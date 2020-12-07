@@ -569,6 +569,7 @@ public class Utils {
 		a.saveInfos();
 	}
 	private static ArchiveInfo getArchiveInfo(BufferedReader stdin,String message, String def, boolean moveOtherFile) {
+		if (stdin==null && "-".equals(def)) return null;
 		String input=null;
 		ArchiveInfo camera=null;
 		while(camera==null) {
@@ -678,45 +679,46 @@ public class Utils {
 			ArchiveInfo archived = getArchiveInfo(argv.length>=2 ? null : stdin,"输入已经归档的目录",argv.length>=2 ? argv[1] : "E:\\Photo\\Archived",false);
 
 			SystemOut.println("Now :"+date2String(new Date()));
-			SystemOut.println("扫描目录信息: "+archived.getPath());
-			List<FolderInfo> folderInfos = getFolderInfos(archived);
-			boolean isOk = true;
-			for (FolderInfo fi: folderInfos) {
-				if (fi.getDate0()==null) {
-					isOk = false;
-					SystemOut.println(fi.getPath() + " 缺少开始日期");
-				}
-				if (fi.getDate1()==null) {
-					isOk = false;
-					SystemOut.println(fi.getPath() + " 缺少结束日期");
-				}
-			}
-			if (isOk) {
-				folderInfos.sort((a, b) -> a.compareTo(b));
-				saveFolderInfos(folderInfos, archived);
-				SystemOut.println("Now :" + date2String(new Date()));
-				input = (argv.length>=3 ? argv[2].toLowerCase() : null);
-				while (input==null || input.isEmpty()) {
-					SystemOut.println("执行文件归档？");
-					try {
-						input = stdin.readLine().trim();
-					} catch (Exception e) {
+			if (archived!=null) {
+				SystemOut.println("扫描目录信息: "+archived.getPath());
+				List<FolderInfo> folderInfos = getFolderInfos(archived);
+				boolean isOk = true;
+				for (FolderInfo fi: folderInfos) {
+					if (fi.getDate0()==null) {
+						isOk = false;
+						SystemOut.println(fi.getPath() + " 缺少开始日期");
+					}
+					if (fi.getDate1()==null) {
+						isOk = false;
+						SystemOut.println(fi.getPath() + " 缺少结束日期");
 					}
 				}
-				if (input.toLowerCase().startsWith("y")) {
-					SystemOut.println("Now :"+date2String(new Date()));
-					SystemOut.println("删除归档文件夹已经存在的待归档文件...");
-					deleteFiles(camera,archived);
-					SystemOut.println("Now :"+date2String(new Date()));
-					SystemOut.println("将文件归档...");
-					copyToFolder(camera, folderInfos);
+				if (isOk && camera!=null) {
+					folderInfos.sort((a, b) -> a.compareTo(b));
+					saveFolderInfos(folderInfos, archived);
+					SystemOut.println("Now :" + date2String(new Date()));
+					input = (argv.length>=3 ? argv[2].toLowerCase() : null);
+					while (input==null || input.isEmpty()) {
+						SystemOut.println("执行文件归档？");
+						try {
+							input = stdin.readLine().trim();
+						} catch (Exception e) {
+						}
+					}
+					if (input.toLowerCase().startsWith("y")) {
+						SystemOut.println("Now :"+date2String(new Date()));
+						SystemOut.println("删除归档文件夹已经存在的待归档文件...");
+						deleteFiles(camera,archived);
+						SystemOut.println("Now :"+date2String(new Date()));
+						SystemOut.println("将文件归档...");
+						copyToFolder(camera, folderInfos);
+					}
 				}
+		
+				SystemOut.println("Now :"+date2String(new Date()));
+				SystemOut.println("删除空目录");
+				removeEmptyFolder(new File(archived.getPath()));
 			}
-	
-			SystemOut.println("Now :"+date2String(new Date()));
-			SystemOut.println("删除空目录");
-			removeEmptyFolder(new File(archived.getPath()));
-	
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("End.");
 	

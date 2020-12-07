@@ -93,6 +93,9 @@ public final class TwoImageViewer {
 
 	void completeIndex() {
 		if (index>=0 && index<imageFiles1.size()) {
+			try {
+				new File(imageFiles1.get(index)).delete();
+			} catch (Exception e) {}
 			imageFiles1.remove(index);
 			imageFiles2.remove(index);
 			if (index>0 && index>=imageFiles1.size()) index--;
