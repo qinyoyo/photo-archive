@@ -9,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -91,14 +92,29 @@ public final class TwoImageViewer {
 		vp2.updateImage(images[1]);
 	}
 
-	void completeIndex() {
+	void completeIndex(int saveIndex ) {
 		if (index>=0 && index<imageFiles1.size()) {
 			try {
-				new File(imageFiles1.get(index)).delete();
+				File file1 = new File(imageFiles1.get(index));
+				File file2 = new File(imageFiles2.get(index));
+				if (saveIndex==3) {
+					String n=file1.getAbsolutePath().substring(file1.getAbsolutePath().indexOf(".delete")+8);
+					File nf = new File(new File(logFile).getParent()+"\\"+n);
+					new File(nf.getParent()).mkdirs();
+					Files.move(file1.toPath(),nf.toPath());
+					imageFiles1.remove(index);
+					imageFiles2.remove(index);
+					if (index>0 && index>=imageFiles1.size()) index--;
+				} else	if (file1.exists() && file2.exists()) {
+					if (saveIndex==1 || (saveIndex==0 && file1.length()>file2.length())) {
+						file2.delete();
+						Files.move(file1.toPath(), file2.toPath());
+					} else file1.delete();
+					imageFiles1.remove(index);
+					imageFiles2.remove(index);
+					if (index>0 && index>=imageFiles1.size()) index--;
+				}
 			} catch (Exception e) {}
-			imageFiles1.remove(index);
-			imageFiles2.remove(index);
-			if (index>0 && index>=imageFiles1.size()) index--;
 		}
 	}
 
@@ -122,7 +138,6 @@ public final class TwoImageViewer {
 			try {
 				this.image = ImageIO.read(file);
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 
@@ -131,7 +146,6 @@ public final class TwoImageViewer {
 			try {
 				this.image = ImageIO.read(file);
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 			repaint();
 			this.getParent().doLayout();
@@ -234,7 +248,19 @@ public final class TwoImageViewer {
 				np.updateButtonStates();
 
 			} else if (key == KeyEvent.VK_DELETE) {
-				completeIndex();
+				completeIndex(0);
+				show(np.vp1,np.vp2);
+				np.updateButtonStates();
+			} else if (key == KeyEvent.VK_1) {
+				completeIndex(1);
+				show(np.vp1,np.vp2);
+				np.updateButtonStates();
+			} else if (key == KeyEvent.VK_2) {
+				completeIndex(2);
+				show(np.vp1,np.vp2);
+				np.updateButtonStates();
+			} else if (key == KeyEvent.VK_3) {
+				completeIndex(3);
 				show(np.vp1,np.vp2);
 				np.updateButtonStates();
 			} else if (key == KeyEvent.VK_ENTER) {
@@ -298,6 +324,43 @@ public final class TwoImageViewer {
 		
 		f.setContentPane(panel);
 		
+		f.addWindowListener(new WindowListener() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveFile();
+            }
+
+			@Override
+			public void windowActivated(WindowEvent e) {
+			
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				
+			}
+
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+				
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				
+			}
+
+			@Override
+			public void windowIconified(WindowEvent e) {
+				
+			}
+
+			@Override
+			public void windowOpened(WindowEvent e) {
+				
+			}
+		});
+
 		
 		
 		f.pack();

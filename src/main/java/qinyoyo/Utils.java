@@ -84,6 +84,46 @@ public class Utils {
 		}
 	}
 
+	public static int contentCompare(String path1,String path2) {
+		if (path1==null && path2==null) return 0;
+		else if (path1==null) return -1;
+		else if (path2==null) return 1;
+		else {
+			File file1=new File(path1), file2=new File(path2);
+			if (!file1.exists() && !file2.exists()) return 0;
+			else if (!file1.exists()) return -1;
+			else if (!file2.exists()) return 1;
+			else if (file1.length()<file2.length()) return -1;
+			else if (file1.length()>file2.length()) return 1;
+			else {
+				FileInputStream in1=null,in2=null;
+				try {
+					in1=new FileInputStream(file1);
+					in2=new FileInputStream(file2);
+					byte[] buf1=new byte[102400],buf2 = new byte[102400];
+					int len1=in1.read(buf1), len2=in2.read(buf2);
+					do {
+						if (len1<len2) return -1;
+						else if (len1>len2) return 1;
+						else if (!Arrays.equals(buf1,buf2)) return -1;
+						len1=in1.read(buf1);
+						len2=in2.read(buf2);
+					} while (len1>0);
+					return 0;
+				} catch (Exception e) { return -1; }
+				finally {
+					if (in1!=null)
+						try {
+							in1.close();
+						} catch (IOException e) {}
+					if (in2!=null)
+						try {
+							in2.close();
+						} catch (IOException e) {}				
+					}
+			}
+		}
+	}
 	public static void saveObj(File file, Object object) {
 		try {
 			FileOutputStream outputStream = new FileOutputStream(file);
@@ -598,7 +638,11 @@ public class Utils {
 				String [] ll= line.split(" <-> ");
 				if (ll.length==2) {
 					String f1=ll[0].trim(), f2 = ll[1].trim();
-					if (!f1.isEmpty() || !f2.isEmpty()) {
+					if (contentCompare(f1,f2) == 0) {
+						if (!f1.isEmpty()) {
+							new File(f1).delete();
+						}
+					} else {
 						list1.add(f1);
 						list2.add(f2);
 					}
@@ -618,6 +662,7 @@ public class Utils {
 
 
 		TwoImageViewer tv = new TwoImageViewer(logFile, list1, list2);
+		tv.saveFile();
 		tv.run();
 
 	}
