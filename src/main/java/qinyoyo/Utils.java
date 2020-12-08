@@ -20,6 +20,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Utils {
+	static final String same_photo_log = ".same_photo.log";
+	static final String manual_other_bat = ".manual_other.bat";
+	static final String manual_rm_bat = ".manual_rm.bat";
+	static final String manual_archive_bat = ".manual_archive.bat";
+	static final String no_shottime_log = ".no_shottime.log";
 	public static boolean equals(String s1, String s2) {
 		if (s1 == null && s2 == null)
 			return true;
@@ -297,7 +302,7 @@ public class Utils {
 	static void doDeleteSameFiles(List<PhotoInfo> rm,List<PhotoInfo> sameAs,ArchiveInfo archiveInfo, ArchiveInfo ref) {
 		if (rm.size() > 0) {
 			List<PhotoInfo> all = archiveInfo.getInfos();
-			File logFile = new File(archiveInfo.getPath(), "same_photo.log");
+			File logFile = new File(archiveInfo.getPath(), same_photo_log);
 			SystemOut.println("重复照片数量 : " + rm.size());
 			File rmf = new File(new File(archiveInfo.getPath()), ".delete");
 			rmf.mkdirs();
@@ -326,7 +331,7 @@ public class Utils {
 				}
 			}
 			String cmd = sb.toString().trim();
-			if (!cmd.isEmpty())	appendToFile(new File(archiveInfo.getPath(), "manual_rm.bat"), sb.toString());
+			if (!cmd.isEmpty())	appendToFile(new File(archiveInfo.getPath(), manual_rm_bat), sb.toString());
 		}
 	}
 	// 记录必须排序好
@@ -357,7 +362,7 @@ public class Utils {
 		List<PhotoInfo> sameAs = new ArrayList<>();
 		List<PhotoInfo> all = archiveInfo.getInfos();
 		List<PhotoInfo> refInfos = ref.getInfos();
-		File logFile = new File(archiveInfo.getPath(), "same_photo.log");
+		File logFile = new File(archiveInfo.getPath(), same_photo_log);
 		SystemOut.println("照片数量 : " + all.size());
 		int j0 = 0, jstart = 0; // 0 - jstart : 没有拍摄日期
 		for (int i = 0; i < refInfos.size(); i++) {
@@ -428,7 +433,7 @@ public class Utils {
 				}
 			}
 			String batcmd = sb.toString().trim();
-			if (!batcmd.isEmpty()) writeToFile(new File(archiveInfo.getPath(), "manual_other.bat"), batcmd);
+			if (!batcmd.isEmpty()) writeToFile(new File(archiveInfo.getPath(), manual_other_bat), batcmd);
 		}
 	}
 
@@ -545,7 +550,7 @@ public class Utils {
 		for (FolderInfo fi: folderInfos) {
 			new File(fi.getPath(),fi.getCamera()).mkdirs();
 		}
-		String sameLog = getFromFile(new File(camera.getPath(),"same_photo.log"));
+		String sameLog = getFromFile(new File(camera.getPath(),same_photo_log));
 		if (sameLog==null) sameLog="";
 		StringBuilder mvfailed=new StringBuilder();
 		StringBuilder notarchived = new StringBuilder();
@@ -570,9 +575,9 @@ public class Utils {
 				}
 			}
 		}
-		if (!sameLog.isEmpty()) writeToFile(new File(camera.getPath(),"same_photo.log"),sameLog.trim());
-		writeToFile(new File(root,"没有归宿的文件.log"),notarchived.toString());
-		writeToFile(new File(root,"manual_archive.bat"),mvfailed.toString());
+		if (!sameLog.isEmpty()) writeToFile(new File(camera.getPath(),same_photo_log),sameLog.trim());
+		writeToFile(new File(root,no_shottime_log),notarchived.toString());
+		writeToFile(new File(root,manual_archive_bat),mvfailed.toString());
 	}
 	public static void removeEmptyFolder(File dir) {
 		if (!dir.isDirectory()) return;
@@ -682,7 +687,7 @@ public class Utils {
 		      2 ：yes/on
 		      3 : off 自动关机
 		 */
-		checkDeletedFile("E:\\Photo\\Archived\\same_photo.log");
+		checkDeletedFile("E:\\Photo\\Archived\\"+same_photo_log);
 	}
 	public static void main(String[] argv) {
 		/* argv
@@ -709,7 +714,7 @@ public class Utils {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			checkDeletedFile(new File(input,"same_photo.log").getAbsolutePath());
+			checkDeletedFile(new File(input,same_photo_log).getAbsolutePath());
 		} else {
 			BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
 			String input=null;

@@ -91,30 +91,53 @@ public final class TwoImageViewer {
 		vp1.updateImage(images[0]);
 		vp2.updateImage(images[1]);
 	}
+	
+	private void removeIndex() {
+		imageFiles1.remove(index);
+		imageFiles2.remove(index);
+		if (index>0 && index>=imageFiles1.size()) index--;
+	}
 	private static final String KEY_HELP = "del/0:save large 1:left      <%s>     2:right 3:both Enter:save";
 	void completeIndex(int saveIndex ) {
 		if (index>=0 && index<imageFiles1.size()) {
 			try {
 				File file1 = new File(imageFiles1.get(index));
 				File file2 = new File(imageFiles2.get(index));
-				if (saveIndex==3) {
-					String n=file1.getAbsolutePath().substring(file1.getAbsolutePath().indexOf(".delete")+8);
-					File nf = new File(new File(logFile).getParent()+"\\"+n);
-					new File(nf.getParent()).mkdirs();
-					Files.move(file1.toPath(),nf.toPath());
-					imageFiles1.remove(index);
-					imageFiles2.remove(index);
-					if (index>0 && index>=imageFiles1.size()) index--;
-				} else	if (file1.exists() && file2.exists()) {
-					if (saveIndex==1 || (saveIndex==0 && file1.length()>file2.length())) {
+				if (!file1.exists()) {
+					removeIndex();
+					return;
+				}
+				if (!file2.exists()) {
+					Files.move(file1.toPath(), file2.toPath());
+					removeIndex();
+					return;
+				}
+				if (saveIndex==0) {
+					if (file1.length()>file2.length()) saveIndex=1;
+					else saveIndex=2;
+				}
+				switch (saveIndex) {
+					case 1:
 						file2.delete();
 						Files.move(file1.toPath(), file2.toPath());
-					} else file1.delete();
-					imageFiles1.remove(index);
-					imageFiles2.remove(index);
-					if (index>0 && index>=imageFiles1.size()) index--;
+						removeIndex();
+						break;
+					case 2:
+						file1.delete();
+						removeIndex();
+						break;
+					case 3:
+						String n=file1.getAbsolutePath().substring(file1.getAbsolutePath().indexOf(".delete")+8);
+						File nf = new File(new File(logFile).getParent()+"\\"+n);
+						new File(nf.getParent()).mkdirs();
+						Files.move(file1.toPath(),nf.toPath());
+						removeIndex();
+						break;
+					default:	
 				}
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

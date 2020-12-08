@@ -93,11 +93,16 @@ public class PhotoInfo implements Serializable {
     public void setPropertiesBy(Map<Key, Object> attrs) {
         if (attrs!=null) {
             Object v = attrs.get(Key.SUBSECDATETIMEORIGINAL);
-            if (v != null && !v.toString().equals("-")) shootTime = Utils.string2Date(v.toString());
+            if (v != null && !v.toString().equals("-") && !v.toString().startsWith("0000")) shootTime = Utils.string2Date(v.toString());
             if (shootTime==null) {
                 v = attrs.get(Key.DATETIMEORIGINAL);
-                if (v != null && !v.toString().equals("-")) shootTime = Utils.string2Date(v.toString());
-                else shootTime = Utils.getShootTimeFromFileName(fileName);
+                if (v != null && !v.toString().equals("-") && !v.toString().startsWith("0000")) shootTime = Utils.string2Date(v.toString());
+                v = attrs.get(Key.CREATEDATE);
+                Date createDate=null;
+                if (v != null && !v.toString().equals("-") && !v.toString().startsWith("0000")) createDate = Utils.string2Date(v.toString());
+                if (shootTime==null) shootTime = createDate;
+                else if (createDate!=null && createDate.getTime()<shootTime.getTime()) shootTime = createDate;
+                if (shootTime==null) shootTime = Utils.getShootTimeFromFileName(fileName);
             }
             v = attrs.get(Key.MAKE);
             if (v != null && !v.toString().equals("-")) camera = v.toString();

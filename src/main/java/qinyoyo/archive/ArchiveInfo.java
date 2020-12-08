@@ -89,7 +89,8 @@ public class ArchiveInfo {
         try {
             Map<String, Map<Key, Object>> fileInfos = exifTool.batchQuery(dir, Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,
                     Key.MAKE, Key.MODEL, Key.LENS_ID,
-                    Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE);
+                    Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+                    Key.CREATEDATE);
             SystemOut.println("搜索 "+dir.getAbsolutePath()+" 文件数 : "+fileInfos.size());
             for (String file : fileInfos.keySet()) {
             	try {
@@ -105,9 +106,9 @@ public class ArchiveInfo {
 	                	} else throw e;
 	                }	                
 	                photoInfo.setPropertiesBy(fileInfos.get(file));
-	                if (photoInfo.getShootTime()==null) {
-	                    photoInfo.setShootTime(FFMpeg.getMediaCreateTime(new File(dir,fileName)));
-                    }
+	                //if (photoInfo.getShootTime()==null) {
+	                //    photoInfo.setShootTime(FFMpeg.getMediaCreateTime(new File(dir,fileName)));
+                    //}
 	                infos.add(photoInfo);
             	} catch(Exception e1) {           		
             		SystemOut.println("忽略文件 "+new File(dir, file).getAbsolutePath());
