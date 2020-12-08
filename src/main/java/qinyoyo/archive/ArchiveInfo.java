@@ -3,6 +3,7 @@ package qinyoyo.archive;
 import qinyoyo.SystemOut;
 import qinyoyo.Utils;
 import qinyoyo.exiftool.ExifTool;
+import qinyoyo.exiftool.FFMpeg;
 import qinyoyo.exiftool.Key;
 
 import java.io.File;
@@ -93,15 +94,20 @@ public class ArchiveInfo {
             for (String file : fileInfos.keySet()) {
             	try {
 	                PhotoInfo photoInfo = null;
+	                String fileName = file;
 	                try {
 	                	photoInfo = new PhotoInfo(path, new File(dir, file));
 	                } catch (Exception e) {
 	                	String nf = aiFileName(dir, file);
 	                	if (nf!=null) {
 	                	   photoInfo = new PhotoInfo(path, new File(dir, nf));
+	                	   fileName = nf;
 	                	} else throw e;
 	                }	                
 	                photoInfo.setPropertiesBy(fileInfos.get(file));
+	                if (photoInfo.getShootTime()==null) {
+	                    photoInfo.setShootTime(FFMpeg.getMediaCreateTime(new File(dir,fileName)));
+                    }
 	                infos.add(photoInfo);
             	} catch(Exception e1) {           		
             		SystemOut.println("忽略文件 "+new File(dir, file).getAbsolutePath());

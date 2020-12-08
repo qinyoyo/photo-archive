@@ -91,7 +91,7 @@ public final class TwoImageViewer {
 		vp1.updateImage(images[0]);
 		vp2.updateImage(images[1]);
 	}
-
+	private static final String KEY_HELP = "del/0:save large 1:left      <%s>     2:right 3:both Enter:save";
 	void completeIndex(int saveIndex ) {
 		if (index>=0 && index<imageFiles1.size()) {
 			try {
@@ -224,8 +224,8 @@ public final class TwoImageViewer {
 				prevButton.requestFocus();
 			}
 			if (imageFiles1!=null && imageFiles1.size()>0)
-				indicator.setText("" + (index + 1) + " / " + imageFiles1.size());
-			else indicator.setText("empty");
+				indicator.setText(String.format(KEY_HELP, "" + (index + 1) + " / " + imageFiles1.size()));
+			else indicator.setText(String.format(KEY_HELP, "empty"));
 		}
 	}
 	
@@ -247,7 +247,7 @@ public final class TwoImageViewer {
 				showNext(np.vp1,np.vp2);
 				np.updateButtonStates();
 
-			} else if (key == KeyEvent.VK_DELETE) {
+			} else if (key == KeyEvent.VK_DELETE || key == KeyEvent.VK_0) {
 				completeIndex(0);
 				show(np.vp1,np.vp2);
 				np.updateButtonStates();

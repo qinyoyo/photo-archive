@@ -5,6 +5,7 @@ import qinyoyo.archive.FolderInfo;
 import qinyoyo.archive.PhotoInfo;
 import qinyoyo.exiftool.CommandRunner;
 import qinyoyo.exiftool.ExifTool;
+import qinyoyo.exiftool.FFMpeg;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -198,7 +199,15 @@ public class Utils {
 				else if (ms.length() > 4) ms = ms.substring(0, 4);
 				else while (ms.length() < 4) ms = ms + "0";
 				if (m.end() == s.length()) return string2Date(newS + ms, "yyyy-MM-dd HH:mm:ss.SSS");
-				else return string2Date(newS + ms + s.substring(m.end()), "yyyy-MM-dd HH:mm:ss.SSSz");
+				else {
+					String z = s.substring(m.end()).trim();
+					newS = newS + ms;
+					if (z.isEmpty()) return string2Date(newS, "yyyy-MM-dd HH:mm:ss.SSS");
+					else {
+						if (z.toLowerCase().equals("z")) z="+0000";
+					    return string2Date(newS + z, "yyyy-MM-dd HH:mm:ss.SSSz");
+					}
+				}
 			} else return null;
 		} catch (Exception e) {
 			throw new RuntimeException(s + " 无法格式化");
@@ -714,6 +723,19 @@ public class Utils {
 						input = stdin.readLine().trim();
 						ExifTool.EXIFTOOL = new File(input, "exiftool.exe").getAbsolutePath();
 					} catch (IOException ex) {
+					}
+				}
+			}
+			while (true) {
+				try {
+					FFMpeg.FFMPEG_VERSION = FFMpeg.getFfmpegVersion();
+					break;
+				} catch (Exception e) {
+					SystemOut.println(e.getMessage());
+					try {
+						input = stdin.readLine().trim();
+						FFMpeg.FFMPEG = new File(input, "ffmpeg.exe").getAbsolutePath();
+					} catch (Exception ex) {
 					}
 				}
 			}
