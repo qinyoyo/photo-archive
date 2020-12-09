@@ -602,7 +602,7 @@ public class Utils {
 		});
 		if (files.length==0) dir.delete();
 	}
-	public static void processDir(ArchiveInfo a, boolean moveOtherFiles) {
+	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
 		SystemOut.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
 		a.sortInfos();
 		a.saveInfos();
@@ -613,8 +613,10 @@ public class Utils {
 			Files.copy(dat.toPath(), bak.toPath());
 		} catch (IOException e) {
 		}
-		SystemOut.println("删除重复文件...");
-		deleteFiles(a);
+		if (removeSameFile) {
+			SystemOut.println("删除重复文件...");
+			deleteFiles(a);
+		}
 		if (moveOtherFiles) {
 			SystemOut.println("移动无拍摄日期文件...");
 			otherFiles(a);
@@ -622,22 +624,20 @@ public class Utils {
 		SystemOut.println("保存处理后文件...");
 		a.saveInfos();
 	}
-	private static ArchiveInfo getArchiveInfo(BufferedReader stdin,String message, String def, boolean moveOtherFile) {
-		if (stdin==null && "-".equals(def)) return null;
-		String input=null;
-		ArchiveInfo camera=null;
-		while(camera==null) {
-			if (stdin!=null) SystemOut.println(message+"(" + def + "):");
-			try {
-				input = (stdin==null ? def : stdin.readLine().trim());
-				if (input.isEmpty()) input=def;
-				camera = new ArchiveInfo(input);
-				if (!camera.isReadFromFile()) processDir(camera, moveOtherFile);
-			} catch (IOException ex) {
-				camera=null;
-			}
+	private static ArchiveInfo getArchiveInfo(String path, boolean clearInfo, boolean removeSameFile, boolean moveOtherFile) {
+		if (path==null || path.isEmpty() || "-".equals(path)) return null;
+		if (clearInfo) {
+			new File(path,ArchiveInfo.ARCHIVE_FILE).delete();
+			new File(path,ArchiveInfo.ARCHIVE_FILE+ ".sorted.dat").delete();
+			new File(path,same_photo_log).delete();
+			new File(path,manual_other_bat).delete();
+			new File(path,manual_rm_bat).delete();
+			new File(path,manual_archive_bat).delete();
+			new File(path,no_shottime_log).delete();
 		}
-		return camera;
+		ArchiveInfo	a = new ArchiveInfo(path);
+		if (!a.isReadFromFile()) processDir(a, removeSameFile, moveOtherFile);
+		return a;
 	}
 
 
@@ -689,120 +689,266 @@ public class Utils {
 		 */
 		checkDeletedFile("E:\\Photo\\Archived\\"+same_photo_log);
 	}
-	public static void main(String[] argv) {
-		/* argv
-		      0 : 需要归档的目录
-		      1 : 已经归档的目录
-		      2 ：yes/on
-		      3 : off 自动关机
-		 */
-		System.out.println("Usage1: java -jar pa.jar \"需要归档的目录完整名\" \"归档到的目录完整名\" yes|no<是否执行归档操作> <off自动关机>");
-		System.out.println("Usage2: java -jar pa.jar -v \"已归档目录完整名\"");
-		if (argv.length>0 && argv[0].equals("-v")) {
-			BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
-			String input=(argv.length>1 ? argv[1] : null);
-			while (input==null || input.isEmpty()) {
-				try {
-					System.out.println("已归档目录完整名：");
-					input = stdin.readLine().trim();
-				} catch (IOException e) {
-				}
-			}
-			try {
-				stdin.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			checkDeletedFile(new File(input,same_photo_log).getAbsolutePath());
-		} else {
-			BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
-			String input=null;
-			while (true) {
-				try {
-					ExifTool.INSTALLED_VERSION = ExifTool.getInstalledVersion();
-					break;
-				} catch (IOException e) {
-					SystemOut.println(e.getMessage());
-					try {
-						input = stdin.readLine().trim();
-						ExifTool.EXIFTOOL = new File(input, "exiftool.exe").getAbsolutePath();
-					} catch (IOException ex) {
-					}
-				}
-			}
-			while (true) {
-				try {
-					FFMpeg.FFMPEG_VERSION = FFMpeg.getFfmpegVersion();
-					break;
-				} catch (Exception e) {
-					SystemOut.println(e.getMessage());
-					try {
-						input = stdin.readLine().trim();
-						FFMpeg.FFMPEG = new File(input, "ffmpeg.exe").getAbsolutePath();
-					} catch (Exception ex) {
-					}
-				}
-			}
-			SystemOut.println("Now :"+date2String(new Date()));
-			ArchiveInfo camera=getArchiveInfo(argv.length>=1 ? null : stdin,"输入需要归档的目录",argv.length>=1 ? argv[0] : "E:\\Camera",true);
-	
-			SystemOut.println("Now :"+date2String(new Date()));
-			ArchiveInfo archived = getArchiveInfo(argv.length>=2 ? null : stdin,"输入已经归档的目录",argv.length>=2 ? argv[1] : "E:\\Photo\\Archived",false);
+	static final String PARAM_VIEW_DIR = "view";
+	static final String PARAM_CAMERA_DIR = "camera";
+	static final String PARAM_ARCHIVED_DIR = "archived";
+	static final String PARAM_DELETE_SAME1 = "same1";
+	static final String PARAM_DELETE_SAME2 = "same2";
+	static final String PARAM_MOVE_OTHER1 = "other1";
+	static final String PARAM_MOVE_OTHER2 = "other2";
+	static final String PARAM_CLEAR1 = "clear1";
+	static final String PARAM_CLEAR2 = "clear2";
+	static final String PARAM_EXECUTE = "execute";
+	static final String PARAM_SHUTDOWN = "shutdown";
+	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
+		Map<String,Object> result = new HashMap<>();
+		if (argv==null || argv.length==0) return result;
+		int total = argv.length;
+		for (int i=0;i<total;i++) {
+			String param = argv[i].trim();
+			switch (param) {
+				case "-v" :
+				case "--view":
+					if (i<total-1) {
+						result.put(PARAM_VIEW_DIR,argv[i+1]);
+						break;
+					} else throw new Exception("-v 参数必须后跟一个目录，指定浏览相同图片的目录");
+				case "-p1":
+				case "--path1":
+					if (i<total-1) {
+						result.put(PARAM_CAMERA_DIR,argv[i+1]);
+						break;
+					} else throw new Exception("-c 参数必须后跟一个目录，指定需要归档的文件目录");
+				case "-p2":
+				case "--path2":
+					if (i<total-1) {
+						result.put(PARAM_ARCHIVED_DIR,argv[i+1]);
+						break;
+					} else throw new Exception("-a 参数必须后跟一个目录，指定归档目标路径");
 
-			SystemOut.println("Now :"+date2String(new Date()));
-			if (archived!=null) {
-				SystemOut.println("扫描目录信息: "+archived.getPath());
-				List<FolderInfo> folderInfos = getFolderInfos(archived);
-				boolean isOk = true;
-				for (FolderInfo fi: folderInfos) {
-					if (fi.getDate0()==null) {
-						isOk = false;
-						SystemOut.println(fi.getPath() + " 缺少开始日期");
-					}
-					if (fi.getDate1()==null) {
-						isOk = false;
-						SystemOut.println(fi.getPath() + " 缺少结束日期");
-					}
-				}
-				if (isOk && camera!=null) {
-					folderInfos.sort((a, b) -> a.compareTo(b));
-					saveFolderInfos(folderInfos, archived);
-					SystemOut.println("Now :" + date2String(new Date()));
-					input = (argv.length>=3 ? argv[2].toLowerCase() : null);
-					while (input==null || input.isEmpty()) {
-						SystemOut.println("执行文件归档？");
-						try {
-							input = stdin.readLine().trim();
-						} catch (Exception e) {
-						}
-					}
-					if (input.toLowerCase().startsWith("y")) {
-						SystemOut.println("Now :"+date2String(new Date()));
-						SystemOut.println("删除归档文件夹已经存在的待归档文件...");
-						deleteFiles(camera,archived);
-						SystemOut.println("Now :"+date2String(new Date()));
-						SystemOut.println("将文件归档...");
-						copyToFolder(camera, folderInfos);
-					}
-				}
-		
-				SystemOut.println("Now :"+date2String(new Date()));
-				SystemOut.println("删除空目录");
-				removeEmptyFolder(new File(archived.getPath()));
+				case "-s1":
+				case "--same1":
+				case "-s2":
+				case "--same2":
+					result.put(param.endsWith("1") ? PARAM_DELETE_SAME1 : PARAM_DELETE_SAME2,true);
+					break;
+				case "-o1":
+				case "--other1":
+				case "-o2":
+				case "--other2":
+					result.put(param.endsWith("1") ? PARAM_MOVE_OTHER1 : PARAM_MOVE_OTHER2,true);
+					break;
+				case "-c1":
+				case "--clear1":
+				case "-c2":
+				case "--clear2":
+					result.put(param.endsWith("1") ? PARAM_CLEAR1 : PARAM_CLEAR2,true);
+					break;
+				case "-e":
+				case "--execute":
+					result.put(PARAM_EXECUTE,true);
+					break;
+				case "-f":
+				case "--shutdown":
+					result.put(PARAM_SHUTDOWN,true);
+					break;
 			}
+		}
+		return result;
+	}
+	private static boolean boolValue(Object o) {
+		if (o==null) return false;
+		else if (o instanceof Boolean) return (Boolean) o;
+		else {
+			String s=o.toString().toLowerCase();
+			if (s.startsWith("y")) return true;
+			else return false;
+		}
+	}
+	public static String getInputString(BufferedReader stdin, String message, String def) {
+		String input=null;
+		while(input==null || input.isEmpty()) {
+			System.out.println(message + (def==null || def.isEmpty() ? ":" : ("(" + def + "):")));
+			try {
+				input = stdin.readLine().trim();
+				if (input.isEmpty()) input=def;
+			} catch (IOException ex) {
+				input=null;
+			}
+		}
+		return input;
+	}
+
+	public static List<FolderInfo> scanFolderInfo(ArchiveInfo archived) {
+		SystemOut.println("扫描目录信息: "+archived.getPath());
+		List<FolderInfo> folderInfos = getFolderInfos(archived);
+		boolean isOk = true;
+		for (FolderInfo fi: folderInfos) {
+			if (fi.getDate0()==null) {
+				isOk = false;
+				SystemOut.println(fi.getPath() + " 缺少开始日期");
+			}
+			if (fi.getDate1()==null) {
+				isOk = false;
+				SystemOut.println(fi.getPath() + " 缺少结束日期");
+			}
+		}
+		if (isOk) {
+			folderInfos.sort((a, b) -> a.compareTo(b));
+			saveFolderInfos(folderInfos, archived);
+			return folderInfos;
+		} else return null;
+	}
+	static void executeArchive(ArchiveInfo camera, ArchiveInfo archived) {
+		List<FolderInfo> folderInfos = scanFolderInfo(archived);
+		if (folderInfos!=null) {
 			SystemOut.println("Now :"+date2String(new Date()));
-			SystemOut.println("End.");
-	
-			SystemOut.close();
-	
+			SystemOut.println("删除归档文件夹已经存在的待归档文件...");
+			deleteFiles(camera,archived);
+			SystemOut.println("Now :"+date2String(new Date()));
+			SystemOut.println("将文件归档...");
+			copyToFolder(camera, folderInfos);
+			SystemOut.println("Now :"+date2String(new Date()));
+			SystemOut.println("删除空目录");
+			removeEmptyFolder(new File(archived.getPath()));
+		}
+	}
+
+	public static void main1(BufferedReader stdin) {
+		System.out.println("Usage1: java -jar pa.jar <options>");
+		System.out.println("");
+		while (true) {
+			String input = getInputString(stdin, "1 执行归档\n2 查看相同图像文件\n", "");
+			if (input.startsWith("1")) break;
+			else if (input.startsWith("2")) {
+				input = getInputString(stdin, "输入待查看的目录路径", "E:\\Camera");
+				try {
+					stdin.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				checkDeletedFile(new File(input,same_photo_log).getAbsolutePath());
+				return;
+			}
+		}
+		ArchiveInfo camera = null, archived=null;
+		File dir=null;
+		while(dir==null || !dir.exists() || !dir.isDirectory()) {
+			String input = getInputString(stdin, "输入待归档的目录路径(输入-表示忽略)", "E:\\Camera");
+			if (input.isEmpty() || input.equals("-")) break;
+			dir = new File(input);
+			if (dir!=null && dir.exists() && dir.isDirectory()) {
+				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
+				boolean same = boolValue(getInputString(stdin, "是否扫面相同文件", "yes"));
+				boolean other = boolValue(getInputString(stdin, "是否移除未知日期的文件", "yes"));
+				camera=getArchiveInfo(input, clear, same,other);
+			}
+		}
+		dir=null;
+		while(dir==null || !dir.exists() || !dir.isDirectory()) {
+			String input = getInputString(stdin, "输入已经归档的目录路径(输入-表示忽略)", "E:\\Archived");
+			if (input.isEmpty() || input.equals("-")) break;
+			dir = new File(input);
+			if (dir!=null && dir.exists() && dir.isDirectory()) {
+				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
+				boolean same = boolValue(getInputString(stdin, "是否扫面相同文件", "yes"));
+				boolean other = boolValue(getInputString(stdin, "是否移除未知日期的文件", "yes"));
+				archived=getArchiveInfo(input, clear, same,other);
+			}
+		}
+		if (camera!=null && archived!=null) {
+			boolean op = boolValue(getInputString(stdin, "是否执行归档操作", "no"));
+			if (op) executeArchive(camera,archived);
+		}
+		SystemOut.close();
+	}
+	public static void checkVersion(BufferedReader stdin) {
+		String input=null;
+		while (true) {
+			try {
+				ExifTool.INSTALLED_VERSION = ExifTool.getInstalledVersion();
+				break;
+			} catch (IOException e) {
+				SystemOut.println(e.getMessage());
+				try {
+					input = stdin.readLine().trim();
+					ExifTool.EXIFTOOL = new File(input, "exiftool.exe").getAbsolutePath();
+				} catch (IOException ex) {
+				}
+			}
+		}
+		/*
+		while (true) {
+			try {
+				FFMpeg.FFMPEG_VERSION = FFMpeg.getFfmpegVersion();
+				break;
+			} catch (Exception e) {
+				SystemOut.println(e.getMessage());
+				try {
+					input = stdin.readLine().trim();
+					FFMpeg.FFMPEG = new File(input, "ffmpeg.exe").getAbsolutePath();
+				} catch (Exception ex) {
+				}
+			}
+		}
+	 */
+	}
+	public static void main(String[] argv) {
+		BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
+		checkVersion(stdin);
+		Map<String,Object> params = null;
+		try {
+			params = parseArgv(argv);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 			try {
 				stdin.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
-	
-			if (argv.length>=4 && argv[3].toLowerCase().contains("off")) {
+			return;
+		}
+		if (params==null || params.isEmpty()) {
+			main1(stdin);
+			try {
+				stdin.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			return;
+		}
+		try {
+			stdin.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		ArchiveInfo camera = null, archived=null;
+		Object v = params.get(PARAM_CAMERA_DIR);
+		if (v!=null) {
+			String path = v.toString();
+			boolean same = boolValue(params.get(PARAM_DELETE_SAME1));
+			boolean other = boolValue(params.get(PARAM_MOVE_OTHER1));
+			boolean clear = boolValue(params.get(PARAM_CLEAR1));
+			camera=getArchiveInfo(path, clear, same,other);
+		}
+		v = params.get(PARAM_ARCHIVED_DIR);
+		if (v!=null) {
+			String path = v.toString();
+			boolean same = boolValue(params.get(PARAM_DELETE_SAME2));
+			boolean other = boolValue(params.get(PARAM_MOVE_OTHER2));
+			boolean clear = boolValue(params.get(PARAM_CLEAR2));
+			archived = getArchiveInfo(path, clear, same,other);
+			if (archived!=null && camera!=null && boolValue(params.get(PARAM_EXECUTE))) {
+				executeArchive(camera,archived);
+			}
+		}
+
+		SystemOut.close();
+		v = params.get(PARAM_VIEW_DIR);
+		if (v!=null) {
+			checkDeletedFile(new File(v.toString(),same_photo_log).getAbsolutePath());
+		} else {
+			if (boolValue(params.get(PARAM_SHUTDOWN))) {
 				List<String> cmd = new ArrayList<>();
 				cmd.add("shutdown");
 				cmd.add("-s");
