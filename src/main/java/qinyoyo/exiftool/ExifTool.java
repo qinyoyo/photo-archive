@@ -14,8 +14,6 @@ public class ExifTool {
 
     private final Set<Feature> features;
 
-    private Process longRunningProcess;
-
     private ExifTool(Set<Feature> features) throws IOException, InterruptedException {
         this.features = features;
         if (INSTALLED_VERSION==null) INSTALLED_VERSION = getInstalledVersion();
@@ -26,23 +24,6 @@ public class ExifTool {
                 ));
             }
         });
-    }
-
-    public void startLongRunningProcess() throws IOException, InterruptedException {
-        if (features.contains(Feature.STAY_OPEN)) {
-            List<String> argsList = new ArrayList<>();
-            argsList.add(EXIFTOOL);
-            argsList.add(Feature.getFlag(Feature.STAY_OPEN));
-            argsList.add("True");
-            argsList.add("-@");
-            argsList.add("-");
-            longRunningProcess = CommandRunner.run(argsList);
-        }
-    }
-
-    public void cancelLongRunningProcess() throws InterruptedException {
-        longRunningProcess.destroyForcibly().waitFor();
-        assert !longRunningProcess.isAlive() : "Long running process is still alive.";
     }
 
     public static Double getInstalledVersion() throws IOException{
@@ -59,106 +40,43 @@ public class ExifTool {
         }
         return INSTALLED_VERSION;
     }
-
-    public <T> Map<Key, T> query(File file, Key ... keys) throws IOException, InterruptedException {
-        return (longRunningProcess != null && longRunningProcess.isAlive())
-                ? queryLongRunning(file, keys)
-                : queryShortLived(file, keys);
-    }
-
-    public <T> Map<String,Map<Key, T>> batchQuery(File dir, Key ... keys) throws IOException, InterruptedException {
+    /**
+     * 获得目录或文件的exif信息
+     * @param dir  目录或文件
+     * @param keys  需要获取的exif信息tag
+     * @param <T>   标签类别
+     * @return 标签值，key为文件名，值为标签及值的map
+     * @throws IOException io异常
+     */
+    public <T> Map<String,Map<Key, T>> query(File dir, Key ... keys) throws IOException {
         // exiftool.exe -T -charset filename="" -c "%+.7f" -filename -SubSecDateTimeOriginal -DateTimeOriginal -Make -Model -LensID -GPSLongitude -GPSLatitude -GPSAltitude
 
         List<String> argsList = new ArrayList<>();
         argsList.add(EXIFTOOL);
+
         argsList.add("-T");
+
+        argsList.add("-c");
+        argsList.add("\"%+.7f\"");
+
         if (dir.isDirectory()) {
 	        argsList.add("-charset");
 	        argsList.add("filename=\"\"");
+            argsList.add("-filename");
         }
-        argsList.add("-c");
-        argsList.add("\"%+.7f\"");
-        if (dir.isDirectory()) argsList.add("-filename");
         for (Key key : keys) {
             argsList.add(String.format("-%s", Key.getName(key)));
         }
-
-        argsList.add(dir.getAbsolutePath());
-        Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList);
+        if (dir.isDirectory())  argsList.add(".");
+        else argsList.add(dir.getName());
+        Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
         List<String> stdOut = result.getKey();
         List<String> stdErr = result.getValue();
-
-        return processBatchQueryResult(dir, stdOut, stdErr, keys);
-
+        return processQueryResult(dir, stdOut, stdErr, keys);
     }
 
 
-    private <T> Map<Key, T> queryLongRunning(File file, Key... keys) throws IOException, InterruptedException {
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(longRunningProcess.getOutputStream());
-        List<String> argsList = new ArrayList<>();
-        argsList.add("-S");
-        for (Key key : keys) {
-            argsList.add(String.format("-%s", Key.getName(key)));
-        }
-        argsList.add(file.getAbsolutePath());
-        argsList.add("-execute\n");
-        outputStreamWriter.write(String.join("\n", argsList));
-        outputStreamWriter.flush();
-
-        String line;
-        BufferedReader stdOutStreamReader = new BufferedReader(new InputStreamReader(longRunningProcess.getInputStream()));
-        List<String> stdOut = new ArrayList<>();
-        while ((line = stdOutStreamReader.readLine()) != null) {
-            if (line.equals("{ready}")) {
-                break;
-            }
-            stdOut.add(line);
-        }
-
-        BufferedReader stdErrStreamReader = new BufferedReader(new InputStreamReader(longRunningProcess.getErrorStream()));
-        List<String> stdErr = new ArrayList<>();
-        while (stdErrStreamReader.ready() && (line = stdErrStreamReader.readLine()) != null) {
-            stdErr.add(line);
-        }
-
-        return processQueryResult(stdOut, stdErr);
-    }
-
-    private <T> Map<Key, T> queryShortLived(File file, Key ... keys) throws IOException, InterruptedException {
-        List<String> argsList = new ArrayList<>();
-        argsList.add(EXIFTOOL);
-        argsList.add("-S");
-        for (Key key : keys) {
-            argsList.add(String.format("-%s", Key.getName(key)));
-        }
-        argsList.add(file.getAbsolutePath());
-        Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList);
-        List<String> stdOut = result.getKey();
-        List<String> stdErr = result.getValue();
-
-        return processQueryResult(stdOut, stdErr);
-    }
-
-    private <T> Map<Key, T> processQueryResult(List<String> stdOut, List<String> stdErr) {
-        Map<Key, T> queryResult = new HashMap<>();
-        if (stdErr.size() > 0) {
-            throw new RuntimeException(String.join("\n", stdErr));
-        }
-
-        for (String line : stdOut) {
-            List<String> lineSeparated = Arrays.asList(line.split(":"));
-            if (lineSeparated.size() < 2) {
-                continue;
-            }
-            String name = lineSeparated.get(0).trim();
-            String value = String.join(":", lineSeparated.subList(1, lineSeparated.size())).trim();
-            Optional<Key> maybeKey = Key.findKeyWithName(name);
-            maybeKey.ifPresent(key -> queryResult.put(key, Key.parse(key, value)));
-        }
-        return queryResult;
-    }
-
-    private <T> Map<String,Map<Key, T>> processBatchQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
+    private <T> Map<String,Map<Key, T>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
         Map<String,Map<Key, T>> queryResult = new HashMap<>();
         if (stdErr.size() > 0) {
             throw new RuntimeException(String.join("\n", stdErr));

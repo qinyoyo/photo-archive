@@ -3,7 +3,6 @@ package qinyoyo.archive;
 import qinyoyo.SystemOut;
 import qinyoyo.Utils;
 import qinyoyo.exiftool.ExifTool;
-import qinyoyo.exiftool.FFMpeg;
 import qinyoyo.exiftool.Key;
 
 import java.io.File;
@@ -74,49 +73,74 @@ public class ArchiveInfo {
         if (ff.length==1) return ff[0].getName();
         else return null;
 	}
+
     private void seekPhotoInfosInFolder(File dir) {
         if (!dir.isDirectory()) return;
-        File [] dotFile = dir.listFiles(new FileFilter() {
+        File [] files = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
                 return (!pathname.isDirectory() && pathname.getName().startsWith(".") && pathname.length() == 4096);
             }
         });
-        if (dotFile.length>0) {
-            SystemOut.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+dotFile.length);
-            for (File f : dotFile) f.delete();
+        if (files.length>0) {
+            SystemOut.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+files.length);
+            for (File f : files) f.delete();
         }
+        files = dir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return (!pathname.isDirectory() && !pathname.getName().startsWith("."));
+            }
+        });
+        Set<String> processedFiles = new HashSet<String>();
+        SystemOut.println("批量搜索 "+dir.getAbsolutePath());
+        Map<String, Map<Key, Object>> fileInfos = null;
+        int count = 0;
         try {
-            Map<String, Map<Key, Object>> fileInfos = exifTool.batchQuery(dir, Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,
+            fileInfos = exifTool.query(dir, Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,
                     Key.MAKE, Key.MODEL, Key.LENS_ID,
                     Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
                     Key.CREATEDATE);
-            SystemOut.println("搜索 "+dir.getAbsolutePath()+" 文件数 : "+fileInfos.size());
-            for (String file : fileInfos.keySet()) {
-            	try {
-	                PhotoInfo photoInfo = null;
-	                String fileName = file;
-	                try {
-	                	photoInfo = new PhotoInfo(path, new File(dir, file));
-	                } catch (Exception e) {
-	                	String nf = aiFileName(dir, file);
-	                	if (nf!=null) {
-	                	   photoInfo = new PhotoInfo(path, new File(dir, nf));
-	                	   fileName = nf;
-	                	} else throw e;
-	                }	                
-	                photoInfo.setPropertiesBy(fileInfos.get(file));
-	                //if (photoInfo.getShootTime()==null) {
-	                //    photoInfo.setShootTime(FFMpeg.getMediaCreateTime(new File(dir,fileName)));
-                    //}
-	                infos.add(photoInfo);
-            	} catch(Exception e1) {           		
-            		SystemOut.println("忽略文件 "+new File(dir, file).getAbsolutePath());
-            		e1.printStackTrace();
-            	}
-            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (fileInfos!=null) {
+            for (String file : fileInfos.keySet()) {
+                try {
+                    if (SupportFileType.isSupport(file)) {
+                        PhotoInfo photoInfo = new PhotoInfo(path, new File(dir, file));
+                        photoInfo.setPropertiesBy(fileInfos.get(file));
+                        infos.add(photoInfo);
+                        count++;
+                    } else SystemOut.println("    忽略文件 " + file);
+                    processedFiles.add(file);
+                } catch (Exception e1) {
+                }
+            }
+        }
+        SystemOut.println("    处理文件数 : "+count);
+        if (processedFiles.size()<files.length) {
+            count=0;
+            for (int i = 0; i < files.length; i++) {
+                File f = files[i];
+                if (processedFiles.contains(f.getName())) continue;
+                try {
+                    if (SupportFileType.isSupport(f.getName())) {
+                        fileInfos = exifTool.query(f, Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,
+                                Key.MAKE, Key.MODEL, Key.LENS_ID,
+                                Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+                                Key.CREATEDATE);
+
+                        PhotoInfo photoInfo = new PhotoInfo(path, f);
+                        photoInfo.setPropertiesBy(fileInfos.get(f.getName()));
+                        infos.add(photoInfo);
+                        count++;
+                    } else SystemOut.println("    忽略文件 " + f.getName());
+                } catch (Exception e1) {
+                    SystemOut.println("    忽略文件 " + f.getName());
+                }
+            }
+            if (count > 0) SystemOut.println("    中文搜索 " + dir.getAbsolutePath() + " 处理文件数 : " + count);
         }
         File[] subDirs = dir.listFiles(new FileFilter() {
             @Override
@@ -126,11 +150,11 @@ public class ArchiveInfo {
             }
         });
         if (subDirs.length>0) {
-            List<File> files = Arrays.asList(subDirs);
-            files.sort((a,b)->{
+            List<File> dirs = Arrays.asList(subDirs);
+            dirs.sort((a,b)->{
                 return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
             });
-            for (File d : files) {
+            for (File d : dirs) {
                 if (d.isDirectory()) seekPhotoInfosInFolder(d);
             }
         }

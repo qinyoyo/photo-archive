@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Date;
 
 public class FolderInfo {
+	public static final String DEFPATH = "Camera";
 	private String path;
 	private String name;
 	private int priority;

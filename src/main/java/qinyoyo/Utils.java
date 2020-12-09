@@ -25,6 +25,7 @@ public class Utils {
 	static final String manual_rm_bat = ".manual_rm.bat";
 	static final String manual_archive_bat = ".manual_archive.bat";
 	static final String no_shottime_log = ".no_shottime.log";
+	static final String folder_info_dat = ".folder_info.dat";
 	public static boolean equals(String s1, String s2) {
 		if (s1 == null && s2 == null)
 			return true;
@@ -299,6 +300,7 @@ public class Utils {
 			return null;
 		}
 	}
+	// 完全一致的文件将被删除
 	static void doDeleteSameFiles(List<PhotoInfo> rm,List<PhotoInfo> sameAs,ArchiveInfo archiveInfo, ArchiveInfo ref) {
 		if (rm.size() > 0) {
 			List<PhotoInfo> all = archiveInfo.getInfos();
@@ -318,12 +320,21 @@ public class Utils {
 			for (int i=0;i<rm.size();i++) {
 				PhotoInfo p = rm.get(i);
 				File source = new File(fullPath(rootName, p));
-				File targetDir = p.getFolder()==null || p.getFolder().isEmpty() ? rmf : new File(rmf,p.getFolder());
+
 				try {
-					targetDir.mkdirs();
-					Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
-					if (!p.absuluteSameAs(sameAs.get(i))) appendToFile(logFile, new File(targetDir, source.getName()).getAbsolutePath() + " <-> "
-							+ fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)));
+					if (p.absuluteSameAs(sameAs.get(i))) {
+						File targetDir = p.getFolder()==null || p.getFolder().isEmpty() ? new File(rmf,"absolute") : new File(new File(rmf,p.getFolder()),"absolute");
+						//source.delete();
+						targetDir.mkdirs();
+						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
+					}
+					else {
+						File targetDir = p.getFolder()==null || p.getFolder().isEmpty() ? rmf : new File(rmf,p.getFolder());
+						targetDir.mkdirs();
+						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
+						appendToFile(logFile, new File(targetDir, source.getName()).getAbsolutePath() + " <-> "
+								+ fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)));
+					}
 				} catch (Exception e) {
 					sb.append("move \"").append(fullPath(rootName, p)).append("\" \"").append(newFile(sub, p))
 							.append("\"\r\n");
@@ -438,7 +449,7 @@ public class Utils {
 	}
 
 	public static void saveFolderInfos(List<FolderInfo> infos, ArchiveInfo archived) {
-		File f=new File(archived.getPath(),".folder_info.dat");
+		File f=new File(archived.getPath(),folder_info_dat);
 		String rootPath = archived.getPath();
 		StringBuilder sb=new StringBuilder();
 		for (FolderInfo fi : infos) {
@@ -447,7 +458,7 @@ public class Utils {
 		writeToFile(f,sb.toString());
 	}
 	public static List<FolderInfo> getFolderInfos(ArchiveInfo archived) {
-		File f=new File(archived.getPath(),".folder_info.dat");
+		File f=new File(archived.getPath(),folder_info_dat);
 		String rootPath = archived.getPath();
 		List<FolderInfo> list = new ArrayList<>();
 		if (f.exists()) {
@@ -546,7 +557,7 @@ public class Utils {
 		}
 		return null;
 	}
-	public static void copyToFolder(ArchiveInfo camera, List<FolderInfo> folderInfos) {
+	public static void copyToFolder(ArchiveInfo camera, String archivedDir, List<FolderInfo> folderInfos) {
 		for (FolderInfo fi: folderInfos) {
 			new File(fi.getPath(),fi.getCamera()).mkdirs();
 		}
@@ -560,18 +571,20 @@ public class Utils {
 			if (dt==null) notarchived.append(fullPath(root,pi)).append("\r\n");
 			else {
 				FolderInfo fi = findFolder(dt,folderInfos);
-				if (fi==null) notarchived.append(fullPath(root,pi)).append("\r\n");
-				else {
-					File source = new File(fullPath(root,pi));
-					File targetDir = new File(fi.getPath()+File.separator+fi.getCamera());
-					try {
-						Files.move(source.toPath(),new File(targetDir,source.getName()).toPath());
-						sameLog.replace(source.getAbsolutePath(),new File(targetDir,source.getName()).getAbsolutePath());
-					} catch (IOException e) {
-						mvfailed.append("move \"").append(fullPath(root,pi)).append("\" ").append("\"")
-								.append(fi.getPath()).append("\\").append(fi.getCamera()).append("\"\r\n");
-					}
-
+				File source = new File(fullPath(root,pi));
+				File targetDir = null;
+				if (fi==null) {
+					targetDir = new File(archivedDir + File.separator+date2String(dt,"yyyy")
+							+ File.separator+date2String(dt,"yyyyMM")+ File.separator+FolderInfo.DEFPATH);
+					targetDir.mkdirs();
+				}
+				else targetDir = new File(fi.getPath()+File.separator+fi.getCamera());
+				try {
+					Files.move(source.toPath(),new File(targetDir,source.getName()).toPath());
+					sameLog.replace(source.getAbsolutePath(),new File(targetDir,source.getName()).getAbsolutePath());
+				} catch (IOException e) {
+					mvfailed.append("move \"").append(fullPath(root,pi)).append("\" ").append("\"")
+							.append(fi.getPath()).append("\\").append(fi.getCamera()).append("\"\r\n");
 				}
 			}
 		}
@@ -634,6 +647,7 @@ public class Utils {
 			new File(path,manual_rm_bat).delete();
 			new File(path,manual_archive_bat).delete();
 			new File(path,no_shottime_log).delete();
+			new File(path,folder_info_dat).delete();
 		}
 		ArchiveInfo	a = new ArchiveInfo(path);
 		if (!a.isReadFromFile()) processDir(a, removeSameFile, moveOtherFile);
@@ -645,6 +659,7 @@ public class Utils {
 	public static void checkDeletedFile(String logFile) {
 		List<String> list1 = new ArrayList<>(), list2 = new ArrayList<>();
 		BufferedReader ins=null;
+		System.out.println("删除完全一致的文件...");
 		try {
 			ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
 			String line = null;
@@ -663,7 +678,7 @@ public class Utils {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 			return;
 		} finally {
 			if (ins!=null) {
@@ -674,21 +689,14 @@ public class Utils {
 			}
 		}
 
-
-		TwoImageViewer tv = new TwoImageViewer(logFile, list1, list2);
-		tv.saveFile();
-		tv.run();
+		if (list1.size()>0) {
+			TwoImageViewer tv = new TwoImageViewer(logFile, list1, list2);
+			tv.saveFile();
+			tv.run();
+		} else System.out.println("没有可比较的文件");
 
 	}
-	public static void main2(String[] argv) {
-		/* argv
-		      0 : 需要归档的目录
-		      1 : 已经归档的目录
-		      2 ：yes/on
-		      3 : off 自动关机
-		 */
-		checkDeletedFile("E:\\Photo\\Archived\\"+same_photo_log);
-	}
+
 	static final String PARAM_VIEW_DIR = "view";
 	static final String PARAM_CAMERA_DIR = "camera";
 	static final String PARAM_ARCHIVED_DIR = "archived";
@@ -803,13 +811,11 @@ public class Utils {
 		List<FolderInfo> folderInfos = scanFolderInfo(archived);
 		if (folderInfos!=null) {
 			SystemOut.println("Now :"+date2String(new Date()));
-			SystemOut.println("删除归档文件夹已经存在的待归档文件...");
-			deleteFiles(camera,archived);
-			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("将文件归档...");
-			copyToFolder(camera, folderInfos);
+			copyToFolder(camera, archived.getPath(), folderInfos);
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("删除空目录");
+
 			removeEmptyFolder(new File(archived.getPath()));
 		}
 	}
@@ -852,11 +858,14 @@ public class Utils {
 			if (dir!=null && dir.exists() && dir.isDirectory()) {
 				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
 				boolean same = boolValue(getInputString(stdin, "是否扫面相同文件", "yes"));
-				boolean other = boolValue(getInputString(stdin, "是否移除未知日期的文件", "yes"));
+				boolean other = boolValue(getInputString(stdin, "是否移除未知日期的文件", "no"));
 				archived=getArchiveInfo(input, clear, same,other);
 			}
 		}
 		if (camera!=null && archived!=null) {
+			SystemOut.println("Now :"+date2String(new Date()));
+			SystemOut.println("删除归档文件夹已经存在的待归档文件...");
+			deleteFiles(camera,archived);
 			boolean op = boolValue(getInputString(stdin, "是否执行归档操作", "no"));
 			if (op) executeArchive(camera,archived);
 		}
@@ -938,6 +947,11 @@ public class Utils {
 			boolean other = boolValue(params.get(PARAM_MOVE_OTHER2));
 			boolean clear = boolValue(params.get(PARAM_CLEAR2));
 			archived = getArchiveInfo(path, clear, same,other);
+			if (archived!=null && camera!=null) {
+				SystemOut.println("Now :"+date2String(new Date()));
+				SystemOut.println("删除归档文件夹已经存在的待归档文件...");
+				deleteFiles(camera,archived);
+			}
 			if (archived!=null && camera!=null && boolValue(params.get(PARAM_EXECUTE))) {
 				executeArchive(camera,archived);
 			}

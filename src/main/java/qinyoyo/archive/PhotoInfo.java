@@ -1,7 +1,6 @@
 package qinyoyo.archive;
 
 import qinyoyo.Utils;
-import qinyoyo.exiftool.ExifTool;
 import qinyoyo.exiftool.Key;
 
 import java.io.File;
@@ -128,11 +127,7 @@ public class PhotoInfo implements Serializable {
 
         }
     }
-    public  PhotoInfo(ExifTool exifTool, String rootPath, File file) throws Exception {
-        this(rootPath,file);
-        Map<Key, Object> attrs = exifTool.query(file, Key.DATETIMEORIGINAL, Key.MAKE, Key.MODEL, Key.LENS_ID);
-        setPropertiesBy(attrs);
-    }
+
     public  boolean absuluteSameAs(PhotoInfo pi) {
         return (Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize)
                 && shootTime!=null && Utils.equals(shootTime,pi.shootTime)

@@ -387,6 +387,7 @@ public final class TwoImageViewer {
 		
 		
 		f.pack();
+		f.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		f.setVisible(true);
 	}
 
