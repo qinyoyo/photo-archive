@@ -20,6 +20,17 @@ public class PhotoInfo implements Serializable {
     private Double latitude;
     private Double altitude;
 
+    public PhotoInfo(PhotoInfo ref) {
+        folder = ref.folder;
+        fileName = ref.fileName;
+        fileSize = ref.fileSize;
+        lastModified = ref.lastModified;
+        shootTime=ref.shootTime;
+        camera=ref.camera;
+        longitude=ref.longitude;
+        latitude=ref.latitude;
+        altitude=ref.altitude;
+    }
     public String getFolder() {
 		return folder;
 	}

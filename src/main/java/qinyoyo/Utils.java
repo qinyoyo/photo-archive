@@ -327,6 +327,9 @@ public class Utils {
 						//source.delete();
 						targetDir.mkdirs();
 						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
+						appendToFile(new File(targetDir,Utils.same_photo_log+".bat"), "fc /b \"" + new File(targetDir, source.getName()).getAbsolutePath() 
+								+ "\" \""
+								+ fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)) + "\"");
 					}
 					else {
 						File targetDir = p.getFolder()==null || p.getFolder().isEmpty() ? rmf : new File(rmf,p.getFolder());
@@ -369,6 +372,8 @@ public class Utils {
 
 	// 两个记录必须排序好
 	static void deleteFiles(ArchiveInfo archiveInfo, ArchiveInfo ref) {
+		String signFile = "." + ref.getPath().replace(":", "_").replace(File.separator, "_");
+		if (new File(archiveInfo.getPath(),signFile).exists()) return;
 		List<PhotoInfo> rm = new ArrayList<>();
 		List<PhotoInfo> sameAs = new ArrayList<>();
 		List<PhotoInfo> all = archiveInfo.getInfos();
@@ -415,6 +420,7 @@ public class Utils {
 			}
 		}
 		doDeleteSameFiles(rm,sameAs,archiveInfo,ref);
+		writeToFile(new File(archiveInfo.getPath(),signFile),ref.getPath());
 	}
 
 	static void otherFiles(ArchiveInfo archiveInfo) {
@@ -557,7 +563,7 @@ public class Utils {
 		}
 		return null;
 	}
-	public static void copyToFolder(ArchiveInfo camera, String archivedDir, List<FolderInfo> folderInfos) {
+	public static void copyToFolder(ArchiveInfo camera, ArchiveInfo archived, List<FolderInfo> folderInfos) {
 		for (FolderInfo fi: folderInfos) {
 			new File(fi.getPath(),fi.getCamera()).mkdirs();
 		}
@@ -566,6 +572,7 @@ public class Utils {
 		StringBuilder mvfailed=new StringBuilder();
 		StringBuilder notarchived = new StringBuilder();
 		String root = camera.getPath();
+		List<PhotoInfo> archivedInfos = archived.getInfos();
 		for (PhotoInfo pi : camera.getInfos()) {
 			Date dt = pi.getShootTime();
 			if (dt==null) notarchived.append(fullPath(root,pi)).append("\r\n");
@@ -574,13 +581,16 @@ public class Utils {
 				File source = new File(fullPath(root,pi));
 				File targetDir = null;
 				if (fi==null) {
-					targetDir = new File(archivedDir + File.separator+date2String(dt,"yyyy")
+					targetDir = new File(archived.getPath() + File.separator+date2String(dt,"yyyy")
 							+ File.separator+date2String(dt,"yyyyMM")+ File.separator+FolderInfo.DEFPATH);
 					targetDir.mkdirs();
 				}
 				else targetDir = new File(fi.getPath()+File.separator+fi.getCamera());
 				try {
 					Files.move(source.toPath(),new File(targetDir,source.getName()).toPath());
+					PhotoInfo newPi = new PhotoInfo(pi);
+					newPi.setFolder(targetDir.getAbsolutePath().substring(archived.getPath().length()+1));
+					archivedInfos.add(newPi);
 					sameLog.replace(source.getAbsolutePath(),new File(targetDir,source.getName()).getAbsolutePath());
 				} catch (IOException e) {
 					mvfailed.append("move \"").append(fullPath(root,pi)).append("\" ").append("\"")
@@ -588,6 +598,7 @@ public class Utils {
 				}
 			}
 		}
+		processDir(archived,false,false);
 		if (!sameLog.isEmpty()) writeToFile(new File(camera.getPath(),same_photo_log),sameLog.trim());
 		writeToFile(new File(root,no_shottime_log),notarchived.toString());
 		writeToFile(new File(root,manual_archive_bat),mvfailed.toString());
@@ -618,6 +629,7 @@ public class Utils {
 	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
 		SystemOut.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
 		a.sortInfos();
+		/*
 		a.saveInfos();
 		SystemOut.println("备份排序后文件："+ArchiveInfo.ARCHIVE_FILE + ".sorted.dat");
 		File bak = new File(a.getPath(), ArchiveInfo.ARCHIVE_FILE + ".sorted.dat");
@@ -626,6 +638,7 @@ public class Utils {
 			Files.copy(dat.toPath(), bak.toPath());
 		} catch (IOException e) {
 		}
+		*/
 		if (removeSameFile) {
 			SystemOut.println("删除重复文件...");
 			deleteFiles(a);
@@ -812,7 +825,7 @@ public class Utils {
 		if (folderInfos!=null) {
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("将文件归档...");
-			copyToFolder(camera, archived.getPath(), folderInfos);
+			copyToFolder(camera, archived, folderInfos);
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("删除空目录");
 
