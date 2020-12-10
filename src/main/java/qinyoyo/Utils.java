@@ -805,14 +805,18 @@ public class Utils {
 		SystemOut.println("扫描目录信息: "+archived.getPath());
 		List<FolderInfo> folderInfos = getFolderInfos(archived);
 		StringBuilder sb=new StringBuilder();
-		for (FolderInfo fi: folderInfos) {
+		
+		Iterator<FolderInfo> iter = folderInfos.iterator();
+		while (iter.hasNext()) {
+			FolderInfo fi = iter.next();
 			if (fi.getDate0()==null) {
 				SystemOut.println(fi.getPath() + " 缺少开始日期");
-				sb.append(fi.getPath() + " 缺少开始日期").append("\r\n");
-			}
-			if (fi.getDate1()==null) {
+				sb.append(fi.getPath()).append("\r\n");
+				iter.remove();
+			} else if (fi.getDate1()==null) {
 				SystemOut.println(fi.getPath() + " 缺少结束日期");
-				sb.append(fi.getPath() + " 缺少结束日期").append("\r\n");
+				sb.append(fi.getPath()).append("\r\n");
+				iter.remove();
 			}
 		}
 		String logmsg=sb.toString();
