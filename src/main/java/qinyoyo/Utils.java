@@ -26,6 +26,7 @@ public class Utils {
 	static final String manual_archive_bat = ".manual_archive.bat";
 	static final String no_shottime_log = ".no_shottime.log";
 	static final String folder_info_dat = ".folder_info.dat";
+	static final String folder_info_lost_log = ".folder_info_lost.log";
 	public static boolean equals(String s1, String s2) {
 		if (s1 == null && s2 == null)
 			return true;
@@ -803,18 +804,22 @@ public class Utils {
 	public static List<FolderInfo> scanFolderInfo(ArchiveInfo archived) {
 		SystemOut.println("扫描目录信息: "+archived.getPath());
 		List<FolderInfo> folderInfos = getFolderInfos(archived);
-		boolean isOk = true;
+		StringBuilder sb=new StringBuilder();
 		for (FolderInfo fi: folderInfos) {
 			if (fi.getDate0()==null) {
-				isOk = false;
 				SystemOut.println(fi.getPath() + " 缺少开始日期");
+				sb.append(fi.getPath() + " 缺少开始日期").append("\r\n");
 			}
 			if (fi.getDate1()==null) {
-				isOk = false;
 				SystemOut.println(fi.getPath() + " 缺少结束日期");
+				sb.append(fi.getPath() + " 缺少结束日期").append("\r\n");
 			}
 		}
-		if (isOk) {
+		String logmsg=sb.toString();
+		if (!logmsg.isEmpty()) {
+			writeToFile(new File(archived.getPath(),folder_info_lost_log),logmsg);
+		}
+		if (folderInfos.size()>0) {
 			folderInfos.sort((a, b) -> a.compareTo(b));
 			saveFolderInfos(folderInfos, archived);
 			return folderInfos;
