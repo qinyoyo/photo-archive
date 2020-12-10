@@ -97,6 +97,7 @@ public final class TwoImageViewer {
 		imageFiles2.remove(index);
 		if (index>0 && index>=imageFiles1.size()) index--;
 	}
+
 	private static final String KEY_HELP = "del/0:save large 1:left      <%s>     2:right 3:both Enter:save";
 	void completeIndex(int saveIndex ) {
 		if (index>=0 && index<imageFiles1.size()) {
@@ -127,9 +128,8 @@ public final class TwoImageViewer {
 						removeIndex();
 						break;
 					case 3:
-						String n=file1.getAbsolutePath().substring(file1.getAbsolutePath().indexOf(".delete")+8);
-						File nf = new File(new File(logFile).getParent()+"\\"+n);
-						new File(nf.getParent()).mkdirs();
+						File nf = new File(file2.getParentFile(),file1.getName());
+						nf=Utils.bakNameOf(nf);
 						Files.move(file1.toPath(),nf.toPath());
 						removeIndex();
 						break;
@@ -169,6 +169,7 @@ public final class TwoImageViewer {
 			try {
 				this.image = ImageIO.read(file);
 			} catch (IOException e) {
+				this.image = null;
 			}
 			repaint();
 			this.getParent().doLayout();

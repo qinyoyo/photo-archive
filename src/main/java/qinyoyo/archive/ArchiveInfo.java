@@ -95,12 +95,14 @@ public class ArchiveInfo {
         Set<String> processedFiles = new HashSet<String>();
         SystemOut.println("批量搜索 "+dir.getAbsolutePath());
         Map<String, Map<Key, Object>> fileInfos = null;
+        Key[] keys = new Key[]{Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,Key.CREATEDATE,
+                Key.MAKE, Key.MODEL, Key.LENS_ID,
+                Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+                Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
+                Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUB_LOCATION};
         int count = 0;
         try {
-            fileInfos = exifTool.query(dir, Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,
-                    Key.MAKE, Key.MODEL, Key.LENS_ID,
-                    Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
-                    Key.CREATEDATE);
+            fileInfos = exifTool.query(dir, keys);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,10 +128,7 @@ public class ArchiveInfo {
                 if (processedFiles.contains(f.getName())) continue;
                 try {
                     if (SupportFileType.isSupport(f.getName())) {
-                        fileInfos = exifTool.query(f, Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,
-                                Key.MAKE, Key.MODEL, Key.LENS_ID,
-                                Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
-                                Key.CREATEDATE);
+                        fileInfos = exifTool.query(f, keys);
 
                         PhotoInfo photoInfo = new PhotoInfo(path, f);
                         photoInfo.setPropertiesBy(fileInfos.get(f.getName()));

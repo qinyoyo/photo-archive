@@ -1,7 +1,5 @@
 package qinyoyo.archive;
 
-import com.sun.istack.internal.NotNull;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -205,7 +203,8 @@ public class SupportFileType {
         };
         for (String s : ss) add(s);
     }};
-    public static boolean isSupport(@NotNull String name) {
+    public static boolean isSupport(String name) {
+        if (name==null) return false;
         int pos = name.lastIndexOf(".");
         String ext = (pos>=0 ? name.substring(pos+1) : name).toUpperCase();
         if (ext.isEmpty()) return false;

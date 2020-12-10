@@ -169,7 +169,27 @@ public class Utils {
 		}
 		return null;
 	}
-
+	public static File bakNameOf(File file) {
+		if (!file.exists()) return file;
+		String path = file.getAbsolutePath();
+		int pos = path.lastIndexOf(".");
+		String ext = (pos>=0 ? path.substring(pos) : "");
+		String name = (pos>=0 ? path.substring(0,pos) : path);
+		Pattern p = Pattern.compile("_(\\d+)$");
+		Matcher m = p.matcher(name);
+		int index = 0;
+		if (m.find()) {
+			name = name.substring(0,m.start());
+			index = Integer.parseInt(m.group(1));
+		}
+		index ++;
+		File f = new File(name+"_"+index + ext);
+		while (f.exists()) {
+			index ++;
+			f = new File(name+"_"+index + ext);
+		}
+		return f;
+	}
 	public static String date2String(Date dt,String fmt) {
 		if (dt == null) return null;
 		return new SimpleDateFormat(fmt).format(dt);
@@ -265,6 +285,7 @@ public class Utils {
 	}
 
 	public static Date getShootTimeFromFileName(String fileName) {
+		if (fileName==null || fileName.isEmpty()) return null;
 		try {
 			Pattern p = Pattern.compile("(\\d{15})");
 			Matcher m = p.matcher(fileName);
@@ -589,11 +610,11 @@ public class Utils {
 				else targetDir = new File(fi.getPath()+File.separator+fi.getCamera());
 				try {
 					Files.move(source.toPath(),new File(targetDir,source.getName()).toPath());
-					PhotoInfo newPi = new PhotoInfo(pi);
+					PhotoInfo newPi = pi.cloneObject();
 					newPi.setFolder(targetDir.getAbsolutePath().substring(archived.getPath().length()+1));
 					archivedInfos.add(newPi);
 					sameLog.replace(source.getAbsolutePath(),new File(targetDir,source.getName()).getAbsolutePath());
-				} catch (IOException e) {
+				} catch (Exception e) {
 					mvfailed.append("move \"").append(fullPath(root,pi)).append("\" ").append("\"")
 							.append(fi.getPath()).append("\\").append(fi.getCamera()).append("\"\r\n");
 				}
@@ -670,7 +691,7 @@ public class Utils {
 
 
 
-	public static void checkDeletedFile(String logFile) {
+	public static void checkDeletedFile(String logFile, boolean absoluteCheck) {
 		List<String> list1 = new ArrayList<>(), list2 = new ArrayList<>();
 		BufferedReader ins=null;
 		System.out.println("删除完全一致的文件...");
@@ -681,14 +702,14 @@ public class Utils {
 				String [] ll= line.split(" <-> ");
 				if (ll.length==2) {
 					String f1=ll[0].trim(), f2 = ll[1].trim();
-					if (contentCompare(f1,f2) == 0) {
-						if (!f1.isEmpty()) {
-							new File(f1).delete();
+						if (absoluteCheck && !f1.isEmpty() && !f2.isEmpty() && contentCompare(f1, f2) == 0) {
+							if (!f1.isEmpty()) {
+								new File(f1).delete();
+							}
+						} else if (!f1.isEmpty() || !f2.isEmpty()) {
+							list1.add(f1);
+							list2.add(f2);
 						}
-					} else {
-						list1.add(f1);
-						list2.add(f2);
-					}
 				}
 			}
 		} catch (Exception e) {
@@ -713,6 +734,7 @@ public class Utils {
 
 	static final String PARAM_VIEW_DIR = "view";
 	static final String PARAM_CAMERA_DIR = "camera";
+	static final String PARAM_FORCE_CHECK = "force";
 	static final String PARAM_ARCHIVED_DIR = "archived";
 	static final String PARAM_DELETE_SAME1 = "same1";
 	static final String PARAM_DELETE_SAME2 = "same2";
@@ -747,7 +769,9 @@ public class Utils {
 						result.put(PARAM_ARCHIVED_DIR,argv[i+1]);
 						break;
 					} else throw new Exception("-a 参数必须后跟一个目录，指定归档目标路径");
-
+				case "-a":
+					result.put(PARAM_FORCE_CHECK,true);
+					break;
 				case "-s1":
 				case "--same1":
 				case "-s2":
@@ -826,8 +850,8 @@ public class Utils {
 		if (folderInfos.size()>0) {
 			folderInfos.sort((a, b) -> a.compareTo(b));
 			saveFolderInfos(folderInfos, archived);
-			return folderInfos;
-		} else return null;
+		}
+		return folderInfos;
 	}
 	static void executeArchive(ArchiveInfo camera, ArchiveInfo archived) {
 		List<FolderInfo> folderInfos = scanFolderInfo(archived);
@@ -850,12 +874,13 @@ public class Utils {
 			if (input.startsWith("1")) break;
 			else if (input.startsWith("2")) {
 				input = getInputString(stdin, "输入待查看的目录路径", "E:\\Camera");
+				String ac = getInputString(stdin, "是否需要对文件内容进行比较", "no");
 				try {
 					stdin.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				checkDeletedFile(new File(input,same_photo_log).getAbsolutePath());
+				checkDeletedFile(new File(input,same_photo_log).getAbsolutePath(),boolValue(ac));
 				return;
 			}
 		}
@@ -927,6 +952,15 @@ public class Utils {
 	public static void main(String[] argv) {
 		BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
 		checkVersion(stdin);
+		List<String> args = new ArrayList<>();
+		args.add("-Scene=Lanscape");
+		args.add("-overwrite_original");
+		ExifTool.dirAction(new File("G:\\Archived"), args, true, new ExifTool.DirActionCondition() {
+			@Override
+			public boolean accept(File dir) {
+				return (dir.getName().toLowerCase().equals("l")) || dir.getName().contains("风景");
+			}
+		});
 		Map<String,Object> params = null;
 		try {
 			params = parseArgv(argv);
@@ -982,7 +1016,7 @@ public class Utils {
 		SystemOut.close();
 		v = params.get(PARAM_VIEW_DIR);
 		if (v!=null) {
-			checkDeletedFile(new File(v.toString(),same_photo_log).getAbsolutePath());
+			checkDeletedFile(new File(v.toString(),same_photo_log).getAbsolutePath(),boolValue(params.get(PARAM_FORCE_CHECK)));
 		} else {
 			if (boolValue(params.get(PARAM_SHUTDOWN))) {
 				List<String> cmd = new ArrayList<>();

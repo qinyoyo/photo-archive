@@ -53,6 +53,7 @@ public enum Key {
     IMAGE_WIDTH("ImageWidth", Integer.class),
     INTEROPINDEX("InteropIndex", String.class, "'R03' = R03 - DCF option file (Adobe RGB), 'R98' = R98 - DCF basic file (sRGB), 'THM' = THM - DCF thumbnail file"),
     IPTC_KEYWORDS("Keywords", String.class),
+    IPTCDigest("IPTCDigest", String.class),
     ISO("ISO", Integer.class),
     KEYWORDS("XPKeywords", String.class),
     LENS_ID("LensID", String.class),
@@ -81,7 +82,21 @@ public enum Key {
     TITLE("XPTitle", String.class),
     WHITE_BALANCE("WhiteBalance", Integer.class),
     X_RESOLUTION("XResolution", Double.class),
-    Y_RESOLUTION("YResolution", Double.class);
+    Y_RESOLUTION("YResolution", Double.class),
+
+    DESCRIPTION("Description",String.class),   // 说明
+
+    COUNTRY("Country",String.class),
+    STATE("State",String.class),
+    CITY("City",String.class),
+    LOCATION("Location",String.class),
+    SUB_LOCATION("Sub-location",String.class),
+
+    SUBJECT_CODE("SubjectCode",String.class),  // IPTC 主题
+    SCENE("Scene",String.class),  // 场景代码
+    CATEGORY("Category",String.class),  // 类别
+    HEADLINE("Headline",String.class),  // 题要
+   ;
 
     private static final Map<String, Key> ENTRY_MAP = Arrays.stream(Key.values()).collect(Collectors.toMap(Key::getName, k -> k));
 

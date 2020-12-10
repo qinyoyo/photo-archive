@@ -97,6 +97,46 @@ public class ExifTool {
         return queryResult;
     }
 
+    public interface DirActionCondition {
+        boolean accept(File dir);
+    }
+    public static void dirAction(File dir, List<String> args, boolean recursive, DirActionCondition condition) {
+        if (args==null || args.isEmpty()) return;
+        if (dir == null || !dir.exists()) return;
+        if (condition==null || condition.accept(dir)) {
+            try {
+                SystemOut.println(dir.getAbsolutePath());
+                List<String> argsList = new ArrayList<>();
+                argsList.add(EXIFTOOL);
+                argsList.addAll(args);
+                if (dir.isDirectory()) argsList.add(".");
+                else argsList.add(dir.getName());
+                Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
+                List<String> stdOut = result.getKey();
+                List<String> stdErr = result.getValue();
+                if (stdOut != null && !stdOut.isEmpty()) {
+                    for (String s : stdOut) SystemOut.println(s);
+                }
+                if (stdErr != null && !stdErr.isEmpty()) {
+                    for (String s : stdErr) SystemOut.println(s);
+                }
+            } catch (Exception e) {
+                SystemOut.println(e.getMessage());
+            }
+        }
+        if (dir.isDirectory() && recursive) {
+            File[] subDirs = dir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    if (pathname.getName().startsWith(".")) return false;
+                    return pathname.isDirectory();
+                }
+            });
+            for (File d : subDirs) {
+                dirAction(d, args, recursive, condition);
+            }
+        }
+    }
     public static class Builder {
 
         private Set<Feature> features = new HashSet<>();
