@@ -67,16 +67,17 @@ public class ExifTool {
         for (Key key : keys) {
             argsList.add(String.format("-%s", Key.getName(key)));
         }
+        ChineseFileName cc = new ChineseFileName(dir);
         if (dir.isDirectory())  argsList.add(".");
         else argsList.add(dir.getName());
         Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
         List<String> stdOut = result.getKey();
         List<String> stdErr = result.getValue();
-        return processQueryResult(dir, stdOut, stdErr, keys);
+        return processQueryResult(cc, dir, stdOut, stdErr, keys);
     }
 
 
-    private <T> Map<String,Map<Key, T>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
+    private <T> Map<String,Map<Key, T>> processQueryResult(ChineseFileName cc, File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
         Map<String,Map<Key, T>> queryResult = new HashMap<>();
         if (stdErr.size() > 0) {
             throw new RuntimeException(String.join("\n", stdErr));
@@ -92,8 +93,9 @@ public class ExifTool {
                 String value = lineSeparated.get(i+(dir.isDirectory()?1:0)).trim();
                 if (!value.isEmpty() && !value.equals("-")) oneResult.put(keys[i],Key.parse(keys[i], value));
             }
-            queryResult.put(dir.isDirectory() ? lineSeparated.get(0).trim() : dir.getName(),oneResult);
+            queryResult.put(dir.isDirectory() ? cc.getOrignalName(lineSeparated.get(0)) : dir.getName(),oneResult);
         }
+        cc.reverse();
         return queryResult;
     }
 

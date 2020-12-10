@@ -2,6 +2,7 @@ package qinyoyo.archive;
 
 import qinyoyo.SystemOut;
 import qinyoyo.Utils;
+import qinyoyo.exiftool.ChineseFileName;
 import qinyoyo.exiftool.ExifTool;
 import qinyoyo.exiftool.Key;
 
@@ -54,28 +55,9 @@ public class ArchiveInfo {
         if (af.exists()) readInfos();
         else seekPhotoInfo();
     }
-	private String asciiCharsOf(String str) {
-		String s="";
-		for (int i=0;i<str.length();i++) {
-			char ch=str.charAt(i);
-			if (ch>0 && ch<128) s=s+ch;
-		}
-		return s;
-	}
-	private String aiFileName(File dir, String file) {
-		String asciis=asciiCharsOf(file);
-        File [] ff = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return asciis.equals(asciiCharsOf(pathname.getName()));
-            }
-        });
-        if (ff.length==1) return ff[0].getName();
-        else return null;
-	}
 
     private void seekPhotoInfosInFolder(File dir) {
-        if (!dir.isDirectory()) return;
+        if (!dir.isDirectory() || !dir.exists()) return;
         File [] files = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
@@ -100,7 +82,7 @@ public class ArchiveInfo {
                 Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
                 Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
                 Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUB_LOCATION};
-        int count = 0;
+        int count = 0; 
         try {
             fileInfos = exifTool.query(dir, keys);
         } catch (Exception e) {
