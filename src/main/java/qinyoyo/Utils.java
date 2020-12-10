@@ -5,11 +5,6 @@ import qinyoyo.archive.FolderInfo;
 import qinyoyo.archive.PhotoInfo;
 import qinyoyo.exiftool.CommandRunner;
 import qinyoyo.exiftool.ExifTool;
-import qinyoyo.exiftool.FFMpeg;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -634,7 +629,7 @@ public class Utils {
 				else return pathname.isDirectory();
 			}
 		});
-		if (subDirs.length>0) {
+		if (subDirs!=null && subDirs.length>0) {
 			for (File d : subDirs) {
 				removeEmptyFolder(d);
 			}
@@ -646,7 +641,7 @@ public class Utils {
 				else return true;
 			}
 		});
-		if (files.length==0) dir.delete();
+		if (files!=null && files.length==0) dir.delete();
 	}
 	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
 		SystemOut.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
@@ -744,6 +739,8 @@ public class Utils {
 	static final String PARAM_CLEAR2 = "clear2";
 	static final String PARAM_EXECUTE = "execute";
 	static final String PARAM_SHUTDOWN = "shutdown";
+	static final String PARAM_SCENE = "scene";
+	static final String PARAM_HELP = "help";
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
 		if (argv==null || argv.length==0) return result;
@@ -751,6 +748,12 @@ public class Utils {
 		for (int i=0;i<total;i++) {
 			String param = argv[i].trim();
 			switch (param) {
+				case "-n":
+				case "--scene":
+					if (i<total-1) {
+						result.put(PARAM_SCENE,argv[i+1]);
+						break;
+					} else throw new Exception("-n 参数必须后跟一个目录，指定修改场景标识的目录");
 				case "-v" :
 				case "--view":
 					if (i<total-1) {
@@ -771,6 +774,10 @@ public class Utils {
 					} else throw new Exception("-a 参数必须后跟一个目录，指定归档目标路径");
 				case "-a":
 					result.put(PARAM_FORCE_CHECK,true);
+					break;
+				case "-h":
+				case "--help":
+					result.put(PARAM_HELP,true);
 					break;
 				case "-s1":
 				case "--same1":
@@ -801,6 +808,24 @@ public class Utils {
 			}
 		}
 		return result;
+	}
+	private static void printUsage() {
+		System.out.println("Usage:  java -jar pa.jar <options>");
+		System.out.println("options:");
+		System.out.println("  -p1 dir_name	: 指定需要归档的图像文件目录, 同 --path1");
+		System.out.println("  -p2 dir_name	: 指定归档图像文件最终保存目录,同 --path2");
+		System.out.println("  -v  dir_name	:  对比浏览相同图像文件的目录, 同 --view");
+		System.out.println("  -n  dir_name	:  场景自动修改目录名, 同  --scene");
+		System.out.println("  -s1 : 需要归档的文件进行图像是否相同分析, 同  --same1");
+		System.out.println("  -o1 : 无法确定拍摄日期的文件不归档, 同  --other1");
+		System.out.println("  -c1 : 需要归档的目录重新分析, 同  --clear1");
+		System.out.println("  -s2 : 归档目标目录进行图像是否相同分析, 同  --same2");
+		System.out.println("  -o2 : 归档目标目录排除无法确定拍摄日期的文件, 同  --other2");
+		System.out.println("  -c2 : 归档目标目录重新分析, 同  --clear2");		
+		System.out.println("  -a : 强制将path1与path2进行文件相同分析");
+		System.out.println("  -e : 扫描完成后立即执行归档操作, 同  --execute");
+		System.out.println("  -f : 完成后自动关机, 同  --shutdown");
+		System.out.println("  -h : 显示本帮助, 同  --help");
 	}
 	private static boolean boolValue(Object o) {
 		if (o==null) return false;
@@ -949,18 +974,75 @@ public class Utils {
 		}
 	 */
 	}
-	public static void main(String[] argv) {
-		BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
-		checkVersion(stdin);
+	public static void pathScene(File dir) {
 		List<String> args = new ArrayList<>();
 		args.add("-Scene=Lanscape");
 		args.add("-overwrite_original");
-		ExifTool.dirAction(new File("G:\\Archived"), args, true, new ExifTool.DirActionCondition() {
+		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
 			@Override
 			public boolean accept(File dir) {
 				return (dir.getName().toLowerCase().equals("l")) || dir.getName().contains("风景");
 			}
+
+			@Override
+			public void before(File dir) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void after(File dir) {
+				dir.renameTo(new File(dir.getParentFile(),"Lanscape"));
+				
+			}
 		});
+		args.clear();
+		args.add("-Scene=Portrait");
+		args.add("-overwrite_original");
+		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
+			@Override
+			public boolean accept(File dir) {
+				return (dir.getName().toLowerCase().equals("p")) || dir.getName().contains("人物") || dir.getName().contains("人像");
+			}
+
+			@Override
+			public void before(File dir) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void after(File dir) {
+				dir.renameTo(new File(dir.getParentFile(),"Portrait"));
+				
+			}
+		});
+		args.clear();
+		args.add("-Scene=Group");
+		args.add("-overwrite_original");
+		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
+			@Override
+			public boolean accept(File dir) {
+				return dir.getName().toLowerCase().contains("group") || dir.getName().toLowerCase().contains("合影");
+			}
+
+			@Override
+			public void before(File dir) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void after(File dir) {
+				// TODO Auto-generated method stub
+				dir.renameTo(new File(dir.getParentFile(),"Group"));
+			}
+		});
+	}
+	public static void main(String[] argv) {
+		BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
+		checkVersion(stdin);
+
 		Map<String,Object> params = null;
 		try {
 			params = parseArgv(argv);
@@ -987,8 +1069,17 @@ public class Utils {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
+		if (boolValue(params.get(PARAM_HELP))) {
+			printUsage();
+			return;
+		}
+		Object v = params.get(PARAM_SCENE);
+		if (v!=null) {
+			String path = v.toString();
+			pathScene(new File(path));
+		}
 		ArchiveInfo camera = null, archived=null;
-		Object v = params.get(PARAM_CAMERA_DIR);
+		v = params.get(PARAM_CAMERA_DIR);
 		if (v!=null) {
 			String path = v.toString();
 			boolean same = boolValue(params.get(PARAM_DELETE_SAME1));

@@ -97,15 +97,18 @@ public class ExifTool {
         return queryResult;
     }
 
-    public interface DirActionCondition {
+    public interface FileActionListener {
         boolean accept(File dir);
+        void before(File dir);
+        void after(File dir);
     }
-    public static void dirAction(File dir, List<String> args, boolean recursive, DirActionCondition condition) {
+    public static void dirAction(File dir, List<String> args, boolean recursive, FileActionListener listener) {
         if (args==null || args.isEmpty()) return;
         if (dir == null || !dir.exists()) return;
-        if (condition==null || condition.accept(dir)) {
+        if (listener==null || listener.accept(dir)) {
             try {
                 SystemOut.println(dir.getAbsolutePath());
+                /* 可能会损坏文件
                 List<String> argsList = new ArrayList<>();
                 argsList.add(EXIFTOOL);
                 argsList.addAll(args);
@@ -120,6 +123,8 @@ public class ExifTool {
                 if (stdErr != null && !stdErr.isEmpty()) {
                     for (String s : stdErr) SystemOut.println(s);
                 }
+                */
+                if (listener!=null) listener.after(dir);
             } catch (Exception e) {
                 SystemOut.println(e.getMessage());
             }
@@ -132,8 +137,10 @@ public class ExifTool {
                     return pathname.isDirectory();
                 }
             });
-            for (File d : subDirs) {
-                dirAction(d, args, recursive, condition);
+            if (subDirs!=null) {
+	            for (File d : subDirs) {
+	                dirAction(d, args, recursive, listener);
+	            }
             }
         }
     }

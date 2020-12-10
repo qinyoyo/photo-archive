@@ -82,7 +82,7 @@ public class ArchiveInfo {
                 return (!pathname.isDirectory() && pathname.getName().startsWith(".") && pathname.length() == 4096);
             }
         });
-        if (files.length>0) {
+        if (files!=null && files.length>0) {
             SystemOut.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+files.length);
             for (File f : files) f.delete();
         }
@@ -121,7 +121,7 @@ public class ArchiveInfo {
             }
         }
         SystemOut.println("    处理文件数 : "+count);
-        if (processedFiles.size()<files.length) {
+        if (files!=null && processedFiles.size()<files.length) {
             count=0;
             for (int i = 0; i < files.length; i++) {
                 File f = files[i];
@@ -148,7 +148,7 @@ public class ArchiveInfo {
                 return pathname.isDirectory();
             }
         });
-        if (subDirs.length>0) {
+        if (subDirs!=null && subDirs.length>0) {
             List<File> dirs = Arrays.asList(subDirs);
             dirs.sort((a,b)->{
                 return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
