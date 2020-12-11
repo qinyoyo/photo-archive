@@ -138,6 +138,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                 }
             } catch (Exception e) {}
         }
+        if (shootTime==null && createTime!=null) shootTime = createTime;
     }
 
     public boolean exifEquals(PhotoInfo pi) {

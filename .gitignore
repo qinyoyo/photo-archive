@@ -10,7 +10,6 @@ target/
 *.bak
 *.rar
 *.zip
-*.jar
 *.log
 *.doc
 *.docx
