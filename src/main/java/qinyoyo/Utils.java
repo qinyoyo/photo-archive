@@ -253,7 +253,7 @@ public class Utils {
 	}
 
 	public static String fullPath(String root, PhotoInfo p) {
-		String sub = p.getFolder();
+		String sub = p.getSubFolder();
 		if (sub == null || sub.isEmpty()) {
 			return new File(root, p.getFileName()).getAbsolutePath();
 		} else
@@ -261,7 +261,7 @@ public class Utils {
 	}
 
 	public static String newFile(String root, PhotoInfo p) {
-		String sub = p.getFolder();
+		String sub = p.getSubFolder();
 		if (sub == null || sub.isEmpty() || sub.equals(".")) {
 			return new File(root, p.getFileName()).getAbsolutePath();
 		} else
@@ -340,7 +340,7 @@ public class Utils {
 
 				try {
 					if (p.absuluteSameAs(sameAs.get(i))) {
-						File targetDir = p.getFolder()==null || p.getFolder().isEmpty() ? new File(rmf,"absolute") : new File(new File(rmf,p.getFolder()),"absolute");
+						File targetDir = p.getSubFolder()==null || p.getSubFolder().isEmpty() ? new File(rmf,"absolute") : new File(new File(rmf,p.getSubFolder()),"absolute");
 						//source.delete();
 						targetDir.mkdirs();
 						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
@@ -349,7 +349,7 @@ public class Utils {
 								+ fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)) + "\"");
 					}
 					else {
-						File targetDir = p.getFolder()==null || p.getFolder().isEmpty() ? rmf : new File(rmf,p.getFolder());
+						File targetDir = p.getSubFolder()==null || p.getSubFolder().isEmpty() ? rmf : new File(rmf,p.getSubFolder());
 						targetDir.mkdirs();
 						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
 						appendToFile(logFile, new File(targetDir, source.getName()).getAbsolutePath() + " <-> "
@@ -507,7 +507,7 @@ public class Utils {
 		String fiPath="", pathYear=null;
 		for (int i=0;i<infos.size();i++) {
 			PhotoInfo pi = infos.get(i);
-			String path = pi.getFolder();
+			String path = pi.getSubFolder();
 			if (path.indexOf("扫描")>=0) continue;
 			if (path.startsWith("\\")) path=path.substring(1);
 			if (path.endsWith("\\")) path=path.substring(0,path.length()-1);
@@ -606,7 +606,7 @@ public class Utils {
 				try {
 					Files.move(source.toPath(),new File(targetDir,source.getName()).toPath());
 					PhotoInfo newPi = pi.cloneObject();
-					newPi.setFolder(targetDir.getAbsolutePath().substring(archived.getPath().length()+1));
+					newPi.setSubFolder(targetDir.getAbsolutePath().substring(archived.getPath().length()+1));
 					archivedInfos.add(newPi);
 					sameLog.replace(source.getAbsolutePath(),new File(targetDir,source.getName()).getAbsolutePath());
 				} catch (Exception e) {
@@ -689,7 +689,7 @@ public class Utils {
 	public static void checkDeletedFile(String logFile, boolean absoluteCheck) {
 		List<String> list1 = new ArrayList<>(), list2 = new ArrayList<>();
 		BufferedReader ins=null;
-		System.out.println("删除完全一致的文件...");
+		if (absoluteCheck) System.out.println("删除完全一致的文件...");
 		try {
 			ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
 			String line = null;
@@ -739,8 +739,9 @@ public class Utils {
 	static final String PARAM_CLEAR2 = "clear2";
 	static final String PARAM_EXECUTE = "execute";
 	static final String PARAM_SHUTDOWN = "shutdown";
-	static final String PARAM_SCENE = "scene";
+//	static final String PARAM_SCENE = "scene";
 	static final String PARAM_HELP = "help";
+	static final String PARAM_EMPTY = "empty";
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
 		if (argv==null || argv.length==0) return result;
@@ -748,12 +749,13 @@ public class Utils {
 		for (int i=0;i<total;i++) {
 			String param = argv[i].trim();
 			switch (param) {
-				case "-n":
+/*				case "-n":
 				case "--scene":
 					if (i<total-1) {
 						result.put(PARAM_SCENE,argv[i+1]);
 						break;
 					} else throw new Exception("-n 参数必须后跟一个目录，指定修改场景标识的目录");
+*/
 				case "-v" :
 				case "--view":
 					if (i<total-1) {
@@ -801,6 +803,12 @@ public class Utils {
 				case "--execute":
 					result.put(PARAM_EXECUTE,true);
 					break;
+				case "-m":
+				case "--empty":
+					if (i<total-1) {
+						result.put(PARAM_EMPTY,argv[i+1]);
+						break;
+					} else throw new Exception("-m 参数必须后跟一个目录，指定需要删除空目录的文件夹");				
 				case "-f":
 				case "--shutdown":
 					result.put(PARAM_SHUTDOWN,true);
@@ -815,7 +823,8 @@ public class Utils {
 		System.out.println("  -p1 dir_name	: 指定需要归档的图像文件目录, 同 --path1");
 		System.out.println("  -p2 dir_name	: 指定归档图像文件最终保存目录,同 --path2");
 		System.out.println("  -v  dir_name	:  对比浏览相同图像文件的目录, 同 --view");
-		System.out.println("  -n  dir_name	:  场景自动修改目录名, 同  --scene");
+		// System.out.println("  -n  dir_name	:  场景自动修改目录名, 同  --scene");
+		System.out.println("  -m : 删除空目录, 同  --empty");
 		System.out.println("  -s1 : 需要归档的文件进行图像是否相同分析, 同  --same1");
 		System.out.println("  -o1 : 无法确定拍摄日期的文件不归档, 同  --other1");
 		System.out.println("  -c1 : 需要归档的目录重新分析, 同  --clear1");
@@ -1073,12 +1082,19 @@ public class Utils {
 			printUsage();
 			return;
 		}
-		Object v = params.get(PARAM_SCENE);
+		Object v = null;
+/*		v = params.get(PARAM_SCENE);
 		if (v!=null) {
 			String path = v.toString();
 			pathScene(new File(path));
 		}
+*/
 		ArchiveInfo camera = null, archived=null;
+		v = params.get(PARAM_EMPTY);
+		if (v!=null) {
+			String path = v.toString();
+			removeEmptyFolder(new File(path));
+		}
 		v = params.get(PARAM_CAMERA_DIR);
 		if (v!=null) {
 			String path = v.toString();

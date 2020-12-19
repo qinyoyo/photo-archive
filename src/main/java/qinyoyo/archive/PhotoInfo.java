@@ -10,7 +10,7 @@ import java.util.Map;
 
 
 public class PhotoInfo implements Serializable,Cloneable {
-    private String folder;
+    private String subFolder; 
     private String fileName;
     private long   fileSize;
 
@@ -47,8 +47,8 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (!file.exists()) throw new RuntimeException(file.getAbsolutePath() + " 不存在");
         String dir = file.getParent();
         if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
-        folder = dir.substring(rootPath.length());
-        if (folder.startsWith("/") || folder.startsWith("\\")) folder = folder.substring(1);
+        subFolder = dir.substring(rootPath.length());
+        if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
         fileName = file.getName();
         fileSize = file.length();
 
@@ -165,11 +165,11 @@ public class PhotoInfo implements Serializable,Cloneable {
         return exifEquals(pi);
     }
 
-    public String getFolder() {
-        return folder;
+    public String getSubFolder() {
+        return subFolder;
     }
-    public void setFolder(String folder) {
-        this.folder = folder;
+    public void setSubFolder(String folder) {
+        this.subFolder = folder;
     }
     public String getFileName() {
         return fileName;

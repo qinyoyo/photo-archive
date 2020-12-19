@@ -79,7 +79,22 @@ public final class TwoImageViewer {
 		}
 		show(vp1,vp2);
 	}
-
+	void pageDown(ViewerPanel vp1,ViewerPanel vp2) {
+		int count=0;
+		while (count<100 && index<imageFiles1.size()-1) {
+			index++;
+			count++;
+		}
+		show(vp1,vp2);
+	}
+	void pageUp(ViewerPanel vp1,ViewerPanel vp2) {
+		int count=100;
+		while (count>0 && index>0) {
+			index--;
+			count--;
+		}
+		show(vp1,vp2);
+	}
 	void showPrev(ViewerPanel vp1,ViewerPanel vp2) {
 		if (index>0) {
 			index--;
@@ -286,6 +301,12 @@ public final class TwoImageViewer {
 			} else if (key == KeyEvent.VK_3) {
 				completeIndex(3);
 				show(np.vp1,np.vp2);
+				np.updateButtonStates();
+			} else if (key == KeyEvent.VK_PAGE_DOWN) {
+				pageDown(np.vp1,np.vp2);
+				np.updateButtonStates();
+			}  else if (key == KeyEvent.VK_PAGE_UP) {
+				pageDown(np.vp1,np.vp2);
 				np.updateButtonStates();
 			} else if (key == KeyEvent.VK_ENTER) {
 				saveFile();

@@ -2,7 +2,6 @@ package qinyoyo.archive;
 
 import qinyoyo.SystemOut;
 import qinyoyo.Utils;
-import qinyoyo.exiftool.ChineseFileName;
 import qinyoyo.exiftool.ExifTool;
 import qinyoyo.exiftool.Key;
 
@@ -160,14 +159,14 @@ public class ArchiveInfo {
         }
     }
     private static int nameCompare(PhotoInfo a,PhotoInfo b) {
-        String na = (a.getFolder() + "\\" + Utils.nameWithoutExt(a.getFileName())).toLowerCase();
-        String nb = (b.getFolder() + "\\" + Utils.nameWithoutExt(b.getFileName())).toLowerCase();
+        String na = (a.getSubFolder() + "\\" + Utils.nameWithoutExt(a.getFileName())).toLowerCase();
+        String nb = (b.getSubFolder() + "\\" + Utils.nameWithoutExt(b.getFileName())).toLowerCase();
 
         if (na.length()>nb.length() && na.startsWith(nb)) return -1;
         else if (nb.length()>na.length() && nb.startsWith(na)) return 1;
         else {
-            na = (a.getFolder() + "\\" + a.getFileName()).toLowerCase();
-            nb = (b.getFolder() + "\\" + b.getFileName()).toLowerCase();
+            na = (a.getSubFolder() + "\\" + a.getFileName()).toLowerCase();
+            nb = (b.getSubFolder() + "\\" + b.getFileName()).toLowerCase();
             return na.compareTo(nb);
         }
     }
