@@ -895,8 +895,9 @@ public class Utils {
 			copyToFolder(camera, archived, folderInfos);
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("删除空目录");
-
 			removeEmptyFolder(new File(archived.getPath()));
+			SystemOut.println("Now :"+date2String(new Date()));
+			SystemOut.println("归档完成");
 		}
 	}
 
