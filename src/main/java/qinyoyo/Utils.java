@@ -103,12 +103,17 @@ public class Utils {
 				try {
 					in1=new FileInputStream(file1);
 					in2=new FileInputStream(file2);
-					byte[] buf1=new byte[102400],buf2 = new byte[102400];
+					byte[] buf1=new byte[10240],buf2 = new byte[10240];
+					long passLength = Math.max(0,file1.length() / 10 - 10240);
 					int len1=in1.read(buf1), len2=in2.read(buf2);
 					do {
 						if (len1<len2) return -1;
 						else if (len1>len2) return 1;
 						else if (!Arrays.equals(buf1,buf2)) return -1;
+						if (passLength>0) {
+							in1.skip(passLength);
+							in2.skip(passLength);
+						}
 						len1=in1.read(buf1);
 						len2=in2.read(buf2);
 					} while (len1>0);
@@ -410,7 +415,13 @@ public class Utils {
 				Date dt1 = all.get(j).getShootTime();
 				if (!equals(dt0, dt1))
 					break;
-				if (all.get(i).sameAs(all.get(j))) {
+				boolean same = false;
+				try {
+					same = all.get(i).sameAs(all.get(j));
+				} catch (Exception e) {
+					same = contentCompare(fullPath(archiveInfo.getPath(),all.get(i)),fullPath(archiveInfo.getPath(),all.get(j))) == 0;
+				}
+				if (same) {
 					rm.add(all.get(i));
 					sameAs.add(all.get(j));
 					break;
@@ -443,7 +454,13 @@ public class Utils {
 			Date dt0 = all.get(i).getShootTime();
 			if (dt0 == null) { // 没有拍摄日期的互相比较
 				for (int j = j0; j < jstart; j++) {
-					if (all.get(i).sameAs(refInfos.get(j))) {
+					boolean same = false;
+					try {
+						same = all.get(i).sameAs(refInfos.get(j));
+					} catch (Exception e) {
+						same = contentCompare(fullPath(archiveInfo.getPath(),all.get(i)),fullPath(ref.getPath(),refInfos.get(j))) == 0;
+					}
+					if (same) {
 						rm.add(all.get(i));
 						sameAs.add(refInfos.get(j));
 						break;
@@ -458,7 +475,13 @@ public class Utils {
 							j0 = j;
 							j0set = true;
 						}
-						if (all.get(i).sameAs(refInfos.get(j))) {
+						boolean same = false;
+						try {
+							same = all.get(i).sameAs(refInfos.get(j));
+						} catch (Exception e) {
+							same = contentCompare(fullPath(archiveInfo.getPath(),all.get(i)),fullPath(ref.getPath(),refInfos.get(j))) == 0;
+						}
+						if (same) {
 							rm.add(all.get(i));
 							sameAs.add(refInfos.get(j));
 							break;

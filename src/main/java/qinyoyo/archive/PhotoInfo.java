@@ -235,7 +235,8 @@ public class PhotoInfo implements Serializable,Cloneable {
         return s==null || s.trim().isEmpty();
     }
     public boolean isExifEmpty() {
-        return shootTime==null && createTime==null && isEmpty(make) && isEmpty(model) && isEmpty(lens) && isEmpty(digest) && isEmpty(documentId);
+        return shootTime==null && createTime==null && isEmpty(make) && isEmpty(model) && isEmpty(lens) && isEmpty(documentId);
+        // 网络图片 digest 很多一样，不可靠
     }
     public boolean exifEquals(PhotoInfo pi) {
         if (Utils.equals(shootTime,pi.shootTime)) {
@@ -257,11 +258,15 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (isExifEmpty() && pi.isExifEmpty()) return Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize);
         else return (Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize) && exifEquals(pi)) ;
     }
-    public  boolean sameAs(PhotoInfo pi) {
+    public  boolean sameAs(PhotoInfo pi) throws Exception {
         if (this == pi) return true;
         if (Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize)) return true; // 文件名和大小一样，可能其中一个删除了exif信息
         if (!Utils.extName(fileName).toLowerCase().equals(Utils.extName(pi.getFileName()).toLowerCase())) return false; // 文件扩展名不同，不一致
-        if (isExifEmpty() && pi.isExifEmpty()) return false;
+        if (isExifEmpty() && pi.isExifEmpty()) {
+            if (!Utils.equals(digest,pi.digest)) return false;
+            else if (fileSize == pi.fileSize) throw new Exception("unknown");  // 不可知
+            else return false;
+        }
         else return exifEquals(pi);
     }
 
