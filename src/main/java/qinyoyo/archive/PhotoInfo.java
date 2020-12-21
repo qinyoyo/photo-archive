@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class PhotoInfo implements Serializable,Cloneable {
@@ -43,15 +45,98 @@ public class PhotoInfo implements Serializable,Cloneable {
        return (PhotoInfo)super.clone();
     }
 
-    public  PhotoInfo(String rootPath, File file) {
-        if (!file.exists()) throw new RuntimeException(file.getAbsolutePath() + " 不存在");
-        String dir = file.getParent();
-        if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
-        subFolder = dir.substring(rootPath.length());
-        if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
-        fileName = file.getName();
-        fileSize = file.length();
+    private String pathProperty(String rootPath) {
+        String [] dirs = new File(rootPath,subFolder).getAbsolutePath().split(File.separator.equals("\\")?"\\\\":File.separator);
+        String value="";
+        if (dirs!=null && dirs.length>0) {
+            for (int i=dirs.length-1; i>=0; i--) {
+                String d = dirs[i].toLowerCase();
+                if (d.equals("l") || d.equals("p") || d.equals("g") || d.equals("jpg") || d.equals("raw") || d.equals("nef")) continue;
+                if (d.equals("landscape") || d.equals("portrait") ) continue;
+                if (d.equals("camera") || d.equals("video") || d.equals("mov") || d.equals("audio")
+                        || d.equals("mp4") || d.equals("mp3") || d.equals("res") || d.equals("resource")) continue;
+                if (d.equals("风景") || d.equals("景物") || d.equals("人物") || d.equals("人像")) continue;
+                if (d.endsWith("生活")) continue;
+                d = dirs[i].trim();
+                while (!d.isEmpty() && d.charAt(0)>='0' && d.charAt(0)<='9') d=d.substring(1);
+                d=d.trim();
+                if (!d.isEmpty()) {
+                    value = d;
+                    break;
+                }
+            }
+        }
+        return value;
+    }
+    private String  useDefaultPatten(String rootPath, String name, String type) {
+        String value = ("l".equals(type) ? location :
+                ("u".equals(type) ? subLocation :
+                        ("c".equals(type) ? scene : "")));
+        Pattern p = Pattern.compile("%"+type+"=([^%]*)%");
+        Matcher m = p.matcher(name);
+        if (m.find()) {
+            if (value==null || value.trim().isEmpty()) value = m.group(1);
+            if (value.equals("{P}")) value = pathProperty(rootPath);
+            return name.substring(0,m.start()) + value + name.substring(m.end());
+        } else {
+            if (value==null || value.trim().isEmpty()) value = "";
+            return name.replace("%"+type,value);
+        }
+    }
+    public void rename(String rootPath, String namePat) throws  Exception {
+        String newName = namePat;
+        if (newName == null) newName = Utils.RENAME_PATTERN;
+        if (namePat.contains("%y")) newName = newName.replace("%y", Utils.date2String(shootTime,"yyyy"));
+        if (namePat.contains("%M")) newName = newName.replace("%M",Utils.date2String(shootTime,"MM"));
+        if (namePat.contains("%d")) newName = newName.replace("%d",Utils.date2String(shootTime,"dd"));
+        if (namePat.contains("%h")) newName = newName.replace("%h",Utils.date2String(shootTime,"HH"));
+        if (namePat.contains("%m")) newName = newName.replace("%m",Utils.date2String(shootTime,"mm"));
+        if (namePat.contains("%s")) newName = newName.replace("%s",Utils.date2String(shootTime,"ss"));
 
+        if (namePat.contains("%p")) newName = newName.replace("%p",pathProperty(rootPath));
+        if (namePat.contains("%o")) newName = newName.replace("%o",model==null?"":model);
+
+        if (namePat.contains("%l")) newName = useDefaultPatten(rootPath, newName,"l");
+        if (namePat.contains("%u")) newName = useDefaultPatten(rootPath, newName,"u");
+        if (namePat.contains("%c")) newName = useDefaultPatten(rootPath, newName,"c");
+
+        int pos = fileName.lastIndexOf(".");
+        String ext = (pos>=0 ? fileName.substring(pos) : "");
+        if (namePat.contains("%E")) {
+            newName = newName.replace("%E","");
+            ext = ext.toUpperCase();
+        }
+        else if (namePat.contains("%e")) {
+            newName = newName.replace("%e","");
+            ext = ext.toLowerCase();
+        }
+        if (fileName.toLowerCase().indexOf(newName.toLowerCase())==0) return;
+        File dir = new File(rootPath,subFolder);
+        File file1=new File(dir,fileName);
+        if (!file1.exists()) return;
+        File file2=new File(dir,newName+ext);
+        pos = 0;
+        while (file2.exists()) {
+            pos++;
+            file2=new File(dir,newName+pos+ext);
+        }
+        file2.getCanonicalPath();
+        file1.renameTo(file2);
+        fileName = file2.getName();
+    }
+    public  PhotoInfo(String rootPath, File file) {
+        try {
+            rootPath = new File(rootPath).getCanonicalPath();
+            if (!file.exists()) throw new RuntimeException(file.getAbsolutePath() + " 不存在");
+            String dir = file.getParentFile().getCanonicalPath();
+            if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
+            subFolder = dir.substring(rootPath.length());
+            if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
+            fileName = file.getName();
+            fileSize = file.length();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
     private boolean emptyValue(Object v) {
         return v==null || v.toString().isEmpty() || v.toString().equals("-");

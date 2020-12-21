@@ -203,7 +203,9 @@ public final class TwoImageViewer {
 				int y = (int) ((this.getHeight()  - ih) / 2);
 
 				g.drawImage(image.getScaledInstance(iw,ih , 0), x, y, null);
-				g.drawString(imageFile.getAbsolutePath(),10,10);
+				try {
+					g.drawString(imageFile.getCanonicalPath(), 10, 10);
+				} catch (Exception e) {}
 				g.drawString("size = " +imageFile.length(),10,30);
 			}
 		}

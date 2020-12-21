@@ -120,7 +120,9 @@ public class FolderInfo {
 			if (p>0 && p<line.length()-1) {
 				String label = line.substring(0,p).trim().toLowerCase(), value = line.substring(p+1).trim();
 				switch (label) {
-					case "path" : path = new File(rootPath,value).getAbsolutePath(); break;
+					case "path" :
+						try { path = new File(rootPath,value).getCanonicalPath(); break; }
+						catch (Exception e) { throw new RuntimeException(e.getMessage()); }
 					case "name" : name = value; break;
 					case "priority" : priority = Integer.parseInt(value); break;
 					case "camera" : camera = value; break;

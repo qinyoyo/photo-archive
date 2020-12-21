@@ -9,7 +9,7 @@ import java.util.*;
 import static java.lang.Double.parseDouble;
 
 public class ExifTool {
-    public  static String EXIFTOOL = "D:\\Download\\exiftool.exe";
+    public  static String EXIFTOOL = "exiftool";
     public  static Double INSTALLED_VERSION;
 
     private final Set<Feature> features;
@@ -109,7 +109,7 @@ public class ExifTool {
         if (dir == null || !dir.exists()) return;
         if (listener==null || listener.accept(dir)) {
             try {
-                SystemOut.println(dir.getAbsolutePath());
+                SystemOut.println(dir.getCanonicalPath());
                 /* 可能会损坏文件
                 List<String> argsList = new ArrayList<>();
                 argsList.add(EXIFTOOL);

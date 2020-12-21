@@ -253,19 +253,27 @@ public class Utils {
 	}
 
 	public static String fullPath(String root, PhotoInfo p) {
-		String sub = p.getSubFolder();
-		if (sub == null || sub.isEmpty()) {
-			return new File(root, p.getFileName()).getAbsolutePath();
-		} else
-			return new File(new File(root, sub), p.getFileName()).getAbsolutePath();
+		try {
+			String sub = p.getSubFolder();
+			if (sub == null || sub.isEmpty()) {
+				return new File(root, p.getFileName()).getCanonicalPath();
+			} else
+				return new File(new File(root, sub), p.getFileName()).getCanonicalPath();
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 
 	public static String newFile(String root, PhotoInfo p) {
-		String sub = p.getSubFolder();
-		if (sub == null || sub.isEmpty() || sub.equals(".")) {
-			return new File(root, p.getFileName()).getAbsolutePath();
-		} else
-			return new File(root, sub.replace("\\", " ") + p.getFileName()).getAbsolutePath();
+		try {
+			String sub = p.getSubFolder();
+			if (sub == null || sub.isEmpty() || sub.equals(".")) {
+				return new File(root, p.getFileName()).getCanonicalPath();
+			} else
+				return new File(root, sub.replace("\\", " ") + p.getFileName()).getCanonicalPath();
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 
 	public static <T> void removeAll(List<T> all, List<T> rm) {
@@ -319,50 +327,54 @@ public class Utils {
 	}
 	// 完全一致的文件将被删除
 	static void doDeleteSameFiles(List<PhotoInfo> rm,List<PhotoInfo> sameAs,ArchiveInfo archiveInfo, ArchiveInfo ref) {
-		if (rm.size() > 0) {
-			List<PhotoInfo> all = archiveInfo.getInfos();
-			File logFile = new File(archiveInfo.getPath(), same_photo_log);
-			SystemOut.println("重复照片数量 : " + rm.size());
-			File rmf = new File(new File(archiveInfo.getPath()), ".delete");
-			rmf.mkdirs();
-			ArchiveInfo rma = new ArchiveInfo();
-			rma.setPath(rmf.getAbsolutePath());
-			rma.setExifTool(archiveInfo.getExifTool());
-			rma.setInfos(rm);
-			rma.saveInfos();
-			removeAll(all, rm);
-			StringBuilder sb = new StringBuilder();
-			String rootName = archiveInfo.getPath();
-			String sub = rmf.getAbsolutePath();
-			for (int i=0;i<rm.size();i++) {
-				PhotoInfo p = rm.get(i);
-				File source = new File(fullPath(rootName, p));
+		try {
+			if (rm.size() > 0) {
+				List<PhotoInfo> all = archiveInfo.getInfos();
+				File logFile = new File(archiveInfo.getPath(), same_photo_log);
+				SystemOut.println("重复照片数量 : " + rm.size());
+				File rmf = new File(new File(archiveInfo.getPath()), ".delete");
+				rmf.mkdirs();
+				ArchiveInfo rma = new ArchiveInfo();
+				rma.setPath(rmf.getCanonicalPath());
+				rma.setExifTool(archiveInfo.getExifTool());
+				rma.setInfos(rm);
+				rma.saveInfos();
+				removeAll(all, rm);
+				StringBuilder sb = new StringBuilder();
+				String rootName = archiveInfo.getPath();
+				String sub = rmf.getCanonicalPath();
+				for (int i = 0; i < rm.size(); i++) {
+					PhotoInfo p = rm.get(i);
+					File source = new File(fullPath(rootName, p));
 
-				try {
-					if (p.absuluteSameAs(sameAs.get(i))) {
-						File targetDir = p.getSubFolder()==null || p.getSubFolder().isEmpty() ? new File(rmf,"absolute") : new File(new File(rmf,p.getSubFolder()),"absolute");
-						//source.delete();
-						targetDir.mkdirs();
-						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
-						appendToFile(new File(targetDir,Utils.same_photo_log+".bat"), "fc /b \"" + new File(targetDir, source.getName()).getAbsolutePath() 
-								+ "\" \""
-								+ fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)) + "\"");
+					try {
+						if (p.absuluteSameAs(sameAs.get(i))) {
+							File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? new File(rmf, "absolute") : new File(new File(rmf, p.getSubFolder()), "absolute");
+							//source.delete();
+							targetDir.mkdirs();
+							Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
+							appendToFile(new File(targetDir, Utils.same_photo_log + ".bat"), "fc /b \"" + new File(targetDir, source.getName()).getCanonicalPath()
+									+ "\" \""
+									+ fullPath(ref == null ? rootName : ref.getPath(), sameAs.get(i)) + "\"");
+						} else {
+							File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? rmf : new File(rmf, p.getSubFolder());
+							targetDir.mkdirs();
+							Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
+							appendToFile(logFile, new File(targetDir, source.getName()).getCanonicalPath() + " <-> "
+									+ fullPath(ref == null ? rootName : ref.getPath(), sameAs.get(i)));
+						}
+					} catch (Exception e) {
+						sb.append("move \"").append(fullPath(rootName, p)).append("\" \"").append(newFile(sub, p))
+								.append("\"\r\n");
+						if (!p.absuluteSameAs(sameAs.get(i)))
+							appendToFile(logFile, fullPath(rootName, p) + " <-> " + fullPath(ref == null ? rootName : ref.getPath(), sameAs.get(i)));
 					}
-					else {
-						File targetDir = p.getSubFolder()==null || p.getSubFolder().isEmpty() ? rmf : new File(rmf,p.getSubFolder());
-						targetDir.mkdirs();
-						Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
-						appendToFile(logFile, new File(targetDir, source.getName()).getAbsolutePath() + " <-> "
-								+ fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)));
-					}
-				} catch (Exception e) {
-					sb.append("move \"").append(fullPath(rootName, p)).append("\" \"").append(newFile(sub, p))
-							.append("\"\r\n");
-					if (!p.absuluteSameAs(sameAs.get(i))) appendToFile(logFile, fullPath(rootName, p) + " <-> " + fullPath(ref==null?rootName:ref.getPath(), sameAs.get(i)));
 				}
+				String cmd = sb.toString().trim();
+				if (!cmd.isEmpty()) appendToFile(new File(archiveInfo.getPath(), manual_rm_bat), sb.toString());
 			}
-			String cmd = sb.toString().trim();
-			if (!cmd.isEmpty())	appendToFile(new File(archiveInfo.getPath(), manual_rm_bat), sb.toString());
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 	// 记录必须排序好
@@ -441,33 +453,37 @@ public class Utils {
 	}
 
 	static void otherFiles(ArchiveInfo archiveInfo) {
-		List<PhotoInfo> all = archiveInfo.getInfos();
-		SystemOut.println("照片数量 : " + all.size());
-		List<PhotoInfo> other = all.stream().filter(a -> a.getShootTime() == null).collect(Collectors.toList());
-		if (other.size() > 0) {
-			SystemOut.println("没有拍摄日期照片数量 : " + other.size());
-			File rmf = new File(new File(archiveInfo.getPath()), ".other");
-			rmf.mkdirs();
-			ArchiveInfo rma = new ArchiveInfo();
-			rma.setPath(rmf.getAbsolutePath());
-			rma.setExifTool(archiveInfo.getExifTool());
-			rma.setInfos(new ArrayList<>(other));
-			rma.saveInfos();
-			removeAll(all, other);
-			StringBuilder sb = new StringBuilder();
-			String rootName = archiveInfo.getPath();
-			String sub = rmf.getAbsolutePath();
-			for (PhotoInfo p : other) {
-				File source = new File(fullPath(rootName, p));
-				try {
-					Files.move(source.toPath(), new File(rmf, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-				} catch (Exception e) {
-					sb.append("move \"").append(fullPath(rootName, p)).append("\" \"").append(newFile(sub, p))
-							.append("\"\r\n");
+		try {
+			List<PhotoInfo> all = archiveInfo.getInfos();
+			SystemOut.println("照片数量 : " + all.size());
+			List<PhotoInfo> other = all.stream().filter(a -> a.getShootTime() == null).collect(Collectors.toList());
+			if (other.size() > 0) {
+				SystemOut.println("没有拍摄日期照片数量 : " + other.size());
+				File rmf = new File(new File(archiveInfo.getPath()), ".other");
+				rmf.mkdirs();
+				ArchiveInfo rma = new ArchiveInfo();
+				rma.setPath(rmf.getCanonicalPath());
+				rma.setExifTool(archiveInfo.getExifTool());
+				rma.setInfos(new ArrayList<>(other));
+				rma.saveInfos();
+				removeAll(all, other);
+				StringBuilder sb = new StringBuilder();
+				String rootName = archiveInfo.getPath();
+				String sub = rmf.getCanonicalPath();
+				for (PhotoInfo p : other) {
+					File source = new File(fullPath(rootName, p));
+					try {
+						Files.move(source.toPath(), new File(rmf, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+					} catch (Exception e) {
+						sb.append("move \"").append(fullPath(rootName, p)).append("\" \"").append(newFile(sub, p))
+								.append("\"\r\n");
+					}
 				}
+				String batcmd = sb.toString().trim();
+				if (!batcmd.isEmpty()) writeToFile(new File(archiveInfo.getPath(), manual_other_bat), batcmd);
 			}
-			String batcmd = sb.toString().trim();
-			if (!batcmd.isEmpty()) writeToFile(new File(archiveInfo.getPath(), manual_other_bat), batcmd);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
@@ -606,9 +622,9 @@ public class Utils {
 				try {
 					Files.move(source.toPath(),new File(targetDir,source.getName()).toPath());
 					PhotoInfo newPi = pi.cloneObject();
-					newPi.setSubFolder(targetDir.getAbsolutePath().substring(archived.getPath().length()+1));
+					newPi.setSubFolder(targetDir.getCanonicalPath().substring(archived.getPath().length()+1));
 					archivedInfos.add(newPi);
-					sameLog.replace(source.getAbsolutePath(),new File(targetDir,source.getName()).getAbsolutePath());
+					sameLog.replace(source.getCanonicalPath(),new File(targetDir,source.getName()).getCanonicalPath());
 				} catch (Exception e) {
 					mvfailed.append("move \"").append(fullPath(root,pi)).append("\" ").append("\"")
 							.append(fi.getPath()).append("\\").append(fi.getCamera()).append("\"\r\n");
@@ -646,16 +662,6 @@ public class Utils {
 	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
 		SystemOut.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
 		a.sortInfos();
-		/*
-		a.saveInfos();
-		SystemOut.println("备份排序后文件："+ArchiveInfo.ARCHIVE_FILE + ".sorted.dat");
-		File bak = new File(a.getPath(), ArchiveInfo.ARCHIVE_FILE + ".sorted.dat");
-		File dat = new File(a.getPath(), ArchiveInfo.ARCHIVE_FILE);
-		try {
-			Files.copy(dat.toPath(), bak.toPath());
-		} catch (IOException e) {
-		}
-		*/
 		if (removeSameFile) {
 			SystemOut.println("删除重复文件...");
 			deleteFiles(a);
@@ -739,9 +745,10 @@ public class Utils {
 	static final String PARAM_CLEAR2 = "clear2";
 	static final String PARAM_EXECUTE = "execute";
 	static final String PARAM_SHUTDOWN = "shutdown";
-//	static final String PARAM_SCENE = "scene";
 	static final String PARAM_HELP = "help";
 	static final String PARAM_EMPTY = "empty";
+	static final String PARAM_RENAME = "rename";
+	public static String RENAME_PATTERN = "%y%M%d-%h%m%s_%l={P}%%E";
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
 		if (argv==null || argv.length==0) return result;
@@ -749,13 +756,15 @@ public class Utils {
 		for (int i=0;i<total;i++) {
 			String param = argv[i].trim();
 			switch (param) {
-/*				case "-n":
-				case "--scene":
+				case "-n":
+				case "--rename":
 					if (i<total-1) {
-						result.put(PARAM_SCENE,argv[i+1]);
-						break;
-					} else throw new Exception("-n 参数必须后跟一个目录，指定修改场景标识的目录");
-*/
+						result.put(PARAM_RENAME,argv[i+1]);
+					} else throw new Exception("-n 参数必须后跟一个目录，指定修改文件名的目录");
+					if (i<total-2) {
+						RENAME_PATTERN = argv[i+2];
+					}
+					break;
 				case "-v" :
 				case "--view":
 					if (i<total-1) {
@@ -823,7 +832,7 @@ public class Utils {
 		System.out.println("  -p1 dir_name	: 指定需要归档的图像文件目录, 同 --path1");
 		System.out.println("  -p2 dir_name	: 指定归档图像文件最终保存目录,同 --path2");
 		System.out.println("  -v  dir_name	:  对比浏览相同图像文件的目录, 同 --view");
-		// System.out.println("  -n  dir_name	:  场景自动修改目录名, 同  --scene");
+		System.out.println("  -n  dir_name	<name_pattern>:  修改文件名，忽略其他选项, 同  --rename");
 		System.out.println("  -m : 删除空目录, 同  --empty");
 		System.out.println("  -s1 : 需要归档的文件进行图像是否相同分析, 同  --same1");
 		System.out.println("  -o1 : 无法确定拍摄日期的文件不归档, 同  --other1");
@@ -896,6 +905,7 @@ public class Utils {
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("删除空目录");
 			removeEmptyFolder(new File(archived.getPath()));
+			removeEmptyFolder(new File(camera.getPath()));
 			SystemOut.println("Now :"+date2String(new Date()));
 			SystemOut.println("归档完成");
 		}
@@ -915,7 +925,11 @@ public class Utils {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				checkDeletedFile(new File(input,same_photo_log).getAbsolutePath(),boolValue(ac));
+				try {
+					checkDeletedFile(new File(input, same_photo_log).getCanonicalPath(), boolValue(ac));
+				} catch (Exception e) {
+					throw new RuntimeException(e.getMessage());
+				}
 				return;
 			}
 		}
@@ -963,26 +977,11 @@ public class Utils {
 				SystemOut.println(e.getMessage());
 				try {
 					input = stdin.readLine().trim();
-					ExifTool.EXIFTOOL = new File(input, "exiftool.exe").getAbsolutePath();
+					ExifTool.EXIFTOOL = new File(input, "exiftool").getCanonicalPath();
 				} catch (IOException ex) {
 				}
 			}
 		}
-		/*
-		while (true) {
-			try {
-				FFMpeg.FFMPEG_VERSION = FFMpeg.getFfmpegVersion();
-				break;
-			} catch (Exception e) {
-				SystemOut.println(e.getMessage());
-				try {
-					input = stdin.readLine().trim();
-					FFMpeg.FFMPEG = new File(input, "ffmpeg.exe").getAbsolutePath();
-				} catch (Exception ex) {
-				}
-			}
-		}
-	 */
 	}
 	public static void pathScene(File dir) {
 		List<String> args = new ArrayList<>();
@@ -1084,12 +1083,27 @@ public class Utils {
 			return;
 		}
 		Object v = null;
-/*		v = params.get(PARAM_SCENE);
+		v = params.get(PARAM_RENAME);
 		if (v!=null) {
 			String path = v.toString();
-			pathScene(new File(path));
+			ArchiveInfo ai = new ArchiveInfo(path);
+			SystemOut.println("重新排序...");
+			ai.sortInfos();
+			SystemOut.println("重新命名...");
+			for (PhotoInfo pi : ai.getInfos()) {
+				try {
+					String name0 = pi.getFileName();
+					pi.rename(ai.getPath(),RENAME_PATTERN);
+					String name1 = pi.getFileName();
+					if (name1.equals(name0)) SystemOut.println(name0 + " 没有重命名");
+					else SystemOut.println(name0 + " 重命名为 " + name1);
+				} catch (Exception e) {
+				}
+			}
+			SystemOut.close();
+			return;
 		}
-*/
+
 		ArchiveInfo camera = null, archived=null;
 		v = params.get(PARAM_EMPTY);
 		if (v!=null) {
@@ -1124,7 +1138,11 @@ public class Utils {
 		SystemOut.close();
 		v = params.get(PARAM_VIEW_DIR);
 		if (v!=null) {
-			checkDeletedFile(new File(v.toString(),same_photo_log).getAbsolutePath(),boolValue(params.get(PARAM_FORCE_CHECK)));
+			try {
+				checkDeletedFile(new File(v.toString(), same_photo_log).getCanonicalPath(), boolValue(params.get(PARAM_FORCE_CHECK)));
+			} catch (Exception e) {
+				throw new RuntimeException(e.getMessage());
+			}
 		} else {
 			if (boolValue(params.get(PARAM_SHUTDOWN))) {
 				List<String> cmd = new ArrayList<>();

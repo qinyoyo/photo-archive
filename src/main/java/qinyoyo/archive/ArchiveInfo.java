@@ -7,6 +7,7 @@ import qinyoyo.exiftool.Key;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.*;
 
 public class ArchiveInfo {
@@ -43,12 +44,17 @@ public class ArchiveInfo {
         try {
             exifTool = new ExifTool.Builder().build();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
         File d = new File(dir);
         if (!d.exists()) d.mkdirs();
-        if (d.isDirectory()) path = d.getAbsolutePath();
-        else throw new RuntimeException("必须指定目录而不是文件");
+        try {
+            if (d.isDirectory()) path = d.getCanonicalPath();
+            else throw new RuntimeException("必须指定目录而不是文件");
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
         if (path.endsWith(File.separator)) path=path.substring(0,path.length()-1);
         File af = new File(d, ARCHIVE_FILE);
         if (af.exists()) readInfos();
