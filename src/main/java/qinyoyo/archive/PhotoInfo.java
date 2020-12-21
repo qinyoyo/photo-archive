@@ -1,5 +1,6 @@
 package qinyoyo.archive;
 
+import qinyoyo.SystemOut;
 import qinyoyo.Utils;
 import qinyoyo.exiftool.Key;
 
@@ -57,7 +58,10 @@ public class PhotoInfo implements Serializable,Cloneable {
                 if (d.equals("camera") || d.equals("video") || d.equals("mov") || d.equals("audio")
                         || d.equals("mp4") || d.equals("mp3") || d.equals("res") || d.equals("resource")) continue;
                 if (d.equals("风景") || d.equals("景物") || d.equals("人物") || d.equals("人像")) continue;
-                if (d.endsWith("生活")) continue;
+                if (d.endsWith("生活")) {
+                	value="U";
+                	break;
+                };
                 d = dirs[i].trim();
                 while (!d.isEmpty() && d.charAt(0)>='0' && d.charAt(0)<='9') d=d.substring(1);
                 d=d.trim();
@@ -77,7 +81,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         Matcher m = p.matcher(name);
         if (m.find()) {
             if (value==null || value.trim().isEmpty()) value = m.group(1);
-            if (value.equals("{P}")) value = pathProperty(rootPath);
+            if (value.equals("{p}")) value = pathProperty(rootPath);
             return name.substring(0,m.start()) + value + name.substring(m.end());
         } else {
             if (value==null || value.trim().isEmpty()) value = "";
@@ -98,6 +102,17 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (namePat.contains("%o")) newName = newName.replace("%o",model==null?"":model);
 
         if (namePat.contains("%l")) newName = useDefaultPatten(rootPath, newName,"l");
+        if (namePat.contains("%f")) {
+        	int pos = fileName.lastIndexOf(".");
+        	String f = (pos>=0?fileName.substring(0,pos) : fileName);
+        	String nf="";
+        	for (int i=0;i<f.length();i++) {
+        		char ch=f.charAt(i);
+        		if ((ch>='0' && ch<='9') || ch=='-' || ch=='_') continue;
+        		else nf=nf+String.valueOf(ch);
+        	}
+        	newName = newName.replace("%f",nf);
+        }
         if (namePat.contains("%u")) newName = useDefaultPatten(rootPath, newName,"u");
         if (namePat.contains("%c")) newName = useDefaultPatten(rootPath, newName,"c");
 
@@ -124,6 +139,13 @@ public class PhotoInfo implements Serializable,Cloneable {
         file2.getCanonicalPath();
         file1.renameTo(file2);
         fileName = file2.getName();
+        
+        if (file1.getAbsolutePath().startsWith("E:\\")) {
+			file1=new File("H"+file1.getAbsolutePath().substring(1));
+			file2=new File("H"+file2.getAbsolutePath().substring(1));
+			file1.renameTo(file2);
+        }
+        
     }
     public  PhotoInfo(String rootPath, File file) {
         try {
