@@ -24,6 +24,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private String model;
     private String lens;
     private String digest;
+    private String documentId;
 
     private String country;
     private String province;
@@ -163,6 +164,9 @@ public class PhotoInfo implements Serializable,Cloneable {
                     case CREATEDATE:
                         if (!s.startsWith("0000")) createTime = Utils.string2Date(v.toString());
                         break;
+                    case DOCUMENT_ID:
+                        documentId = s;
+                        break;
                     case IPTCDigest:
                         digest = s;
                         break;
@@ -223,32 +227,42 @@ public class PhotoInfo implements Serializable,Cloneable {
                 }
             } catch (Exception e) {}
         }
-        if (shootTime==null && createTime!=null) shootTime = createTime;
+        if (shootTime==null && createTime!=null && mimeType!=null && !mimeType.toLowerCase().startsWith("image")) shootTime = createTime;
         if (shootTime==null) shootTime = Utils.getShootTimeFromFileName(fileName);
     }
 
+    public static boolean isEmpty(String s) {
+        return s==null || s.trim().isEmpty();
+    }
+    public boolean isExifEmpty() {
+        return shootTime==null && createTime==null && isEmpty(make) && isEmpty(model) && isEmpty(lens) && isEmpty(digest) && isEmpty(documentId);
+    }
     public boolean exifEquals(PhotoInfo pi) {
         if (Utils.equals(shootTime,pi.shootTime)) {
             if (Utils.equals(createTime,pi.createTime)) {
                 if (Utils.equals(make,pi.make)) {
                     if (Utils.equals(model,pi.model)) {
                         if (Utils.equals(lens,pi.lens)) {
-                            if (Utils.equals(digest,pi.digest)) return true;
-                            else return false;
+                            if (Utils.equals(digest,pi.digest)) {
+                                if (Utils.equals(documentId,pi.documentId)) return true;
+                                else return false;
+                            } else return false;
                         } else return false;
                     } else return false;
                 } else return false;
             } else return false;
         } else return false;
     }
-    public  boolean absuluteSameAs(PhotoInfo pi) {
-        return (Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize) && exifEquals(pi)) ;
+    public  boolean absoluteSameAs(PhotoInfo pi) {
+        if (isExifEmpty() && pi.isExifEmpty()) return Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize);
+        else return (Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize) && exifEquals(pi)) ;
     }
     public  boolean sameAs(PhotoInfo pi) {
         if (this == pi) return true;
         if (Utils.equals(fileName, pi.fileName) && (fileSize == pi.fileSize)) return true; // 文件名和大小一样，可能其中一个删除了exif信息
         if (!Utils.extName(fileName).toLowerCase().equals(Utils.extName(pi.getFileName()).toLowerCase())) return false; // 文件扩展名不同，不一致
-        return exifEquals(pi);
+        if (isExifEmpty() && pi.isExifEmpty()) return false;
+        else return exifEquals(pi);
     }
 
     public String getSubFolder() {

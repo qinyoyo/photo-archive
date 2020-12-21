@@ -123,10 +123,16 @@ public final class TwoImageViewer {
 					removeIndex();
 					return;
 				}
+				boolean isDeleteFolder = file1.getCanonicalPath().contains(File.separator+".delete"+File.separator);
 				if (!file2.exists()) {
-					Files.move(file1.toPath(), file2.toPath());
-					removeIndex();
-					return;
+					if (isDeleteFolder) {
+						Files.move(file1.toPath(), file2.toPath());
+						removeIndex();
+						return;
+					} else {
+						removeIndex();
+						return;
+					}
 				}
 				if (saveIndex==0) {
 					if (file1.length()>file2.length()) saveIndex=1;
@@ -135,7 +141,7 @@ public final class TwoImageViewer {
 				switch (saveIndex) {
 					case 1:
 						file2.delete();
-						Files.move(file1.toPath(), file2.toPath());
+						if (isDeleteFolder) Files.move(file1.toPath(), file2.toPath());
 						removeIndex();
 						break;
 					case 2:
@@ -143,10 +149,12 @@ public final class TwoImageViewer {
 						removeIndex();
 						break;
 					case 3:
-						File nf = new File(file2.getParentFile(),file1.getName());
-						nf=Utils.bakNameOf(nf);
-						Files.move(file1.toPath(),nf.toPath());
-						removeIndex();
+						if (isDeleteFolder) {
+							File nf = new File(file2.getParentFile(), file1.getName());
+							nf = Utils.bakNameOf(nf);
+							Files.move(file1.toPath(), nf.toPath());
+							removeIndex();
+						}
 						break;
 					default:	
 				}

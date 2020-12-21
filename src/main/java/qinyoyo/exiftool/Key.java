@@ -54,6 +54,7 @@ public enum Key {
     INTEROPINDEX("InteropIndex", String.class, "'R03' = R03 - DCF option file (Adobe RGB), 'R98' = R98 - DCF basic file (sRGB), 'THM' = THM - DCF thumbnail file"),
     IPTC_KEYWORDS("Keywords", String.class),
     IPTCDigest("IPTCDigest", String.class),
+    DOCUMENT_ID("OriginalDocumentID",String.class),
     ISO("ISO", Integer.class),
     KEYWORDS("XPKeywords", String.class),
     LENS_ID("LensID", String.class),

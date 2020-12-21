@@ -84,6 +84,7 @@ public class ArchiveInfo {
         Map<String, Map<Key, Object>> fileInfos = null;
         Key[] keys = new Key[]{Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,Key.CREATEDATE,
                 Key.MAKE, Key.MODEL, Key.LENS_ID,
+                Key.DOCUMENT_ID, Key.IPTCDigest,
                 Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
                 Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
                 Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUB_LOCATION};

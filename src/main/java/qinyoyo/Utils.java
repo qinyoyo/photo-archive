@@ -325,6 +325,27 @@ public class Utils {
 			return null;
 		}
 	}
+	static void listSameFiles(List<PhotoInfo> rm,List<PhotoInfo> sameAs,ArchiveInfo archiveInfo) {
+		try {
+			if (rm.size() > 0) {
+				List<PhotoInfo> all = archiveInfo.getInfos();
+				File logFile = new File(archiveInfo.getPath(), same_photo_log);
+				SystemOut.println("重复照片数量 : " + rm.size());
+				StringBuilder sb = new StringBuilder();
+				String rootName = archiveInfo.getPath();
+				for (int i = 0; i < rm.size(); i++) {
+					File one = new File(fullPath(rootName, rm.get(i)));
+					File two = new File(fullPath(rootName, sameAs.get(i)));
+					if (one.exists() && two.exists()) {
+						sb.append(one.getCanonicalPath() + " <-> " + two.getCanonicalPath()).append("\r\n");
+					}
+				}
+				writeToFile(logFile,sb.toString());
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
 	// 完全一致的文件将被删除
 	static void doDeleteSameFiles(List<PhotoInfo> rm,List<PhotoInfo> sameAs,ArchiveInfo archiveInfo, ArchiveInfo ref) {
 		try {
@@ -348,7 +369,7 @@ public class Utils {
 					File source = new File(fullPath(rootName, p));
 
 					try {
-						if (p.absuluteSameAs(sameAs.get(i))) {
+						if (p.absoluteSameAs(sameAs.get(i))) {
 							File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? new File(rmf, "absolute") : new File(new File(rmf, p.getSubFolder()), "absolute");
 							//source.delete();
 							targetDir.mkdirs();
@@ -366,7 +387,7 @@ public class Utils {
 					} catch (Exception e) {
 						sb.append("move \"").append(fullPath(rootName, p)).append("\" \"").append(newFile(sub, p))
 								.append("\"\r\n");
-						if (!p.absuluteSameAs(sameAs.get(i)))
+						if (!p.absoluteSameAs(sameAs.get(i)))
 							appendToFile(logFile, fullPath(rootName, p) + " <-> " + fullPath(ref == null ? rootName : ref.getPath(), sameAs.get(i)));
 					}
 				}
@@ -378,7 +399,7 @@ public class Utils {
 		}
 	}
 	// 记录必须排序好
-	static void deleteFiles(ArchiveInfo archiveInfo) {
+	static void deleteFiles(ArchiveInfo archiveInfo, boolean removeSameFile) {
 		List<PhotoInfo> rm = new ArrayList<>();
 		List<PhotoInfo> sameAs = new ArrayList<>();
 		List<PhotoInfo> all = archiveInfo.getInfos();
@@ -396,7 +417,8 @@ public class Utils {
 				}
 			}
 		}
-		doDeleteSameFiles(rm,sameAs,archiveInfo,null);
+		if (removeSameFile) doDeleteSameFiles(rm,sameAs,archiveInfo,null);
+		else listSameFiles(rm,sameAs,archiveInfo);
 	}
 
 	// 两个记录必须排序好
@@ -662,10 +684,10 @@ public class Utils {
 	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
 		SystemOut.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
 		a.sortInfos();
-		if (removeSameFile) {
-			SystemOut.println("删除重复文件...");
-			deleteFiles(a);
-		}
+
+		SystemOut.println(removeSameFile?"删除重复文件..." : "扫描重复文件...");
+		deleteFiles(a,removeSameFile);
+
 		if (moveOtherFiles) {
 			SystemOut.println("移动无拍摄日期文件...");
 			otherFiles(a);
@@ -689,8 +711,6 @@ public class Utils {
 		if (!a.isReadFromFile()) processDir(a, removeSameFile, moveOtherFile);
 		return a;
 	}
-
-
 
 	public static void checkDeletedFile(String logFile, boolean absoluteCheck) {
 		List<String> list1 = new ArrayList<>(), list2 = new ArrayList<>();
@@ -834,11 +854,11 @@ public class Utils {
 		System.out.println("  -v  dir_name	:  对比浏览相同图像文件的目录, 同 --view");
 		System.out.println("  -n  dir_name	<name_pattern>:  修改文件名，忽略其他选项, 同  --rename");
 		System.out.println("  -m : 删除空目录, 同  --empty");
-		System.out.println("  -s1 : 需要归档的文件进行图像是否相同分析, 同  --same1");
-		System.out.println("  -o1 : 无法确定拍摄日期的文件不归档, 同  --other1");
+		System.out.println("  -s1 : 将相同文件移到.delete目录, 同  --same1");
+		System.out.println("  -o1 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other1");
 		System.out.println("  -c1 : 需要归档的目录重新分析, 同  --clear1");
-		System.out.println("  -s2 : 归档目标目录进行图像是否相同分析, 同  --same2");
-		System.out.println("  -o2 : 归档目标目录排除无法确定拍摄日期的文件, 同  --other2");
+		System.out.println("  -s2 : 将相同文件移到.delete目录, 同  --same2");
+		System.out.println("  -o2 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other2");
 		System.out.println("  -c2 : 归档目标目录重新分析, 同  --clear2");		
 		System.out.println("  -a : 强制将path1与path2进行文件相同分析");
 		System.out.println("  -e : 扫描完成后立即执行归档操作, 同  --execute");
@@ -941,8 +961,8 @@ public class Utils {
 			dir = new File(input);
 			if (dir!=null && dir.exists() && dir.isDirectory()) {
 				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
-				boolean same = boolValue(getInputString(stdin, "是否扫面相同文件", "yes"));
-				boolean other = boolValue(getInputString(stdin, "是否移除未知日期的文件", "yes"));
+				boolean same = boolValue(getInputString(stdin, "将相同文件移到.delete目录", "yes"));
+				boolean other = boolValue(getInputString(stdin, "将无法确定拍摄日期的文件移动到.other目录", "yes"));
 				camera=getArchiveInfo(input, clear, same,other);
 			}
 		}
@@ -953,8 +973,8 @@ public class Utils {
 			dir = new File(input);
 			if (dir!=null && dir.exists() && dir.isDirectory()) {
 				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
-				boolean same = boolValue(getInputString(stdin, "是否扫面相同文件", "yes"));
-				boolean other = boolValue(getInputString(stdin, "是否移除未知日期的文件", "no"));
+				boolean same = boolValue(getInputString(stdin, "将相同文件移到.delete目录", "yes"));
+				boolean other = boolValue(getInputString(stdin, "将无法确定拍摄日期的文件移动到.other目录", "no"));
 				archived=getArchiveInfo(input, clear, same,other);
 			}
 		}
