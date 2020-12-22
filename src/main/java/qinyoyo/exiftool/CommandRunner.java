@@ -12,13 +12,15 @@ import java.util.List;
  */
 public final class CommandRunner {
     public static Process run(List<String> args) throws IOException {
-        return run(args, FileSystems.getDefault().getPath("."));
+        return run(args, FileSystems.getDefault().getPath("."),null);
     }
 
-    public static Process run(List<String> args, Path workingDir) throws IOException {
+    public static Process run(List<String> args, Path workingDir,File redirectOutput) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(args);
         processBuilder.directory(workingDir.toFile());
+        processBuilder.redirectErrorStream(true);
+        if (redirectOutput!=null) processBuilder.redirectOutput(redirectOutput);
         return processBuilder.start();
     }
 
@@ -46,16 +48,19 @@ public final class CommandRunner {
         }
     }
     public static Pair<List<String>, List<String>> runAndFinish(List<String> args, Path workingDir) throws IOException {
-        Process process = run(args, workingDir);
+    	File redirectOutput = File.createTempFile("_p_a_", ".tmp");    	
+        Process process = run(args, workingDir, redirectOutput);
         List<String> stdout=new ArrayList<>();
         List<String> stderr=new ArrayList<>();
         try {
-            final InputStream is1 = process.getInputStream();
+        	if (redirectOutput==null) {
+        		final InputStream is1 = process.getInputStream();
+        		new Thread(() -> {
+                    bufferProcess(is1,stdout);
+                }).start();
+        	}
+            
             final InputStream is2 = process.getErrorStream();
-            new Thread(() -> {
-                bufferProcess(is1,stdout);
-            }).start();
-
             new Thread(() -> {
                 bufferProcess(is2,stderr);
             }).start();
@@ -68,6 +73,20 @@ public final class CommandRunner {
                 process.getOutputStream().close();
             }
             catch(Exception ee){}
+        }
+        if (redirectOutput!=null && redirectOutput.exists()) {
+        	try {
+                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(redirectOutput),"UTF8"));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (line != null) stdout.add(line);
+                }
+                br.close();
+                redirectOutput.delete();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            
         }
         return new Pair<>(stdout, stderr);
     }

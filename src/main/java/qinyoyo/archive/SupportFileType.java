@@ -183,7 +183,6 @@ public class SupportFileType {
                 "TIFF", "TIF",
                 "TTF", "TTC",
                 "TORRENT",
-                "TXT",
                 "VCF", "VCARD",
                 "VOB",
                 "VRD",

@@ -30,7 +30,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private String province;
     private String city;
     private String location;
-    private String subLocation;  // 地标位置
+    private String subjectCode;  // IPTC 主题代码，用以记录 step poi
     private String scene;        // 场景代码，用于标注照片分类, landscape，portrait，group等
     private String artist;
     private Integer rating;      // 星级
@@ -96,7 +96,7 @@ public class PhotoInfo implements Serializable,Cloneable {
 
             case 'o': return model;
             case 'l': return location;
-            case 'u': return subLocation;
+            case 'u': return subjectCode;
             case 'c': return scene;
 
             case 'p': return pathProperty(rootPath);
@@ -259,8 +259,8 @@ public class PhotoInfo implements Serializable,Cloneable {
                     case LOCATION:
                         location = s;
                         break;
-                    case SUB_LOCATION:
-                        subLocation = s;
+                    case SUBJECT_CODE:
+                        subjectCode = s;
                         break;
                     default:
                 }
@@ -434,15 +434,16 @@ public class PhotoInfo implements Serializable,Cloneable {
         this.location = location;
     }
 
-    public String getSubLocation() {
-        return subLocation;
-    }
 
-    public void setSubLocation(String subLocation) {
-        this.subLocation = subLocation;
-    }
+    public String getSubjectCode() {
+		return subjectCode;
+	}
 
-    public String getScene() {
+	public void setSubjectCode(String subjectCode) {
+		this.subjectCode = subjectCode;
+	}
+
+	public String getScene() {
         return scene;
     }
 

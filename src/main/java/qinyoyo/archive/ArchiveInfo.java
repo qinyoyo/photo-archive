@@ -87,7 +87,7 @@ public class ArchiveInfo {
                 Key.DOCUMENT_ID, Key.IPTCDigest,
                 Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
                 Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
-                Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUB_LOCATION};
+                Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
         int count = 0; 
         try {
             fileInfos = exifTool.query(dir, keys);
@@ -96,19 +96,24 @@ public class ArchiveInfo {
         }
         if (fileInfos!=null) {
             for (String file : fileInfos.keySet()) {
-                try {
-                    if (SupportFileType.isSupport(file)) {
-                        PhotoInfo photoInfo = new PhotoInfo(path, new File(dir, file));
-                        photoInfo.setPropertiesBy(fileInfos.get(file));
-                        infos.add(photoInfo);
-                        count++;
-                    } else SystemOut.println("    忽略文件 " + file);
-                    processedFiles.add(file);
-                } catch (Exception e1) {
-                }
+            	if (file.equals(":ERROR:")) {
+            		SystemOut.println(fileInfos.get(file).get(Key.DESCRIPTION));
+            	} else {
+	                try {
+	                    if (SupportFileType.isSupport(file)) {
+	                        PhotoInfo photoInfo = new PhotoInfo(path, new File(dir, file));
+	                        photoInfo.setPropertiesBy(fileInfos.get(file));
+	                        infos.add(photoInfo);
+	                        count++;
+	                    } else SystemOut.println("    忽略文件 " + file);
+	                    processedFiles.add(file);
+	                } catch (Exception e1) {
+	                }
+            	}
             }
         }
         SystemOut.println("    处理文件数 : "+count);
+        /*
         if (files!=null && processedFiles.size()<files.length) {
             count=0;
             for (int i = 0; i < files.length; i++) {
@@ -129,6 +134,7 @@ public class ArchiveInfo {
             }
             if (count > 0) SystemOut.println("    中文搜索 " + dir.getAbsolutePath() + " 处理文件数 : " + count);
         }
+        */
         File[] subDirs = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {

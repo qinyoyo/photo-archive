@@ -6,6 +6,7 @@ import qinyoyo.archive.PhotoInfo;
 import qinyoyo.exiftool.CommandRunner;
 import qinyoyo.exiftool.ExifTool;
 import java.io.*;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
@@ -804,7 +805,7 @@ public class Utils {
 	static final String PARAM_HELP = "help";
 	static final String PARAM_EMPTY = "empty";
 	static final String PARAM_RENAME = "rename";
-	public static String RENAME_PATTERN = "%y%M%d-%h%m%s_%p%E";
+	public static String RENAME_PATTERN = "%y%M%d-%h%m%s_%u={p}%%E";
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
 		if (argv==null || argv.length==0) return result;

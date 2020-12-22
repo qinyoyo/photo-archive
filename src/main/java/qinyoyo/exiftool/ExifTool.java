@@ -73,25 +73,25 @@ public class ExifTool {
         for (Key key : keys) {
             argsList.add(String.format("-%s", Key.getName(key)));
         }
-        ChineseFileName cc = null; // new ChineseFileName(dir);
         if (dir.isDirectory())  argsList.add(".");
         else argsList.add(dir.getName());
         Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
         List<String> stdOut = result.getKey();
         List<String> stdErr = result.getValue();
-        return processQueryResult(cc, dir, stdOut, stdErr, keys);
+        return processQueryResult(dir, stdOut, stdErr, keys);
     }
 
 
-    private <T> Map<String,Map<Key, T>> processQueryResult(ChineseFileName cc, File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
+    private <T> Map<String,Map<Key, T>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
         Map<String,Map<Key, T>> queryResult = new HashMap<>();
         if (stdErr.size() > 0) {
-            throw new RuntimeException(String.join("\n", stdErr));
+           throw new RuntimeException(String.join("\n", stdErr));
         }
-
+        StringBuilder sb=new StringBuilder();
         for (String line : stdOut) {
             List<String> lineSeparated = Arrays.asList(line.split("\t"));
             if (lineSeparated.size() < keys.length + 1) {
+            	sb.append(line).append("\n");
                 continue;
             }
             Map<Key, T> oneResult = new HashMap<>();
@@ -99,9 +99,14 @@ public class ExifTool {
                 String value = lineSeparated.get(i+(dir.isDirectory()?1:0)).trim();
                 if (!value.isEmpty() && !value.equals("-")) oneResult.put(keys[i],Key.parse(keys[i], value));
             }
-            queryResult.put(dir.isDirectory() ? (cc==null ? lineSeparated.get(0) : cc.getOrignalName(lineSeparated.get(0))) : dir.getName(),oneResult);
+            queryResult.put(dir.isDirectory() ? lineSeparated.get(0) : dir.getName(),oneResult);
         }
-        if (cc!=null) cc.reverse();
+        String error=sb.toString();
+        if (error!=null && !error.isEmpty()) {
+        	Map<Key, T> emap = new HashMap<>();
+        	emap.put(Key.DESCRIPTION, Key.parse(Key.DESCRIPTION,error));
+        	queryResult.put(":ERROR:", emap);
+        }
         return queryResult;
     }
 
