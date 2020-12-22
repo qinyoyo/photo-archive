@@ -690,6 +690,19 @@ public class Utils {
 				else return pathname.isDirectory();
 			}
 		});
+		/*
+		if (dir.getName().toLowerCase().equals("lanscape") || dir.getName().toLowerCase().equals("l") ||
+				dir.getName().toLowerCase().equals("风景") || dir.getName().toLowerCase().equals("景物")) {
+			File newDir = new File(dir.getParentFile(),"Landscape");
+			dir.renameTo(newDir);
+			dir=newDir;
+		} else if (dir.getName().toLowerCase().equals("p") || dir.getName().toLowerCase().equals("l") ||
+				dir.getName().toLowerCase().equals("人物") || dir.getName().toLowerCase().equals("人像")) {
+			File newDir = new File(dir.getParentFile(),"Portrait");
+			dir.renameTo(newDir);
+			dir=newDir;
+		}
+		*/
 		if (subDirs!=null && subDirs.length>0) {
 			for (File d : subDirs) {
 				removeEmptyFolder(d);
@@ -791,7 +804,7 @@ public class Utils {
 	static final String PARAM_HELP = "help";
 	static final String PARAM_EMPTY = "empty";
 	static final String PARAM_RENAME = "rename";
-	public static String RENAME_PATTERN = "%y%M%d-%h%m%s_%l={P}%%E";
+	public static String RENAME_PATTERN = "%y%M%d-%h%m%s_%p%E";
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
 		if (argv==null || argv.length==0) return result;
@@ -1028,7 +1041,7 @@ public class Utils {
 	}
 	public static void pathScene(File dir) {
 		List<String> args = new ArrayList<>();
-		args.add("-Scene=Lanscape");
+		args.add("-Scene=Landscape");
 		args.add("-overwrite_original");
 		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
 			@Override
@@ -1044,7 +1057,7 @@ public class Utils {
 
 			@Override
 			public void after(File dir) {
-				dir.renameTo(new File(dir.getParentFile(),"Lanscape"));
+				dir.renameTo(new File(dir.getParentFile(),"Landscape"));
 				
 			}
 		});

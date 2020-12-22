@@ -56,6 +56,12 @@ public class ExifTool {
 
         argsList.add("-T");
 
+        argsList.add("-charset");
+        argsList.add("iptc=utf8");
+
+        argsList.add("-charset");
+        argsList.add("exif=utf8");
+
         argsList.add("-c");
         argsList.add("\"%+.7f\"");
 
@@ -67,7 +73,7 @@ public class ExifTool {
         for (Key key : keys) {
             argsList.add(String.format("-%s", Key.getName(key)));
         }
-        ChineseFileName cc = new ChineseFileName(dir);
+        ChineseFileName cc = null; // new ChineseFileName(dir);
         if (dir.isDirectory())  argsList.add(".");
         else argsList.add(dir.getName());
         Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
@@ -93,9 +99,9 @@ public class ExifTool {
                 String value = lineSeparated.get(i+(dir.isDirectory()?1:0)).trim();
                 if (!value.isEmpty() && !value.equals("-")) oneResult.put(keys[i],Key.parse(keys[i], value));
             }
-            queryResult.put(dir.isDirectory() ? cc.getOrignalName(lineSeparated.get(0)) : dir.getName(),oneResult);
+            queryResult.put(dir.isDirectory() ? (cc==null ? lineSeparated.get(0) : cc.getOrignalName(lineSeparated.get(0))) : dir.getName(),oneResult);
         }
-        cc.reverse();
+        if (cc!=null) cc.reverse();
         return queryResult;
     }
 
