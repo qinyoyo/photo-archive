@@ -1,0 +1,32 @@
+#端口以及主目录路径   
+server:
+   port : 8888
+   servlet: 
+      context-path : /
+      session:
+         timeout: PT1H  #会话最大保持时间，以秒为单位，不低于1分钟，
+#配置ssl请将 server.port 配置 为 443，然后配置以下参数
+#   http:
+#      port : 80       
+#   ssl:
+#      key-store: webapp/ssl_www.svein.com.cn.pfx
+#      key-store-password: xipYs081
+#      keyStoreType: PKCS12
+spring:
+# 正式环境设为false
+   devtools:
+      add-properties: true
+
+   jackson:
+      date-format: yyyy-MM-dd HH:mm:ss
+      time-zone: GMT+8
+#日志输出
+logging:
+   file: 
+      name: log/iotequ.log
+   level: 
+      root: info
+      org.springframework: info
+      qinyoyo: debug
+photo:
+   root-path: F:/Pictures/Archived
