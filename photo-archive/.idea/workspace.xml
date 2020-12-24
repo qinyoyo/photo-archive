@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="efed3c73-7e1d-4d87-8043-268260d54a77" name="Default Changelist" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="importAutomatically" value="true" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1kULujAN5oXEyhmTycnuLUVYSEH" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main/java/qinyoyo" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="MavenSettings" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="qinyoyo" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\J2EE\archive-photo\src\main\java\qinyoyo" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="Utils" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="qinyoyo.Utils" />
+      <module name="archive-photo" />
+      <option name="PROGRAM_PARAMETERS" value="-p1 &quot;F:\Pictures\Archived\2020\202008 福建&quot; -c1" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="qinyoyo.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Utils" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="efed3c73-7e1d-4d87-8043-268260d54a77" name="Default Changelist" comment="" />
+      <created>1605750447820</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1605750447820</updated>
+      <workItem from="1605750449040" duration="1490000" />
+      <workItem from="1605751943262" duration="179000" />
+      <workItem from="1605752132784" duration="162000" />
+      <workItem from="1605752376122" duration="23081000" />
+      <workItem from="1605834950746" duration="22400000" />
+      <workItem from="1605862652831" duration="2183000" />
+      <workItem from="1605866032766" duration="1455000" />
+      <workItem from="1605942576076" duration="15350000" />
+      <workItem from="1607157462741" duration="13885000" />
+      <workItem from="1607174953994" duration="261000" />
+      <workItem from="1607175316849" duration="51000" />
+      <workItem from="1607175744645" duration="30000" />
+      <workItem from="1607226716472" duration="1227000" />
+      <workItem from="1607228038033" duration="1008000" />
+      <workItem from="1607229528397" duration="5249000" />
+      <workItem from="1607242367646" duration="6677000" />
+      <workItem from="1607253901656" duration="4238000" />
+      <workItem from="1607317273805" duration="14619000" />
+      <workItem from="1607332214230" duration="559000" />
+      <workItem from="1607394891015" duration="6653000" />
+      <workItem from="1607404822970" duration="1653000" />
+      <workItem from="1607408549833" duration="10000" />
+      <workItem from="1607479843122" duration="7408000" />
+      <workItem from="1607491868067" duration="13772000" />
+      <workItem from="1607564507426" duration="6703000" />
+      <workItem from="1607580921122" duration="11904000" />
+      <workItem from="1608094815870" duration="742000" />
+      <workItem from="1608172250541" duration="5000" />
+      <workItem from="1608512605831" duration="27273000" />
+      <workItem from="1608598364054" duration="8601000" />
+      <workItem from="1608772254211" duration="339000" />
+      <workItem from="1608791385541" duration="247000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/exiftool/ExifTool.java</url>
+          <line>117</line>
+          <option name="timeStamp" value="115" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/Utils.java</url>
+          <line>103</line>
+          <option name="timeStamp" value="133" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/archive/PhotoInfo.java</url>
+          <line>145</line>
+          <option name="timeStamp" value="136" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="Application">
+        <watch expression="workingDir.toFile().getAbsolutePath()" language="JAVA" />
+        <watch expression="fileInfos.get(file).size()" language="JAVA" />
+      </configuration>
+    </watches-manager>
+  </component>
+</project>
