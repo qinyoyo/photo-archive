@@ -7,6 +7,9 @@ body {
     border-top: 1px solid #e6ebf5;
     border-bottom: 1px solid #e6ebf5;
 }
+.folder-head {
+    margin-bottom: 10px;
+}
 .folder-item {
     cursor: pointer;
 }
@@ -49,7 +52,7 @@ body {
     display: grid;
     grid-auto-flow: row;
     grid-template-columns: repeat(4, 1fr);
-    grid-gap: 1rem;
+    grid-gap: 5px;
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -57,17 +60,16 @@ body {
 
 .grid-cell {
     color: #fff;
-    font-size: 50px;
-    height: 90px;
+    font-size: 12px;
+    height: 120px;
     text-align: center;
+    display: table-cell;
+    vertical-align: middle;
+    border: 1px solid #f1e8e8;
 }
 .gird-cell-img {
-    object-fit: contain;
-    width: auto;
-    height: auto;
     max-width: 100%;
     max-height: 100%;
-    position: absolute;
 }
 /*
 @media screen and (max-aspect-ratio: 13/9) {

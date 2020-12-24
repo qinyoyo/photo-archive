@@ -32,10 +32,19 @@ public class PVController implements ApplicationRunner {
     List<PhotoInfo> mimeListInPath(@NotNull String mime, @NotNull String folder) {
         return archiveInfo.getInfos().stream()
                 .filter(p->
-                        folder.equals(p.getSubFolder()) && p.getMimeType().contains(mime)
+                        folder.equals(p.getSubFolder()) && p.getMimeType()!=null && p.getMimeType().contains(mime)
                 ).collect(Collectors.toList());
     }
 
+    void createThumbs(String thumbPath, String imgPath) {
+        ImageUtil.compressImage(imgPath, thumbPath, 180, 120);
+    }
+
+    @RequestMapping(value = "thumbnail")
+    public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
+        return null;
+    }
+    List<String> threadPathList = new ArrayList<>();
     @RequestMapping(value = "/")
     public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
         model.addAttribute("separator",File.separator);
@@ -79,7 +88,19 @@ public class PVController implements ApplicationRunner {
 
             //Photo Info
             List<PhotoInfo> photos = mimeListInPath("image",path);
-            if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
+            if (photos!=null && photos.size()>0) {
+                final List<PhotoInfo> noThumbs = photos.stream().filter(p->!new File(p.fullPath(rootPath+File.separator+".thumb")).exists()).collect(Collectors.toList());
+                if (noThumbs!=null && noThumbs.size()>0 && !threadPathList.contains(path)) {
+                    threadPathList.add(path);
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            for (PhotoInfo p : noThumbs) createThumbs(p.fullPath(rootPath+File.separator+".thumb"),p.fullPath(rootPath));
+                        }
+                    }.start();
+                }
+                model.addAttribute("photos",photos);
+            }
         }
         return "index";
     }

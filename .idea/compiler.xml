@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="archive-photo" />
         <module name="photo-info" />
+        <module name="photo-viewer" />
         <module name="photo-archive" />
       </profile>
     </annotationProcessing>
@@ -18,6 +19,12 @@
       <module name="photo" target="1.8" />
       <module name="photo-archive" target="1.8" />
       <module name="photo-info" target="8" />
+      <module name="photo-viewer" target="1.8" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="photo-viewer" options="-parameters" />
+    </option>
   </component>
 </project>

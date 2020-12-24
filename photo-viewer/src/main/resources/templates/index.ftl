@@ -44,13 +44,11 @@
         <div class="photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <div>
                     <#if p.subFolder?? && p.subFolder!=''>
-                        <img src = "${p.subFolder?replace('\\','/')+'/'+p.fileName}" class="gird-cell-img" alt="${p.fileName}" />
+                        <img src = ".thumb/${p.subFolder?replace('\\','/')+'/'+p.fileName}" class="gird-cell-img" alt="${p.fileName}" />
                     <#else>
-                        <img src = "${p.fileName}" class="gird-cell-img" alt="${p.fileName}" />
+                        <img src = ".thumb/${p.fileName}" class="gird-cell-img" alt="${p.fileName}" />
                     </#if>
-                    </div>
                 </div>
             </#list>
         </div>
