@@ -120,22 +120,6 @@ public class ExifTool {
         if (listener==null || listener.accept(dir)) {
             try {
                 System.out.println(dir.getCanonicalPath());
-                /* 可能会损坏文件
-                List<String> argsList = new ArrayList<>();
-                argsList.add(EXIFTOOL);
-                argsList.addAll(args);
-                if (dir.isDirectory()) argsList.add(".");
-                else argsList.add(dir.getName());
-                Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
-                List<String> stdOut = result.getKey();
-                List<String> stdErr = result.getValue();
-                if (stdOut != null && !stdOut.isEmpty()) {
-                    for (String s : stdOut) SystemOut.println(s);
-                }
-                if (stdErr != null && !stdErr.isEmpty()) {
-                    for (String s : stdErr) SystemOut.println(s);
-                }
-                */
                 if (listener!=null) listener.after(dir);
             } catch (Exception e) {
                 System.out.println(e.getMessage());

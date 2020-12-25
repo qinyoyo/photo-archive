@@ -68,7 +68,7 @@ public enum Key {
     OBJECT_NAME("ObjectName", String.class),
     OFFSETTIME("OffsetTime", String.class, "time zone for ModifyDate"),
     OFFSETTIMEORIGINAL("OffsetTimeOriginal", String.class, "time zone for DateTimeOriginal"),
-    ORIENTATION("Orientation", Integer.class),
+    ORIENTATION("Orientation", String.class),
     OWNER_NAME("OwnerName", String.class),
     RATING("Rating", Integer.class),
     RATING_PERCENT("RatingPercent", Integer.class),

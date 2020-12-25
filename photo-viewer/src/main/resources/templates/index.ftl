@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="static/css/pv.css">
     <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
     <script type="text/javascript" src="static/js/transform.js"></script>
+    <script type="text/javascript" src="static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>

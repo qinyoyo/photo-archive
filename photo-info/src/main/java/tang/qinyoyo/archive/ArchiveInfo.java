@@ -78,7 +78,7 @@ public class ArchiveInfo {
         System.out.println("批量搜索 "+dir.getAbsolutePath());
         Map<String, Map<Key, Object>> fileInfos = null;
         Key[] keys = new Key[]{Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,Key.CREATEDATE,
-                Key.MAKE, Key.MODEL, Key.LENS_ID,
+                Key.MAKE, Key.MODEL, Key.LENS_ID, Key.ORIENTATION,
                 Key.DOCUMENT_ID, Key.IPTCDigest,
                 Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
                 Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
@@ -108,28 +108,6 @@ public class ArchiveInfo {
             }
         }
         System.out.println("    处理文件数 : "+count);
-        /*
-        if (files!=null && processedFiles.size()<files.length) {
-            count=0;
-            for (int i = 0; i < files.length; i++) {
-                File f = files[i];
-                if (processedFiles.contains(f.getName())) continue;
-                try {
-                    if (SupportFileType.isSupport(f.getName())) {
-                        fileInfos = exifTool.query(f, keys);
-
-                        PhotoInfo photoInfo = new PhotoInfo(path, f);
-                        photoInfo.setPropertiesBy(fileInfos.get(f.getName()));
-                        infos.add(photoInfo);
-                        count++;
-                    } else System.out.println("    忽略文件 " + f.getName());
-                } catch (Exception e1) {
-                    System.out.println("    忽略文件 " + f.getName());
-                }
-            }
-            if (count > 0) System.out.println("    中文搜索 " + dir.getAbsolutePath() + " 处理文件数 : " + count);
-        }
-        */
         File[] subDirs = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {

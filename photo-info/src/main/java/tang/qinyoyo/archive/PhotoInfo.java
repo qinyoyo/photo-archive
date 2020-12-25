@@ -35,6 +35,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private String scene;        // 场景代码，用于标注照片分类, landscape，portrait，group等
     private String artist;
     private Integer rating;      // 星级
+    private String orientation;
 
     private String headline;
     private String subTitle;     // 题注
