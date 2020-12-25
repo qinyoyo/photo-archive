@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="stylesheet" href="static/css/pv.css">
     <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <script type="text/javascript" src="static/js/transform.js"></script>
     <script type="text/javascript" src="static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>
@@ -45,9 +46,9 @@
             <#list photos as p>
                 <div class="photo-item grid-cell">
                     <#if p.subFolder?? && p.subFolder!=''>
-                        <img src = ".thumb/${p.subFolder?replace('\\','/')+'/'+p.fileName}" class="gird-cell-img" alt="${p.fileName}" />
+                        <img src = ".thumb/${p.subFolder?replace('\\','/')+'/'+p.fileName}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" />
                     <#else>
-                        <img src = ".thumb/${p.fileName}" class="gird-cell-img" alt="${p.fileName}" />
+                        <img src = ".thumb/${p.fileName}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" />
                     </#if>
                 </div>
             </#list>
