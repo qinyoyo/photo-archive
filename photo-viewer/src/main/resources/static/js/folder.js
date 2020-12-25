@@ -8,6 +8,7 @@ const DIALOG = '<div class="dialog__wrapper" style="z-index: 8888;">' +
                '  </div>' +
                '</div>'
 */
+
 function isMobile() {
     const ua = navigator.userAgent.toLowerCase()
     const agents = ["android", "iphone","symbianos", "phone","mobile"]
@@ -30,11 +31,6 @@ function removeImageDialog() {
     document.querySelector('body').style.overflow = 'auto'
 }
 
-function resetTransform(element) {
-    element.perspective = 500;
-    element.scaleX = element.scaleY = element.scaleZ = 1;
-    element.translateX = element.translateY = element.translateZ = element.rotateX = element.rotateY = element.rotateZ =element.skewX=element.skewY= element.originX = element.originY = element.originZ = 0;
-}
 function loadImageBy(img, index) {
     if (index<0) return false
     let thumb = document.querySelector('.img-index-'+index)
@@ -48,11 +44,12 @@ function loadImageBy(img, index) {
 }
 
 function addImageDialog(src, index) {
+    let maxScale = 1.0
     removeImageDialog()
     addModel()
     const body = document.querySelector('body')
     body.style.overflow = 'hidden'
-    const maxWidth = window.innerWidth, maxHeight = window.innerHeight
+    const windowWidth = window.innerWidth, windowHeight = window.innerHeight
     let wrapper = document.createElement("div")
     wrapper.className = 'dialog__wrapper'
     wrapper.style.zIndex = "6001"
@@ -62,8 +59,8 @@ function addImageDialog(src, index) {
     let dialogBody = document.createElement("div")
     dialogBody.className = 'dialog__body'
     dialogBody.style.zIndex = "6003"
-    dialogBody.style.width = maxWidth+'px'
-    dialogBody.style.height = maxHeight+'px'
+    dialogBody.style.width = windowWidth+'px'
+    dialogBody.style.height = windowHeight+'px'
     dialogBody.tabIndex = -1
 
     let img = document.createElement("img")
@@ -85,10 +82,14 @@ function addImageDialog(src, index) {
     wrapper.appendChild(dialog)
     body.appendChild(wrapper)
 
-    let imageWidth = maxWidth, imageHeight = maxHeight
+    let imageWidth = windowWidth, imageHeight = windowHeight
     img.onload = function() {
         imageWidth = img.naturalWidth
         imageHeight = img.naturalHeight
+        maxScale = Math.max(imageWidth/windowWidth, imageWidth/windowHeight)
+        img.rotateZ = 0
+        if (maxScale<1) maxScale=1
+        if (isMobile()) img.scaleX = img.scaleY = 1
     }
     button.onclick = function() {
         removeImageDialog()
@@ -97,7 +98,7 @@ function addImageDialog(src, index) {
     if (isMobile()) {
         let initScale = 1
         let swipStart = false
-        wrapper.style.overflow = 'hidden'
+        //wrapper.style.overflow = 'hidden'
         new AlloyFinger(img, {
             rotate:function(event){
                 img.rotateZ += event.angle;
@@ -106,14 +107,19 @@ function addImageDialog(src, index) {
                 initScale = img.scaleX;
             },
             pinch: function (event) {
-                img.scaleX = img.scaleY = initScale * event.zoom;
+                let scale = img.scaleY = initScale * event.zoom;
+                if (scale>maxScale) scale=maxScale
+                else if (scale<1) scale = 1
+                img.scaleX = img.scaleY = scale
             },
             doubleTap:function(event){
                 event.stopPropagation();
-                resetTransform(img)
+                img.rotateZ = 0
+                if (img.scaleX>1) img.scaleX = img.scaleY =  1;
+                else img.scaleX = img.scaleY =  maxScale;
             },
             touchStart:function(event) {
-                if (event.touches.length==1 && event.touches[0].clientX > maxWidth-30 || event.touches[0].clientX < 30) swipStart = true;
+                if (event.touches.length==1 && event.touches[0].clientX > windowWidth-30 || event.touches[0].clientX < 30) swipStart = true;
                 else swipStart = false;
             },
             touchMove:function(event) {
@@ -131,9 +137,9 @@ function addImageDialog(src, index) {
         });
     } else {
         dialogBody.onclick=function (event){
-            if (event.clientX>maxWidth-100||event.clientX<100){
-                if (loadImageBy(img,event.clientX<100?index-1:index+1)){
-                    if (event.clientX<100) index--; else index++;
+            if (event.clientX>img.offsetLeft + img.offsetWidth ||event.clientX<img.offsetLeft){
+                if (loadImageBy(img,event.clientX<img.offsetLeft ? index-1 : index+1)){
+                    if (event.clientX<img.offsetLeft) index--; else index++;
                 }
             }
         }
@@ -142,22 +148,22 @@ function addImageDialog(src, index) {
                 if (loadImageBy(img,event.code=='ArrowLeft'?index-1:index+1)){
                     if (event.code=='ArrowLeft') index--; else index++;
                 }
-            }else if (event.code=='ArrowUp'||event.code=='ArrowDown'){
-                img.rotateZ+=(event.code=='ArrowUp'?90:-90)
+            }else if (event.code=='Space' || event.code=='ArrowUp'||event.code=='ArrowDown'){
+                img.rotateZ+=(event.code=='ArrowUp'?-90:90)
                 if (img.rotateZ>=360) img.rotateZ=0; else if (img.rotateZ<0) img.rotateZ+=360;
             }
         }
         img.onclick=function (event){
-            if (event.clientX>maxWidth-100||event.clientX<100){
-                if (loadImageBy(img,event.clientX<100?index-1:index+1)){
-                    if (event.clientX<100) index--; else index++;
+            if (event.clientX>img.offsetLeft + img.offsetWidth-30 ||event.clientX<img.offsetLeft+30) {
+                if (loadImageBy(img,event.clientX<img.offsetLeft+30 ? index-1 : index+1)){
+                    if (event.clientX<img.offsetLeft+30) index--; else index++;
                     event.stopPropagation()
                 }
             } else if (img.className=='img-fit') {
-                let scaleX = imageWidth/maxWidth, scaleY=imageHeight/maxHeight;
+                let scaleX = imageWidth/windowWidth, scaleY=imageHeight/windowHeight;
                 //if (scaleY>scale) scale = scaleY
                 img.className='';
-                wrapper.scrollTo(event.clientX*scaleX-maxWidth/2, event.clientY*scaleY-maxHeight/2)
+                wrapper.scrollTo(event.clientX*scaleX-windowWidth/2, event.clientY*scaleY-windowHeight/2)
             }
             else img.className='img-fit';
         }
