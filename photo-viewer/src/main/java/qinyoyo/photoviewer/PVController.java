@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import qinyoyo.utils.SpringContextUtil;
 import tang.qinyoyo.archive.ArchiveInfo;
+import tang.qinyoyo.archive.ImageUtil;
 import tang.qinyoyo.archive.PhotoInfo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +38,7 @@ public class PVController implements ApplicationRunner {
     }
 
     void createThumbs(String thumbPath, String imgPath) {
-        ImageUtil.compressImage(imgPath, thumbPath, 180, 120);
+        ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
     }
 
     @RequestMapping(value = "thumbnail")

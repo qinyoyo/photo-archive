@@ -179,6 +179,20 @@ public class ArchiveInfo {
                 else return nameCompare(a,b);
 	        });
     }
+    public void createThumbFiles() {
+        if (infos!=null && infos.size()>0) {
+            for (PhotoInfo p : infos) {
+                if (p.getMimeType()!=null && p.getMimeType().contains("image/")) {
+                    String thumbPath = p.fullPath(getPath() + File.separator + ".thumb");
+                    String imgPath = p.fullPath(getPath());
+                    if (!new File(thumbPath).exists()) {
+                        System.out.println("Create thumbnail of "+imgPath);
+                        ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
+                    }
+                }
+            }
+        }
+    }
     public void saveInfos() {
     	if (infos==null) return;
         File af = new File(path, ARCHIVE_FILE);

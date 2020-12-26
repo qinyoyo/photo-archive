@@ -1,4 +1,4 @@
-package qinyoyo.photoviewer;
+package tang.qinyoyo.archive;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -10,10 +10,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-/**
- * * @author WQ * @date 2011-01-14 * @versions 1.0 图片压缩工具类 提供的方法中可以设定生成的
- * 缩略图片的大小尺寸等
- */
+
 public class ImageUtil {
     /** * 图片文件读取 * * @param srcImgPath * @return */
     private static BufferedImage InputImage(String srcImgPath) {
@@ -35,6 +32,7 @@ public class ImageUtil {
     public static void compressImage(String srcImgPath, String outImgPath,
                                      int new_w, int new_h) {
         BufferedImage src = InputImage(srcImgPath);
+        if (src==null) return;
         disposeImage(src, outImgPath, new_w, new_h);
     }
 

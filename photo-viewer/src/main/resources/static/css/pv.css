@@ -136,7 +136,7 @@ body {
 }
 .button-close {
     position: fixed;
-    bottom: 36px;
+    bottom: 12px;
     left: 50%;
     width: 36px;
     height: 36px;
@@ -147,15 +147,28 @@ body {
     font-size: 32px;
     color: #66666680;
 }
-/*
+
+.waiting-icon {
+    position: fixed;
+    bottom: 50%;
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 48px;
+    color: #ffa0c0;
+}
+
 @media screen and (max-aspect-ratio: 13/9) {
     .grid-box {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 @media screen and (min-aspect-ratio: 13/9) {
     .grid-box {
-        grid-template-rows: repeat(3, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
 }
- */

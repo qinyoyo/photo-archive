@@ -542,19 +542,7 @@ public class Utils {
 				else return pathname.isDirectory();
 			}
 		});
-		/*
-		if (dir.getName().toLowerCase().equals("lanscape") || dir.getName().toLowerCase().equals("l") ||
-				dir.getName().toLowerCase().equals("风景") || dir.getName().toLowerCase().equals("景物")) {
-			File newDir = new File(dir.getParentFile(),"Landscape");
-			dir.renameTo(newDir);
-			dir=newDir;
-		} else if (dir.getName().toLowerCase().equals("p") || dir.getName().toLowerCase().equals("l") ||
-				dir.getName().toLowerCase().equals("人物") || dir.getName().toLowerCase().equals("人像")) {
-			File newDir = new File(dir.getParentFile(),"Portrait");
-			dir.renameTo(newDir);
-			dir=newDir;
-		}
-		*/
+
 		if (subDirs!=null && subDirs.length>0) {
 			for (File d : subDirs) {
 				removeEmptyFolder(d);
@@ -651,6 +639,8 @@ public class Utils {
 	static final String PARAM_MOVE_OTHER2 = "other2";
 	static final String PARAM_CLEAR1 = "clear1";
 	static final String PARAM_CLEAR2 = "clear2";
+	static final String PARAM_THUMB1 = "thumb1";
+	static final String PARAM_THUMB2 = "thumb2";
 	static final String PARAM_EXECUTE = "execute";
 	static final String PARAM_SHUTDOWN = "shutdown";
 	static final String PARAM_HELP = "help";
@@ -716,6 +706,12 @@ public class Utils {
 				case "--clear2":
 					result.put(param.endsWith("1") ? PARAM_CLEAR1 : PARAM_CLEAR2,true);
 					break;
+				case "-t1":
+				case "--thumb1":
+				case "-t2":
+				case "--thumb2":
+					result.put(param.endsWith("1") ? PARAM_THUMB1 : PARAM_THUMB2,true);
+					break;
 				case "-e":
 				case "--execute":
 					result.put(PARAM_EXECUTE,true);
@@ -745,9 +741,11 @@ public class Utils {
 		System.out.println("  -s1 : 将相同文件移到.delete目录, 同  --same1");
 		System.out.println("  -o1 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other1");
 		System.out.println("  -c1 : 需要归档的目录重新分析, 同  --clear1");
+		System.out.println("  -t1 : 创建缩略图, 同  --thumb1");
 		System.out.println("  -s2 : 将相同文件移到.delete目录, 同  --same2");
 		System.out.println("  -o2 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other2");
-		System.out.println("  -c2 : 归档目标目录重新分析, 同  --clear2");		
+		System.out.println("  -c2 : 归档目标目录重新分析, 同  --clear2");
+		System.out.println("  -t2 : 创建缩略图, 同  --thumb2");
 		System.out.println("  -a : 强制将path1与path2进行文件相同分析");
 		System.out.println("  -e : 扫描完成后立即执行归档操作, 同  --execute");
 		System.out.println("  -f : 完成后自动关机, 同  --shutdown");
@@ -1025,6 +1023,11 @@ public class Utils {
 			boolean other = boolValue(params.get(PARAM_MOVE_OTHER1));
 			boolean clear = boolValue(params.get(PARAM_CLEAR1));
 			camera=getArchiveInfo(path, clear, same,other);
+			if (camera!=null && boolValue(params.get(PARAM_THUMB1))) {
+				SystemOut.println("Now :"+DateUtil.date2String(new Date()));
+				SystemOut.println("建立缩略图文件<"+camera.getPath()+">...");
+				camera.createThumbFiles();
+			}
 		}
 		v = params.get(PARAM_ARCHIVED_DIR);
 		if (v!=null) {
@@ -1040,6 +1043,11 @@ public class Utils {
 			}
 			if (archived!=null && camera!=null && boolValue(params.get(PARAM_EXECUTE))) {
 				executeArchive(camera,archived);
+			}
+			if (archived!=null && boolValue(params.get(PARAM_THUMB2))) {
+				SystemOut.println("Now :"+DateUtil.date2String(new Date()));
+				SystemOut.println("建立缩略图文件<"+archived.getPath()+">...");
+				archived.createThumbFiles();
 			}
 		}
 
