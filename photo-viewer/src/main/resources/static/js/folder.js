@@ -1,14 +1,3 @@
-/*
-const MODEL = '<div class="v-modal" tabindex="0" style="z-index: 6666;"></div>'
-const DIALOG = '<div class="dialog__wrapper" style="z-index: 8888;">' +
-               '  <div class="dialog" style="margin-top: 0px; top: 0px;">' +
-               '    <div class="dialog__body">' +
-               '      <img src="SRC" />' +
-               '    </div>' +
-               '  </div>' +
-               '</div>'
-*/
-
 function addModel() {
     let node = document.createElement("div")
     node.className = 'v-modal'
@@ -44,11 +33,13 @@ function addImageDialog(src, index) {
     dialogBody.tabIndex = -1
 
     let img = document.createElement("img")
+    img.draggable = false
     img.className = 'img-fit'
     img.style.zIndex = "6004"
 
     let closeButton = document.createElement("button")
     closeButton.className = 'button-close'
+    closeButton.style.left = (pageW - 36)/2 + 'px'
     closeButton.style.zIndex = "6005"
 
     let closeIcon = document.createElement("img")
@@ -58,6 +49,7 @@ function addImageDialog(src, index) {
     let waitingIcon = document.createElement("button")
     waitingIcon.className = 'waiting-icon'
     waitingIcon.style.zIndex = '6006'
+    waitingIcon.style.left = (pageW - 50)/2 + 'px'
 
     let waitingI = document.createElement("i")
     waitingI.className = 'fa fa-spinner fa-spin animated'
@@ -94,18 +86,40 @@ function addImageDialog(src, index) {
     }
     body.onkeydown=function (event){
         if (event.code=='ArrowLeft'||event.code=='ArrowRight'){
-            loadImageBy(img,event.code=='ArrowLeft'?index-1:index+1)
+            loadImageBy(event.code=='ArrowLeft'?index-1:index+1)
         } else if (event.code=='Space' || event.code=='ArrowUp'||event.code=='ArrowDown'){
             img._rotate(event.code=='ArrowUp'?-90:90)
+            img._calcSize()
         }
+    }
+    let clickForChange = false
+    const dblClick = function(point) {
+        clickForChange = false
+        if (!img._isReady) return
+        if (img._isFitClient()) {
+            img._realSize(point)
+        } else img._fitClient()
+    }
+    const imgClick = function(point) {
+        if (!img._isReady) return
+        if (point.x>pageW - 50 ||point.x< 50) {
+            clickForChange = true
+            setTimeout(function(){
+                if (clickForChange) {
+                    clickForChange = false
+                    loadImageBy(point.x < 50 ? index - 1 : index + 1)
+                }
+            },400)
+        }
+
     }
     if (isMobile()) {
         let initScale = 1
         let swipStart = false
-        wrapper.style.overflow = 'hidden'
         new AlloyFinger(img, {
             rotate:function(event){
                 event.stopPropagation();
+                event.preventDefault()
                 if (img._isReady) img._rotate(event.angle,{
                     x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
                     y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
@@ -113,10 +127,12 @@ function addImageDialog(src, index) {
             },
             multipointStart: function (event) {
                 event.stopPropagation();
+                event.preventDefault()
                 initScale = img.scaleX;
             },
             pinch: function (event) {
                 event.stopPropagation();
+                event.preventDefault()
                 if (img._isReady)  {
                     let scale = img.scaleY = initScale * event.zoom;
                     img._scale(scale,{
@@ -125,70 +141,94 @@ function addImageDialog(src, index) {
                     })
                 }
             },
+            tap:function(event) {
+                event.stopPropagation();
+                event.preventDefault()
+                imgClick({
+                    x: event.changedTouches[0].pageX,
+                    y: event.changedTouches[0].pageY
+                })
+            },
             doubleTap:function(event){
                 event.stopPropagation();
-                if (!img._isReady) return
-                if (img.scaleX>1) {
-                    img._fitClient()
-                }
-                else {
-                    img._realSize({
+                event.preventDefault()
+                dblClick({
                         x: event.changedTouches[0].pageX,
                         y: event.changedTouches[0].pageY
                     })
-                }
             },
             touchStart:function(event) {
-                event.stopPropagation();
                 if (!img._isReady) return
                 if (event.touches.length == 1 && event.touches[0].pageX > pageW - 30 || event.touches[0].pageX < 30) swipStart = true;
                 else swipStart = false;
             },
             touchMove:function(event) {
                 event.stopPropagation();
+                event.preventDefault()
                 if (!img._isReady) return
                 if (event.touches.length==1) {
-                    img._translate({
-                        x: img.translateX + event.deltaX,
-                        y: img.translateY += event.deltaY
+                    img._move({
+                        x: event.deltaX,
+                        y: event.deltaY
                     })
-                }
-            },
-            tap:function(event) {
-                let x = event.changedTouches[0].pageX
-                if (x<30 || x > pageW - 30) {
-                    loadImageBy(img,x<30 ? index-1:index+1)
                 }
             },
             swipe:function(event){
                 event.stopPropagation();
+                event.preventDefault()
                 if (!img._isReady) return
                 if (swipStart){
-                    loadImageBy(img,event.direction==="Right" ? index-1:index+1)
+                    loadImageBy(event.direction==="Right" ? index-1:index+1)
                 }
                 swipStart = false;
             },
             touchEnd: function (event) {
                 event.stopPropagation();
+                event.preventDefault()
                 if (!img._isReady) return
+                img._calcSize()
                 img._roundRotate()
-                img._translate({ x: img.translateX, y: img.translateY })
             }
         });
     } else {
+        let pageX = 0,pageY = 0
+        let startDrag = false
         img.onclick=function (event){
-            if (!img._isReady) return
-            if (event.clientX>img.offsetLeft + img.offsetWidth-30 ||event.clientX<img.offsetLeft+30) {
-                if (loadImageBy(img,event.clientX<img.offsetLeft+30 ? index-1 : index+1)){
-                    event.stopPropagation()
-                }
-            } else if (img._isFitClient()) {
-                img._realSize({
-                    x:event.pageX,
-                    y:event.pageY
-                })
+            event.stopPropagation();
+            event.preventDefault()
+            imgClick({
+                x: event.clientX,
+                y: event.clientY
+            })
+        }
+        img.ondblclick=function (event){
+            event.stopPropagation();
+            event.preventDefault()
+            dblClick({
+                x:event.clientX,
+                y:event.clientY
+            })
+        }
+        img.onmousedown=function (event) {
+            if (!img._isReady) {
+                startDrag = false
+                return
             }
-            else img._fitClient()
+            startDrag = true
+            pageX = event.pageX
+            pageY = event.pageY
+        }
+        img.onmousemove=function(event) {
+            if (!startDrag) return
+            img._move({
+                x: event.pageX - pageX,
+                y: event.pageY - pageY
+            })
+            pageX = event.pageX
+            pageY = event.pageY
+        }
+        img.onmouseup=function (event) {
+            startDrag = false
         }
     }
     TransformImage(img)
@@ -207,7 +247,8 @@ window.onload=function(){
         if (src.indexOf('.thumb/')==0) src = src.substring(7)
         let pos = img.className.indexOf('img-index-')
         const index = (pos>=0 ? parseInt(img.className.substring(pos+10)) : 0)
-        img.onclick=function (){
+        img.onclick=function (event){
+            event.stopPropagation()
             addImageDialog(src, index == NaN ? 0 : index)
         }
     });

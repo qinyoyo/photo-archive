@@ -1,6 +1,5 @@
 package qinyoyo.photoviewer;
 
-import com.sun.istack.internal.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -30,7 +29,7 @@ public class PVController implements ApplicationRunner {
     private String rootPath;
     private ArchiveInfo archiveInfo;
 
-    List<PhotoInfo> mimeListInPath(@NotNull String mime, @NotNull String folder) {
+    List<PhotoInfo> mimeListInPath(String mime, String folder) {
         return archiveInfo.getInfos().stream()
                 .filter(p->
                         folder.equals(p.getSubFolder()) && p.getMimeType()!=null && p.getMimeType().contains(mime)
