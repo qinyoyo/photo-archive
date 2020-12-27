@@ -115,7 +115,6 @@ function addImageDialog(src, index) {
     }
     if (isMobile()) {
         let initScale = 1
-        let swipStart = false
         new AlloyFinger(img, {
             rotate:function(event){
                 event.stopPropagation();
@@ -157,11 +156,6 @@ function addImageDialog(src, index) {
                         y: event.changedTouches[0].pageY
                     })
             },
-            touchStart:function(event) {
-                if (!img._isReady) return
-                if (event.touches.length == 1 && event.touches[0].pageX > pageW - 30 || event.touches[0].pageX < 30) swipStart = true;
-                else swipStart = false;
-            },
             touchMove:function(event) {
                 event.stopPropagation();
                 event.preventDefault()
@@ -176,11 +170,9 @@ function addImageDialog(src, index) {
             swipe:function(event){
                 event.stopPropagation();
                 event.preventDefault()
-                if (!img._isReady) return
-                if (swipStart){
+                if (!img._isReady || !img._isFitClient()) return
+                if (event.direction==="Right" || event.direction==="Left")
                     loadImageBy(event.direction==="Right" ? index-1:index+1)
-                }
-                swipStart = false;
             },
             touchEnd: function (event) {
                 event.stopPropagation();

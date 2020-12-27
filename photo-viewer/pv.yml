@@ -1,6 +1,6 @@
 #端口以及主目录路径   
 server:
-   port : 8888
+   port : 80
    servlet: 
       context-path : /
       session:
@@ -29,4 +29,4 @@ logging:
       org.springframework: info
       qinyoyo: debug
 photo:
-   root-path: E:\Photo\Archived\2017\201707 美加
+   root-path: H:\Photo\Archived

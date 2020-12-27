@@ -11,6 +11,7 @@
     <groupId>qinyoyo</groupId>
     <artifactId>photo-viewer</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
     <name>photo-viewer</name>
     <description>Photo viewer with browser</description>
 
@@ -51,10 +52,31 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+        <finalName>pv</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Iotequ-Module>true</Iotequ-Module>
+                            <Group-Id>${project.groupId}</Group-Id>
+                            <Artifact-Id>${project.artifactId}</Artifact-Id>
+                            <Version>${project.version}</Version>
+                            <Build-Time>${maven.build.timestamp}</Build-Time>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
     </build>
