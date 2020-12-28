@@ -10,7 +10,7 @@
         })) return true
         else return false
     }
-    window.TransformImage = function (img) {
+    window.TransformImage = function (img, initialSrc, index) {
         const pageW = window.innerWidth, pageH = window.innerHeight
         let   imageW = pageW, imageH = pageH
         let   clientW = pageW, clientH = pageH
@@ -18,14 +18,60 @@
         const container = img.parentNode
         const waitingIcon = container.querySelector('.waiting-icon')
 
-        img._isReady = false
+        const loadImageBy = function (imgIndex) {
+            if (imgIndex<0) return false
+            let thumb = document.querySelector('.img-index-'+imgIndex)
+            if (thumb) {
+                let src = thumb.getAttribute('src')
+                if (src.indexOf('.thumb/')==0) src = src.substring(7)
+                changeImage(src)
+                index = imgIndex
+                return true
+            } else return false
+        }
+        container.onclick=function (event){
+            if (event.clientX>img.offsetLeft + img.offsetWidth ||event.clientX<img.offsetLeft){
+                loadImageBy(event.clientX<img.offsetLeft ? index-1 : index+1)
+            }
+        }
+        const imageKeyEvent = function(event) {
+            if (event.code=='ArrowLeft'||event.code=='ArrowRight'){
+                loadImageBy(event.code=='ArrowLeft'?index-1:index+1)
+            } else if (event.code=='Space' || event.code=='ArrowUp'||event.code=='ArrowDown'){
+                rotate(event.code=='ArrowUp'?-90:90)
+                calcSize()
+            }
+        }
+        document.querySelector('body').onkeydown = imageKeyEvent
 
+        let isReady = false
+        let clickForChange = false
+        
+        const dblClick = function(point) {
+            clickForChange = false
+            if (!isReady) return
+            if (isFitClient()) {
+                realSize(point)
+            } else fitClient()
+        }
+        const imgClick = function(point) {
+            if (!isReady) return
+            if (point.x>pageW - 50 ||point.x< 50) {
+                clickForChange = true
+                setTimeout(function(){
+                    if (clickForChange) {
+                        clickForChange = false
+                        loadImageBy(point.x < 50 ? index - 1 : index + 1)
+                    }
+                },400)
+            }
+        }
         // adjust rotate to 90x, swap width, height of image and client
         const rotate90 = function() {
             let b90 = Math.round(img.rotateZ / 90)
             return Math.trunc(b90 / 2) * 2 != b90
         }
-        img._calcSize = function() {
+        const calcSize = function() {
             if (rotate90()) {
                 imageW = img.naturalHeight
                 imageH = img.naturalWidth
@@ -70,7 +116,7 @@
             img.translateX = p.x
             img.translateY = p.y
         }
-        img._move = function(p) {
+        const move = function(p) {
             translate({
                 x: p.x + img.translateX,
                 y: p.y + img.translateY
@@ -83,14 +129,14 @@
                 y: page.y - clientAxis.y
             })
         }
-        img._rotate = function(angle,refPoint) {
+        const rotate = function(angle,refPoint) {
             let image = refPoint ? pageAxis2ImageAxis(refPoint) : null
             img.rotateZ += angle;
             if (refPoint) {
                 moveTo(image, refPoint)
             }
         }
-        img._roundRotate = function () {
+        const roundRotate = function () {
             let b90 = Math.round(img.rotateZ / 90)
             let angle = b90 * 90
             if (angle!=img.rotateZ) img.rotateZ = angle
@@ -104,7 +150,7 @@
                 return ms
             } else return 1
         }
-        img._scale = function(scale, refPoint) {
+        const scale = function(scale, refPoint) {
             let image = refPoint ? pageAxis2ImageAxis(refPoint) : null
             let ms = minScale()
             if (scale< ms) scale=ms
@@ -116,21 +162,21 @@
                 moveTo(image, refPoint)
             }
         }
-        img._isFitClient = function() {
+        const isFitClient = function() {
             return clientH<=pageH && clientW<=pageW
         }
         // scale to fit client, reserve rotate
-        img._fitClient = function() {
-            img._scale(minScale())
+        const fitClient = function() {
+            scale(minScale())
             translate({ x:0, y:0 })
         }
         // scale real size
-        img._realSize = function(page) {
-            img._scale(realSizeScale,page)
+        const realSize = function(page) {
+            scale(realSizeScale,page)
         }
-        img._changeImage = function(src) {
+        const changeImage = function(src) {
             waitingIcon.style.display = 'block'
-            img._isReady = false
+            isReady = false
             img.src = src
         }
 
@@ -141,9 +187,120 @@
             img.translateX = img.translateY = 0
             realSizeScale = Math.max(img.naturalWidth / pageW, img.naturalHeight / pageH)
             if (realSizeScale<1) realSizeScale = 1
-            img._calcSize()
-            img._isReady = true
+            calcSize()
+            isReady = true
         }
         Transform(img)
+        if (isMobile()) {
+            let initScale = 1
+            new AlloyFinger(img, {
+                rotate:function(event){
+                    event.stopPropagation();
+                    event.preventDefault()
+                    if (isReady) rotate(event.angle,{
+                        x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
+                        y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
+                    })
+                },
+                multipointStart: function (event) {
+                    event.stopPropagation();
+                    event.preventDefault()
+                    initScale = img.scaleX;
+                },
+                pinch: function (event) {
+                    event.stopPropagation();
+                    event.preventDefault()
+                    if (isReady)  {
+                        let scale = img.scaleY = initScale * event.zoom;
+                        scale(scale,{
+                            x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
+                            y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
+                        })
+                    }
+                },
+                tap:function(event) {
+                    event.stopPropagation();
+                    event.preventDefault()
+                    imgClick({
+                        x: event.changedTouches[0].pageX,
+                        y: event.changedTouches[0].pageY
+                    })
+                },
+                doubleTap:function(event){
+                    event.stopPropagation();
+                    event.preventDefault()
+                    dblClick({
+                        x: event.changedTouches[0].pageX,
+                        y: event.changedTouches[0].pageY
+                    })
+                },
+                touchMove:function(event) {
+                    event.stopPropagation();
+                    event.preventDefault()
+                    if (!isReady) return
+                    if (event.touches.length==1) {
+                        move({
+                            x: event.deltaX,
+                            y: event.deltaY
+                        })
+                    }
+                },
+                swipe:function(event){
+                    event.stopPropagation();
+                    event.preventDefault()
+                    if (!isReady || !isFitClient()) return
+                    if (event.direction==="Right" || event.direction==="Left")
+                        loadImageBy(event.direction==="Right" ? index-1:index+1)
+                },
+                touchEnd: function (event) {
+                    event.stopPropagation();
+                    event.preventDefault()
+                    if (!isReady) return
+                    calcSize()
+                    roundRotate()
+                }
+            });
+        } else {
+            let pageX = 0,pageY = 0
+            let startDrag = false
+            img.onclick=function (event){
+                event.stopPropagation();
+                event.preventDefault()
+                imgClick({
+                    x: event.clientX,
+                    y: event.clientY
+                })
+            }
+            img.ondblclick=function (event){
+                event.stopPropagation();
+                event.preventDefault()
+                dblClick({
+                    x:event.clientX,
+                    y:event.clientY
+                })
+            }
+            img.onmousedown=function (event) {
+                if (!isReady) {
+                    startDrag = false
+                    return
+                }
+                startDrag = true
+                pageX = event.pageX
+                pageY = event.pageY
+            }
+            img.onmousemove=function(event) {
+                if (!startDrag) return
+                move({
+                    x: event.pageX - pageX,
+                    y: event.pageY - pageY
+                })
+                pageX = event.pageX
+                pageY = event.pageY
+            }
+            img.onmouseup=function (event) {
+                startDrag = false
+            }
+        }
+        changeImage(initialSrc)
     }
 })();

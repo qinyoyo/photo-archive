@@ -63,177 +63,41 @@ function addImageDialog(src, index) {
     wrapper.appendChild(dialog)
     body.appendChild(wrapper)
 
-    const loadImageBy = function (imgIndex) {
-        if (imgIndex<0) return false
-        let thumb = document.querySelector('.img-index-'+imgIndex)
-        if (thumb) {
-            let src = thumb.getAttribute('src')
-            if (src.indexOf('.thumb/')==0) src = src.substring(7)
-            img._changeImage(src)
-            index = imgIndex
-            return true
-        } else return false
-    }
-
     closeButton.onclick = function() {
+        document.querySelector('body').onkeydown = null
         removeImageDialog()
     }
-
-    dialogBody.onclick=function (event){
-        if (event.clientX>img.offsetLeft + img.offsetWidth ||event.clientX<img.offsetLeft){
-            loadImageBy(event.clientX<img.offsetLeft ? index-1 : index+1)
-        }
-    }
-    body.onkeydown=function (event){
-        if (event.code=='ArrowLeft'||event.code=='ArrowRight'){
-            loadImageBy(event.code=='ArrowLeft'?index-1:index+1)
-        } else if (event.code=='Space' || event.code=='ArrowUp'||event.code=='ArrowDown'){
-            img._rotate(event.code=='ArrowUp'?-90:90)
-            img._calcSize()
-        }
-    }
-    let clickForChange = false
-    const dblClick = function(point) {
-        clickForChange = false
-        if (!img._isReady) return
-        if (img._isFitClient()) {
-            img._realSize(point)
-        } else img._fitClient()
-    }
-    const imgClick = function(point) {
-        if (!img._isReady) return
-        if (point.x>pageW - 50 ||point.x< 50) {
-            clickForChange = true
-            setTimeout(function(){
-                if (clickForChange) {
-                    clickForChange = false
-                    loadImageBy(point.x < 50 ? index - 1 : index + 1)
-                }
-            },400)
-        }
-
-    }
-    if (isMobile()) {
-        let initScale = 1
-        new AlloyFinger(img, {
-            rotate:function(event){
-                event.stopPropagation();
-                event.preventDefault()
-                if (img._isReady) img._rotate(event.angle,{
-                    x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
-                    y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
-                })
-            },
-            multipointStart: function (event) {
-                event.stopPropagation();
-                event.preventDefault()
-                initScale = img.scaleX;
-            },
-            pinch: function (event) {
-                event.stopPropagation();
-                event.preventDefault()
-                if (img._isReady)  {
-                    let scale = img.scaleY = initScale * event.zoom;
-                    img._scale(scale,{
-                        x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
-                        y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
-                    })
-                }
-            },
-            tap:function(event) {
-                event.stopPropagation();
-                event.preventDefault()
-                imgClick({
-                    x: event.changedTouches[0].pageX,
-                    y: event.changedTouches[0].pageY
-                })
-            },
-            doubleTap:function(event){
-                event.stopPropagation();
-                event.preventDefault()
-                dblClick({
-                        x: event.changedTouches[0].pageX,
-                        y: event.changedTouches[0].pageY
-                    })
-            },
-            touchMove:function(event) {
-                event.stopPropagation();
-                event.preventDefault()
-                if (!img._isReady) return
-                if (event.touches.length==1) {
-                    img._move({
-                        x: event.deltaX,
-                        y: event.deltaY
-                    })
-                }
-            },
-            swipe:function(event){
-                event.stopPropagation();
-                event.preventDefault()
-                if (!img._isReady || !img._isFitClient()) return
-                if (event.direction==="Right" || event.direction==="Left")
-                    loadImageBy(event.direction==="Right" ? index-1:index+1)
-            },
-            touchEnd: function (event) {
-                event.stopPropagation();
-                event.preventDefault()
-                if (!img._isReady) return
-                img._calcSize()
-                img._roundRotate()
-            }
-        });
-    } else {
-        let pageX = 0,pageY = 0
-        let startDrag = false
-        img.onclick=function (event){
-            event.stopPropagation();
-            event.preventDefault()
-            imgClick({
-                x: event.clientX,
-                y: event.clientY
-            })
-        }
-        img.ondblclick=function (event){
-            event.stopPropagation();
-            event.preventDefault()
-            dblClick({
-                x:event.clientX,
-                y:event.clientY
-            })
-        }
-        img.onmousedown=function (event) {
-            if (!img._isReady) {
-                startDrag = false
-                return
-            }
-            startDrag = true
-            pageX = event.pageX
-            pageY = event.pageY
-        }
-        img.onmousemove=function(event) {
-            if (!startDrag) return
-            img._move({
-                x: event.pageX - pageX,
-                y: event.pageY - pageY
-            })
-            pageX = event.pageX
-            pageY = event.pageY
-        }
-        img.onmouseup=function (event) {
-            startDrag = false
-        }
-    }
-    TransformImage(img)
-    img._changeImage(src)
+    TransformImage(img,src,index)
+}
+function searchText(text) {
+    if (text) window.location.href = '/search?text=' + encodeURI(text)
 }
 window.onload=function(){
     document.querySelectorAll('.folder-item').forEach(function(d) {
         let path = d.getAttribute('data-folder')
         const url = path ? '/?path=' + encodeURI(path) : '/'
         d.onclick=function () {
+            document.querySelector('.search-input__wrapper').style.display = 'none';
             window.location.href = url
         }
     });
+    document.querySelector('.search-clear-icon').onclick = function() {
+        document.querySelector('.search-input').value = ''
+    }
+    document.querySelector('.search-input').onkeydown = function(event) {
+        if (event.code=='Enter') {
+            document.querySelector('.search-input__wrapper').style.display = 'none'
+            searchText(this.value)
+        }
+    }
+    document.querySelector('.search-item').onclick = function() {
+        const inputWrapper = document.querySelector('.search-input__wrapper')
+        if (inputWrapper.style.display == 'none') inputWrapper.style.display = 'initial';
+        else {
+            inputWrapper.style.display = 'none';
+            searchText(document.querySelector('.search-input').value)
+        }
+    }
     document.querySelectorAll('.gird-cell-img').forEach(function(img) {
         let src = img.getAttribute('src')
         if (src.indexOf('.thumb/')==0) src = src.substring(7)
@@ -244,4 +108,5 @@ window.onload=function(){
             addImageDialog(src, index == NaN ? 0 : index)
         }
     });
+
 }

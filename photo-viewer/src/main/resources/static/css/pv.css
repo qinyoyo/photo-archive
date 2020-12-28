@@ -9,9 +9,13 @@ body {
     border-bottom: 1px solid #e6ebf5;
 }
 .folder-head {
-    margin-bottom: 10px;
+    overflow: hidden;
+    position: relative;
+    background: #fff;
+    border-bottom: 1px solid #cebead;
 }
-.folder-item {
+
+.folder-item, .search-item, .search-clear-icon {
     cursor: pointer;
 }
 .folder-list__item {
@@ -22,8 +26,8 @@ body {
     -webkit-box-align: center;
     -ms-flex-align: center;
     align-items: center;
-    height: 48px;
-    line-height: 48px;
+    height: 36px;
+    line-height: 36px;
     background-color: #fff;
     color: #303133;
     border-bottom: 1px solid #e6ebf5;
@@ -32,9 +36,38 @@ body {
     transition: border-bottom-color .3s;
     outline: none;
 }
+audio, video {
+    width: 100%!important;
+}
 .folder-head__item {
     margin: 0 5px 0 5px;
 }
+.folder-head__left {
+    line-height: 46px;
+    height: 100%;
+    float: left;
+}
+.folder-head__right {
+    line-height: 46px;
+    height: 100%;
+    right: 0px;
+    position: absolute;
+    background: white;
+}
+.search-input__wrapper {
+    border-bottom: 1px solid #d9d9d9;
+}
+.search-input {
+    border-radius: 0;
+    border: 0;
+    padding-left: 0;
+    padding-right: 0;
+    width:200px;
+    border: none;
+    outline: none;
+    vertical-align: middle;
+}
+
 .folder-item__arrow {
     margin: 0 8px 0 auto;
     -webkit-transition: -webkit-transform .3s;
@@ -48,7 +81,9 @@ body {
     font-size: 16px;
     margin-right: 5px;
 }
-
+.folder-list, .html-list, .audio-list, .video-list, .photo-list {
+    margin-top: 10px;
+}
 .grid-box {
     display: grid;
     grid-auto-flow: row;
@@ -60,9 +95,8 @@ body {
 }
 
 .grid-cell {
-    color: #fff;
+    color: #666666;
     font-size: 12px;
-    height: 120px;
     text-align: center;
     display: table-cell;
     vertical-align: middle;

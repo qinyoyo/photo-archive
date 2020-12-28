@@ -29,4 +29,4 @@ logging:
       org.springframework: info
       qinyoyo: debug
 photo:
-   root-path: H:\Photo\Archived
+   root-path: E:\Photo\Archived

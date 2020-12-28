@@ -1,3 +1,14 @@
+<#function replaceSpecialChar s>
+    <#assign ns = s?replace('[','%5B')?replace(']','%5D') />
+    <#return ns />
+</#function>
+<#function fileUrl h>
+    <#if h.subFolder?? && h.subFolder!=''>
+        <#return replaceSpecialChar('/'+h.subFolder?replace('\\','/')+'/'+h.fileName) />
+    <#else>
+        <#return replaceSpecialChar('/'+h.fileName) />
+    </#if>
+</#function>
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,20 +28,28 @@
 <body>
 <div id="app">
     <div class="folder-head" >
-        <i class = "fa fa-search"></i>
-        <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
-        <#if pathNames??>
-            <#assign path = '' />
-            <#list pathNames as name>
-                <i class="fa fa-angle-right"></i>
-                <#if path==''>
-                    <#assign path = name />
-                <#else>
-                    <#assign path = path + separator + name />
-                </#if>
-                <span class="folder-item folder-head__item" data-folder="${path}">${name}</span>
-            </#list>
-        </#if>
+        <div class="folder-head__left">
+            <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
+            <#if pathNames??>
+                <#assign path = '' />
+                <#list pathNames as name>
+                    <i class="fa fa-angle-right"></i>
+                    <#if path==''>
+                        <#assign path = name />
+                    <#else>
+                        <#assign path = path + separator + name />
+                    </#if>
+                    <span class="folder-item folder-head__item" data-folder="${path}">${name}</span>
+                </#list>
+            </#if>
+        </div>
+        <div class="folder-head__right">
+            <i class = "fa fa-search search-item folder-head__item"></i>
+            <span style="display: none" class="search-input__wrapper">
+            <input type="text" autocomplete="off" placeholder="搜索关键词" class="search-input">
+            <i  class="fa fa-times-circle-o search-clear-icon"></i>
+            </span>
+        </div>
     </div>
     <#if subDirectories??>
         <div class="folder-list" >
@@ -43,15 +62,40 @@
             </#list>
         </div>
     </#if>
+    <#if htmls??>
+        <div class="html-list">
+            <#list htmls as h>
+                <div class="folder-list__item">
+                    <a href = "${fileUrl(h)}" class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
+                </div>
+            </#list>
+        </div>
+    </#if>
+    <#if audios??>
+        <div class="audio-list grid-box">
+            <#list audios as a>
+                <div class="audio-item grid-cell">
+                    <audio src = "${fileUrl(a)}" class="audio-index-${a?index}" controls></audio>
+                    <span>${a.fileName}</span>
+                </div>
+            </#list>
+        </div>
+    </#if>
+    <#if videos??>
+        <div class="video-list grid-box">
+            <#list videos as v>
+                <div class="audio-item grid-cell">
+                    <video src = "${fileUrl(v)}" class="video-index-${v?index}" controls></video>
+                    <span>${v.fileName}</span>
+                </div>
+            </#list>
+        </div>
+    </#if>
     <#if photos??>
         <div class="photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <#if p.subFolder?? && p.subFolder!=''>
-                        <img src = ".thumb/${p.subFolder?replace('\\','/')+'/'+p.fileName}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" />
-                    <#else>
-                        <img src = ".thumb/${p.fileName}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" />
-                    </#if>
+                    <img src = ".thumb${fileUrl(p)}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" />
                 </div>
             </#list>
         </div>

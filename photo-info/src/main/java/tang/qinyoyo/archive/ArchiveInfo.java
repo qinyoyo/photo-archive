@@ -68,12 +68,6 @@ public class ArchiveInfo {
             System.out.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+files.length);
             for (File f : files) f.delete();
         }
-        files = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return (!pathname.isDirectory() && !pathname.getName().startsWith("."));
-            }
-        });
         Set<String> processedFiles = new HashSet<String>();
         System.out.println("批量搜索 "+dir.getAbsolutePath());
         Map<String, Map<Key, Object>> fileInfos = null;
@@ -121,7 +115,19 @@ public class ArchiveInfo {
                 return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
             });
             for (File d : dirs) {
-                if (d.isDirectory()) seekPhotoInfosInFolder(d);
+                if (d.isDirectory()) {
+                    // .web 结束的子目录为游记目录，不递归处理，添加游记文件
+                    if (d.getName().endsWith(".web")) {
+                        File indexHtml = new File(d,"index.html");
+                        if (indexHtml.exists()) {
+                            PhotoInfo html = new PhotoInfo(path, indexHtml);
+                            html.setMimeType("text/html");
+                            html.setSubTitle(d.getName().substring(0,d.getName().length()-4));
+                            infos.add(html);
+                            System.out.println("    处理游记 : "+html.getSubTitle());
+                        }
+                    } else seekPhotoInfosInFolder(d);
+                }
             }
         }
     }
