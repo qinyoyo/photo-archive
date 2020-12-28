@@ -93,7 +93,15 @@ audio, video {
     justify-content: center;
     width: 100%;
 }
-
+.grid-box3 {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 5px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
 .grid-cell {
     color: #666666;
     font-size: 12px;

@@ -7,6 +7,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
 import tang.qinyoyo.archive.ArchiveInfo;
@@ -15,8 +16,7 @@ import tang.qinyoyo.archive.PhotoInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileFilter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -186,6 +186,83 @@ public class PVController implements ApplicationRunner {
             model.addAttribute("photos",photos);
         }
         return "index";
+    }
+
+    public static void writeToFile(File file, String string) {
+        try {
+            FileOutputStream s = new FileOutputStream(file);
+            OutputStreamWriter w = new OutputStreamWriter(s, "GBK");
+            PrintWriter pw = new PrintWriter(w);
+            pw.write(string);
+            pw.flush();
+            pw.close();
+            w.close();
+            s.close();
+        } catch (Exception e ) {
+            e.printStackTrace();
+        }
+    }
+
+    @RequestMapping(value = "sameView")
+    public String sameView(Model model, HttpServletRequest request, HttpServletResponse response, String text) {
+        List<Map<String,Object>> list = new ArrayList<>();
+        BufferedReader ins=null;
+        StringBuilder sb=new StringBuilder();
+        try {
+            File logFile = new File(rootPath, ".same_photo.log");
+            ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
+            String line = null;
+            while ((line=ins.readLine())!=null) {
+                String [] ll= line.split(" <-> ");
+                if (ll.length==2) {
+                    String f1=ll[0].trim(), f2 = ll[1].trim();
+                    File file1=new File(f1);
+                    File file2=new File(f2);
+                    if (!f1.isEmpty() && !f2.isEmpty() && f1.startsWith(rootPath) && f2.startsWith(rootPath)) {
+                        if (file1.exists() && file2.exists()) {
+                            sb.append(line).append("\r\n");
+                            list.add(new HashMap<String, Object>() {{
+                                put("same1", f1.substring(rootPath.length() + 1));
+                                put("same2", f2.substring(rootPath.length() + 1));
+                            }});
+                        }
+                    }
+                }
+            }
+            ins.close();
+            writeToFile(logFile,sb.toString());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+        model.addAttribute("sames",list);;
+        return "same_view";
+    }
+    @ResponseBody
+    @RequestMapping(value = "deleteSame")
+    public String deleteSame(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path==null) return null;
+        if (path.contains(" <-> ")) {
+            String [] ll= path.split(" <-> ");
+            if (ll.length==2) {
+                String f1=ll[0].trim(), f2 = ll[1].trim();
+                if (f1.contains(".delete"))  new File(rootPath + File.separator + f1).delete();
+                else if (f2.contains(".delete"))  new File(rootPath + File.separator + f2).delete();
+                else if (f1.contains("Camera/"))  new File(rootPath + File.separator + f1).delete();
+                else if (f2.contains("Camera/"))  new File(rootPath + File.separator + f2).delete();
+                else {
+                    File file1 = new File(rootPath + File.separator + f1),
+                         file2 = new File(rootPath + File.separator + f2);
+                    if (file1.exists() && file2.exists()) {
+                        if (file1.length()<=file2.length()) file1.delete();
+                        else file2.delete();
+                    }
+                }
+            }
+        } else {
+            new File(rootPath + File.separator + path).delete();
+        }
+        return "ok";
     }
     @Override
     public void run(ApplicationArguments args) throws Exception {
