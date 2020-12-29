@@ -20,10 +20,11 @@ public enum Key {
     COPYRIGHT("Copyright", String.class),
     COPYRIGHT_NOTICE("CopyrightNotice", String.class),
     CREATEDATE("CreateDate", String.class, "called DateTimeDigitized by the EXIF spec"),
+    SUB_SEC_TIME_CREATE("SubSecTimeDigitized",String.class),
     CREATION_DATE("CreationDate", String.class),
     CREATOR("Creator", String.class),
     DATETIMEORIGINAL("DateTimeOriginal", String.class, "date/time when original image was taken"),
-    SUBSECDATETIMEORIGINAL("SubSecDateTimeOriginal", String.class),
+
     DIGITAL_ZOOM_RATIO("DigitalZoomRatio", Double.class),
     EXIF_VERSION("ExifVersion", String.class),
     EXPOSURE_COMPENSATION("ExposureCompensation", Double.class),

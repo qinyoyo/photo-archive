@@ -198,18 +198,21 @@ public class PhotoInfo implements Serializable,Cloneable {
             Date dt=null;
             try {
                 switch (k) {
-                    case SUBSECDATETIMEORIGINAL:
-                        if (!s.startsWith("0000")) dt = DateUtil.string2Date(v.toString());
-                        if (dt!=null) shootTime=dt;
-                        break;
                     case DATETIMEORIGINAL:
-                        if (shootTime==null) {
-                            if (!s.startsWith("0000")) dt = DateUtil.string2Date(v.toString());
-                            if (dt != null) shootTime = dt;
+                        if (!s.startsWith("0000")) {
+                            Object subSec = attrs.get(Key.SUB_SEC_TIME_ORIGINAL);
+                            shootTime = DateUtil.string2Date(v.toString()+(
+                                        emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
+                                ));
                         }
                         break;
                     case CREATEDATE:
-                        if (!s.startsWith("0000")) createTime = DateUtil.string2Date(v.toString());
+                        if (!s.startsWith("0000")) {
+                            Object subSec = attrs.get(Key.SUB_SEC_TIME_CREATE);
+                            createTime = DateUtil.string2Date(v.toString()+(
+                                    emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
+                                    ));
+                        }
                         break;
                     case DOCUMENT_ID:
                         documentId = s;
@@ -298,7 +301,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         return shootTime==null && createTime==null && isEmpty(make) && isEmpty(model) && isEmpty(lens) && isEmpty(documentId);
         // 网络图片 digest 很多一样，不可靠
     }
-    private static boolean equals(Date s1, Date s2) {
+    private static boolean same(Date s1, Date s2) {
         if (s1 == null && s2 == null)
             return true;
         else if (s1 != null && s2 != null)
@@ -306,7 +309,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         else
             return false;
     }
-    private static boolean equals(String s1, String s2) {
+    private static boolean same(String s1, String s2) {
         if (s1 == null && s2 == null)
             return true;
         else if (s1 != null && s2 != null)
@@ -321,14 +324,19 @@ public class PhotoInfo implements Serializable,Cloneable {
         else
             return "";
     }
+    boolean allNull(Object ...objs) {
+        for (Object o:objs) if (o!=null) return false;
+        return true;
+    }
     public boolean exifEquals(PhotoInfo pi) {
-        if (equals(shootTime,pi.shootTime)) {
-            if (equals(createTime,pi.createTime)) {
-                if (equals(make,pi.make)) {
-                    if (equals(model,pi.model)) {
-                        if (equals(lens,pi.lens)) {
-                            if (equals(digest,pi.digest)) {
-                                if (equals(documentId,pi.documentId)) return true;
+        if (same(shootTime,pi.shootTime)) {
+            if (same(createTime,pi.createTime)) {
+                if (same(make,pi.make)) {
+                    if (same(model,pi.model)) {
+                        if (same(lens,pi.lens)) {
+                            if (!allNull(shootTime,createTime) && !allNull(make,model,lens)) return true;
+                            if (same(digest,pi.digest)) {
+                                if (same(documentId,pi.documentId)) return true;
                                 else return false;
                             } else return false;
                         } else return false;
@@ -338,15 +346,15 @@ public class PhotoInfo implements Serializable,Cloneable {
         } else return false;
     }
     public  boolean absoluteSameAs(PhotoInfo pi) {
-        if (isExifEmpty() && pi.isExifEmpty()) return equals(fileName, pi.fileName) && (fileSize == pi.fileSize);
-        else return (equals(fileName, pi.fileName) && (fileSize == pi.fileSize) && exifEquals(pi)) ;
+        if (isExifEmpty() && pi.isExifEmpty()) return same(fileName, pi.fileName) && (fileSize == pi.fileSize);
+        else return (same(fileName, pi.fileName) && (fileSize == pi.fileSize) && exifEquals(pi)) ;
     }
     public  boolean sameAs(PhotoInfo pi) throws Exception {
         if (this == pi) return true;
-        if (equals(fileName, pi.fileName) && (fileSize == pi.fileSize)) return true; // 文件名和大小一样，可能其中一个删除了exif信息
+        if (same(fileName, pi.fileName) && (fileSize == pi.fileSize)) return true; // 文件名和大小一样，可能其中一个删除了exif信息
         if (!extName(fileName).toLowerCase().equals(extName(pi.getFileName()).toLowerCase())) return false; // 文件扩展名不同，不一致
         if (isExifEmpty() && pi.isExifEmpty()) {
-            if (!equals(digest,pi.digest)) return false;
+            if (!same(digest,pi.digest)) return false;
             else if (fileSize == pi.fileSize) throw new Exception("unknown");  // 不可知
             else return false;
         }

@@ -4,15 +4,14 @@ import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 
 import java.io.*;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ArchiveInfo {
-    public static final Key[] NEED_KEYS = new Key[]{Key.SUBSECDATETIMEORIGINAL, Key.DATETIMEORIGINAL,Key.CREATEDATE,
+    public static final Key[] NEED_KEYS = new Key[]{
+            Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
             Key.MAKE, Key.MODEL, Key.LENS_ID, Key.ORIENTATION,
             Key.DOCUMENT_ID, Key.IPTCDigest,
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
