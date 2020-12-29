@@ -14,6 +14,21 @@
     <script type="text/javascript" src="static/js/transform_image.js"></script>
     <title>Photo viewer</title>
 </head>
+<style>
+    .delete-buttons {
+        text-align: center;
+    }
+    button {
+        margin: 10px;
+        color:#ff6060;
+    }
+    .button-left {
+        float: left;
+    }
+    .button-right {
+        float:right;
+    }
+</style>
 <body>
 <div id="app">
     <#if sames??>
@@ -22,10 +37,10 @@
                 <div class="photo-item grid-cell delete-index-${p?index}">
                     <img src = ".thumb/${p.same1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}" />
                 </div>
-                <div class="delete-index-${p?index}">
-                    <button type="button" style="margin:10px" class="delete-file" data-index="${p?index}" data-file="${p.same1}"><i class="fa fa-close"></i></button>
-                    <button type="button" style="margin:10px" class="delete-file" data-index="${p?index}" data-file="${p.same1} <-> ${p.same2}"><i class="fa fa-close"></i>自动</button>
-                    <button type="button" style="margin:10px" class="delete-file" data-index="${p?index}" data-file="${p.same2}"><i class="fa fa-close"></i></button>
+                <div class="delete-buttons delete-index-${p?index}">
+                    <button type="button"  class="button-left delete-file" data-index="${p?index}" data-file="${p.same1}"><i class="fa fa-close"></i></button>
+                    <button type="button"  style="color:#202122" class="delete-file" data-index="${p?index}" data-file="${p.same1} <-> ${p.same2}"><i class="fa fa-check"></i>All</button>
+                    <button type="button"  class="button-right delete-file" data-index="${p?index}" data-file="${p.same2}"><i class="fa fa-close"></i></button>
                 </div>
                 <div class="photo-item grid-cell delete-index-${p?index}">
                     <img src = ".thumb/${p.same2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}" />
@@ -64,26 +79,22 @@
         }
     }
     window.onload=function(){
-        document.querySelectorAll('.gird-cell-img').forEach(function(img) {
-            let src = img.getAttribute('src')
-            if (src.indexOf('.thumb/')==0) src = src.substring(7)
-            let pos = img.className.indexOf('img-index-')
-            const index = (pos>=0 ? parseInt(img.className.substring(pos+10)) : 0)
-            img.onclick=function (event){
-                event.stopPropagation()
-                addImageDialog(src, index == NaN ? 0 : index)
-            }
-        });
         document.querySelectorAll('.delete-file').forEach(function(img) {
             const src = img.getAttribute('data-file')
             const index = parseInt(img.getAttribute('data-index'))
             img.onclick=function (event){
                 event.stopPropagation()
-                Ajax.get("/deleteSame?path="+encodeURI(src), function(el,responseText) {
-                    document.querySelectorAll('.delete-index-'+index).forEach(function(e){ e.remove() })
+                let url = src.indexOf(" <-> ")>0 ? '/save-file?path=' : '/delete-file?path='
+                Ajax.get(url+encodeURI(src), function(responseText) {
+                    if ("ok"==responseText){
+                        document.querySelectorAll('.delete-index-'+index).forEach(function (e){
+                            e.remove()
+                        })
+                    }
                 })
             }
         });
+        TransformImage('gird-cell-img')
     }
 </script>
 </body>

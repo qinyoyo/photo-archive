@@ -10,9 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
+import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.archive.ArchiveInfo;
+import tang.qinyoyo.archive.FolderInfo;
 import tang.qinyoyo.archive.ImageUtil;
 import tang.qinyoyo.archive.PhotoInfo;
+import tang.qinyoyo.exiftool.CommandRunner;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -203,7 +206,7 @@ public class PVController implements ApplicationRunner {
         }
     }
 
-    @RequestMapping(value = "sameView")
+    @RequestMapping(value = "same")
     public String sameView(Model model, HttpServletRequest request, HttpServletResponse response, String text) {
         List<Map<String,Object>> list = new ArrayList<>();
         BufferedReader ins=null;
@@ -238,32 +241,105 @@ public class PVController implements ApplicationRunner {
         model.addAttribute("sames",list);;
         return "same_view";
     }
-    @ResponseBody
-    @RequestMapping(value = "deleteSame")
-    public String deleteSame(HttpServletRequest request, HttpServletResponse response, String path) {
-        if (path==null) return null;
-        if (path.contains(" <-> ")) {
-            String [] ll= path.split(" <-> ");
-            if (ll.length==2) {
-                String f1=ll[0].trim(), f2 = ll[1].trim();
-                if (f1.contains(".delete"))  new File(rootPath + File.separator + f1).delete();
-                else if (f2.contains(".delete"))  new File(rootPath + File.separator + f2).delete();
-                else if (f1.contains("Camera/"))  new File(rootPath + File.separator + f1).delete();
-                else if (f2.contains("Camera/"))  new File(rootPath + File.separator + f2).delete();
-                else {
-                    File file1 = new File(rootPath + File.separator + f1),
-                         file2 = new File(rootPath + File.separator + f2);
-                    if (file1.exists() && file2.exists()) {
-                        if (file1.length()<=file2.length()) file1.delete();
-                        else file2.delete();
-                    }
-                }
+    private boolean deleteFile(File file) {
+        if (file.exists()) {
+            try {
+                String fp = file.getCanonicalPath();
+                if (fp.indexOf(rootPath) == 0) {
+                    return new PhotoInfo(rootPath, file).delete(rootPath);
+                } else return file.delete();
+            } catch (Exception e) {}
+        }
+        return false;
+    }
+    boolean autoDeleteSame(File file1, File file2) {
+        try {
+            if (file1.exists() && file2.exists()) {
+                String f1 = file1.getCanonicalPath(), f2 = file2.getCanonicalPath();
+                String s_d = File.separator + ".delete" + File.separator;
+                String s_c = File.separator + FolderInfo.DEFPATH + File.separator;
+                if (f1.contains(s_d)) return deleteFile(file1);
+                else if (f2.contains(s_d)) return deleteFile(file2);
+                else if (f1.contains(s_c)) return deleteFile(file1);
+                else if (f2.contains(s_c)) return deleteFile(file2);
+                else if (file1.length() <= file2.length()) return deleteFile(file1);
+                else return deleteFile(file2);
             }
-        } else {
-            new File(rootPath + File.separator + path).delete();
+        }catch (Exception e) {}
+        return false;
+    }
+    @ResponseBody
+    @RequestMapping(value = "delete-file")
+    public String deleteFile(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path==null) return null;
+        new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath);
+        return "ok";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "save-file")
+    public String saveFile(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path==null) return null;
+        String [] ll= path.split(" <-> ");
+        if (ll.length==2) {
+            BufferedReader ins=null;
+            StringBuilder sb=new StringBuilder();
+            try {
+                File logFile = new File(rootPath, ArchiveInfo.same_photo_log);
+                ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
+                String line = null;
+                boolean found= false;
+                while ((line=ins.readLine())!=null) {
+                    if (found) sb.append(line).append("\r\n");
+                    else if (line.contains(ll[0]) && line.contains(ll[1])) found=true;
+                    else sb.append(line).append("\r\n");
+                }
+                ins.close();
+                writeToFile(logFile,sb.toString());
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                return e.getMessage();
+            }
         }
         return "ok";
     }
+
+    @ResponseBody
+    @RequestMapping(value = "auto-delete-same")
+    public String autoDeleteSame(HttpServletRequest request, HttpServletResponse response) {
+        BufferedReader ins=null;
+        StringBuilder sb=new StringBuilder();
+        try {
+            File logFile = new File(rootPath, ArchiveInfo.same_photo_log);
+            ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
+            String line = null;
+            while ((line=ins.readLine())!=null) {
+                String [] ll= line.split(" <-> ");
+                if (ll.length==2) {
+                    String f1=ll[0].trim(), f2 = ll[1].trim();
+                    File file1=new File(f1);
+                    File file2=new File(f2);
+                    if (!autoDeleteSame(file1,file2)) sb.append(line).append("\r\n");
+                }
+            }
+            ins.close();
+            String txt = sb.toString();
+            if (txt.isEmpty()) logFile.delete();
+            else writeToFile(logFile,sb.toString());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return e.getMessage();
+        }
+        return "ok";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "shutdown")
+    public String shutdown(HttpServletRequest request, HttpServletResponse response, Integer delay) {
+        CommandRunner.shutdown(delay==null?10:delay);
+        return "ok";
+    }
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         rootPath = env.getProperty("photo.root-path");
@@ -271,6 +347,8 @@ public class PVController implements ApplicationRunner {
         archiveInfo = new ArchiveInfo(rootPath);
         if (!archiveInfo.isReadFromFile()) {
             archiveInfo.sortInfos();
+            archiveInfo.scanSameFiles(false);
+            ArchiveUtils.removeEmptyFolder(new File(rootPath));
             archiveInfo.saveInfos();
         }
         rootPath = archiveInfo.getPath();  // 标准化

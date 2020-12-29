@@ -90,4 +90,17 @@ public final class CommandRunner {
         }
         return new Pair<>(stdout, stderr);
     }
+    public static void shutdown(int delay) {
+        List<String> cmd = new ArrayList<>();
+        cmd.add("shutdown");
+        cmd.add("-s");
+        cmd.add("-f");
+        cmd.add("-t");
+        cmd.add(String.valueOf(delay));
+        try {
+            CommandRunner.run(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

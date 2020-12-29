@@ -2,6 +2,7 @@ package tang.qinyoyo.archive;
 
 import lombok.Getter;
 import lombok.Setter;
+import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 import java.io.File;
 import java.io.Serializable;
@@ -167,16 +168,20 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         
     }
+    public void setFile(String rootPath, File file) throws Exception {
+        String dir = file.getParentFile().getCanonicalPath();
+        if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
+        subFolder = dir.substring(rootPath.length());
+        if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
+        fileName = file.getName();
+        fileSize = file.length();
+    }
+    // 不读取exif信息，便于快速读取
     public  PhotoInfo(String rootPath, File file) {
         try {
             rootPath = new File(rootPath).getCanonicalPath();
             if (!file.exists()) throw new RuntimeException(file.getAbsolutePath() + " 不存在");
-            String dir = file.getParentFile().getCanonicalPath();
-            if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
-            subFolder = dir.substring(rootPath.length());
-            if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
-            fileName = file.getName();
-            fileSize = file.length();
+            setFile(rootPath,file);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -273,6 +278,19 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (shootTime==null) shootTime = DateUtil.getShootTimeFromFileName(fileName);
     }
 
+    public void readProperties(String rootPath) {
+        File f = new File(fullPath(rootPath));
+        if (f.exists() && SupportFileType.isSupport(f.getName())) {
+            try {
+                Map<String, Map<Key, Object>>  fileInfos = new ExifTool.Builder().build().query(f, ArchiveInfo.NEED_KEYS);
+                if (fileInfos!=null) {
+                    setPropertiesBy(fileInfos.get(f.getName()));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
     private static boolean isEmpty(String s) {
         return s==null || s.trim().isEmpty();
     }
@@ -344,5 +362,54 @@ public class PhotoInfo implements Serializable,Cloneable {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+    public String fullThumbPath(String root) {
+        try {
+            String sub = getSubFolder();
+            if (sub == null || sub.isEmpty()) {
+                return new File(new File(root, ".thumb"),getFileName()).getCanonicalPath();
+            } else
+                return new File(new File(root, ".thumb"+File.separator + sub), getFileName()).getCanonicalPath();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    public boolean delete(String rootPath) {
+        try {
+            new File(fullThumbPath(rootPath)).delete();
+        } catch (Exception e) {}
+        return new File(fullPath(rootPath)).delete();
+    }
+    private static String nameWithoutExt(String name) {
+        int p = name.lastIndexOf(".");
+        if (p >= 0)
+            return name.substring(0, p);
+        else
+            return name;
+    }
+    private int nameCompare(PhotoInfo p) {
+        String na = (getSubFolder() + "\\" + nameWithoutExt(getFileName())).toLowerCase();
+        String nb = (p.getSubFolder() + "\\" + nameWithoutExt(p.getFileName())).toLowerCase();
+
+        if (na.length()>nb.length() && na.startsWith(nb)) return -1;
+        else if (nb.length()>na.length() && nb.startsWith(na)) return 1;
+        else {
+            na = (getSubFolder() + "\\" + getFileName()).toLowerCase();
+            nb = (p.getSubFolder() + "\\" + p.getFileName()).toLowerCase();
+            return na.compareTo(nb);
+        }
+    }
+    int compareTo(PhotoInfo p) {
+        Date d1 = getShootTime(), d2 = p.getShootTime();
+        if (d1==null && d2==null) return nameCompare(p);
+        else if (d1==null)
+            return -1;
+        else if (d2==null)
+            return 1;
+        else if (d1.getTime() > d2.getTime())
+            return 1;
+        else if (d1.getTime() < d2.getTime())
+            return -1;
+        else return nameCompare(p);
     }
 }

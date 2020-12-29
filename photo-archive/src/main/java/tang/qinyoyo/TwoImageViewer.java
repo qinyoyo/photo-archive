@@ -147,7 +147,7 @@ public final class TwoImageViewer {
 					case 3:
 						if (isDeleteFolder) {
 							File nf = new File(file2.getParentFile(), file1.getName());
-							nf = Utils.bakNameOf(nf);
+							nf = ArchiveUtils.bakNameOf(nf);
 							Files.move(file1.toPath(), nf.toPath());
 							removeIndex();
 						}
