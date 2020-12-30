@@ -353,5 +353,6 @@ public class PVController implements ApplicationRunner {
             archiveInfo.saveInfos();
         }
         rootPath = archiveInfo.getPath();  // 标准化
+        System.out.println("Photo viewer started.");
     }
 }

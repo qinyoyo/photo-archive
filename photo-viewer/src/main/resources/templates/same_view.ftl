@@ -25,7 +25,7 @@
         text-align: center;
     }
     button {
-        margin: 10px;
+        margin: 5px 0;
         color:#ff6060;
     }
     .button-left {
@@ -38,21 +38,38 @@
         height:150px;
     }
 </style>
+<script>
+    function adjustSize(img) {
+        let w = img.parentNode.clientWidth
+        let iw = img.naturalWidth, ih = img.naturalHeight
+        if (iw<=w) img.parentNode.style.height = Math.min(w,ih) + 'px'
+        else img.parentNode.style.height = Math.min(w, ih*w/iw) + 'px';
+    }
+</script>
 <body>
 <div id="app">
     <#if sames??>
         <div class="grid-box3">
             <#list sames as p>
                 <div class="photo-item grid-cell delete-index-${p?index}">
-                    <img src = ".thumb/${deletePrefix(p.same1)}" title="${p.title1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}"/>
+                    <img src = ".thumb/${deletePrefix(p.same1)}" title="${p.title1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}" onload="adjustSize(this)"/>
+                    <div class="photo-info info-${p?index}" style="display:none">${p.title1}</div>
                 </div>
-                <div class="grid-cell delete-buttons delete-index-${p?index}" style="height:50px">
-                    <button type="button"  class="button-left delete-file" data-index="${p?index}" data-file="${p.same1}"><i class="fa fa-close"></i></button>
-                    <button type="button"  style="color:#202122" class="delete-file" data-index="${p?index}" data-file="${p.same1} <-> ${p.same2}"><i class="fa fa-check"></i></button>
-                    <button type="button"  class="button-right delete-file" data-index="${p?index}" data-file="${p.same2}"><i class="fa fa-close"></i></button>
+                <div class="grid-cell delete-buttons delete-index-${p?index}" style="height:90px">
+                    <div>
+                        <button type="button"  class="button-info hide" style="color:#202122" data-index="${p?index}"><i class="fa fa-info"></i></button>
+                    </div>
+                    <div>
+                        <button type="button"  class="button-left delete-file" data-index="${p?index}" data-file="${p.same1}"><i class="fa fa-close"></i></button>
+                        <button type="button"  class="button-right delete-file" data-index="${p?index}" data-file="${p.same2}"><i class="fa fa-close"></i></button>
+                    </div>
+                    <div>
+                        <button type="button"  style="color:#202122" class="delete-file" data-index="${p?index}" data-file="${p.same1} <-> ${p.same2}"><i class="fa fa-check"></i></button>
+                    </div>
                 </div>
                 <div class="photo-item grid-cell delete-index-${p?index}">
-                    <img src = ".thumb/${deletePrefix(p.same2)}" title="${p.title2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}"/>
+                    <img src = ".thumb/${deletePrefix(p.same2)}" title="${p.title2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}" onload="adjustSize(this)"/>
+                    <div class="photo-info info-${p?index}" style="display:none">${p.title2}</div>
                 </div>
             </#list>
         </div>
@@ -88,6 +105,38 @@
         }
     }
     window.onload=function(){
+        document.querySelectorAll('.delete-file').forEach(function(img) {
+            const src = img.getAttribute('data-file')
+            const index = parseInt(img.getAttribute('data-index'))
+            img.onclick=function (event){
+                event.stopPropagation()
+                let url = src.indexOf(" <-> ")>0 ? '/save-file?path=' : '/delete-file?path='
+                Ajax.get(url+encodeURI(src), function(responseText) {
+                    if ("ok"==responseText){
+                        document.querySelectorAll('.delete-index-'+index).forEach(function (e){
+                            e.remove()
+                        })
+                    }
+                })
+            }
+        });
+        document.querySelectorAll('.button-info').forEach(function(btn) {
+            const index = parseInt(btn.getAttribute('data-index'))
+            btn.onclick=function (event){
+                if (btn.className.indexOf('hide')>=0) {
+                    btn.className = 'button-info'
+                    document.querySelectorAll('.info-'+index).forEach(function(e){
+                        e.style.display = ''
+                    });
+                } else {
+                    btn.className = 'button-info hide'
+                    document.querySelectorAll('.info-'+index).forEach(function(e){
+                        e.style.display = 'none'
+                    });
+                }
+                event.stopPropagation()
+            }
+        });
         document.querySelectorAll('.delete-file').forEach(function(img) {
             const src = img.getAttribute('data-file')
             const index = parseInt(img.getAttribute('data-index'))

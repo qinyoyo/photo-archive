@@ -468,6 +468,7 @@ public class ArchiveInfo {
                         if (ArchiveUtils.contentCompare(rm.get(i).fullPath(rootName),sameAs.get(i).fullPath(rootName))==0) {  // 完全相同，删除一个
                             System.out.println("删除完全一致文件 : " + rm.get(i).fullPath(rootName));
                             rm.get(i).delete(rootName);
+                            infos.remove(rm.get(i));
                         } else sb.append(one.getCanonicalPath() + " <-> " + two.getCanonicalPath()).append("\r\n");
                     }
                 }
@@ -503,6 +504,7 @@ public class ArchiveInfo {
                         if (ArchiveUtils.contentCompare(p.fullPath(rootName),sameAs.get(i).fullPath(ref == null ? rootName : ref.getPath()))==0) {  // 完全相同，删除一个
                             System.out.println("删除完全一致文件 : " + p.fullPath(rootName));
                             p.delete(rootName);
+                            infos.remove(p);
                         } else {
                             File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? rmf : new File(rmf, p.getSubFolder());
                             targetDir.mkdirs();

@@ -96,7 +96,7 @@ audio, video {
 .grid-box3 {
     display: grid;
     grid-auto-flow: row;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 40% 20% 40%;
     grid-gap: 5px;
     align-items: center;
     justify-content: center;
@@ -106,13 +106,12 @@ audio, video {
     position: relative;
 }
 .photo-info {
-    /*position: absolute;*/
+    position: absolute;
     left: 0px;
     top: 0px;
     font-size: 8px;
     color: #303133;
     text-align: left;
-    overflow: auto;
 }
 .grid-cell {
     color: #666666;
