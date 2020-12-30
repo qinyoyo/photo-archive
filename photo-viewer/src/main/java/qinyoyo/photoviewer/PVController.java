@@ -20,6 +20,8 @@ import tang.qinyoyo.exiftool.CommandRunner;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -144,7 +146,7 @@ public class PVController implements ApplicationRunner {
         String s = p.getFileName();
         if (s!=null && s.toLowerCase().contains(text)) return true;
         s = join(" ", p.getCountry(),p.getProvince(),p.getCity(),p.getLocation(),p.getSubjectCode(),p.getHeadline(),p.getSubTitle(),
-                DateUtil.date2String(p.getShootTime(),null),p.getMake(),p.getModel(),p.getLens());
+                DateUtil.date2String(p.getShootTime(),null),p.getModel(),p.getLens());
         if (s!=null && s.toLowerCase().contains(text)) return true;
         return false;
     }
@@ -191,23 +193,10 @@ public class PVController implements ApplicationRunner {
         return "index";
     }
 
-    public static void writeToFile(File file, String string) {
-        try {
-            FileOutputStream s = new FileOutputStream(file);
-            OutputStreamWriter w = new OutputStreamWriter(s, "GBK");
-            PrintWriter pw = new PrintWriter(w);
-            pw.write(string);
-            pw.flush();
-            pw.close();
-            w.close();
-            s.close();
-        } catch (Exception e ) {
-            e.printStackTrace();
-        }
-    }
 
     @RequestMapping(value = "same")
-    public String sameView(Model model, HttpServletRequest request, HttpServletResponse response, String text) {
+    public String sameView(Model model) {
+        model.addAttribute("separator", File.separator);
         List<Map<String,Object>> list = new ArrayList<>();
         BufferedReader ins=null;
         StringBuilder sb=new StringBuilder();
@@ -223,17 +212,21 @@ public class PVController implements ApplicationRunner {
                     File file2=new File(f2);
                     if (!f1.isEmpty() && !f2.isEmpty() && f1.startsWith(rootPath) && f2.startsWith(rootPath)) {
                         if (file1.exists() && file2.exists()) {
+                            PhotoInfo p1=archiveInfo.find(file1), p2=archiveInfo.find(file2);
                             sb.append(line).append("\r\n");
                             list.add(new HashMap<String, Object>() {{
                                 put("same1", f1.substring(rootPath.length() + 1));
+                                put("title1", (p1==null?new PhotoInfo(rootPath,file1):p1).toString());
                                 put("same2", f2.substring(rootPath.length() + 1));
+                                put("title2", (p2==null?new PhotoInfo(rootPath,file2):p2).toString());
                             }});
                         }
                     }
                 }
             }
             ins.close();
-            writeToFile(logFile,sb.toString());
+            if (sb.length()==0) logFile.delete();
+            else ArchiveUtils.writeToFile(logFile,sb.toString());
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return null;
@@ -284,6 +277,14 @@ public class PVController implements ApplicationRunner {
         if (ll.length==2) {
             BufferedReader ins=null;
             StringBuilder sb=new StringBuilder();
+            for (String fn : ll) {
+                if (fn.startsWith(".delete"+File.separator)) {
+                    try {
+                        Files.move(new File(rootPath, fn).toPath(),new File(rootPath, fn.substring(8)).toPath(), StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                    }
+                }
+            }
             try {
                 File logFile = new File(rootPath, ArchiveInfo.same_photo_log);
                 ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
@@ -295,7 +296,8 @@ public class PVController implements ApplicationRunner {
                     else sb.append(line).append("\r\n");
                 }
                 ins.close();
-                writeToFile(logFile,sb.toString());
+                if (sb.length()==0) logFile.delete();
+                else ArchiveUtils.writeToFile(logFile,sb.toString());
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 return e.getMessage();
@@ -323,9 +325,8 @@ public class PVController implements ApplicationRunner {
                 }
             }
             ins.close();
-            String txt = sb.toString();
-            if (txt.isEmpty()) logFile.delete();
-            else writeToFile(logFile,sb.toString());
+            if (sb.length()==0) logFile.delete();
+            else ArchiveUtils.writeToFile(logFile,sb.toString());
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return e.getMessage();

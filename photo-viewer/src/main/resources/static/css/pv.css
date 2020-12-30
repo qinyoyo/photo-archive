@@ -102,6 +102,18 @@ audio, video {
     justify-content: center;
     width: 100%;
 }
+.photo-item {
+    position: relative;
+}
+.photo-info {
+    /*position: absolute;*/
+    left: 0px;
+    top: 0px;
+    font-size: 8px;
+    color: #303133;
+    text-align: left;
+    overflow: auto;
+}
 .grid-cell {
     color: #666666;
     font-size: 12px;
@@ -109,6 +121,9 @@ audio, video {
     display: table-cell;
     vertical-align: middle;
     border: 1px solid #f1e8e8;
+}
+.photo-item.grid-cell {
+    height:80px;
 }
 .gird-cell-img {
     max-width: 100%;
@@ -180,7 +195,7 @@ audio, video {
 .button-close {
     position: fixed;
     bottom: 12px;
-    left: 50%;
+    left: calc(50% - 18px);
     width: 36px;
     height: 36px;
     background: transparent;
@@ -193,8 +208,8 @@ audio, video {
 
 .waiting-icon {
     position: fixed;
-    bottom: 50%;
-    left: 50%;
+    bottom: calc(50% - 25px);
+    left: calc(50% - 25px);
     width: 50px;
     height: 50px;
     background: transparent;

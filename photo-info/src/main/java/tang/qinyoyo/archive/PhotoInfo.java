@@ -22,7 +22,6 @@ public class PhotoInfo implements Serializable,Cloneable {
 
     private Date   shootTime;
     private Date   createTime;
-    private String make;
     private String model;
     private String lens;
     private String digest;
@@ -36,6 +35,8 @@ public class PhotoInfo implements Serializable,Cloneable {
     private String scene;        // 场景代码，用于标注照片分类, landscape，portrait，group等
     private String artist;
     private Integer rating;      // 星级
+    private Integer width;
+    private Integer height;
     private String orientation;
 
     private String headline;
@@ -45,6 +46,71 @@ public class PhotoInfo implements Serializable,Cloneable {
     private Double latitude;
     private Double altitude;
 
+    String lengString(long l) {
+        String s = String.valueOf(l);
+        String r = "";
+        for (int i=0; i<s.length();i++) {
+            if (i%3==0 && i>0) r = ',' + r;
+            r=s.charAt(s.length()-1-i) + r;
+        }
+        return r;
+    }
+    public String gpsString(double v, boolean isLatitude) {
+        double d=Math.abs(v);
+        String r="";
+        int du = (int) d;
+        int fen = (int) ((d - (double) du) * 60.0);
+        double miao = (d - (double) du - (double) fen / 60.0) * 3600.0;
+        r = du + "°" + fen + "′" + String.format("%.3f", miao) + "″";
+        if (isLatitude) {
+            return (v>=0.0?"N":"S")+r;
+        }  return (v>=0.0?"E":"W")+r;
+    }
+    @Override
+    public String toString() {
+        StringBuilder sb=new StringBuilder();
+        if (rating!=null && rating>0) {
+            for (int i=0;i<rating;i++) sb.append("★");
+            sb.append("\n");
+        }
+        if (headline!=null && !headline.isEmpty()) sb.append(headline).append("\n");
+
+        if (subTitle!=null && !subTitle.isEmpty()) sb.append(subTitle).append("\n");
+
+        if (!subFolder.isEmpty()) sb.append(subFolder).append("\n");
+
+        sb.append(fileName).append("(").append(lengString(fileSize));
+        if (width!=null && height!=null) sb.append(" ").append(width).append("x").append(height);
+        sb.append(")\n");
+
+        if (shootTime!=null) sb.append(DateUtil.date2String(shootTime)).append("\n");
+        else if (createTime!=null) sb.append(DateUtil.date2String(createTime)).append("\n");
+
+        if (artist!=null && !artist.isEmpty()) sb.append("by ").append(artist).append("\n");
+
+        if (model!=null && !model.isEmpty()) {
+            sb.append(model);
+            if (lens!=null && !lens.isEmpty()) sb.append(" - ").append(lens);
+            sb.append("\n");
+        }
+
+        if (subjectCode!=null && !subjectCode.isEmpty()) sb.append(subjectCode).append("\n");
+
+        if (!allNull(country,province,city,location)) {
+            if (country!=null) sb.append(country).append(" ");
+            if (province!=null) sb.append(province).append(" ");
+            if (city!=null) sb.append(city).append(" ");
+            if (location!=null) sb.append(location).append(" ");
+            sb.append("\n");
+        }
+        if (longitude!=null) {
+            sb.append(gpsString(longitude,false));
+            if (latitude!=null) sb.append(" ").append(gpsString(latitude,true));
+            if (altitude!=null) sb.append(" ").append(Math.round(altitude)).append("m");
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
     public PhotoInfo cloneObject() throws CloneNotSupportedException {
        return (PhotoInfo)super.clone();
     }
@@ -214,14 +280,17 @@ public class PhotoInfo implements Serializable,Cloneable {
                                     ));
                         }
                         break;
+                    case IMAGE_WIDTH:
+                        width = Integer.parseInt(s);
+                        break;
+                    case IMAGE_HEIGHT:
+                        height = Integer.parseInt(s);
+                        break;
                     case DOCUMENT_ID:
                         documentId = s;
                         break;
                     case IPTCDigest:
                         digest = s;
-                        break;
-                    case MAKE:
-                        make = s;
                         break;
                     case MODEL:
                         model = s;
@@ -298,7 +367,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         return s==null || s.trim().isEmpty();
     }
     private boolean isExifEmpty() {
-        return shootTime==null && createTime==null && isEmpty(make) && isEmpty(model) && isEmpty(lens) && isEmpty(documentId);
+        return shootTime==null && createTime==null && isEmpty(model) && isEmpty(lens) && isEmpty(documentId);
         // 网络图片 digest 很多一样，不可靠
     }
     private static boolean same(Date s1, Date s2) {
@@ -331,14 +400,12 @@ public class PhotoInfo implements Serializable,Cloneable {
     public boolean exifEquals(PhotoInfo pi) {
         if (same(shootTime,pi.shootTime)) {
             if (same(createTime,pi.createTime)) {
-                if (same(make,pi.make)) {
-                    if (same(model,pi.model)) {
-                        if (same(lens,pi.lens)) {
-                            if (!allNull(shootTime,createTime) && !allNull(make,model,lens)) return true;
-                            if (same(digest,pi.digest)) {
-                                if (same(documentId,pi.documentId)) return true;
-                                else return false;
-                            } else return false;
+                if (same(model,pi.model)) {
+                    if (same(lens,pi.lens)) {
+                        if (!allNull(shootTime,createTime) && !allNull(model,lens)) return true;
+                        if (same(digest,pi.digest)) {
+                            if (same(documentId,pi.documentId)) return true;
+                            else return false;
                         } else return false;
                     } else return false;
                 } else return false;
@@ -377,6 +444,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             if (sub == null || sub.isEmpty()) {
                 return new File(new File(root, ".thumb"),getFileName()).getCanonicalPath();
             } else
+                if (sub.startsWith(".delete"+File.separator)) sub=sub.substring(8);
                 return new File(new File(root, ".thumb"+File.separator + sub), getFileName()).getCanonicalPath();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());

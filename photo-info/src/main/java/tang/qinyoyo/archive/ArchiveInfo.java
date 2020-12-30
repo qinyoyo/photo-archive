@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class ArchiveInfo {
     public static final Key[] NEED_KEYS = new Key[]{
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
-            Key.MAKE, Key.MODEL, Key.LENS_ID, Key.ORIENTATION,
+            Key.MODEL, Key.LENS_ID, Key.ORIENTATION, Key.IMAGE_WIDTH, Key.IMAGE_HEIGHT,
             Key.DOCUMENT_ID, Key.IPTCDigest,
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
             Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
@@ -471,7 +471,8 @@ public class ArchiveInfo {
                         } else sb.append(one.getCanonicalPath() + " <-> " + two.getCanonicalPath()).append("\r\n");
                     }
                 }
-                ArchiveUtils.writeToFile(logFile,sb.toString());
+                if (sb.length()==0) logFile.delete();
+                else ArchiveUtils.writeToFile(logFile,sb.toString());
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
@@ -521,6 +522,18 @@ public class ArchiveInfo {
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
+        }
+    }
+    public PhotoInfo find(File f) {
+        try {
+            String fullPath = f.getCanonicalPath();
+            if (!fullPath.startsWith(path)) return null;
+            String name = f.getName();
+            String subFolder = fullPath.substring(path.length()+1,fullPath.length()-name.length()-1);
+            PhotoInfo photoInfo = infos.stream().filter(p -> p.getSubFolder().equals(subFolder) && p.getFileName().equals(name)).findFirst().get();
+            return photoInfo;
+        } catch (Exception e) {
+            return null;
         }
     }
 }

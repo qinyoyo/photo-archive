@@ -2,6 +2,12 @@
 function searchText(text) {
     if (text) window.location.href = '/search?text=' + encodeURI(text)
 }
+function adjustSize(img) {
+    let w = img.parentNode.clientWidth
+    let iw = img.naturalWidth, ih = img.naturalHeight
+    if (iw<=w) img.parentNode.style.height = Math.min(w,ih) + 'px'
+    else img.parentNode.style.height = Math.min(w, ih*w/iw) + 'px';
+}
 window.onload=function(){
     document.querySelectorAll('.folder-item').forEach(function(d) {
         let path = d.getAttribute('data-folder')

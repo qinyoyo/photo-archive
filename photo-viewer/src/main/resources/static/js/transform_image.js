@@ -1,7 +1,6 @@
 /* transform image
  * By qinyoyo
  */
-
 ;(function () {
     window.isMobile = function() {
         const ua = navigator.userAgent.toLowerCase()
@@ -382,9 +381,12 @@
             if (src.indexOf('.thumb/')==0) src=src.substring(7)
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
+            const title = img.getAttribute('title')
             img.onclick=function (event){
                 event.stopPropagation()
-                addImageDialog(src,index==NaN?0:index)
+                if (title && event.offsetX<36 && event.offsetY<36) {
+                    alert(title)
+                } else addImageDialog(src,index==NaN?0:index)
             }
         });
     }

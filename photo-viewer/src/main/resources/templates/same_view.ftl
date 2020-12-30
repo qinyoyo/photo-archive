@@ -1,4 +1,10 @@
-
+<#function deletePrefix n>
+    <#if n?index_of('.delete'+ separator)==0>
+        <#return n?substring(8)?replace(separator,'/')>
+    <#else>
+        <#return n?replace(separator,'/')>
+    </#if>
+</#function>
 <!DOCTYPE html>
 <html>
 <head>
@@ -28,6 +34,9 @@
     .button-right {
         float:right;
     }
+    .grid-cell {
+        height:150px;
+    }
 </style>
 <body>
 <div id="app">
@@ -35,15 +44,15 @@
         <div class="grid-box3">
             <#list sames as p>
                 <div class="photo-item grid-cell delete-index-${p?index}">
-                    <img src = ".thumb/${p.same1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}" />
+                    <img src = ".thumb/${deletePrefix(p.same1)}" title="${p.title1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}"/>
                 </div>
-                <div class="delete-buttons delete-index-${p?index}">
+                <div class="grid-cell delete-buttons delete-index-${p?index}" style="height:50px">
                     <button type="button"  class="button-left delete-file" data-index="${p?index}" data-file="${p.same1}"><i class="fa fa-close"></i></button>
-                    <button type="button"  style="color:#202122" class="delete-file" data-index="${p?index}" data-file="${p.same1} <-> ${p.same2}"><i class="fa fa-check"></i>All</button>
+                    <button type="button"  style="color:#202122" class="delete-file" data-index="${p?index}" data-file="${p.same1} <-> ${p.same2}"><i class="fa fa-check"></i></button>
                     <button type="button"  class="button-right delete-file" data-index="${p?index}" data-file="${p.same2}"><i class="fa fa-close"></i></button>
                 </div>
                 <div class="photo-item grid-cell delete-index-${p?index}">
-                    <img src = ".thumb/${p.same2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}" />
+                    <img src = ".thumb/${deletePrefix(p.same2)}" title="${p.title2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}"/>
                 </div>
             </#list>
         </div>

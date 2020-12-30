@@ -95,7 +95,7 @@
         <div class="photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = ".thumb${fileUrl(p)}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" />
+                    <img src = ".thumb${fileUrl(p)}" title="${p.toString()}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>
         </div>
