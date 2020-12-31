@@ -5,28 +5,30 @@ import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * 执行操作系统命令
  */
 public final class CommandRunner {
+    public static Process run(String ... args) throws IOException {
+        return run(Arrays.asList(args));
+    }
+    public static Process run(Path workingDir, String ... args) throws IOException {
+        return run(workingDir,null, Arrays.asList(args));
+    }
     public static Process run(List<String> args) throws IOException {
-        return run(args, FileSystems.getDefault().getPath("."),null);
+        return run(FileSystems.getDefault().getPath("."),null, args);
     }
 
-    public static Process run(List<String> args, Path workingDir,File redirectOutput) throws IOException {
+    public static Process run(Path workingDir,File redirectOutput, List<String> args) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(args);
         processBuilder.directory(workingDir.toFile());
         processBuilder.redirectErrorStream(true);
         if (redirectOutput!=null) processBuilder.redirectOutput(redirectOutput);
         return processBuilder.start();
-    }
-
-
-    public static Pair<List<String>, List<String>> runAndFinish(List<String> args) throws IOException {
-        return runAndFinish(args, FileSystems.getDefault().getPath("."));
     }
 
     private static void bufferProcess(InputStream ins,List<String> out) {
@@ -47,9 +49,20 @@ public final class CommandRunner {
             }
         }
     }
-    public static Pair<List<String>, List<String>> runAndFinish(List<String> args, Path workingDir) throws IOException {
-    	File redirectOutput = File.createTempFile("_p_a_", ".tmp");    	
-        Process process = run(args, workingDir, redirectOutput);
+
+    public static Pair<List<String>, List<String>> runWithResult(boolean useTempFileOutput, String ... args) throws IOException {
+        return runWithResult(useTempFileOutput, Arrays.asList(args));
+    }
+
+    public static Pair<List<String>, List<String>> runWithResult(boolean useTempFileOutput, List<String> args) throws IOException {
+        return runWithResult(FileSystems.getDefault().getPath("."), useTempFileOutput, args);
+    }
+    public static Pair<List<String>, List<String>> runWithResult(Path workingDir, boolean useTempFileOutput, String ... args) throws IOException {
+        return runWithResult(workingDir, useTempFileOutput, Arrays.asList(args));
+    }
+    public static Pair<List<String>, List<String>> runWithResult(Path workingDir, boolean useTempFileOutput, List<String> args) throws IOException {
+    	File redirectOutput = useTempFileOutput ? File.createTempFile("_p_a_", ".tmp") : null;
+        Process process = run(workingDir, redirectOutput, args);
         List<String> stdout=new ArrayList<>();
         List<String> stderr=new ArrayList<>();
         try {
@@ -91,14 +104,8 @@ public final class CommandRunner {
         return new Pair<>(stdout, stderr);
     }
     public static void shutdown(int delay) {
-        List<String> cmd = new ArrayList<>();
-        cmd.add("shutdown");
-        cmd.add("-s");
-        cmd.add("-f");
-        cmd.add("-t");
-        cmd.add(String.valueOf(delay));
         try {
-            CommandRunner.run(cmd);
+            CommandRunner.run("shutdown","-s","-f","-t",String.valueOf(delay));
         } catch (IOException e) {
             e.printStackTrace();
         }

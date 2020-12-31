@@ -11,9 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Utils {
-
-
-
 	public static void saveFolderInfos(List<FolderInfo> infos, ArchiveInfo archived) {
 		File f=new File(archived.getPath(),ArchiveInfo.folder_info_dat);
 		String rootPath = archived.getPath();

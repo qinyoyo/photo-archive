@@ -11,18 +11,8 @@ public class ExifTool {
     public  static String EXIFTOOL = "exiftool";
     public  static Double INSTALLED_VERSION;
 
-    private final Set<Feature> features;
-
-    private ExifTool(Set<Feature> features) throws IOException, InterruptedException {
-        this.features = features;
+    private ExifTool() throws IOException {
         if (INSTALLED_VERSION==null) INSTALLED_VERSION = getInstalledVersion();
-        features.forEach(feature -> {
-            if (!Feature.isCompatible(feature, INSTALLED_VERSION)) {
-                throw new UnsupportedOperationException(String.format(
-                        "Feature %s not supported by ExifTool version %s", feature, INSTALLED_VERSION
-                ));
-            }
-        });
     }
 
     public static Double getInstalledVersion() throws IOException{
@@ -30,7 +20,7 @@ public class ExifTool {
             List<String> argsList = new ArrayList<>();
             argsList.add(EXIFTOOL);
             argsList.add("-ver");
-            Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList);
+            Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false,argsList);
             if (result.getKey().size() == 0) {
                 throw new RuntimeException("Could not get version of <" + EXIFTOOL + ">. Where is it installed?");
             }
@@ -73,13 +63,33 @@ public class ExifTool {
             argsList.add(String.format("-%s", Key.getName(key)));
         }
         if (dir.isDirectory())  argsList.add(".");
-        else argsList.add(dir.getName());
-        Pair<List<String>, List<String>> result = CommandRunner.runAndFinish(argsList, dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath());
+        else argsList.add("\"" + dir.getName() + "\"");
+        Pair<List<String>, List<String>> result = CommandRunner.runWithResult(dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath(),true, argsList);
         List<String> stdOut = result.getKey();
         List<String> stdErr = result.getValue();
         return processQueryResult(dir, stdOut, stdErr, keys);
     }
 
+    public Map<String,List<String>> excute(File dir, String ... options) throws IOException {
+        List<String> argsList = new ArrayList<>();
+        argsList.add(EXIFTOOL);
+
+        argsList.add("-charset");
+        argsList.add("filename=\"\"");
+
+        for (String option : options) {
+            argsList.add(option);
+        }
+        if (dir.isDirectory())  argsList.add(".");
+        else argsList.add("\"" + dir.getName() + "\"");
+        Pair<List<String>, List<String>> result = CommandRunner.runWithResult(dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath(),true, argsList);
+        List<String> stdOut = result.getKey();
+        List<String> stdErr = result.getValue();
+        return new HashMap<String,List<String>>(){{
+            put("output",stdOut);
+            put("error",stdErr);
+        }};
+    }
 
     private <T> Map<String,Map<Key, T>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
         Map<String,Map<Key, T>> queryResult = new HashMap<>();
@@ -141,15 +151,8 @@ public class ExifTool {
         }
     }
     public static class Builder {
-
-        private Set<Feature> features = new HashSet<>();
-
-        public Builder features(Set<Feature> features) {
-            this.features = features;
-            return this;
-        }
         public ExifTool build() throws IOException, InterruptedException {
-            return new ExifTool(features);
+            return new ExifTool();
         }
     }
 

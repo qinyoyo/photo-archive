@@ -85,7 +85,7 @@
         <div class="video-list grid-box">
             <#list videos as v>
                 <div class="audio-item grid-cell">
-                    <video src = "${fileUrl(v)}" class="video-index-${v?index}" controls></video>
+                    <video src = "${fileUrl(v)}" poster="/.thumb${fileUrl(v)}.jpg" class="video-index-${v?index}" controls></video>
                     <span>${v.fileName}</span>
                 </div>
             </#list>
@@ -95,7 +95,7 @@
         <div class="photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = ".thumb${fileUrl(p)}" title="${p.toString()}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                    <img src = "/.thumb${fileUrl(p)}" title="${p.toString()}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>
         </div>

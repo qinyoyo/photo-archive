@@ -1,5 +1,6 @@
 package tang.qinyoyo.archive;
 import tang.qinyoyo.ArchiveUtils;
+import tang.qinyoyo.exiftool.CommandRunner;
 import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 
@@ -25,6 +26,8 @@ public class ArchiveInfo {
     public static final String manual_archive_bat = ".manual_archive.bat";
     public static final String folder_info_dat = ".folder_info.dat";
     public static final String folder_info_lost_log = ".folder_info_lost.log";
+
+    public static String FFMPEG = "ffmpeg";
 
     private String path; // 末尾不带分隔符
     private List<PhotoInfo> infos;
@@ -170,17 +173,40 @@ public class ArchiveInfo {
     	if (infos!=null && infos.size()>1)
 	        infos.sort((a,b)->a.compareTo(b));
     }
+    public void createThumbFiles(PhotoInfo p) {
+        try {
+            String thumbPath = p.fullThumbPath(getPath());
+            new File(thumbPath).getParentFile().mkdirs();
+            String imgPath = p.fullPath(getPath());
+            if (p.getMimeType()!=null && p.getMimeType().contains("image/")) {
+                if (!new File(thumbPath).exists()) {
+                    System.out.println("Create thumbnail of "+imgPath);
+                    ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
+                    if (p.getOrientation()!=null) {
+                        try {
+                            exifTool.excute(new File(thumbPath),"\"-orientation="+p.getOrientation()+"\"", "-overwrite_original");
+                        } catch (IOException e) {
+
+                        }
+                    }
+                }
+            } else if (p.getMimeType()!=null && p.getMimeType().contains("video/")) {
+                String size = "300x200";
+                if (p.getHeight()!=null && p.getWidth()!=null) {
+                    float scale = Math.min(300.0f/p.getWidth(),200.0f/p.getHeight());
+                    int w = (int)(scale * p.getWidth()), h = (int)(scale * p.getHeight());
+                    size = w + "x" + h;
+                }
+                CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2", "-t", "0.001", "-s",
+                        size, thumbPath);
+            }
+        } catch (IOException e) {
+        }
+    }
     public void createThumbFiles() {
         if (infos!=null && infos.size()>0) {
             for (PhotoInfo p : infos) {
-                if (p.getMimeType()!=null && p.getMimeType().contains("image/")) {
-                    String thumbPath = p.fullPath(getPath() + File.separator + ".thumb");
-                    String imgPath = p.fullPath(getPath());
-                    if (!new File(thumbPath).exists()) {
-                        System.out.println("Create thumbnail of "+imgPath);
-                        ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
-                    }
-                }
+                createThumbFiles(p);
             }
         }
     }

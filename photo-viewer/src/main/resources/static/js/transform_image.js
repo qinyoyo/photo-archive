@@ -10,6 +10,17 @@
         })) return true
         else return false
     }
+    window.toast  = function(msg,delay) {  // 显示提示信息，自动关闭
+        if (typeof msg != 'string') return
+        let toast = document.createElement("div")
+        toast.className = 'toast-center'
+        toast.style.zIndex = "9999"
+        toast.innerText = msg
+        document.querySelector('body').appendChild(toast)
+        setTimeout(function(){
+            toast.remove()
+        },delay ? delay : 500)
+    }
     const initTransformImage = function (img, initialSrc, index) {
         const pageW = window.innerWidth, pageH = window.innerHeight
         let   imageW = pageW, imageH = pageH
@@ -19,7 +30,6 @@
         const waitingIcon = container.querySelector('.waiting-icon')
 
         const loadImageBy = function (imgIndex) {
-            if (imgIndex<0) return false
             let thumb = document.querySelector('.img-index-'+imgIndex)
             if (thumb) {
                 let src = thumb.getAttribute('src')
@@ -27,7 +37,10 @@
                 changeImage(src)
                 index = imgIndex
                 return true
-            } else return false
+            } else {
+                toast('没有更多了')
+                return false
+            }
         }
         container.onclick=function (event){
             if (event.clientX>img.offsetLeft + img.offsetWidth ||event.clientX<img.offsetLeft){
@@ -107,12 +120,14 @@
                 y: Math.trunc(point.y * img.scaleY / realSizeScale - clientTop)
             }
         }
+        let translateXChanged = false
         const translate = function(p) {
             let limit = translateLimit(img)
             if (p.x < -limit.x) p.x = -limit.x;
             else if (p.x > limit.x) p.x = limit.x;
             if (p.y < -limit.y) p.y = -limit.y;
             else if (p.y > limit.y) p.y = limit.y;
+            if (p.x != img.translateX) translateXChanged = true
             img.translateX = p.x
             img.translateY = p.y
         }
@@ -192,7 +207,7 @@
         }
         Transform(img)
         if (isMobile()) {
-            let initScale = 1
+            let initScale = 1, startTime = 0
             new AlloyFinger(img, {
                 rotate:function(event){
                     event.stopPropagation();
@@ -245,12 +260,20 @@
                         })
                     }
                 },
+                touchStart:function(event) {
+                    translateXChanged = false
+                },
                 swipe:function(event){
                     event.stopPropagation();
                     event.preventDefault()
-                    if (!isReady || !isFitClient()) return
-                    if (event.direction==="Right" || event.direction==="Left")
-                        loadImageBy(event.direction==="Right" ? index-1:index+1)
+                    if (!isReady || translateXChanged) return
+                    if (event.direction==="Right"){
+                        let left = clientW/2 - pageW/2  - img.translateX
+                        if (left<=1) loadImageBy(index-1)
+                    } else if (event.direction==="Left"){
+                        let right = clientW/2 + pageW/2  - img.translateX
+                        if (right>=clientW-1) loadImageBy(index+1)
+                    }
                 },
                 touchEnd: function (event) {
                     event.stopPropagation();

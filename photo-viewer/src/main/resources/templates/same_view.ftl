@@ -52,7 +52,7 @@
         <div class="grid-box3">
             <#list sames as p>
                 <div class="photo-item grid-cell delete-index-${p?index}">
-                    <img src = ".thumb/${deletePrefix(p.same1)}" title="${p.title1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}" onload="adjustSize(this)"/>
+                    <img src = "/.thumb/${deletePrefix(p.same1)}" title="${p.title1}" class="gird-cell-img img-index-${2*p?index}" alt="${p.same1}" onload="adjustSize(this)"/>
                     <div class="photo-info info-${p?index}" style="display:none">${p.title1}</div>
                 </div>
                 <div class="grid-cell delete-buttons delete-index-${p?index}" style="height:90px">
@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div class="photo-item grid-cell delete-index-${p?index}">
-                    <img src = ".thumb/${deletePrefix(p.same2)}" title="${p.title2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}" onload="adjustSize(this)"/>
+                    <img src = "/.thumb/${deletePrefix(p.same2)}" title="${p.title2}" class="gird-cell-img img-index-${2*p?index+1}" alt="${p.same2}" onload="adjustSize(this)"/>
                     <div class="photo-info info-${p?index}" style="display:none">${p.title2}</div>
                 </div>
             </#list>

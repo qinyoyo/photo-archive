@@ -16,8 +16,12 @@ public class ImageUtil {
     private static BufferedImage InputImage(String srcImgPath) {
         BufferedImage srcImage = null;
         try {
-            FileInputStream in = new FileInputStream(srcImgPath);
-            srcImage = javax.imageio.ImageIO.read(in);
+            File file = new File(srcImgPath);
+            if (file.exists()) {
+
+                FileInputStream in = new FileInputStream(srcImgPath);
+                srcImage = javax.imageio.ImageIO.read(in);
+            }
         } catch (IOException e) {
             System.out.println("读取图片文件出错！" + e.getMessage());
             e.printStackTrace();

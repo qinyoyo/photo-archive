@@ -13,9 +13,9 @@ import qinyoyo.utils.SpringContextUtil;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.FolderInfo;
-import tang.qinyoyo.archive.ImageUtil;
 import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.CommandRunner;
+import tang.qinyoyo.exiftool.ExifTool;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,19 +55,23 @@ public class PVController implements ApplicationRunner {
         } else return list;
     }
 
-    void createThumbs(String thumbPath, String imgPath) {
-        ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
-    }
-
     void createThumbsList(List<PhotoInfo> photos,String key) {
         if (photos!=null && photos.size()>0) {
-            final List<PhotoInfo> noThumbs = photos.stream().filter(p->!new File(p.fullPath(rootPath+File.separator+".thumb")).exists()).collect(Collectors.toList());
+            final List<PhotoInfo> noThumbs = photos.stream().filter(p->{
+                String tp = null;
+                try {
+                    tp = p.fullThumbPath(rootPath);
+                    return !new File(tp).exists();
+                } catch (IOException e) {
+                    return false;
+                }
+            }).collect(Collectors.toList());
             if (noThumbs!=null && noThumbs.size()>0 && !threadPathList.contains(key)) {
                 threadPathList.add(key);
                 new Thread() {
                     @Override
                     public void run() {
-                        for (PhotoInfo p : noThumbs) createThumbs(p.fullPath(rootPath+File.separator+".thumb"),p.fullPath(rootPath));
+                        for (PhotoInfo p : noThumbs) archiveInfo.createThumbFiles(p);
                     }
                 }.start();
             }
@@ -123,8 +127,13 @@ public class PVController implements ApplicationRunner {
             //Photo Info
             List<PhotoInfo> photos = mimeListInPath("image",path);
             if (photos!=null && photos.size()>0) {
-                createThumbsList(photos,path);
                 model.addAttribute("photos",photos);
+            }
+            if ((photos!=null && photos.size()>0) || (videos!=null && videos.size()>0)) {
+                List<PhotoInfo> l = new ArrayList<>();
+                if (videos!=null && videos.size()>0) l.addAll(videos);
+                if (photos!=null && photos.size()>0) l.addAll(photos);
+                createThumbsList(l, path);
             }
         }
         return "index";
@@ -341,10 +350,25 @@ public class PVController implements ApplicationRunner {
         return "ok";
     }
 
+    String setUseDefault(String value, String def) {
+        if (value==null || value.trim().isEmpty()) return def;
+        else return value;
+    }
     @Override
     public void run(ApplicationArguments args) throws Exception {
         rootPath = env.getProperty("photo.root-path");
         if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
+
+        String ffmpeg = env.getProperty("photo.ffmpeg");
+        if (ffmpeg!=null) ArchiveInfo.FFMPEG = ffmpeg;
+
+        String exiftool = env.getProperty("photo.exiftool");
+        if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
+
+        ExifTool.getInstalledVersion();
+
+
+
         archiveInfo = new ArchiveInfo(rootPath);
         if (!archiveInfo.isReadFromFile()) {
             archiveInfo.sortInfos();

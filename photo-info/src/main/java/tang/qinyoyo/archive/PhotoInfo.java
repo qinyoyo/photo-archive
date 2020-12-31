@@ -5,6 +5,7 @@ import lombok.Setter;
 import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
@@ -324,6 +325,8 @@ public class PhotoInfo implements Serializable,Cloneable {
                     case RATING:
                         rating = Integer.parseInt(s);
                         break;
+                    case ORIENTATION:
+                        orientation = s;
                     case SCENE:
                         scene = s;
                         break;
@@ -438,17 +441,15 @@ public class PhotoInfo implements Serializable,Cloneable {
             throw new RuntimeException(e.getMessage());
         }
     }
-    public String fullThumbPath(String root) {
-        try {
-            String sub = getSubFolder();
-            if (sub == null || sub.isEmpty()) {
-                return new File(new File(root, ".thumb"),getFileName()).getCanonicalPath();
-            } else
-                if (sub.startsWith(".delete"+File.separator)) sub=sub.substring(8);
-                return new File(new File(root, ".thumb"+File.separator + sub), getFileName()).getCanonicalPath();
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+    public String fullThumbPath(String root) throws IOException {
+        if (mimeType==null || (!mimeType.contains("image/") && !mimeType.contains("video/"))) throw new IOException("not supported type");
+        String sub = getSubFolder();
+        if (sub == null || sub.isEmpty()) sub =".thumb";
+        else {
+            if (sub.startsWith(".delete"+File.separator)) sub=sub.substring(8);
+            sub = ".thumb"+File.separator + sub;
         }
+        return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
     }
     public boolean delete(String rootPath) {
         try {
