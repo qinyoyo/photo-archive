@@ -102,6 +102,9 @@ audio, video {
     justify-content: center;
     width: 100%;
 }
+.video-list.grid-box {
+    grid-template-columns: 33% 34% 33%;
+}
 .photo-item {
     position: relative;
 }
@@ -234,6 +237,9 @@ audio, video {
 @media screen and (max-aspect-ratio: 13/9) {
     .grid-box {
         grid-template-columns: repeat(3, 1fr);
+    }
+    .video-list.grid-box {
+        grid-template-columns: 50% 50%;
     }
 }
 @media screen and (min-aspect-ratio: 13/9) {

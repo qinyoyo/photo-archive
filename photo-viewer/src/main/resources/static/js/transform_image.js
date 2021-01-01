@@ -28,12 +28,12 @@
         let   realSizeScale = 1
         const container = img.parentNode
         const waitingIcon = container.querySelector('.waiting-icon')
-
+        let   scaleValue = 1
         const loadImageBy = function (imgIndex) {
             let thumb = document.querySelector('.img-index-'+imgIndex)
             if (thumb) {
                 let src = thumb.getAttribute('src')
-                if (src.indexOf('.thumb/')==0) src = src.substring(7)
+                if (src.indexOf('.thumb/')==0 || src.indexOf('/.thumb/')==0) src = src.substring(7)
                 changeImage(src)
                 index = imgIndex
                 return true
@@ -92,8 +92,8 @@
                 imageW = img.naturalWidth
                 imageH = img.naturalHeight
             }
-            clientW = Math.trunc(imageW * img.scaleX / realSizeScale)
-            clientH = Math.trunc(imageH * img.scaleY / realSizeScale)
+            clientW = Math.trunc(imageW * scaleValue / realSizeScale)
+            clientH = Math.trunc(imageH * scaleValue / realSizeScale)
         }
         const translateLimit = function () {
             let limit = {}
@@ -108,16 +108,16 @@
             let clientLeft = Math.trunc((clientW - pageW) / 2 - img.translateX),
                 clientTop = Math.trunc((clientH - pageH) / 2 - img.translateY);
             return {
-                x: Math.trunc((clientLeft + point.x) * realSizeScale / img.scaleX),
-                y: Math.trunc((clientTop + point.y) * realSizeScale / img.scaleY)
+                x: Math.trunc((clientLeft + point.x) * realSizeScale / scaleValue),
+                y: Math.trunc((clientTop + point.y) * realSizeScale / scaleValue)
             }
         }
         const imageAxis2PageAxis = function (point) {
             let clientLeft = (clientW - pageW) / 2 - img.translateX,
                 clientTop = (clientH - pageH) / 2 - img.translateY;
             return {
-                x: Math.trunc(point.x * img.scaleX / realSizeScale - clientLeft),
-                y: Math.trunc(point.y * img.scaleY / realSizeScale - clientTop)
+                x: Math.trunc(point.x * scaleValue / realSizeScale - clientLeft),
+                y: Math.trunc(point.y * scaleValue / realSizeScale - clientTop)
             }
         }
         let translateXChanged = false
@@ -170,9 +170,11 @@
             let ms = minScale()
             if (scale< ms) scale=ms
             else if (scale > realSizeScale) scale = realSizeScale
-            img.scaleX = img.scaleY = scale
-            clientW = Math.trunc(imageW * img.scaleX / realSizeScale)
-            clientH = Math.trunc(imageH * img.scaleY / realSizeScale)
+            scaleValue = scale
+            clientW = Math.trunc(imageW * scaleValue / realSizeScale)
+            clientH = Math.trunc(imageH * scaleValue / realSizeScale)
+            img.style.width = clientW+'px'
+            img.style.height = clientH+'px'
             if (refPoint) {
                 moveTo(image, refPoint)
             }
@@ -198,7 +200,7 @@
         img.onload = function () {
             waitingIcon.style.display = 'none'
             img.rotateZ = 0
-            img.scaleX = img.scaleY = 1
+            scaleValue = 1
             img.translateX = img.translateY = 0
             realSizeScale = Math.max(img.naturalWidth / pageW, img.naturalHeight / pageH)
             if (realSizeScale<1) realSizeScale = 1
@@ -220,13 +222,13 @@
                 multipointStart: function (event) {
                     event.stopPropagation();
                     event.preventDefault()
-                    initScale = img.scaleX;
+                    initScale = scaleValue;
                 },
                 pinch: function (event) {
                     event.stopPropagation();
                     event.preventDefault()
                     if (isReady)  {
-                        let scale = img.scaleY = initScale * event.zoom;
+                        let scale = initScale * event.zoom;
                         scale(scale,{
                             x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
                             y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
@@ -262,6 +264,8 @@
                 },
                 touchStart:function(event) {
                     translateXChanged = false
+                    event.stopPropagation();
+                    event.preventDefault()
                 },
                 swipe:function(event){
                     event.stopPropagation();
@@ -363,7 +367,6 @@
 
         let img = document.createElement("img")
         img.draggable = false
-        img.className = 'img-fit'
         img.style.zIndex = "6004"
 
         let closeButton = document.createElement("button")
@@ -401,7 +404,7 @@
     window.TransformImage =function(className){
         document.querySelectorAll('.'+className).forEach(function (img){
             let src=img.getAttribute('src')
-            if (src.indexOf('.thumb/')==0) src=src.substring(7)
+            if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
             const title = img.getAttribute('title')

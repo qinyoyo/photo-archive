@@ -6,7 +6,7 @@ function adjustSize(img) {
     let w = img.parentNode.clientWidth
     let iw = img.naturalWidth, ih = img.naturalHeight
     if (iw<=w) img.parentNode.style.height = Math.min(w,ih) + 'px'
-    else img.parentNode.style.height = Math.min(w, ih*w/iw) + 'px';
+    else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px';
 }
 window.onload=function(){
     document.querySelectorAll('.folder-item').forEach(function(d) {

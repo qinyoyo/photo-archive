@@ -376,6 +376,7 @@ public class PVController implements ApplicationRunner {
             ArchiveUtils.removeEmptyFolder(new File(rootPath));
             archiveInfo.saveInfos();
         }
+        if (!new File(rootPath,".thumb").exists()) archiveInfo.createThumbFiles();
         rootPath = archiveInfo.getPath();  // 标准化
         System.out.println("Photo viewer started.");
     }
