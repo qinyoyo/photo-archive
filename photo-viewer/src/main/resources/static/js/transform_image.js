@@ -1,6 +1,24 @@
 /* transform image
  * By qinyoyo
  */
+const PI = 3.1415926
+// client以origin旋转angle(顺时针为正)后，由新坐标系坐标求原坐标
+function clientFromFrame(frame,angle,origin) {
+    angle = 2*PI/360*angle
+    return {
+        x: origin.x + (frame.x - origin.x) * Math.cos(angle) - (frame.y - origin.y) * Math.sin(angle),
+        y: origin.y + (frame.x - origin.x) * Math.sin(angle) + (frame.y - origin.y) * Math.cos(angle)
+    }
+}
+// client以origin旋转angle(顺时针为正)后在新坐标系的坐标
+function frameFromClient(client,angle,origin) {
+    angle = 2*PI/360*angle
+    return {
+        x: origin.x + (client.x - origin.x) * Math.cos(angle) + (client.y - origin.y) * Math.sin(angle),
+        y: origin.y - (client.x - origin.x) * Math.sin(angle) + (client.y - origin.y) * Math.cos(angle)
+    }
+}
+
 ;(function () {
     window.isMobile = function() {
         const ua = navigator.userAgent.toLowerCase()
@@ -21,7 +39,25 @@
             toast.remove()
         },delay ? delay : 500)
     }
+    const rotate90 = function(angle) {
+        let b90 = Math.round(angle / 90)
+        return Math.trunc(b90 / 2) * 2 != b90
+    }
+    const transform = function(element,translateX,translateY,rotateZ) {
+        rotateZ = Math.trunc(rotateZ) % 360
+        let t = ''
+        if (rotateZ!=0) t = 'rotate('+rotateZ+'deg)'
+        if (translateX!=0 || translateY!=0) {
+            let frameTranslate = frameFromClient({ x: translateX, y: translateY },
+                rotateZ, {x:0, y:0})
+            t = t + (t?' ':'') + 'translate('+Math.round(frameTranslate.x) + 'px,'
+                + Math.round(frameTranslate.y) + 'px)'
+        }
+        if (!t) t='none'
+        element.style.transform = element.style.msTransform = element.style.OTransform = element.style.MozTransform = t
+    }
     const initTransformImage = function (img, initialSrc, index) {
+        let translateX = 0, translateY = 0 , rotateZ = 0
         const pageW = window.innerWidth, pageH = window.innerHeight
         let   imageW = pageW, imageH = pageH
         let   clientW = pageW, clientH = pageH
@@ -60,123 +96,163 @@
         let isReady = false
         let clickForChange = false
         
-        const dblClick = function(point) {
+        const dblClick = function(page) {
             clickForChange = false
             if (!isReady) return
             if (isFitClient()) {
-                realSize(point)
+                realSize()
             } else fitClient()
         }
-        const imgClick = function(point) {
-            if (!isReady) return
-            if (point.x>pageW - 50 ||point.x< 50) {
+        const imgClick = function(page) {
+            if (isReady) return
+            if (page.x>pageW - 50 ||page.x< 50) {
                 clickForChange = true
                 setTimeout(function(){
                     if (clickForChange) {
                         clickForChange = false
-                        loadImageBy(point.x < 50 ? index - 1 : index + 1)
+                        loadImageBy(page.x < 50 ? index - 1 : index + 1)
                     }
                 },400)
             }
         }
         // adjust rotate to 90x, swap width, height of image and client
-        const rotate90 = function() {
-            let b90 = Math.round(img.rotateZ / 90)
-            return Math.trunc(b90 / 2) * 2 != b90
-        }
+
         const calcSize = function() {
-            if (rotate90()) {
-                imageW = img.naturalHeight
-                imageH = img.naturalWidth
+            imageW = img.naturalWidth
+            imageH = img.naturalHeight
+            const r90 = rotate90(rotateZ)
+            if (r90) {
+                clientH = Math.trunc(imageW * scaleValue / realSizeScale)
+                clientW = Math.trunc(imageH * scaleValue / realSizeScale)
+                // 旋转不需要修改宽度高度
+                img.style.width = clientH +'px'
+                img.style.height = clientW + 'px'
             } else {
-                imageW = img.naturalWidth
-                imageH = img.naturalHeight
+                clientW = Math.trunc(imageW * scaleValue / realSizeScale)
+                clientH = Math.trunc(imageH * scaleValue / realSizeScale)
+                img.style.width = clientW +'px'
+                img.style.height = clientH + 'px'
             }
-            clientW = Math.trunc(imageW * scaleValue / realSizeScale)
-            clientH = Math.trunc(imageH * scaleValue / realSizeScale)
-        }
-        const translateLimit = function () {
-            let limit = {}
-            let clientLeft = Math.trunc((clientW - pageW) / 2)
-            let clientTop = Math.trunc((clientH - pageH) / 2)
-            if (clientLeft < 0) limit.x = 0; else limit.x = clientLeft;
-            if (clientTop < 0) limit.y = 0; else limit.y = clientTop;
-            return limit
         }
 
-        const pageAxis2ImageAxis = function (point) {
-            let clientLeft = Math.trunc((clientW - pageW) / 2 - img.translateX),
-                clientTop = Math.trunc((clientH - pageH) / 2 - img.translateY);
+        const translateLimit = function () {
+            const min4 = function (v1,v2,v3,v4) {
+                return Math.min(v1,Math.min(v2,Math.min(v3,v4)))
+            }
+            const max4 = function (v1,v2,v3,v4) {
+                return Math.max(v1,Math.max(v2,Math.max(v3,v4)))
+            }
+            let w = img.width, h=img.height, origin = {x:w/2, y:h/2}
+            let lt = clientFromFrame({x:0,y:0},rotateZ,origin)
+            let rt = clientFromFrame({x:w,y:0},rotateZ,origin)
+            let lb = clientFromFrame({x:0,y:h},rotateZ,origin)
+            let rb = clientFromFrame({x:w,y:h},rotateZ,origin)
+            let minx = min4(lt.x,rt.x,lb.x,rb.x),
+                maxx = max4(lt.x,rt.x,lb.x,rb.x),
+                miny = min4(lt.y,rt.y,lb.y,rb.y),
+                maxy = max4(lt.y,rt.y,lb.y,rb.y)
+            let x = {}, y={}
+            x.min = pageW - maxx
+            x.max = -minx
+            y.min = pageH - maxy
+            y.max = -miny
             return {
-                x: Math.trunc((clientLeft + point.x) * realSizeScale / scaleValue),
-                y: Math.trunc((clientTop + point.y) * realSizeScale / scaleValue)
+                x: x,
+                y: y
+            }
+        }
+        const pageAxis2ClientAxis = function(page) {
+            let clientLeft = -translateX,
+                clientTop = -translateY,
+                paddingLeft = Math.max(0,(pageW - clientW)/2),
+                paddingTop = Math.max(0,(pageH - clientH)/2);
+            return {
+                x: page.x - paddingLeft + clientLeft,
+                y: page.y - paddingTop +clientTop
+            }
+        }
+        const pageAxis2ImageAxis = function (page) {
+            let client = pageAxis2ClientAxis(page);
+            return {
+                x: Math.trunc(client.x * realSizeScale / scaleValue),
+                y: Math.trunc(client.y * realSizeScale / scaleValue)
             }
         }
         const imageAxis2PageAxis = function (point) {
-            let clientLeft = (clientW - pageW) / 2 - img.translateX,
-                clientTop = (clientH - pageH) / 2 - img.translateY;
+            let client = {
+                x: point.x * scaleValue / realSizeScale,
+                y: point.y * scaleValue / realSizeScale
+            };
+            let clientLeft = -translateX,
+                clientTop = -translateY,
+                paddingLeft = Math.max(0,(pageW - clientW)/2),
+                paddingTop = Math.max(0,(pageH - clientH)/2);
             return {
-                x: Math.trunc(point.x * scaleValue / realSizeScale - clientLeft),
-                y: Math.trunc(point.y * scaleValue / realSizeScale - clientTop)
+                x: Math.trunc( client.x - clientLeft + paddingLeft),
+                y: Math.trunc(client.y  - clientTop + paddingTop)
             }
         }
+
         let translateXChanged = false
         const translate = function(p) {
-            let limit = translateLimit(img)
-            if (p.x < -limit.x) p.x = -limit.x;
-            else if (p.x > limit.x) p.x = limit.x;
-            if (p.y < -limit.y) p.y = -limit.y;
-            else if (p.y > limit.y) p.y = limit.y;
-            if (p.x != img.translateX) translateXChanged = true
-            img.translateX = p.x
-            img.translateY = p.y
+
+            let limit = translateLimit()
+            if (p.x > limit.x.max) p.x = limit.x.max;
+            else if (p.x < limit.x.min) p.x = limit.x.min;
+            if (p.y > limit.y.max) p.y = limit.y.max;
+            else if (p.y < limit.y.min) p.y = limit.y.min;
+
+            if (p.x != translateX) translateXChanged = true
+            translateX = p.x
+            translateY = p.y
+            transform(img,translateX,translateY,rotateZ)
         }
         const move = function(p) {
             translate({
-                x: p.x + img.translateX,
-                y: p.y + img.translateY
+                x: p.x + translateX,
+                y: p.y + translateY
             })
         }
         const moveTo = function(imageAxis, page) {
-            let clientAxis = imageAxis2PageAxis(imageAxis)
+            let pageAxis = imageAxis2PageAxis(imageAxis)
             translate({
-                x: page.x - clientAxis.x,
-                y: page.y - clientAxis.y
+                x: page.x - pageAxis.x,
+                y: page.y - pageAxis.y
             })
         }
-        const rotate = function(angle,refPoint) {
-            let image = refPoint ? pageAxis2ImageAxis(refPoint) : null
-            img.rotateZ += angle;
-            if (refPoint) {
-                moveTo(image, refPoint)
+        const rotate = function(angle,refPage) {
+            let image = refPage ? pageAxis2ImageAxis(refPage) : null
+            rotateZ += angle;
+            transform(img,translateX,translateY,rotateZ)
+            if (refPage) {
+                moveTo(image, refPage)
             }
         }
         const roundRotate = function () {
-            let b90 = Math.round(img.rotateZ / 90)
+            let b90 = Math.round(rotateZ / 90)
             let angle = b90 * 90
-            if (angle!=img.rotateZ) img.rotateZ = angle
+            if (Math.abs(angle-rotateZ)<15) {
+                rotateZ = angle
+                transform(img,translateX,translateY,rotateZ)
+            }
         }
         const minScale = function() {
-            if (imageW<=pageW && imageH<=pageH) return 1
-            else if (rotate90()) {
-                let w = Math.trunc(imageW / realSizeScale)
-                let h = Math.trunc(imageH / realSizeScale)
+            if (rotate90(rotateZ)) {
+                let w = Math.trunc(imageH / realSizeScale)
+                let h = Math.trunc(imageW / realSizeScale)
                 let ms = Math.min(pageW/w, pageH/h)
                 return ms
             } else return 1
         }
-        const scale = function(scale, refPoint) {
-            let image = refPoint ? pageAxis2ImageAxis(refPoint) : null
+        const scale = function(scale, refPage) {
+            let image = refPage ? pageAxis2ImageAxis(refPage) : null
             let ms = minScale()
             if (scale< ms) scale=ms
             else if (scale > realSizeScale) scale = realSizeScale
             scaleValue = scale
-            clientW = Math.trunc(imageW * scaleValue / realSizeScale)
-            clientH = Math.trunc(imageH * scaleValue / realSizeScale)
-            img.style.width = clientW+'px'
-            img.style.height = clientH+'px'
-            if (refPoint) {
-                moveTo(image, refPoint)
+            calcSize()
+            if (refPage) {
+                moveTo(image, refPage)
             }
         }
         const isFitClient = function() {
@@ -199,15 +275,15 @@
 
         img.onload = function () {
             waitingIcon.style.display = 'none'
-            img.rotateZ = 0
+            rotateZ = 0
             scaleValue = 1
-            img.translateX = img.translateY = 0
+            translateX = translateY = 0
             realSizeScale = Math.max(img.naturalWidth / pageW, img.naturalHeight / pageH)
             if (realSizeScale<1) realSizeScale = 1
             calcSize()
             isReady = true
         }
-        Transform(img)
+        // Transform(img)
         if (isMobile()) {
             let initScale = 1, startTime = 0
             new AlloyFinger(img, {
@@ -228,8 +304,8 @@
                     event.stopPropagation();
                     event.preventDefault()
                     if (isReady)  {
-                        let scale = initScale * event.zoom;
-                        scale(scale,{
+                        let sc = initScale * event.zoom;
+                        scale(sc,{
                             x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
                             y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
                         })
@@ -272,10 +348,10 @@
                     event.preventDefault()
                     if (!isReady || translateXChanged) return
                     if (event.direction==="Right"){
-                        let left = clientW/2 - pageW/2  - img.translateX
+                        let left = clientW/2 - pageW/2  - translateX
                         if (left<=1) loadImageBy(index-1)
                     } else if (event.direction==="Left"){
-                        let right = clientW/2 + pageW/2  - img.translateX
+                        let right = clientW/2 + pageW/2  - translateX
                         if (right>=clientW-1) loadImageBy(index+1)
                     }
                 },
@@ -294,16 +370,16 @@
                 event.stopPropagation();
                 event.preventDefault()
                 imgClick({
-                    x: event.clientX,
-                    y: event.clientY
+                    x: event.pageX,
+                    y: event.pageY
                 })
             }
             img.ondblclick=function (event){
                 event.stopPropagation();
                 event.preventDefault()
                 dblClick({
-                    x:event.clientX,
-                    y:event.clientY
+                    x:event.pageX,
+                    y:event.pageY
                 })
             }
             img.onmousedown=function (event) {
