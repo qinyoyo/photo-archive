@@ -14,8 +14,8 @@ const PI = 3.1415926
      显示的图像内容，大小为 imageW = img.naturalWidth， imageH = img.naturalHeight
      Image和Frame与变换有关
 
-   translateX ： Frame沿Client X 轴移动距离，为Client坐标,向右移动为正
-   translateY ： Frame沿Client Y 轴移动距离，为Client坐标，向下移动为正
+   translateX ： Frame沿Client X 轴移动距离，为Client坐标,向右移动为正.单位为 page 单位
+   translateY ： Frame沿Client Y 轴移动距离，为Client坐标，向下移动为正.单位为 page 单位
    rotateZ ： Client绕中心点旋转角度，顺时针(CW) 为正
  */
 
@@ -101,23 +101,23 @@ function frameFromClient(client,angle,origin) {
             let paddingLeft = Math.max(0,(pageW - clientW)/2),
                 paddingTop = Math.max(0,(pageH - clientH)/2);
             return {
-                x: client.x / scaleValue + paddingLeft,
-                y: client.y / scaleValue + paddingTop
+                x: client.x + paddingLeft,
+                y: client.y + paddingTop
             }
         }
         const clientFromPage = function(page) {
             let paddingLeft = Math.max(0,(pageW - clientW)/2),
                 paddingTop = Math.max(0,(pageH - clientH)/2);
             return {
-                x: (page.x - paddingLeft) * scaleValue,
-                y: (page.y - paddingTop) * scaleValue
+                x: (page.x - paddingLeft) ,
+                y: (page.y - paddingTop)
             }
         }
         /* page 坐标 获得 图像坐标 */
         const imageFromPage = function (page) {
             let client = clientFromPage(page)
-            client.x -= translateX
-            client.y -= translateY
+            client.x = client.x - translateX
+            client.y = client.y - translateY
             let frame = frameFromClient(client, rotateZ, {x: clientW/2, y:clientH/2}) // 图像坐标随frame坐标改变
             return {
                 x: Math.trunc(frame.x * realSizeScale / scaleValue),
@@ -204,17 +204,27 @@ function frameFromClient(client,angle,origin) {
         }
 
         const imageKeyEvent = function(event) {
-            if (event.code=='ArrowLeft'||event.code=='ArrowRight'){
-                loadImageBy(event.code=='ArrowLeft'?index-1:index+1)
+            if (event.code=='ArrowLeft'){
+                move({x: -10, y: 0})
+            } else if (event.code=='ArrowRight'){
+                move({x: 10, y: 0})
+            } else if (event.code=='ArrowUp'){
+                move({x: 0, y: -10})
+            } else if (event.code=='ArrowDown'){
+                move({x: 0, y: 10})
             } else if (event.code=='Space'){
-                rotate(rotateZ+15)
+                rotate(rotateZ+(event.shiftKey ? -15 : 15))
                 calcSize()
-            } else if (event.code=='ArrowUp' && scaleValue<realSizeScale){
+            } else if (event.code=='Equal' && scaleValue<realSizeScale){
                 scale(scaleValue+1)
                 calcSize()
-            } else if (event.code=='ArrowDown' && scaleValue>minScale()){
+            } else if (event.code=='Minus' && scaleValue>minScale()){
                 scale(scaleValue-1)
                 calcSize()
+            } else if (event.code=='PageUp'||event.code=='Comma'){
+                loadImageBy(index-1)
+            } else if (event.code=='PageDown'||event.code=='Period'){
+                loadImageBy(index+1)
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
@@ -230,7 +240,7 @@ function frameFromClient(client,angle,origin) {
             } else fitClient()
         }
         const imgClick = function(page) {
-            /*
+/*
             console.log('page=',page, 'image size = ',imageW, imageH, 'translate = ',translateX,translateY)
             let client = clientFromPage(page)
             console.log('clientFromPage=',client)
@@ -241,9 +251,7 @@ function frameFromClient(client,angle,origin) {
             console.log('imageFromPage=',image)
             let client1=clientFromImage(image)
             console.log('clientFromImage=',client1)
-
-             */
-
+ */
             if (!isReady) return
             if (page.x>pageW - DELTA_LIMIT || page.x< DELTA_LIMIT) {
                 clickForChange = true
@@ -268,12 +276,10 @@ function frameFromClient(client,angle,origin) {
         let translateXChanged = false
         // 平移
         const translate = function(p, justCalc) {
-            /*
             if (p.x > translateLimit.x.max) p.x = translateLimit.x.max;
             else if (p.x < translateLimit.x.min) p.x = translateLimit.x.min;
             if (p.y > translateLimit.y.max) p.y = translateLimit.y.max;
             else if (p.y < translateLimit.y.min) p.y = translateLimit.y.min;
-*/
             if (p.x != translateX) translateXChanged = true
             translateX = p.x
             translateY = p.y
@@ -289,11 +295,11 @@ function frameFromClient(client,angle,origin) {
         // 将图像上的某点平移到page某点
         const translateTo = function(image, page) {
             translateX = translateY = 0
-            let client1 = clientFromImage(image)
-            let client0 = clientFromPage(page)
+            let client = clientFromImage(image)
+            let page1 = pageFromClient(client)
             translate({
-                x: client1.x - client0.x,
-                y: client1.y - client0.y
+                x: page.x - page1.x,
+                y: page.y - page1.y
             })
         }
         // 旋转一个角度，保持refPage点的图像不变
@@ -304,7 +310,7 @@ function frameFromClient(client,angle,origin) {
             transform(img,translateX,translateY,rotateZ)
             if (refPage){
                 translateTo(image,refPage)
-            } else translate({x:(pageW-clientW)/2,y:(pageH-clientH)/2})
+            } else translateTo({x: imageW/2, y: imageH/2}, { x: pageW/2, y: pageH/2})
         }
         // 旋转角度如果与90度倍数差小于15度，按90度取整旋转
         const roundRotate = function () {
@@ -334,7 +340,7 @@ function frameFromClient(client,angle,origin) {
             calcSize()
             if (refPage) {
                 translateTo(image, refPage)
-            } else translate({x: (pageW - clientW)/2, y: (pageH - clientH)/2})
+            } else translateTo({x: imageW/2, y: imageH/2}, { x: pageW/2, y: pageH/2})
         }
         const isFitClient = function() {
             return translateLimit.x.min == 0 && translateLimit.x.max == 0 &&
