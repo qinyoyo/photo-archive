@@ -29,6 +29,6 @@ logging:
       org.springframework: info
       qinyoyo: debug
 photo:
-   root-path: E:\Photo\Archived
-   ffmpeg: G:\Photo\ffmpeg.exe
-#   exiftool: G:\Photo\exiftool.exe
+   root-path: H:\Photo\Archived
+   ffmpeg: H:\Photo\ffmpeg.exe
+   exiftool: H:\Photo\exiftool.exe

@@ -192,43 +192,6 @@ function frameFromClient(client,angle,origin) {
             }
         }
 
-        container.onclick=function (event) {
-            let limit = axisLimit(clientW,clientH)
-            let minX = limit.x.min + translateX ,
-                maxX = limit.x.max + translateX
-            let minPage = pageFromClient({x: minX, y:0}),
-                maxPage = pageFromClient({x: maxX, y:0})
-            if (event.pageX>maxPage.x ||event.pageX<minPage.x){
-                loadImageBy(event.pageX<minPage.x ? index-1 : index+1)
-            }
-        }
-
-        const imageKeyEvent = function(event) {
-            if (event.code=='ArrowLeft'){
-                move({x: -10, y: 0})
-            } else if (event.code=='ArrowRight'){
-                move({x: 10, y: 0})
-            } else if (event.code=='ArrowUp'){
-                move({x: 0, y: -10})
-            } else if (event.code=='ArrowDown'){
-                move({x: 0, y: 10})
-            } else if (event.code=='Space'){
-                rotate(rotateZ+(event.shiftKey ? -15 : 15))
-                calcSize()
-            } else if (event.code=='Equal' && scaleValue<realSizeScale){
-                scale(scaleValue+1)
-                calcSize()
-            } else if (event.code=='Minus' && scaleValue>minScale()){
-                scale(scaleValue-1)
-                calcSize()
-            } else if (event.code=='PageUp'||event.code=='Comma'){
-                loadImageBy(index-1)
-            } else if (event.code=='PageDown'||event.code=='Period'){
-                loadImageBy(index+1)
-            }
-        }
-        document.querySelector('body').onkeydown = imageKeyEvent
-
         let isReady = false
         let clickForChange = false
         
@@ -251,7 +214,6 @@ function frameFromClient(client,angle,origin) {
             console.log('imageFromPage=',image)
             let client1=clientFromImage(image)
             console.log('clientFromImage=',client1)
- */
             if (!isReady) return
             if (page.x>pageW - DELTA_LIMIT || page.x< DELTA_LIMIT) {
                 clickForChange = true
@@ -262,6 +224,8 @@ function frameFromClient(client,angle,origin) {
                     }
                 },400)
             }
+
+ */
         }
         const calcSize = function() {
             imageW = img.naturalWidth
@@ -302,6 +266,9 @@ function frameFromClient(client,angle,origin) {
                 y: page.y - page1.y
             })
         }
+        const translateHome = function() {
+            translateTo({x: imageW/2, y: imageH/2}, { x: pageW/2, y: pageH/2})
+        }
         // 旋转一个角度，保持refPage点的图像不变
         const rotate = function(angle,refPage){
             let image=refPage?imageFromPage(refPage):null
@@ -310,7 +277,7 @@ function frameFromClient(client,angle,origin) {
             transform(img,translateX,translateY,rotateZ)
             if (refPage){
                 translateTo(image,refPage)
-            } else translateTo({x: imageW/2, y: imageH/2}, { x: pageW/2, y: pageH/2})
+            } else translateHome()
         }
         // 旋转角度如果与90度倍数差小于15度，按90度取整旋转
         const roundRotate = function () {
@@ -340,7 +307,7 @@ function frameFromClient(client,angle,origin) {
             calcSize()
             if (refPage) {
                 translateTo(image, refPage)
-            } else translateTo({x: imageW/2, y: imageH/2}, { x: pageW/2, y: pageH/2})
+            } else translateHome()
         }
         const isFitClient = function() {
             return translateLimit.x.min == 0 && translateLimit.x.max == 0 &&
@@ -495,6 +462,47 @@ function frameFromClient(client,angle,origin) {
                 startDrag = false
             }
         }
+
+        container.onclick=function (event) {
+            let limit = axisLimit(clientW,clientH)
+            let minX = limit.x.min + translateX ,
+                maxX = limit.x.max + translateX
+            let minPage = pageFromClient({x: minX, y:0}),
+                maxPage = pageFromClient({x: maxX, y:0})
+            if (event.pageX>maxPage.x ||event.pageX<minPage.x){
+                loadImageBy(event.pageX<minPage.x ? index-1 : index+1)
+            }
+        }
+
+        const imageKeyEvent = function(event) {
+            console.log(event.code)
+            if (event.code=='ArrowLeft' || event.code=='Numpad4'){
+                move({x: -10, y: 0})
+            } else if (event.code=='ArrowRight' || event.code=='Numpad6'){
+                move({x: 10, y: 0})
+            } else if (event.code=='ArrowUp' || event.code=='Numpad8'){
+                move({x: 0, y: -10})
+            } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
+                move({x: 0, y: 10})
+            } else if (event.code=='Space'){
+                rotate(rotateZ+(event.shiftKey ? -15 : 15))
+                calcSize()
+            } else if ((event.code=='Equal' || event.code=='NumpadAdd') && scaleValue<realSizeScale){
+                scale(scaleValue+1)
+                calcSize()
+            } else if ((event.code=='Minus' || event.code=='NumpadSubtract') && scaleValue>minScale()){
+                scale(scaleValue-1)
+                calcSize()
+            } else if (event.code=='PageUp'||event.code=='Comma' || event.code=='Numpad9'){
+                loadImageBy(index-1)
+            } else if (event.code=='PageDown'||event.code=='Period' || event.code=='Numpad3'){
+                loadImageBy(index+1)
+            } else if (event.code=='Home'|| event.code=='Numpad7') {
+                translateHome()
+            }
+        }
+        document.querySelector('body').onkeydown = imageKeyEvent
+
         changeImage(initialSrc)
     }
 

@@ -451,6 +451,19 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
     }
+    public void modifyOrientation(String newOrientation) {
+        if (true) {
+            /*
+            try {
+                System.out.println("Rotate thumbnail of " + imgPath);
+                exifTool.excute(new File(thumbPath),"\"-orientation="+p.getOrientation()+"\"", "-overwrite_original");
+            } catch (IOException e) {
+
+            }
+
+             */
+        }
+    }
     public boolean delete(String rootPath) {
         try {
             new File(fullThumbPath(rootPath)).delete();

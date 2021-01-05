@@ -10,22 +10,38 @@ import static java.lang.Double.parseDouble;
 public class ExifTool {
     public  static String EXIFTOOL = "exiftool";
     public  static Double INSTALLED_VERSION;
-
-    private ExifTool() throws IOException {
+    private static ExifTool instance = null;
+    public  static ExifTool getInstance(){
+        if (instance!=null) return instance;
+        instance = new ExifTool();
+        return instance;
+    }
+    private ExifTool() {
         if (INSTALLED_VERSION==null) INSTALLED_VERSION = getInstalledVersion();
     }
-
-    public static Double getInstalledVersion() throws IOException{
-        if (INSTALLED_VERSION == null) {
+    public static Double getInstalledVersion(){
+        while (INSTALLED_VERSION == null) {
             List<String> argsList = new ArrayList<>();
             argsList.add(EXIFTOOL);
             argsList.add("-ver");
-            Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false,argsList);
-            if (result.getKey().size() == 0) {
-                throw new RuntimeException("Could not get version of <" + EXIFTOOL + ">. Where is it installed?");
+            try {
+                Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false, argsList);
+                if (result.getKey().size() == 0) {
+                    throw new RuntimeException("Could not get version of <" + EXIFTOOL + ">. Where is it installed?");
+                }
+                System.out.println("Installed <" + EXIFTOOL + "> Version: " + result.getKey());
+                INSTALLED_VERSION = parseDouble(result.getKey().get(0));
+            } catch (Exception e) {
+                INSTALLED_VERSION = null;
+                System.out.println(e.getMessage());
+                try {
+                    BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
+                    String input = stdin.readLine().trim();
+                    stdin.close();
+                    EXIFTOOL = new File(input, "exiftool").getCanonicalPath();
+                } catch (IOException ex) {
+                }
             }
-            System.out.println("Installed <" + EXIFTOOL + "> Version: " + result.getKey());
-            INSTALLED_VERSION = parseDouble(result.getKey().get(0));
         }
         return INSTALLED_VERSION;
     }
@@ -150,10 +166,4 @@ public class ExifTool {
             }
         }
     }
-    public static class Builder {
-        public ExifTool build() throws IOException, InterruptedException {
-            return new ExifTool();
-        }
-    }
-
 }

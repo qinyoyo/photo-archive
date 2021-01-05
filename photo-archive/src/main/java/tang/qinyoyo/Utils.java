@@ -164,17 +164,17 @@ public class Utils {
 	}
 
 	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
-		SystemOut.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
+		System.out.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
 		a.sortInfos();
 
-		SystemOut.println(removeSameFile?"删除重复文件..." : "扫描重复文件...");
+		System.out.println(removeSameFile?"删除重复文件..." : "扫描重复文件...");
 		a.scanSameFiles(removeSameFile);
 
 		if (moveOtherFiles) {
-			SystemOut.println("移动无拍摄日期文件...");
+			System.out.println("移动无拍摄日期文件...");
 			a.moveNoShootTimeFiles();
 		}
-		SystemOut.println("保存处理后文件...");
+		System.out.println("保存处理后文件...");
 		a.saveInfos();
 	}
 	private static ArchiveInfo getArchiveInfo(String path, boolean clearInfo, boolean removeSameFile, boolean moveOtherFile) {
@@ -371,7 +371,7 @@ public class Utils {
 	}
 
 	public static List<FolderInfo> scanFolderInfo(ArchiveInfo archived) {
-		SystemOut.println("扫描目录信息: "+archived.getPath());
+		System.out.println("扫描目录信息: "+archived.getPath());
 		List<FolderInfo> folderInfos = getFolderInfos(archived);
 		StringBuilder sb=new StringBuilder();
 		
@@ -379,11 +379,11 @@ public class Utils {
 		while (iter.hasNext()) {
 			FolderInfo fi = iter.next();
 			if (fi.getDate0()==null) {
-				SystemOut.println(fi.getPath() + " 缺少开始日期");
+				System.out.println(fi.getPath() + " 缺少开始日期");
 				sb.append(fi.getPath()).append("\r\n");
 				iter.remove();
 			} else if (fi.getDate1()==null) {
-				SystemOut.println(fi.getPath() + " 缺少结束日期");
+				System.out.println(fi.getPath() + " 缺少结束日期");
 				sb.append(fi.getPath()).append("\r\n");
 				iter.remove();
 			}
@@ -401,15 +401,15 @@ public class Utils {
 	static void executeArchive(ArchiveInfo camera, ArchiveInfo archived) {
 		List<FolderInfo> folderInfos = scanFolderInfo(archived);
 		if (folderInfos!=null) {
-			SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-			SystemOut.println("将文件归档...");
+			System.out.println("Now :"+DateUtil.date2String(new Date()));
+			System.out.println("将文件归档...");
 			copyToFolder(camera, archived, folderInfos);
-			SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-			SystemOut.println("删除空目录");
+			System.out.println("Now :"+DateUtil.date2String(new Date()));
+			System.out.println("删除空目录");
 			ArchiveUtils.removeEmptyFolder(new File(archived.getPath()));
 			ArchiveUtils.removeEmptyFolder(new File(camera.getPath()));
-			SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-			SystemOut.println("归档完成");
+			System.out.println("Now :"+DateUtil.date2String(new Date()));
+			System.out.println("归档完成");
 		}
 	}
 
@@ -460,30 +460,15 @@ public class Utils {
 			}
 		}
 		if (camera!=null && archived!=null) {
-			SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-			SystemOut.println("删除归档文件夹已经存在的待归档文件...");
+			System.out.println("Now :"+DateUtil.date2String(new Date()));
+			System.out.println("删除归档文件夹已经存在的待归档文件...");
 			camera.scanSameFilesWith(archived);
 			boolean op = boolValue(getInputString(stdin, "是否执行归档操作", "no"));
 			if (op) executeArchive(camera,archived);
 		}
-		SystemOut.close();
+		System.out.close();
 	}
-	public static void checkVersion(BufferedReader stdin) {
-		String input=null;
-		while (true) {
-			try {
-				ExifTool.INSTALLED_VERSION = ExifTool.getInstalledVersion();
-				break;
-			} catch (IOException e) {
-				SystemOut.println(e.getMessage());
-				try {
-					input = stdin.readLine().trim();
-					ExifTool.EXIFTOOL = new File(input, "exiftool").getCanonicalPath();
-				} catch (IOException ex) {
-				}
-			}
-		}
-	}
+
 	public static void pathScene(File dir) {
 		List<String> args = new ArrayList<>();
 		args.add("-Scene=Landscape");
@@ -551,7 +536,6 @@ public class Utils {
 	}
 	public static void main(String[] argv) {
 		BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
-		checkVersion(stdin);
 
 		Map<String,Object> params = null;
 		try {
@@ -588,20 +572,20 @@ public class Utils {
 		if (v!=null) {
 			String path = v.toString();
 			ArchiveInfo ai = new ArchiveInfo(path);
-			SystemOut.println("重新排序...");
+			System.out.println("重新排序...");
 			ai.sortInfos();
-			SystemOut.println("重新命名...");
+			System.out.println("重新命名...");
 			for (PhotoInfo pi : ai.getInfos()) {
 				try {
 					String name0 = pi.getFileName();
 					pi.rename(ai.getPath(),RENAME_PATTERN);
 					String name1 = pi.getFileName();
-					if (name1.equals(name0)) SystemOut.println(name0 + " 没有重命名");
-					else SystemOut.println(name0 + " 重命名为 " + name1);
+					if (name1.equals(name0)) System.out.println(name0 + " 没有重命名");
+					else System.out.println(name0 + " 重命名为 " + name1);
 				} catch (Exception e) {
 				}
 			}
-			SystemOut.close();
+			System.out.close();
 			return;
 		}
 
@@ -619,8 +603,8 @@ public class Utils {
 			boolean clear = boolValue(params.get(PARAM_CLEAR1));
 			camera=getArchiveInfo(path, clear, same,other);
 			if (camera!=null && boolValue(params.get(PARAM_THUMB1))) {
-				SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-				SystemOut.println("建立缩略图文件<"+camera.getPath()+">...");
+				System.out.println("Now :"+DateUtil.date2String(new Date()));
+				System.out.println("建立缩略图文件<"+camera.getPath()+">...");
 				camera.createThumbFiles();
 			}
 		}
@@ -632,21 +616,21 @@ public class Utils {
 			boolean clear = boolValue(params.get(PARAM_CLEAR2));
 			archived = getArchiveInfo(path, clear, same,other);
 			if (archived!=null && camera!=null) {
-				SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-				SystemOut.println("删除归档文件夹已经存在的待归档文件...");
+				System.out.println("Now :"+DateUtil.date2String(new Date()));
+				System.out.println("删除归档文件夹已经存在的待归档文件...");
 				camera.scanSameFilesWith(archived);
 			}
 			if (archived!=null && camera!=null && boolValue(params.get(PARAM_EXECUTE))) {
 				executeArchive(camera,archived);
 			}
 			if (archived!=null && boolValue(params.get(PARAM_THUMB2))) {
-				SystemOut.println("Now :"+DateUtil.date2String(new Date()));
-				SystemOut.println("建立缩略图文件<"+archived.getPath()+">...");
+				System.out.println("Now :"+DateUtil.date2String(new Date()));
+				System.out.println("建立缩略图文件<"+archived.getPath()+">...");
 				archived.createThumbFiles();
 			}
 		}
 
-		SystemOut.close();
+		System.out.close();
 		v = params.get(PARAM_VIEW_DIR);
 		if (v!=null) {
 			try {

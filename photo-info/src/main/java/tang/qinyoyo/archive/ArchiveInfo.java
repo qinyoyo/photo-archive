@@ -59,7 +59,7 @@ public class ArchiveInfo {
 	public ArchiveInfo() {}
 	public ArchiveInfo(String dir) {
         try {
-            exifTool = new ExifTool.Builder().build();
+            exifTool = ExifTool.getInstance();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -176,24 +176,17 @@ public class ArchiveInfo {
     public void createThumbFiles(PhotoInfo p) {
         try {
             String thumbPath = p.fullThumbPath(getPath());
-            new File(thumbPath).getParentFile().mkdirs();
+            File thumbFile = new File(thumbPath);
             String imgPath = p.fullPath(getPath());
-            if (p.getMimeType()!=null && p.getMimeType().contains("image/")) {
-                if (!new File(thumbPath).exists()) {
-                    System.out.println("Create thumbnail of " + imgPath);
-                    ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
-                }
-                if (p.getOrientation()!=null &&
-                        (p.getOrientation().toLowerCase().contains("mirror")
-                                ||p.getOrientation().toLowerCase().contains("rotate"))) {
-                    try {
-                        System.out.println("Rotate thumbnail of " + imgPath);
-                        exifTool.excute(new File(thumbPath),"\"-orientation="+p.getOrientation()+"\"", "-overwrite_original");
-                    } catch (IOException e) {
+            File imgFile = new File(imgPath);
 
-                    }
-                }
-            } else if (p.getMimeType()!=null && p.getMimeType().contains("video/")) {
+            if (!imgFile.exists() || p.getMimeType()==null) return;
+            if( thumbFile.exists() && thumbFile.lastModified() >= imgFile.lastModified()) return;
+            thumbFile.getParentFile().mkdirs();
+            if (p.getMimeType().contains("image/")) {
+                System.out.println("Create thumbnail of " + imgPath);
+                ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
+            } else if (p.getMimeType().contains("video/")) {
                /*String size = "300x200";
                 if (p.getHeight()!=null && p.getWidth()!=null) {
                     float scale = Math.min(300.0f/p.getWidth(),200.0f/p.getHeight());
