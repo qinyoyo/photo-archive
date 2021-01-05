@@ -30,5 +30,5 @@ logging:
       qinyoyo: debug
 photo:
    root-path: H:\Photo\Archived
-   ffmpeg: H:\Photo\ffmpeg.exe
+   ffmpeg: E:\Photo\ffmpeg.exe
    exiftool: H:\Photo\exiftool.exe

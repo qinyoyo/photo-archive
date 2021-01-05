@@ -38,7 +38,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private Integer rating;      // 星级
     private Integer width;
     private Integer height;
-    private String orientation;
+    private Integer orientation;
 
     private String headline;
     private String subTitle;     // 题注
@@ -326,7 +326,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                         rating = Integer.parseInt(s);
                         break;
                     case ORIENTATION:
-                        orientation = s;
+                        orientation = orientationValue(s);
                     case SCENE:
                         scene = s;
                         break;
@@ -357,7 +357,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         File f = new File(fullPath(rootPath));
         if (f.exists() && SupportFileType.isSupport(f.getName())) {
             try {
-                Map<String, Map<Key, Object>>  fileInfos = new ExifTool.Builder().build().query(f, ArchiveInfo.NEED_KEYS);
+                Map<String, Map<Key, Object>>  fileInfos = ExifTool.getInstance().query(f, ArchiveInfo.NEED_KEYS);
                 if (fileInfos!=null) {
                     setPropertiesBy(fileInfos.get(f.getName()));
                 }
@@ -451,17 +451,69 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
     }
-    public void modifyOrientation(String newOrientation) {
-        if (true) {
-            /*
-            try {
-                System.out.println("Rotate thumbnail of " + imgPath);
-                exifTool.excute(new File(thumbPath),"\"-orientation="+p.getOrientation()+"\"", "-overwrite_original");
-            } catch (IOException e) {
-
+    public static String orientationString(int ori) {
+        switch (ori) {
+            case 2: return "Mirror horizontal";
+            case 3: return "Rotate 180";
+            case 4: return "Mirror vertical";
+            case 5: return "Mirror horizontal and rotate 270 CW";
+            case 6: return "Rotate 90 CW";
+            case 7: return "Mirror horizontal and rotate 90 CW";
+            case 8: return "Rotate 270 CW";
+            default : return "Horizontal (normal)";
+        }
+    }
+    public static int orientationValue(String ori) {
+        switch (ori) {
+            case "Horizontal (normal)": return 1;
+            case "Mirror horizontal": return 2;
+            case "Rotate 180": return 3;
+            case "Mirror vertical": return 4;
+            case "Mirror horizontal and rotate 270 CW": return 5;
+            case "Rotate 90 CW": return 6;
+            case "Mirror horizontal and rotate 90 CW" : return 7;
+            case "Rotate 270 CW": return 8;
+            default : {
+                try {
+                    int i = Integer.parseInt(ori);
+                    if (i<1 || i>8) return 1;
+                    else return i;
+                } catch (Exception e) {
+                    return 1;
+                }
             }
-
-             */
+        }
+    }
+    public static int orientationChange(int ori0, int ori1) {
+        if (ori0<2 || ori0>8) return ori1;
+        if (ori1<2 || ori1>8) return ori0;
+        int [] [] orientationArrays = new int [] [] {
+       // ori1 = 2 3 4 5 6 7 8
+                {1,4,3,8,7,6,5}, // ori0 = 2
+                {1,4,3,8,7,6,5}, // ori0 = 2
+                {4,1,2,7,8,5,6}, // ori0 = 3
+                {3,2,1,6,5,8,7}, // ori0 = 4
+                {6,7,8,1,2,3,4}, // ori0 = 5
+                {5,8,7,4,3,2,1}, // ori0 = 6
+                {8,5,6,3,4,1,2}, // ori0 = 7
+                {7,6,5,2,1,4,3}, // ori0 = 8
+        };
+        return orientationArrays[ori0-2][ori1-2];
+    }
+    public void modifyOrientation(String root, int operation) {
+        if (mimeType!=null && mimeType.contains("image/")) {
+            int ori0 = orientation == null ? 1 : orientation;
+            orientation = orientationChange(ori0, operation);
+            if (operation != ori0) {
+                String imgPath = fullPath(root);
+                try {
+                    System.out.println("Rotate image of " + imgPath);
+                    ExifTool.getInstance().excute(new File(imgPath), "-orientation=" + orientation, "-overwrite_original");
+                    String thumbPath = fullThumbPath(root);
+                    ExifTool.getInstance().excute(new File(thumbPath), "-orientation=" + orientation, "-overwrite_original");
+                } catch (IOException e) {
+                }
+            }
         }
     }
     public boolean delete(String rootPath) {

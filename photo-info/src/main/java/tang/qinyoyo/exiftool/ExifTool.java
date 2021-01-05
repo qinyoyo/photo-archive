@@ -27,17 +27,16 @@ public class ExifTool {
             try {
                 Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false, argsList);
                 if (result.getKey().size() == 0) {
-                    throw new RuntimeException("Could not get version of <" + EXIFTOOL + ">. Where is it installed?");
+                    throw new RuntimeException("Could not get version of <" + EXIFTOOL + ">.");
                 }
                 System.out.println("Installed <" + EXIFTOOL + "> Version: " + result.getKey());
                 INSTALLED_VERSION = parseDouble(result.getKey().get(0));
             } catch (Exception e) {
                 INSTALLED_VERSION = null;
-                System.out.println(e.getMessage());
+                System.out.println(e.getMessage()+" Where is it installed?");
                 try {
-                    BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
-                    String input = stdin.readLine().trim();
-                    stdin.close();
+                    Scanner in = new Scanner(System.in);
+                    String input = in.nextLine().trim();
                     EXIFTOOL = new File(input, "exiftool").getCanonicalPath();
                 } catch (IOException ex) {
                 }

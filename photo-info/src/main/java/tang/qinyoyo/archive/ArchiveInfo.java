@@ -1,4 +1,5 @@
 package tang.qinyoyo.archive;
+import javafx.util.Pair;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.exiftool.CommandRunner;
 import tang.qinyoyo.exiftool.ExifTool;
@@ -9,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.Double.parseDouble;
 
 public class ArchiveInfo {
     public static final Key[] NEED_KEYS = new Key[]{
@@ -28,7 +31,7 @@ public class ArchiveInfo {
     public static final String folder_info_lost_log = ".folder_info_lost.log";
 
     public static String FFMPEG = "ffmpeg";
-
+    private static String FFMPEG_VERSION = null;
     private String path; // 末尾不带分隔符
     private List<PhotoInfo> infos;
     private ExifTool exifTool;
@@ -56,13 +59,43 @@ public class ArchiveInfo {
 	public void setExifTool(ExifTool exifTool) {
 		this.exifTool = exifTool;
 	}
-	public ArchiveInfo() {}
-	public ArchiveInfo(String dir) {
-        try {
-            exifTool = ExifTool.getInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+	public void checkFfmpeg() {
+        while (FFMPEG_VERSION==null) {
+            List<String> argsList = new ArrayList<>();
+            argsList.add(FFMPEG);
+            argsList.add("-version");
+            try {
+                Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false, argsList);
+                if (result.getKey().size() == 0) {
+                    throw new RuntimeException("Could not get version of <" + FFMPEG + ">.");
+                }
+                FFMPEG_VERSION = result.getKey().get(0);
+                System.out.println("Installed <" + FFMPEG + "> Version: " + result.getKey());
+                return;
+            } catch (Exception e) {
+                System.out.println(e.getMessage()+" Where is ffmpeg installed or 'q' for skip?");
+                try {
+                    Scanner in = new Scanner(System.in);
+                    String input = in.nextLine().trim();
+                    if (input.equals("q")) {
+                        FFMPEG = null;
+                        FFMPEG_VERSION="";
+                        return;
+                    }
+                    FFMPEG = new File(input, "ffmpeg").getCanonicalPath();
+                } catch (IOException ex) {
+                }
+            }
         }
+    }
+    public ArchiveInfo() {
+        exifTool = ExifTool.getInstance();
+        checkFfmpeg();
+        infos = new ArrayList<>();
+    }
+	public ArchiveInfo(String dir) {
+        exifTool = ExifTool.getInstance();
+        checkFfmpeg();
         File d = new File(dir);
         if (!d.exists()) d.mkdirs();
         try {
@@ -186,7 +219,7 @@ public class ArchiveInfo {
             if (p.getMimeType().contains("image/")) {
                 System.out.println("Create thumbnail of " + imgPath);
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
-            } else if (p.getMimeType().contains("video/")) {
+            } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
                /*String size = "300x200";
                 if (p.getHeight()!=null && p.getWidth()!=null) {
                     float scale = Math.min(300.0f/p.getWidth(),200.0f/p.getHeight());

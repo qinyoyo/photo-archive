@@ -356,16 +356,13 @@ public class Utils {
 			else return false;
 		}
 	}
-	public static String getInputString(BufferedReader stdin, String message, String def) {
+	public static String getInputString(String message, String def) {
 		String input=null;
+		Scanner in = new Scanner(System.in);
 		while(input==null || input.isEmpty()) {
 			System.out.println(message + (def==null || def.isEmpty() ? ":" : ("(" + def + "):")));
-			try {
-				input = stdin.readLine().trim();
-				if (input.isEmpty()) input=def;
-			} catch (IOException ex) {
-				input=null;
-			}
+			input = in.nextLine().trim();
+			if (input.isEmpty()) input=def;
 		}
 		return input;
 	}
@@ -413,19 +410,14 @@ public class Utils {
 		}
 	}
 
-	public static void main1(BufferedReader stdin) {
+	public static void main1() {
 		System.out.println("Usage1: java -jar pa.jar <options>");
 		System.out.println("");
 		while (true) {
-			String input = getInputString(stdin, "1 执行归档\n2 查看相同图像文件\n", "");
+			String input = getInputString("1 执行归档\n2 查看相同图像文件\n", "");
 			if (input.startsWith("1")) break;
 			else if (input.startsWith("2")) {
-				input = getInputString(stdin, "输入待查看的目录路径", "E:\\Camera");
-				try {
-					stdin.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				input = getInputString("输入待查看的目录路径", "E:\\Camera");
 				try {
 					checkDeletedFile(new File(input, ArchiveInfo.same_photo_log).getCanonicalPath());
 				} catch (Exception e) {
@@ -437,25 +429,25 @@ public class Utils {
 		ArchiveInfo camera = null, archived=null;
 		File dir=null;
 		while(dir==null || !dir.exists() || !dir.isDirectory()) {
-			String input = getInputString(stdin, "输入待归档的目录路径(输入-表示忽略)", "E:\\Camera");
+			String input = getInputString("输入待归档的目录路径(输入-表示忽略)", "E:\\Camera");
 			if (input.isEmpty() || input.equals("-")) break;
 			dir = new File(input);
 			if (dir!=null && dir.exists() && dir.isDirectory()) {
-				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
-				boolean same = boolValue(getInputString(stdin, "将相同文件移到.delete目录", "yes"));
-				boolean other = boolValue(getInputString(stdin, "将无法确定拍摄日期的文件移动到.other目录", "yes"));
+				boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
+				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
+				boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
 				camera=getArchiveInfo(input, clear, same,other);
 			}
 		}
 		dir=null;
 		while(dir==null || !dir.exists() || !dir.isDirectory()) {
-			String input = getInputString(stdin, "输入已经归档的目录路径(输入-表示忽略)", "E:\\Archived");
+			String input = getInputString("输入已经归档的目录路径(输入-表示忽略)", "E:\\Archived");
 			if (input.isEmpty() || input.equals("-")) break;
 			dir = new File(input);
 			if (dir!=null && dir.exists() && dir.isDirectory()) {
-				boolean clear = boolValue(getInputString(stdin, "是否重新完全扫描", "no"));
-				boolean same = boolValue(getInputString(stdin, "将相同文件移到.delete目录", "yes"));
-				boolean other = boolValue(getInputString(stdin, "将无法确定拍摄日期的文件移动到.other目录", "no"));
+				boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
+				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
+				boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
 				archived=getArchiveInfo(input, clear, same,other);
 			}
 		}
@@ -463,10 +455,9 @@ public class Utils {
 			System.out.println("Now :"+DateUtil.date2String(new Date()));
 			System.out.println("删除归档文件夹已经存在的待归档文件...");
 			camera.scanSameFilesWith(archived);
-			boolean op = boolValue(getInputString(stdin, "是否执行归档操作", "no"));
+			boolean op = boolValue(getInputString("是否执行归档操作", "no"));
 			if (op) executeArchive(camera,archived);
 		}
-		System.out.close();
 	}
 
 	public static void pathScene(File dir) {
@@ -535,33 +526,17 @@ public class Utils {
 		});
 	}
 	public static void main(String[] argv) {
-		BufferedReader stdin= new BufferedReader(new InputStreamReader(System.in));
 
 		Map<String,Object> params = null;
 		try {
 			params = parseArgv(argv);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-			try {
-				stdin.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
 			return;
 		}
 		if (params==null || params.isEmpty()) {
-			main1(stdin);
-			try {
-				stdin.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
+			main1();
 			return;
-		}
-		try {
-			stdin.close();
-		} catch (IOException ex) {
-			ex.printStackTrace();
 		}
 		if (boolValue(params.get(PARAM_HELP))) {
 			printUsage();
@@ -585,7 +560,6 @@ public class Utils {
 				} catch (Exception e) {
 				}
 			}
-			System.out.close();
 			return;
 		}
 
@@ -629,8 +603,6 @@ public class Utils {
 				archived.createThumbFiles();
 			}
 		}
-
-		System.out.close();
 		v = params.get(PARAM_VIEW_DIR);
 		if (v!=null) {
 			try {
