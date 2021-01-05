@@ -15,7 +15,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="stylesheet" href="static/css/pv.css">
     <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
-    <script type="text/javascript" src="static/js/transform.js"></script>
     <script type="text/javascript" src="static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="static/js/transform_image.js"></script>
     <title>Photo viewer</title>
@@ -152,7 +151,7 @@
                 })
             }
         });
-        TransformImage('gird-cell-img')
+        TransformImage('.gird-cell-img')
     }
 </script>
 </body>

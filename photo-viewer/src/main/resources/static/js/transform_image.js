@@ -65,20 +65,26 @@ function frameFromClient(client,angle,origin) {
         },delay ? delay : 500)
     }
 
-    const transform = function(element,translateX,translateY,rotateZ) {
-        let t = ''
-        if (rotateZ!=0) t = 'rotate('+rotateZ+'deg)'
+    const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV) {
+        let t = new Array()
+        if (mirrorH && mirrorV) {
+            rotateZ+=180
+            mirrorH = mirrorV = false
+        }
+        if (rotateZ!=0) t.push('rotate('+rotateZ+'deg)')
         if (translateX!=0 || translateY!=0) {
             let frameTranslate = frameFromClient({ x: translateX, y: translateY },
                 rotateZ, {x:0, y:0})
-            t = t + (t?' ':'') + 'translate('+Math.round(frameTranslate.x) + 'px,'
-                + Math.round(frameTranslate.y) + 'px)'
+            t.push('translate('+Math.round(frameTranslate.x) + 'px,' + Math.round(frameTranslate.y) + 'px)')
         }
-        if (!t) t='none'
-        element.style.transform = element.style.msTransform = element.style.OTransform = element.style.MozTransform = t
+        if (mirrorH) t.push('rotateY(180deg)')
+        else if (mirrorV) t.push('rotateX(180deg)')
+        if (t.length==0) t.push('none')
+        element.style.transform = element.style.msTransform = element.style.OTransform = element.style.MozTransform = t.join(' ')
     }
     const initTransformImage = function (img, initialSrc, index) {
-        let translateX = 0, translateY = 0 , rotateZ = 0
+        let translateX = 0, translateY = 0
+        let rotateZ = 0, mirrorH = false, mirrorV = false
         let translateLimit = {
             x: {
                 min: 0,
@@ -240,14 +246,12 @@ function frameFromClient(client,angle,origin) {
         let translateXChanged = false
         // 平移
         const translate = function(p, justCalc) {
-            if (p.x > translateLimit.x.max) p.x = translateLimit.x.max;
-            else if (p.x < translateLimit.x.min) p.x = translateLimit.x.min;
-            if (p.y > translateLimit.y.max) p.y = translateLimit.y.max;
-            else if (p.y < translateLimit.y.min) p.y = translateLimit.y.min;
+            if (p.x>translateLimit.x.max) p.x=translateLimit.x.max; else if (p.x<translateLimit.x.min) p.x=translateLimit.x.min;
+            if (p.y>translateLimit.y.max) p.y=translateLimit.y.max; else if (p.y<translateLimit.y.min) p.y=translateLimit.y.min;
             if (p.x != translateX) translateXChanged = true
             translateX = p.x
             translateY = p.y
-            if (!justCalc) transform(img,translateX,translateY,rotateZ)
+            if (!justCalc) transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV)
         }
         // 在当前位移的基础上，移动一个位移
         const move = function(p) {
@@ -274,7 +278,7 @@ function frameFromClient(client,angle,origin) {
             let image=refPage?imageFromPage(refPage):null
             rotateZ=Math.trunc(angle)%360
             translate({x:translateX,y:translateY},true)
-            transform(img,translateX,translateY,rotateZ)
+            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV)
             if (refPage){
                 translateTo(image,refPage)
             } else translateHome()
@@ -283,9 +287,9 @@ function frameFromClient(client,angle,origin) {
         const roundRotate = function () {
             let b90 = Math.round(rotateZ / 90)
             let angle = b90 * 90
-            if (Math.abs(angle-rotateZ)<15) {
+            if (Math.abs(angle-rotateZ)<15 ) {
                 rotateZ = angle
-                transform(img,translateX,translateY,rotateZ)
+                transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV)
             }
         }
         const minScale = function() {
@@ -322,14 +326,24 @@ function frameFromClient(client,angle,origin) {
         const realSize = function(page) {
             scale(realSizeScale,page)
         }
+        const mirror = function(vertical) {
+            if (vertical) mirrorV = !mirrorV
+            else mirrorH = !mirrorH
+            if (mirrorH && mirrorV) {
+                mirrorH = mirrorV = false
+                rotateZ += 180
+            }
+            transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV)
+        }
         const changeImage = function(src) {
             waitingIcon.style.display = 'block'
             isReady = false
             img.src = src
             rotateZ = 0
+            mirrorV = mirrorH = false
             scaleValue = 1
             translateX = translateY = 0
-            transform(img, 0, 0, 0)
+            transform(img, 0, 0, 0, mirrorH, mirrorV)
         }
 
         img.onload = function () {
@@ -339,9 +353,8 @@ function frameFromClient(client,angle,origin) {
             calcSize()
             isReady = true
         }
-        // Transform(img)
         if (isMobile()) {
-            let initScale = 1, startTime = 0
+            let initScale = 1, startFingers = 0
             new AlloyFinger(img, {
                 rotate:function(event){
                     event.stopPropagation();
@@ -397,6 +410,7 @@ function frameFromClient(client,angle,origin) {
                     }
                 },
                 touchStart:function(event) {
+                    startFingers = event.touches.length
                     translateXChanged = false
                     event.stopPropagation();
                     event.preventDefault()
@@ -404,21 +418,28 @@ function frameFromClient(client,angle,origin) {
                 swipe:function(event){
                     event.stopPropagation();
                     event.preventDefault()
-                    if (!isReady || translateXChanged) return
-                    if (event.direction==="Right"){
-                        let left = clientW/2 - pageW/2  - translateX
-                        if (left<=1) loadImageBy(index-1)
-                    } else if (event.direction==="Left"){
-                        let right = clientW/2 + pageW/2  - translateX
-                        if (right>=clientW-1) loadImageBy(index+1)
+                    if (!isReady) return
+                    if (startFingers == 3) { // 三指滑动，翻转
+                        mirror(event.direction==="Up" || event.direction==="Down")
+                        return
+                    } else if (startFingers == 1 && !translateXChanged){ // 单指滑动
+                        if (event.direction==="Right"){
+                            let left = clientW/2 - pageW/2  - translateX
+                            if (left<=1) loadImageBy(index-1)
+                        } else if (event.direction==="Left"){
+                            let right = clientW/2 + pageW/2  - translateX
+                            if (right>=clientW-1) loadImageBy(index+1)
+                        }
                     }
                 },
                 touchEnd: function (event) {
+                    startFingers = 0
                     event.stopPropagation();
                     event.preventDefault()
                     if (!isReady) return
                     calcSize()
                     roundRotate()
+                    translate({x: translateX, y: translateY})
                 }
             });
         } else {
@@ -499,6 +520,10 @@ function frameFromClient(client,angle,origin) {
                 loadImageBy(index+1)
             } else if (event.code=='Home'|| event.code=='Numpad7') {
                 translateHome()
+            } else if (event.code=='KeyH') {
+                mirror(false)
+            } else if (event.code=='KeyV') {
+                mirror(true)
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
@@ -576,8 +601,8 @@ function frameFromClient(client,angle,origin) {
         }
         initTransformImage(img,src,index)
     }
-    window.TransformImage =function(className){
-        document.querySelectorAll('.'+className).forEach(function (img){
+    window.TransformImage =function(selector){
+        document.querySelectorAll(selector).forEach(function (img){
             let src=img.getAttribute('src')
             if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
             let pos=img.className.indexOf('img-index-')
