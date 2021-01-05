@@ -76,11 +76,12 @@ public enum Orientation {
         if (ori1 < M_H.value || ori1 > R270.value) return ori0;
         return orientationArrays[ori0-M_H.value][ori1-M_H.value];
     }
-    public static int by(int ... oris) {
+    public static int by(Integer ... oris) {
         if (oris==null || oris.length==0) return 1;
-        int r = oris[0];
+        int r = oris[0] == null ? 1 : oris[0];
         if (r<1 || r>8) r=1;
         for (int i=1;i<oris.length;i++) {
+            if (oris[i]==null) continue;
             int ori = oris[i];
             if (ori>=2 && ori<=8) {
                 if (r==1) r=ori;

@@ -144,7 +144,43 @@ function frameFromClient(client,angle,origin) {
             }
         }
 
+        const saveOrientation = function () {
+            const imgIndex = index
+            let path = img.getAttribute('src')
+            let pos = path.indexOf('?')
+            if (pos>=0) path = path.substring(0,pos)
+            if (Math.trunc(rotateZ/90) * 90 == rotateZ) {
+                if (mirrorH && mirrorV) {
+                    mirrorH = mirrorV = false
+                    rotateZ += 180
+                }
+                rotateZ = rotateZ % 360
+                if (rotateZ < 0) rotateZ += 360
+                let orientations = ''
+                if (mirrorH) orientations = '2'
+                else if (mirrorV) orientations = '4'
+                if (rotateZ) {
+                    if (orientations) orientations = orientations + ','
+                    if (rotateZ==90) orientations += '6'
+                    else if (rotateZ==180) orientations += '3'
+                    else if (rotateZ==270) orientations += '8'
+                }
+                if (orientations) {
+                    let url = '/orientation?path='+encodeURI(path)+'&orientations='+orientations
+                    Ajax.get(url, function(responseText) {
+                        if ("ok"==responseText){
+                            let thumb = document.querySelector('.img-index-'+imgIndex)
+                            let tp = thumb.getAttribute('src')
+                            let pos = tp.indexOf('?')
+                            if (pos>=0) tp = tp.substring(0,pos)
+                            thumb.src = tp + '?click='+(new Date().getTime())
+                        }
+                    })
+                }
+            }
+        }
         const loadImageBy = function (imgIndex) {
+            saveOrientation()
             let thumb = document.querySelector('.img-index-'+imgIndex)
             if (thumb) {
                 let src = thumb.getAttribute('src')
@@ -367,6 +403,7 @@ function frameFromClient(client,angle,origin) {
                 multipointStart: function (event) {
                     event.stopPropagation();
                     event.preventDefault()
+                    startFingers = event.touches.length
                     initScale = scaleValue;
                 },
                 pinch: function (event) {
@@ -422,7 +459,7 @@ function frameFromClient(client,angle,origin) {
                     if (startFingers == 3) { // 三指滑动，翻转
                         mirror(event.direction==="Up" || event.direction==="Down")
                         return
-                    } else if (startFingers == 1 && !translateXChanged){ // 单指滑动
+                    } else if (startFingers < 2 && !translateXChanged){ // 单指滑动
                         if (event.direction==="Right"){
                             let left = clientW/2 - pageW/2  - translateX
                             if (left<=1) loadImageBy(index-1)
@@ -433,7 +470,6 @@ function frameFromClient(client,angle,origin) {
                     }
                 },
                 touchEnd: function (event) {
-                    startFingers = 0
                     event.stopPropagation();
                     event.preventDefault()
                     if (!isReady) return
@@ -506,7 +542,7 @@ function frameFromClient(client,angle,origin) {
             } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
                 move({x: 0, y: 10})
             } else if (event.code=='Space'){
-                rotate(rotateZ+(event.shiftKey ? -15 : 15))
+                rotate(rotateZ+(event.shiftKey ? -90 : 90))
                 calcSize()
             } else if ((event.code=='Equal' || event.code=='NumpadAdd') && scaleValue<realSizeScale){
                 scale(scaleValue+1)
@@ -603,8 +639,6 @@ function frameFromClient(client,angle,origin) {
     }
     window.TransformImage =function(selector){
         document.querySelectorAll(selector).forEach(function (img){
-            let src=img.getAttribute('src')
-            if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
             const title = img.getAttribute('title')
@@ -612,7 +646,11 @@ function frameFromClient(client,angle,origin) {
                 event.stopPropagation()
                 if (title && event.offsetX<36 && event.offsetY<36) {
                     alert(title)
-                } else addImageDialog(src,index==NaN?0:index)
+                } else {
+                    let src = img.getAttribute('src')
+                    if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
+                    addImageDialog(src,index==NaN?0:index)
+                }
             }
         });
     }

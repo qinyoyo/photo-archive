@@ -270,6 +270,17 @@ public class PVController implements ApplicationRunner {
         }catch (Exception e) {}
         return false;
     }
+
+    @ResponseBody
+    @RequestMapping(value = "orientation")
+    public String orientation(HttpServletRequest request, String path, Integer [] orientations) {
+       if (path==null || orientations==null || orientations.length==0) return "error";
+       PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
+       if (pi==null) return "error";
+       if (pi.modifyOrientation(rootPath, orientations)) return "ok";
+       else return "fail";
+    }
+
     @ResponseBody
     @RequestMapping(value = "delete-file")
     public String deleteFile(HttpServletRequest request, HttpServletResponse response, String path) {

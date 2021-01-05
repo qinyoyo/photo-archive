@@ -452,8 +452,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
     }
 
-
-    public void modifyOrientation(String root, int ... operations) {
+    public boolean modifyOrientation(String root, Integer ... operations) {
         if (mimeType!=null && mimeType.contains("image/") && operations.length>0) {
             int ori0 = (orientation==null ? 1: orientation);
             if (orientation==null || orientation==1) orientation = Orientation.by(operations);
@@ -467,13 +466,15 @@ public class PhotoInfo implements Serializable,Cloneable {
                 String imgPath = fullPath(root);
                 try {
                     System.out.println("Rotate image of " + imgPath);
-                    ExifTool.getInstance().excute(new File(imgPath), "-orientation=" + orientation, "-overwrite_original");
+                    ExifTool.getInstance().excute(new File(imgPath), "-orientation=" + Orientation.name(orientation), "-overwrite_original");
                     String thumbPath = fullThumbPath(root);
-                    ExifTool.getInstance().excute(new File(thumbPath), "-orientation=" + orientation, "-overwrite_original");
+                    ExifTool.getInstance().excute(new File(thumbPath), "-orientation=" + Orientation.name(orientation), "-overwrite_original");
+                    return true;
                 } catch (IOException e) {
                 }
             }
         }
+        return false;
     }
     public boolean delete(String rootPath) {
         try {

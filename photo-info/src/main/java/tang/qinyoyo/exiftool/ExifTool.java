@@ -96,7 +96,7 @@ public class ExifTool {
             argsList.add(option);
         }
         if (dir.isDirectory())  argsList.add(".");
-        else argsList.add("\"" + dir.getName() + "\"");
+        else argsList.add(dir.getName());
         Pair<List<String>, List<String>> result = CommandRunner.runWithResult(dir.isDirectory() ? dir.toPath() : dir.getParentFile().toPath(),true, argsList);
         List<String> stdOut = result.getKey();
         List<String> stdErr = result.getValue();
