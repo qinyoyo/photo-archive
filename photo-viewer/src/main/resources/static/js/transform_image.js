@@ -214,15 +214,18 @@ function frameFromClient(client,angle,origin) {
                 y: { min: minY, max: maxY }
             }
         }
+        let debug = false
         const calcTranslateLimit = function () {
             let limit = axisLimit(clientW,clientH)
             let pageMin = pageFromClient({x: limit.x.min, y:limit.y.min }),
                 pageMax = pageFromClient({x: limit.x.max, y:limit.y.max })
             let x = {min:0, max:0}, y={min:0, max:0}
-            if (limit.x.max - limit.x.min > pageW) {
-                x.max = -pageMin.x
-                x.min = pageW - pageMax.x
-            }
+/*            if (debug) alert(''+limit.x.min+','+limit.x.max+' '+limit.y.min + ',' + limit.y.max
+                + ' ' + pageW + ','+pageH + ' ' + clientW + ','+clientH +' ' + scaleValue +' '
+                +translateX+','+translateY+' '+rotateZ)
+            debug=false*/
+            if (pageMin.x < 0) x.max =  -pageMin.x
+            if (pageMax.x > pageW) x.min = pageW - pageMax.x
             if (limit.y.max - limit.y.min > pageH) {
                 y.max = -pageMin.y
                 y.min = pageH - pageMax.y
@@ -244,8 +247,6 @@ function frameFromClient(client,angle,origin) {
             } else fitClient()
         }
         const calcSize = function() {
-            imageW = img.naturalWidth
-            imageH = img.naturalHeight
             clientW = Math.trunc(imageW * scaleValue / realSizeScale)
             clientH = Math.trunc(imageH * scaleValue / realSizeScale)
             img.style.width = clientW +'px'
@@ -347,23 +348,32 @@ function frameFromClient(client,angle,origin) {
             transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV)
         }
         const changeImage = function(src) {
+            const loadImg = new Image()
+            loadImg.onload = function() {
+                waitingIcon.style.display = 'none'
+                img.setAttribute('src', '')
+                imageW = loadImg.naturalWidth
+                imageH = loadImg.naturalHeight
+                rotateZ = 0
+                mirrorV = mirrorH = false
+                scaleValue = 1
+                translateX = translateY = 0
+                realSizeScale = Math.max(imageW / pageW, imageH / pageH)
+                if (realSizeScale<1) realSizeScale = 1
+                calcSize()
+                img.setAttribute('src', src)
+                transform(img, 0, 0, 0, mirrorH, mirrorV)
+                isReady = true
+            }
+            loadImg.onerror = function() {
+                waitingIcon.style.display = 'none'
+                toast('加载失败')
+            }
+            loadImg.setAttribute('src', src)
             waitingIcon.style.display = 'block'
             isReady = false
-            img.setAttribute('src', src)
-            rotateZ = 0
-            mirrorV = mirrorH = false
-            scaleValue = 1
-            translateX = translateY = 0
-            transform(img, 0, 0, 0, mirrorH, mirrorV)
         }
 
-        img.onload = function () {
-            waitingIcon.style.display = 'none'
-            realSizeScale = Math.max(img.naturalWidth / pageW, img.naturalHeight / pageH)
-            if (realSizeScale<1) realSizeScale = 1
-            calcSize()
-            isReady = true
-        }
         if (isMobile()) {
             let initScale = 1, allowSingleSwipe = false
             let touchPos0 = {x:0, y:0}, touchPos1 = {x:0, y:0}, touchMinXPos = {x:0, y:0}, touchMaxYPos = {x:0, y:0}
@@ -447,6 +457,8 @@ function frameFromClient(client,angle,origin) {
                     calcSize()
                     if (scaleValue<=minScale()) translateHome()
                     else translate({x: translateX, y: translateY})
+
+                    debug=true
                 },
                 swipe:function(event){
                     event.stopPropagation();
@@ -580,6 +592,7 @@ function frameFromClient(client,angle,origin) {
 
         let img = document.createElement("img")
         img.draggable = false
+        img.className = 'center-transform'
         img.style.zIndex = "6004"
 
         let closeButton = document.createElement("button")

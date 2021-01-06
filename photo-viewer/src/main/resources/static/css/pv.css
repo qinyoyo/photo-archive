@@ -234,6 +234,7 @@ audio, video {
     padding-top: 12px;
     color: #000;
 }
+
 @media screen and (max-aspect-ratio: 13/9) {
     .grid-box {
         grid-template-columns: repeat(3, 1fr);
