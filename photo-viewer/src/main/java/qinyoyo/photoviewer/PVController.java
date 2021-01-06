@@ -277,7 +277,15 @@ public class PVController implements ApplicationRunner {
        if (path==null || orientations==null || orientations.length==0) return "error";
        PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
        if (pi==null) return "error";
-       if (pi.modifyOrientation(rootPath, orientations)) return "ok";
+       if (pi.modifyOrientation(rootPath, orientations)) {
+           new Thread() {
+               @Override
+               public void run() {
+                   archiveInfo.saveInfos();
+               }
+           }.start();
+           return "ok";
+       }
        else return "fail";
     }
 
@@ -387,8 +395,15 @@ public class PVController implements ApplicationRunner {
             ArchiveUtils.removeEmptyFolder(new File(rootPath));
             archiveInfo.saveInfos();
         }
-        if (!new File(rootPath,".thumb").exists()) archiveInfo.createThumbFiles();
         rootPath = archiveInfo.getPath();  // 标准化
+        if (!new File(rootPath,".thumb").exists()) {
+            new Thread() {
+                @Override
+                public void run() {
+                    archiveInfo.createThumbFiles();
+                }
+            }.start();
+        }
         System.out.println("Photo viewer started.");
     }
 }

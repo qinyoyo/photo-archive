@@ -8,6 +8,8 @@ import java.util.*;
 import static java.lang.Double.parseDouble;
 
 public class ExifTool {
+    public  static final String RESULT = ":RESULT:";
+    public  static final String ERROR = ":ERROR:";
     public  static String EXIFTOOL = "exiftool";
     public  static Double INSTALLED_VERSION;
     private static ExifTool instance = null;
@@ -101,8 +103,8 @@ public class ExifTool {
         List<String> stdOut = result.getKey();
         List<String> stdErr = result.getValue();
         return new HashMap<String,List<String>>(){{
-            put("output",stdOut);
-            put("error",stdErr);
+            if (stdOut!=null && stdOut.size()>0) put(RESULT,stdOut);
+            if (stdErr!=null && stdErr.size()>0) put(ERROR,stdErr);
         }};
     }
 
@@ -129,7 +131,7 @@ public class ExifTool {
         if (error!=null && !error.isEmpty()) {
         	Map<Key, T> emap = new HashMap<>();
         	emap.put(Key.DESCRIPTION, Key.parse(Key.DESCRIPTION,error));
-        	queryResult.put(":ERROR:", emap);
+        	queryResult.put(ERROR, emap);
         }
         return queryResult;
     }

@@ -136,7 +136,7 @@ public class ArchiveInfo {
         }
         if (fileInfos!=null) {
             for (String file : fileInfos.keySet()) {
-            	if (file.equals(":ERROR:")) {
+            	if (file.equals(ExifTool.ERROR)) {
             		System.out.println(fileInfos.get(file).get(Key.DESCRIPTION));
             	} else {
 	                try {
@@ -218,7 +218,7 @@ public class ArchiveInfo {
             thumbFile.getParentFile().mkdirs();
             if (p.getMimeType().contains("image/")) {
                 System.out.println("Create thumbnail of " + imgPath);
-                ImageUtil.compressImage(imgPath, thumbPath, 300, 200);
+                ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
             } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
                /*String size = "300x200";
                 if (p.getHeight()!=null && p.getWidth()!=null) {
@@ -354,6 +354,11 @@ public class ArchiveInfo {
         File af = new File(path, ARCHIVE_FILE);
         System.out.println("向 "+af.getAbsolutePath()+" 写入数据");
         saveObj(af, infos);
+    }
+    public long lastModified() {
+        File af = new File(path, ARCHIVE_FILE);
+        if (af.exists()) return af.lastModified();
+        else return new Date().getTime();
     }
     private static void saveObj(File file, Object object) {
         try {
@@ -602,4 +607,5 @@ public class ArchiveInfo {
             return null;
         }
     }
+
 }

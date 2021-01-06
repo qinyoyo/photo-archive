@@ -102,7 +102,6 @@ function frameFromClient(client,angle,origin) {
         const container = img.parentNode
         const waitingIcon = container.querySelector('.waiting-icon')
         let   scaleValue = 1
-        const DELTA_LIMIT = 30
         const pageFromClient = function(client) {
             let paddingLeft = Math.max(0,(pageW - clientW)/2),
                 paddingTop = Math.max(0,(pageH - clientH)/2);
@@ -173,7 +172,7 @@ function frameFromClient(client,angle,origin) {
                             let tp = thumb.getAttribute('src')
                             let pos = tp.indexOf('?')
                             if (pos>=0) tp = tp.substring(0,pos)
-                            thumb.src = tp + '?click='+(new Date().getTime())
+                            thumb.setAttribute('src', tp + '?click='+(new Date().getTime()))
                         }
                     })
                 }
@@ -243,31 +242,6 @@ function frameFromClient(client,angle,origin) {
             if (isFitClient()) {
                 realSize(page)
             } else fitClient()
-        }
-        const imgClick = function(page) {
-/*
-            console.log('page=',page, 'image size = ',imageW, imageH, 'translate = ',translateX,translateY)
-            let client = clientFromPage(page)
-            console.log('clientFromPage=',client)
-            let page1 = pageFromClient(client)
-            console.log('pageFromClient=',page1)
-
-            let image = imageFromPage(page)
-            console.log('imageFromPage=',image)
-            let client1=clientFromImage(image)
-            console.log('clientFromImage=',client1)
-            if (!isReady) return
-            if (page.x>pageW - DELTA_LIMIT || page.x< DELTA_LIMIT) {
-                clickForChange = true
-                setTimeout(function(){
-                    if (clickForChange) {
-                        clickForChange = false
-                        loadImageBy(page.x < DELTA_LIMIT ? index - 1 : index + 1)
-                    }
-                },400)
-            }
-
- */
         }
         const calcSize = function() {
             imageW = img.naturalWidth
@@ -363,6 +337,7 @@ function frameFromClient(client,angle,origin) {
             scale(realSizeScale,page)
         }
         const mirror = function(vertical) {
+            if (Math.round(rotateZ/90) % 2) vertical = (vertical ? false : true)
             if (vertical) mirrorV = !mirrorV
             else mirrorH = !mirrorH
             if (mirrorH && mirrorV) {
@@ -374,7 +349,7 @@ function frameFromClient(client,angle,origin) {
         const changeImage = function(src) {
             waitingIcon.style.display = 'block'
             isReady = false
-            img.src = src
+            img.setAttribute('src', src)
             rotateZ = 0
             mirrorV = mirrorH = false
             scaleValue = 1
@@ -390,43 +365,36 @@ function frameFromClient(client,angle,origin) {
             isReady = true
         }
         if (isMobile()) {
-            let initScale = 1, startFingers = 0
+            let initScale = 1, allowSingleSwipe = false
+            let touchPos0 = {x:0, y:0}, touchPos1 = {x:0, y:0}, touchMinXPos = {x:0, y:0}, touchMaxYPos = {x:0, y:0}
             new AlloyFinger(img, {
+                multipointStart: function (event) {
+                    event.stopPropagation()
+                    event.preventDefault()
+                    if (!isReady) return
+                    allowSingleSwipe = false
+                    initScale = scaleValue
+                },
                 rotate:function(event){
                     event.stopPropagation();
                     event.preventDefault()
+                    allowSingleSwipe = false
                     if (isReady) rotate(rotateZ + event.angle,{
-                        x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
-                        y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
+                        x: (event.touches[0].pageX + event.touches[1].pageX)/2,
+                        y: (event.touches[0].pageY + event.touches[1].pageY)/2
                     })
-                },
-                multipointStart: function (event) {
-                    event.stopPropagation();
-                    event.preventDefault()
-                    startFingers = event.touches.length
-                    initScale = scaleValue;
                 },
                 pinch: function (event) {
                     event.stopPropagation();
                     event.preventDefault()
+                    allowSingleSwipe = false
                     if (isReady)  {
-                        let sc = initScale * event.zoom;
+                        let sc=initScale*event.zoom;
                         scale(sc,{
-                            x: (event.changedTouches[0].pageX + event.changedTouches[1].pageX)/2,
-                            y: (event.changedTouches[0].pageY + event.changedTouches[1].pageY)/2
+                            x:(event.touches[0].pageX+event.touches[1].pageX)/2,y:(event.touches[0].pageY+event.touches[1].pageY)/2
                         })
                     }
                 },
-                /*
-                tap:function(event) {
-                    event.stopPropagation();
-                    event.preventDefault()
-                    imgClick({
-                        x: event.changedTouches[0].pageX,
-                        y: event.changedTouches[0].pageY
-                    })
-                },
-                 */
                 doubleTap:function(event){
                     event.stopPropagation();
                     event.preventDefault()
@@ -440,6 +408,8 @@ function frameFromClient(client,angle,origin) {
                     event.preventDefault()
                     if (!isReady) return
                     if (event.touches.length==1) {
+                        if (event.touches[0].pageX < touchMinXPos.x) touchMinXPos =  { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                        if (event.touches[0].pageY > touchMaxYPos.y) touchMaxYPos =  { x: event.touches[0].pageX, y: event.touches[0].pageY}
                         move({
                             x: event.deltaX,
                             y: event.deltaY
@@ -447,19 +417,43 @@ function frameFromClient(client,angle,origin) {
                     }
                 },
                 touchStart:function(event) {
-                    startFingers = event.touches.length
-                    translateXChanged = false
+                    if (event.touches.length == 1) {
+                        translateXChanged = false
+                        allowSingleSwipe = true
+                        touchPos0 = touchPos1 = touchMinXPos = touchMaxYPos = { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                    }
                     event.stopPropagation();
                     event.preventDefault()
+                },
+                touchEnd: function (event) {
+                    event.stopPropagation();
+                    event.preventDefault()
+                    if (!isReady) return
+                    if (allowSingleSwipe && event.changedTouches.length == 1) {
+                        touchPos1 = { x: event.changedTouches[0].pageX, y: event.changedTouches[0].pageY}
+                        if (touchPos0.x > touchMinXPos.x + 100 && touchPos1.x >touchMinXPos.x + 100 &&
+                            Math.abs(touchPos0.x - touchPos1.x) < 50 &&
+                            Math.abs((touchPos0.y+touchPos1.y)/2 - touchMinXPos.y ) <50 ) {    // like  '<'
+                            allowSingleSwipe = false
+                            mirror(false)
+                        } else if (touchPos0.y + 100 < touchMaxYPos.y && touchPos1.y + 100 <touchMaxYPos.y &&
+                            Math.abs(touchPos0.y - touchPos1.y) < 50 &&
+                            Math.abs((touchPos0.x+touchPos1.x)/2 - touchMaxYPos.x ) <50 ) {    // like  'V'
+                            allowSingleSwipe = false
+                            mirror(true)
+                        }
+                    }
+                    roundRotate()
+                    calcSize()
+                    if (scaleValue<=minScale()) translateHome()
+                    else translate({x: translateX, y: translateY})
                 },
                 swipe:function(event){
                     event.stopPropagation();
                     event.preventDefault()
-                    if (!isReady) return
-                    if (startFingers == 3) { // 三指滑动，翻转
-                        mirror(event.direction==="Up" || event.direction==="Down")
-                        return
-                    } else if (startFingers < 2 && !translateXChanged){ // 单指滑动
+                    if (!isReady || !allowSingleSwipe) return
+                    allowSingleSwipe = false
+                    if (!translateXChanged){
                         if (event.direction==="Right"){
                             let left = clientW/2 - pageW/2  - translateX
                             if (left<=1) loadImageBy(index-1)
@@ -468,27 +462,11 @@ function frameFromClient(client,angle,origin) {
                             if (right>=clientW-1) loadImageBy(index+1)
                         }
                     }
-                },
-                touchEnd: function (event) {
-                    event.stopPropagation();
-                    event.preventDefault()
-                    if (!isReady) return
-                    calcSize()
-                    roundRotate()
-                    translate({x: translateX, y: translateY})
                 }
             });
         } else {
             let pageX = 0,pageY = 0
             let startDrag = false
-            img.onclick=function (event){
-                event.stopPropagation();
-                event.preventDefault()
-                imgClick({
-                    x: event.clientX,
-                    y: event.clientY
-                })
-            }
             img.ondblclick=function (event){
                 event.stopPropagation();
                 event.preventDefault()
@@ -532,7 +510,6 @@ function frameFromClient(client,angle,origin) {
         }
 
         const imageKeyEvent = function(event) {
-            console.log(event.code)
             if (event.code=='ArrowLeft' || event.code=='Numpad4'){
                 move({x: -10, y: 0})
             } else if (event.code=='ArrowRight' || event.code=='Numpad6'){

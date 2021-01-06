@@ -5,8 +5,8 @@
             xhr.open('GET', url, true);
             xhr.onreadystatechange = function () {
                 // readyState == 4说明请求已完成
-                if (xhr.readyState == 4 && xhr.status == 200 || xhr.status == 304) {
-                    callback.call(this, xhr.responseText);
+                if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
+                    if (typeof callback==='function') callback.call(this, xhr.responseText);
                 }
             };
             xhr.send();
@@ -17,7 +17,7 @@
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
-                    callback.call(this, xhr.responseText);
+                    if (typeof callback==='function') callback.call(this, xhr.responseText);
                 }
             };
             xhr.send(data);

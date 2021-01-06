@@ -1,4 +1,13 @@
 package tang.qinyoyo.archive;
+
+import lombok.Getter;
+import tang.qinyoyo.exiftool.ExifTool;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 /*
 V: Mirror vertical
 H: Mirror horizontal
@@ -13,6 +22,7 @@ R-xx: Rotate xx AW
     H + Rxx = R(360-xx) + H
     Rxx = R(xx-360) = R-(360-xx)
 */
+@Getter
 public enum Orientation {
     UNKNOWN("Unknown",0),
     NONE("Horizontal (normal)",1),
@@ -40,6 +50,20 @@ public enum Orientation {
     Orientation(String name, int value) {
         this.name=name;
         this.value=value;
+    }
+    public static Orientation get(int ori) {
+        switch (ori) {
+            case 0: return UNKNOWN;
+            case 1: return  NONE;
+            case 2: return M_H;
+            case 3: return R180;
+            case 4: return M_V;
+            case 5: return M_H_R270;
+            case 6: return R90;
+            case 7: return M_H_R90;
+            case 8: return R270;
+            default : return null;
+        }
     }
     public static String name(int ori) {
         switch (ori) {
@@ -89,5 +113,27 @@ public enum Orientation {
             }
         }
         return r;
+    }
+    public static boolean setOrientation(File imgFile, Integer orientation) {
+        try {
+            Map<String, List<String>> result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)), "-overwrite_original");
+            List<String> msgList = result.get(ExifTool.RESULT);
+            if (msgList==null || msgList.size()==0) return false;
+            for (String msg : msgList) {
+                if (msg.contains("1") && msg.contains("file") && msg.contains("updated")) return true;
+            }
+        } catch (IOException e) {
+        }
+        return false;
+    }
+    public static Integer getOrientation(File imgFile) {
+        try {
+            Map<String, List<String>> result = ExifTool.getInstance().excute(imgFile, "-T", "-orientation");
+            List<String> msgList = result.get(ExifTool.RESULT);
+            if (msgList==null || msgList.size()==0) return null;
+            return value(msgList.get(0));
+        } catch (IOException e) {
+        }
+        return null;
     }
 }

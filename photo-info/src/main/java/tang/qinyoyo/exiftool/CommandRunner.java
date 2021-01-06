@@ -26,7 +26,7 @@ public final class CommandRunner {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(args);
         processBuilder.directory(workingDir.toFile());
-        processBuilder.redirectErrorStream(true);
+        //processBuilder.redirectErrorStream(true);
         if (redirectOutput!=null) processBuilder.redirectOutput(redirectOutput);
         return processBuilder.start();
     }

@@ -34,10 +34,10 @@ public class ImageUtil {
      * :输出的压缩图片的路径 * @param new_w * :压缩后的图片宽 * @param new_h * :压缩后的图片高
      */
     public static void compressImage(String srcImgPath, String outImgPath,
-                                     int new_w, int new_h) {
+                                     int new_w, int new_h, Integer orientation) {
         BufferedImage src = InputImage(srcImgPath);
         if (src==null) return;
-        disposeImage(src, outImgPath, new_w, new_h);
+        disposeImage(src, outImgPath, new_w, new_h, orientation);
     }
 
     /**
@@ -45,7 +45,7 @@ public class ImageUtil {
      * :输出的压缩图片的路径 * @param maxLength * :长或者宽的最大值
      */
     public static void compressImage(String srcImgPath, String outImgPath,
-                                     int maxLength) {
+                                     int maxLength,Integer orientation) {
         // 得到图片
         BufferedImage src = InputImage(srcImgPath);
         if (null != src) {
@@ -66,13 +66,13 @@ public class ImageUtil {
                 new_w = (int) Math.round(old_w * ((float) maxLength / old_h));
                 new_h = maxLength;
             }
-            disposeImage(src, outImgPath, new_w, new_h);
+            disposeImage(src, outImgPath, new_w, new_h,orientation);
         }
     }
 
     /** * 处理图片 * * @param src * @param outImgPath * @param new_w * @param new_h */
     private synchronized static void disposeImage(BufferedImage src,
-                                                  String outImgPath, int new_w, int new_h) {
+                                                  String outImgPath, int new_w, int new_h, Integer orientation) {
         // 得到图片
         int old_w = src.getWidth();
         // 得到源图宽
@@ -105,14 +105,14 @@ public class ImageUtil {
                 src.getScaledInstance(new_w, new_h, Image.SCALE_SMOOTH), 0, 0,
                 null);
         // 调用方法输出图片文件
-        OutImage(outImgPath, newImg);
+        OutImage(outImgPath, newImg, orientation);
     }
 
     /**
      * * 将图片文件输出到指定的路径，并可设定压缩质量 * * @param outImgPath * @param newImg * @param
      * per
      */
-    private static void OutImage(String outImgPath, BufferedImage newImg) {
+    private static void OutImage(String outImgPath, BufferedImage newImg, Integer orientation) {
         // 判断输出的文件夹路径是否存在，不存在则创建
         File file = new File(outImgPath);
         if (!file.getParentFile().exists()) {
@@ -121,6 +121,7 @@ public class ImageUtil {
         try {
             ImageIO.write(newImg, outImgPath.substring(outImgPath
                     .lastIndexOf(".") + 1), new File(outImgPath));
+            Orientation.setOrientation(file,orientation);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

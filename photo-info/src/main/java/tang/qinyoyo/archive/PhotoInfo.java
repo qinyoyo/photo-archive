@@ -454,24 +454,27 @@ public class PhotoInfo implements Serializable,Cloneable {
 
     public boolean modifyOrientation(String root, Integer ... operations) {
         if (mimeType!=null && mimeType.contains("image/") && operations.length>0) {
-            int ori0 = (orientation==null ? 1: orientation);
-            if (orientation==null || orientation==1) orientation = Orientation.by(operations);
+            orientation = Orientation.getOrientation(new File(fullPath(root)));
+            int orientation1=0;
+            if (orientation==null || orientation==1) orientation1 = Orientation.by(operations);
             else {
-                int [] ops = new int[operations.length+1];
+                Integer [] ops = new Integer[operations.length+1];
                 ops[0]=orientation;
                 for (int i=0;i<operations.length;i++) ops[i+1] = operations[i];
-                orientation = Orientation.by(operations);
+                orientation1 = Orientation.by(ops);
             }
-            if (orientation != ori0) {
-                String imgPath = fullPath(root);
-                try {
-                    System.out.println("Rotate image of " + imgPath);
-                    ExifTool.getInstance().excute(new File(imgPath), "-orientation=" + Orientation.name(orientation), "-overwrite_original");
+            if ((orientation==null && orientation1==Orientation.NONE.getValue()) || (orientation!=null && orientation == orientation1)) return false;
+            String imgPath = fullPath(root);
+            try {
+                if (Orientation.setOrientation(new File(imgPath), orientation1)) {
+                    orientation = orientation1;
                     String thumbPath = fullThumbPath(root);
-                    ExifTool.getInstance().excute(new File(thumbPath), "-orientation=" + Orientation.name(orientation), "-overwrite_original");
+                    if (!Orientation.setOrientation(new File(thumbPath), orientation)) {
+                        System.out.println("Orientation  of thumbnail error: "+thumbPath);
+                    }
                     return true;
-                } catch (IOException e) {
                 }
+            } catch (IOException e) {
             }
         }
         return false;
