@@ -220,16 +220,46 @@ function frameFromClient(client,angle,origin) {
             let pageMin = pageFromClient({x: limit.x.min, y:limit.y.min }),
                 pageMax = pageFromClient({x: limit.x.max, y:limit.y.max })
             let x = {min:0, max:0}, y={min:0, max:0}
-/*            if (debug) alert(''+limit.x.min+','+limit.x.max+' '+limit.y.min + ',' + limit.y.max
-                + ' ' + pageW + ','+pageH + ' ' + clientW + ','+clientH +' ' + scaleValue +' '
-                +translateX+','+translateY+' '+rotateZ)
-            debug=false*/
-            if (pageMin.x < 0) x.max =  -pageMin.x
-            if (pageMax.x > pageW) x.min = pageW - pageMax.x
-            if (limit.y.max - limit.y.min > pageH) {
-                y.max = -pageMin.y
-                y.min = pageH - pageMax.y
+            if (pageW >= (pageMax.x - pageMin.x)) {
+                x = {
+                    min: (pageW - pageMax.x - pageMin.x)/2,
+                    max: (pageW - pageMax.x - pageMin.x)/2
+                }
+            } else {
+                x = {
+                    min :Math.min(-pageMin.x, pageW - pageMax.x),
+                    max: Math.max(-pageMin.x, pageW - pageMax.x)
+                }
             }
+
+/*            else if (pageMin.x>=0) {
+                x = {
+                    min: Math.min(-pageMin.x, pageW - pageMax.x),
+                    max: 0
+                }
+            } else if (pageMax.x<=pageW) {
+                x = {
+                    min:0,
+                    max: Math.max(-pageMin.x, pageW - pageMax.x)
+                }
+            } else {
+                x = {
+                    min: pageW - pageMax.x,
+                    max: -pageMin.x
+                }
+            }*/
+            if (pageH >= (pageMax.y - pageMin.y)) {
+                y = {
+                    min: (pageH - pageMax.y - pageMin.y)/2,
+                    max: (pageH - pageMax.y - pageMin.y)/2
+                }
+            } else {
+                y = {
+                    min :Math.min(-pageMin.y, pageH - pageMax.y),
+                    max: Math.max(-pageMin.y, pageH - pageMax.y)
+                }
+            }
+
             translateLimit = {
                 x: x,
                 y: y
