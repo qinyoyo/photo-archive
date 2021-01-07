@@ -506,7 +506,6 @@
         const touchEnd = function (event){
             event.stopPropagation()
             event.preventDefault()
-            dragStart = false
             if (!isReady) return
             if (dragStart && ((event.changedTouches && event.changedTouches.length==1) || (event.button == 0 && event.buttons == 1) )) {
                 touchPos1={
@@ -534,6 +533,7 @@
                 }
             }
             allowSingleSwipe = false
+            dragStart = false
         }
         if (isMobile()) {
             let initScale = 1
