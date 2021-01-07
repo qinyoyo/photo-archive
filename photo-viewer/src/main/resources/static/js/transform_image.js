@@ -43,8 +43,11 @@ function frameFromClient(client,angle,origin) {
         y: origin.y - (client.x - origin.x) * Math.sin(angle) + (client.y - origin.y) * Math.cos(angle)
     }
 }
-
+const enableDebug = false
 ;(function () {
+    window.debug = function(text) {
+        if (window.debugElement) window.debugElement.innerHTML = text
+    }
     window.isMobile = function() {
         const ua = navigator.userAgent.toLowerCase()
         const agents = ["android", "iphone", "symbianos", "phone", "mobile"]
@@ -214,7 +217,6 @@ function frameFromClient(client,angle,origin) {
                 y: { min: minY, max: maxY }
             }
         }
-        let debug = false
         const calcTranslateLimit = function () {
             let limit = axisLimit(clientW,clientH)
             let pageMin = pageFromClient({x: limit.x.min, y:limit.y.min }),
@@ -231,23 +233,6 @@ function frameFromClient(client,angle,origin) {
                     max: Math.max(-pageMin.x, pageW - pageMax.x)
                 }
             }
-
-/*            else if (pageMin.x>=0) {
-                x = {
-                    min: Math.min(-pageMin.x, pageW - pageMax.x),
-                    max: 0
-                }
-            } else if (pageMax.x<=pageW) {
-                x = {
-                    min:0,
-                    max: Math.max(-pageMin.x, pageW - pageMax.x)
-                }
-            } else {
-                x = {
-                    min: pageW - pageMax.x,
-                    max: -pageMin.x
-                }
-            }*/
             if (pageH >= (pageMax.y - pageMin.y)) {
                 y = {
                     min: (pageH - pageMax.y - pageMin.y)/2,
@@ -267,12 +252,10 @@ function frameFromClient(client,angle,origin) {
         }
 
         let isReady = false
-        let clickForChange = false
-        
+
         const dblClick = function(page) {
-            clickForChange = false
             if (!isReady) return
-            if (isFitClient()) {
+            if (isFixed()) {
                 realSize(page)
             } else fitClient()
         }
@@ -354,9 +337,9 @@ function frameFromClient(client,angle,origin) {
                 translateTo(image, refPage)
             } else translateHome()
         }
-        const isFitClient = function() {
-            return translateLimit.x.min == 0 && translateLimit.x.max == 0 &&
-                translateLimit.y.min == 0 && translateLimit.y.max == 0
+        const isFixed = function() {
+            return translateLimit.x.min == translateLimit.x.max &&
+                translateLimit.y.min == translateLimit.y.max
         }
         // scale to fit client, reserve rotate
         const fitClient = function() {
@@ -406,7 +389,7 @@ function frameFromClient(client,angle,origin) {
 
         if (isMobile()) {
             let initScale = 1, allowSingleSwipe = false
-            let touchPos0 = {x:0, y:0}, touchPos1 = {x:0, y:0}, touchMinXPos = {x:0, y:0}, touchMaxYPos = {x:0, y:0}
+            let touchPos0 = {x:0, y:0}, touchPos1 = {x:0, y:0}, touchMinPos = {x:0, y:0}, touchMaxPos = {x:0, y:0}
             new AlloyFinger(img, {
                 multipointStart: function (event) {
                     event.stopPropagation()
@@ -443,27 +426,32 @@ function frameFromClient(client,angle,origin) {
                         y: event.changedTouches[0].pageY
                     })
                 },
+                touchStart:function(event) {
+                    if (event.touches.length == 1) {
+                        translateXChanged = false
+                        allowSingleSwipe = true
+                        touchPos0 = { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                        touchPos1 = { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                        touchMinPos = { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                        touchMaxPos = { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                    }
+                    event.stopPropagation()
+                    event.preventDefault()
+                },
                 touchMove:function(event) {
-                    event.stopPropagation();
+                    event.stopPropagation()
                     event.preventDefault()
                     if (!isReady) return
                     if (event.touches.length==1) {
-                        if (event.touches[0].pageX < touchMinXPos.x) touchMinXPos =  { x: event.touches[0].pageX, y: event.touches[0].pageY}
-                        if (event.touches[0].pageY > touchMaxYPos.y) touchMaxYPos =  { x: event.touches[0].pageX, y: event.touches[0].pageY}
+                        if (event.touches[0].pageX < touchMinPos.x) touchMinPos.x =  event.touches[0].pageX
+                        else if (event.touches[0].pageX > touchMaxPos.x) touchMaxPos.x =  event.touches[0].pageX
+                        if (event.touches[0].pageY < touchMinPos.y) touchMinPos.y =  event.touches[0].pageY
+                        else if (event.touches[0].pageY > touchMaxPos.y) touchMaxPos.y =  event.touches[0].pageY
                         move({
                             x: event.deltaX,
                             y: event.deltaY
                         })
                     }
-                },
-                touchStart:function(event) {
-                    if (event.touches.length == 1) {
-                        translateXChanged = false
-                        allowSingleSwipe = true
-                        touchPos0 = touchPos1 = touchMinXPos = touchMaxYPos = { x: event.touches[0].pageX, y: event.touches[0].pageY}
-                    }
-                    event.stopPropagation();
-                    event.preventDefault()
                 },
                 touchEnd: function (event) {
                     event.stopPropagation();
@@ -471,24 +459,30 @@ function frameFromClient(client,angle,origin) {
                     if (!isReady) return
                     if (allowSingleSwipe && event.changedTouches.length == 1) {
                         touchPos1 = { x: event.changedTouches[0].pageX, y: event.changedTouches[0].pageY}
-                        if (touchPos0.x > touchMinXPos.x + 100 && touchPos1.x >touchMinXPos.x + 100 &&
-                            Math.abs(touchPos0.x - touchPos1.x) < 50 &&
-                            Math.abs((touchPos0.y+touchPos1.y)/2 - touchMinXPos.y ) <50 ) {    // like  '<'
+                        let minX = Math.min(touchPos0.x,touchPos1.x),
+                            maxX = Math.max(touchPos0.x,touchPos1.x),
+                            minY = Math.min(touchPos0.y,touchPos1.y),
+                            maxY = Math.max(touchPos0.y,touchPos1.y)
+                        if (((touchMinPos.x < minX - 100)|| (touchMaxPos.x > maxX + 100))  // 线长 > 100
+                              && Math.abs(touchPos0.x - touchPos1.x) < 50   // 末端对齐误差
+                              && Math.abs(touchPos0.y - touchPos1.y) > 50  // 开口
+                            ) {    // like  '<' '>'
                             allowSingleSwipe = false
                             mirror(false)
-                        } else if (touchPos0.y + 100 < touchMaxYPos.y && touchPos1.y + 100 <touchMaxYPos.y &&
-                            Math.abs(touchPos0.y - touchPos1.y) < 50 &&
-                            Math.abs((touchPos0.x+touchPos1.x)/2 - touchMaxYPos.x ) <50 ) {    // like  'V'
+                        } else if (((touchMinPos.y < minY - 100)|| (touchMaxPos.y > maxY + 100))  // 线长 > 100
+                              && Math.abs(touchPos0.y - touchPos1.y) < 50  // 末端对齐误差
+                              && Math.abs(touchPos0.x - touchPos1.x) > 50  // 开口
+                            ) {    // like  'V' '^'
                             allowSingleSwipe = false
                             mirror(true)
+                        } else  if (touchMinPos.x < minX-30 || touchMaxPos.x > maxX + 30 ||touchMinPos.y < minY-30 || touchMaxPos.y > maxY + 30 ) {
+                            allowSingleSwipe=false
                         }
                     }
                     roundRotate()
                     calcSize()
                     if (scaleValue<=minScale()) translateHome()
                     else translate({x: translateX, y: translateY})
-
-                    debug=true
                 },
                 swipe:function(event){
                     event.stopPropagation();
@@ -497,11 +491,9 @@ function frameFromClient(client,angle,origin) {
                     allowSingleSwipe = false
                     if (!translateXChanged){
                         if (event.direction==="Right"){
-                            let left = clientW/2 - pageW/2  - translateX
-                            if (left<=1) loadImageBy(index-1)
+                            loadImageBy(index-1)
                         } else if (event.direction==="Left"){
-                            let right = clientW/2 + pageW/2  - translateX
-                            if (right>=clientW-1) loadImageBy(index+1)
+                            loadImageBy(index+1)
                         }
                     }
                 }
@@ -650,6 +642,12 @@ function frameFromClient(client,angle,origin) {
         dialog.appendChild(dialogBody)
         wrapper.appendChild(dialog)
         body.appendChild(wrapper)
+
+        if (enableDebug) {
+            window.debugElement = document.createElement("div")
+            window.debugElement.className = 'debug'
+            body.appendChild(window.debugElement)
+        }
 
         closeButton.onclick = function() {
             document.querySelector('body').onkeydown = null
