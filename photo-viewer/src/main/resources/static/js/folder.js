@@ -34,5 +34,5 @@ window.onload=function(){
             searchText(document.querySelector('.search-input').value)
         }
     }
-    TransformImage('.gird-cell-img')
+    TransformImage('.gird-cell-img',2000)
 }

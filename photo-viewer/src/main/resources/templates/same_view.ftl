@@ -13,8 +13,9 @@
     <meta name="renderer" content="webkit">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="stylesheet" href="static/css/pv.css">
     <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="static/css/pv.css">
+    <link rel="stylesheet" href="static/css/transform_image.css">
     <script type="text/javascript" src="static/js/ajax.js"></script>
     <script type="text/javascript" src="static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="static/js/transform_image.js"></script>
