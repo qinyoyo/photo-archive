@@ -322,6 +322,23 @@ public class PVController implements ApplicationRunner {
     }
 
     @ResponseBody
+    @RequestMapping(value = "remove")
+    public String remove(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            return "error";
+        }
+        if (path==null) return "error";
+        PhotoInfo pi = archiveInfo.find(new File(rootPath , path));
+        if (pi!=null) {
+            pi.delete(rootPath);
+            archiveInfo.getInfos().remove(pi);
+            afterChanged();
+            return "ok";
+        }
+        return "error";
+    }
+
+    @ResponseBody
     @RequestMapping(value = "delete-file")
     public String deleteFile(HttpServletRequest request, HttpServletResponse response, String path) {
         if (!isReady) {
@@ -329,7 +346,6 @@ public class PVController implements ApplicationRunner {
         }
         if (path==null) return null;
         if (new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath)) {
-            afterChanged();
             return "ok";
         }
         return "error";

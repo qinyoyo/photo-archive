@@ -26,7 +26,7 @@
         },delay ? delay : 500)
     }
 
-    const enableDebug = true
+    const enableDebug = false
     const PI = 3.1415926
     let loopTimerId = null
 
@@ -113,17 +113,25 @@
         const container = img.parentNode
         const wrapper = document.querySelector('.tran-img__wrapper')
         const waitingIcon = container.querySelector('.tran-img__waiting')
+        const removeBtn = container.querySelector('.tran-img__remove')
         let   scaleValue = 1
         let   isReady = false
         let   allowSingleSwipe = false
 
         /********   image load, modify   **********/
+        let removedIndexList = []
         const srcByIndex = function (imgIndex) {
-            let thumb = document.querySelector('.img-index-'+imgIndex)
-            if (thumb) {
-                let src = thumb.getAttribute('src')
-                if (src.indexOf('.thumb/')==0 || src.indexOf('/.thumb/')==0) src = src.substring(7)
-                return src
+            while (removedIndexList.indexOf(imgIndex)>=0) {
+                if (imgIndex<index) imgIndex--
+                else imgIndex++
+            }
+            if (imgIndex>=0) {
+                let thumb = document.querySelector('.img-index-' + imgIndex)
+                if (thumb) {
+                    let src = thumb.getAttribute('src')
+                    if (src.indexOf('.thumb/') == 0 || src.indexOf('/.thumb/') == 0) src = src.substring(7)
+                    return src
+                }
             }
             return false
         }
@@ -163,8 +171,8 @@
                 }
             }
         }
-        const loadImageBy = function (imgIndex) {
-            saveOrientation()
+        const loadImageBy = function (imgIndex, skipSave) {
+            if (!skipSave) saveOrientation()
             let src = srcByIndex(imgIndex)
             if (src) {
                 changeImage(src, imgIndex < index)
@@ -485,6 +493,34 @@
         }
         /***********  事件处理  *************/
 
+        const imgClick = function(event) {
+            event.stopPropagation()
+            event.preventDefault()
+            let y = event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.offsetY
+            if (removeBtn && removeBtn.style.display == 'block') {
+                removeBtn.style.display = 'none'
+                resumeLoop()
+                return true
+            } else if (y<50 && removeBtn && removeBtn.style.display == 'none') {
+                pauseLoop()
+                removeBtn.style.display = 'block'
+                return true
+            }
+            return false
+        }
+        removeBtn.onclick = function(event) {
+            if (confirm("确定要从磁盘删除该图像？")) {
+                const imgIndex = index
+                let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
+                Ajax.get(url, function (responseText) {
+                    if ("ok" == responseText) {
+                        removedIndexList.push(imgIndex)
+                        document.querySelector('.img-index-' + imgIndex).remove()
+                    }
+                })
+                loadImageBy(index + 1, true)
+            }
+        }
         const dblClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
@@ -613,6 +649,7 @@
                         })
                     }
                 },
+                tap: imgClick,
                 doubleTap:dblClick,
                 touchStart: function(event) {
                     pauseLoop()
@@ -625,11 +662,12 @@
                 }
             });
         } else {
+            img.onclick = imgClick
             img.onmouseenter=function() {
                 pauseLoop()
             }
             img.onmouseleave = function() {
-                resumeLoop(true)
+                if (!removeBtn || removeBtn.style.display == 'none')  resumeLoop(true)
             }
             img.ondblclick=dblClick
             img.onmousedown=touchStart
@@ -645,11 +683,13 @@
         }
 
         container.onclick=function (event) {
-            let limit=axisLimit(clientW,clientH)
-            let minX=limit.x.min+translateX,maxX=limit.x.max+translateX
-            let minPage=pageFromClient({x:minX,y:0}),maxPage=pageFromClient({x:maxX,y:0})
-            if (event.pageX>maxPage.x||event.pageX<minPage.x){
-                loadImageBy(event.pageX<minPage.x?index-1:index+1)
+            if (!imgClick(event)) {
+                let limit = axisLimit(clientW, clientH)
+                let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
+                let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
+                if (event.pageX > maxPage.x || event.pageX < minPage.x) {
+                    loadImageBy(event.pageX < minPage.x ? index - 1 : index + 1)
+                }
             }
         }
 
@@ -756,9 +796,20 @@
         waitingI.className = 'fa fa-spinner fa-spin animated'
         waitingIcon.appendChild(waitingI)
 
+        let removeBtn = document.createElement("button")
+        removeBtn.className = 'tran-img__remove'
+        removeBtn.style.zIndex = '6006'
+        removeBtn.style.left = (pageW - 36)/2 + 'px'
+        removeBtn.style.display = 'none'
+
+        let removeI = document.createElement("i")
+        removeI.className = 'fa fa-trash-o'
+        removeBtn.appendChild(removeI)
+
         dialogBody.appendChild(img)
         dialogBody.appendChild(closeButton)
         dialogBody.appendChild(waitingIcon)
+        dialogBody.appendChild(removeBtn)
 
         content.appendChild(dialogBody)
         wrapper.appendChild(content)
