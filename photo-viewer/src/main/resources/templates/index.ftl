@@ -86,7 +86,7 @@
         <div class="video-list grid-box">
             <#list videos as v>
                 <div class="video-item grid-cell">
-                    <video src = "${fileUrl(v)}" poster="/.thumb${fileUrl(v)}.jpg" class="video-index-${v?index}" controls></video>
+                    <video src = "${fileUrl(v)}" poster="/.thumb${fileUrl(v)}.jpg" class="video-index-${v?index}"></video>
                     <span>${v.fileName}</span>
                 </div>
             </#list>

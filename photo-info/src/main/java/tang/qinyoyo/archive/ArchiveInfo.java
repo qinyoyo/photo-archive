@@ -9,6 +9,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.lang.Double.parseDouble;
@@ -69,8 +71,16 @@ public class ArchiveInfo {
                 if (result.getKey().size() == 0) {
                     throw new RuntimeException("Could not get version of <" + FFMPEG + ">.");
                 }
-                FFMPEG_VERSION = result.getKey().get(0);
-                System.out.println("Installed <" + FFMPEG + "> Version: " + result.getKey());
+                Pattern p = Pattern.compile("version\\s+(\\S+)",Pattern.CASE_INSENSITIVE);
+                for (String s : result.getKey()) {
+                    Matcher m = p.matcher(s);
+                    if (m.find()) {
+                        FFMPEG_VERSION = m.group(1);
+                        break;
+                    }
+                }
+                if (FFMPEG_VERSION==null) FFMPEG_VERSION = result.getKey().get(0);
+                System.out.println("Installed <" + FFMPEG + "> Version: " + FFMPEG_VERSION);
                 return;
             } catch (Exception e) {
                 System.out.println(e.getMessage()+" Where is ffmpeg installed or 'q' for skip?");

@@ -20,9 +20,12 @@ public class ArchiveUtils {
             return false;
     }
     public static String getFromFile(File file) {
+        return getFromFile(file,"GBK");
+    }
+    public static String getFromFile(File file,String charset) {
         try {
             FileInputStream s = new FileInputStream(file);
-            InputStreamReader r = new InputStreamReader(s, "GBK");
+            InputStreamReader r = new InputStreamReader(s,charset );
             BufferedReader in = new BufferedReader(r);
             StringBuilder sb = new StringBuilder();
             String str;
@@ -39,11 +42,13 @@ public class ArchiveUtils {
             return null;
         }
     }
-
     public static void writeToFile(File file, String string) {
+        writeToFile(file, string, "GBK");
+    }
+    public static void writeToFile(File file, String string, String charset) {
         try {
             FileOutputStream s = new FileOutputStream(file);
-            OutputStreamWriter w = new OutputStreamWriter(s, "GBK");
+            OutputStreamWriter w = new OutputStreamWriter(s, charset);
             PrintWriter pw = new PrintWriter(w);
             pw.write(string);
             pw.flush();
@@ -56,11 +61,14 @@ public class ArchiveUtils {
     }
 
     public static void appendToFile(File file, String string) {
+        appendToFile(file,string,"GBK");
+    }
+    public static void appendToFile(File file, String string, String charset) {
         try {
-            String s=getFromFile(file);
+            String s=getFromFile(file,charset);
             if (s==null || s.isEmpty()) s=string;
             else s=s.trim()+"\r\n"+string;
-            writeToFile(file,s);
+            writeToFile(file,s,charset);
         } catch (Exception e) {
             e.printStackTrace();
         }

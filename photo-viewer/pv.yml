@@ -22,8 +22,8 @@ spring:
       time-zone: GMT+8
 #日志输出
 logging:
-   file: 
-      name: log/iotequ.log
+   file:
+      name: log/pv.log
    level: 
       root: info
       org.springframework: info

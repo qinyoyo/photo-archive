@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Controller
@@ -34,8 +35,10 @@ public class PVController implements ApplicationRunner {
     private Environment env;
     private String rootPath;
     private ArchiveInfo archiveInfo;
-
+    private boolean isReady = false;
+    private static  Logger logger = Logger.getLogger("PVController");
     List<PhotoInfo> mimeListInPath(String mime, String folder) {
+        if (!isReady) return null;
         List<PhotoInfo> list = archiveInfo.getInfos().stream()
                 .filter(p->
                         folder.equals(p.getSubFolder()) && p.getMimeType()!=null && p.getMimeType().contains(mime)
@@ -85,6 +88,10 @@ public class PVController implements ApplicationRunner {
     List<String> threadPathList = new ArrayList<>();
     @RequestMapping(value = "/")
     public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "error";
+        }
         model.addAttribute("separator",File.separator);
         if (path!=null && !path.isEmpty()) {
             model.addAttribute("pathNames",path.split(File.separator.equals("\\")?"\\\\" : File.separator));
@@ -161,6 +168,10 @@ public class PVController implements ApplicationRunner {
     }
     @RequestMapping(value = "search")
     public String doSearch(Model model, HttpServletRequest request, HttpServletResponse response, String text) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "error";
+        }
         if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "");
         text = text.trim().toLowerCase();
         model.addAttribute("separator", File.separator);
@@ -205,6 +216,10 @@ public class PVController implements ApplicationRunner {
 
     @RequestMapping(value = "same")
     public String sameView(Model model) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "error";
+        }
         model.addAttribute("separator", File.separator);
         List<Map<String,Object>> list = new ArrayList<>();
         BufferedReader ins=null;
@@ -271,19 +286,36 @@ public class PVController implements ApplicationRunner {
         return false;
     }
 
+    void afterChanged() {
+        new Thread() {
+            @Override
+            public void run() {
+                archiveInfo.saveInfos();
+            }
+        }.start();
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "stdout")
+    public String stdout(HttpServletRequest request) {
+        File file = new File(PhotoViewerApplication.STDOUT);
+        if (request.getQueryString()!=null && request.getQueryString().toLowerCase().contains("truncate")) {
+            ArchiveUtils.writeToFile(file,"","UTF8");
+            return "ok";
+        } else return ArchiveUtils.getFromFile(file,"UTF8").replace("\n","<br>").replaceAll("\\u001B[^m]*m","");
+    }
+
     @ResponseBody
     @RequestMapping(value = "orientation")
     public String orientation(HttpServletRequest request, String path, Integer [] orientations) {
+        if (!isReady) {
+            return "error";
+        }
        if (path==null || orientations==null || orientations.length==0) return "error";
        PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
        if (pi==null) return "error";
        if (pi.modifyOrientation(rootPath, orientations)) {
-           new Thread() {
-               @Override
-               public void run() {
-                   archiveInfo.saveInfos();
-               }
-           }.start();
+           afterChanged();
            return "ok";
        }
        else return "fail";
@@ -292,14 +324,23 @@ public class PVController implements ApplicationRunner {
     @ResponseBody
     @RequestMapping(value = "delete-file")
     public String deleteFile(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            return "error";
+        }
         if (path==null) return null;
-        new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath);
-        return "ok";
+        if (new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath)) {
+            afterChanged();
+            return "ok";
+        }
+        return "error";
     }
 
     @ResponseBody
     @RequestMapping(value = "save-file")
     public String saveFile(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            return "error";
+        }
         if (path==null) return null;
         String [] ll= path.split(" <-> ");
         if (ll.length==2) {
@@ -384,26 +425,31 @@ public class PVController implements ApplicationRunner {
         String exiftool = env.getProperty("photo.exiftool");
         if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
 
-        ExifTool.getInstalledVersion();
-
-
-
-        archiveInfo = new ArchiveInfo(rootPath);
-        if (!archiveInfo.isReadFromFile()) {
-            archiveInfo.sortInfos();
-            archiveInfo.scanSameFiles(false);
-            ArchiveUtils.removeEmptyFolder(new File(rootPath));
-            archiveInfo.saveInfos();
-        }
-        rootPath = archiveInfo.getPath();  // 标准化
-        if (!new File(rootPath,".thumb").exists()) {
-            new Thread() {
-                @Override
-                public void run() {
-                    archiveInfo.createThumbFiles();
+        new Thread() {
+            @Override
+            public void run() {
+                ExifTool.getInstalledVersion();
+                archiveInfo = new ArchiveInfo(rootPath);
+                if (!archiveInfo.isReadFromFile()) {
+                    archiveInfo.sortInfos();
+                    archiveInfo.scanSameFiles(false);
+                    ArchiveUtils.removeEmptyFolder(new File(rootPath));
+                    archiveInfo.saveInfos();
                 }
-            }.start();
-        }
-        System.out.println("Photo viewer started.");
+                rootPath = archiveInfo.getPath();  // 标准化
+                if (!new File(rootPath,".thumb").exists()) {
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            archiveInfo.createThumbFiles();
+                        }
+                    }.start();
+                }
+                System.out.println("Photo viewer started.");
+                isReady = true;
+            }
+        }.start();
+
+
     }
 }

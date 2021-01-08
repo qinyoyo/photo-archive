@@ -26,8 +26,9 @@
         },delay ? delay : 500)
     }
 
-    const enableDebug = false
+    const enableDebug = true
     const PI = 3.1415926
+    let loopTimerId = null
 
     /* Page :
          可见的页面部分， 固定值, 大小 pageW = window.innerWidth, pageH = window.innerHeight
@@ -224,7 +225,15 @@
                     }
                 }
                 img.onload = function() {
-                    setTimeout(moveImage, 100)
+                    if (img.complete) moveImage()
+                    else {
+                        let timer=setInterval(function (){
+                            if (img.complete){
+                                clearInterval(timer)
+                                moveImage()
+                            }
+                        },50)
+                    }
                 }
                 img.setAttribute('src', src)
             }
@@ -441,12 +450,47 @@
             transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV)
         }
 
+        /*************   轮播  *************/
+        const startLoop = function(runAtOnce) {
+            if (loopTimer) {
+                if (loopTimerId) clearInterval(loopTimerId)
+                const loopView = function() {
+                    if (loopTimer) {
+                        if (!loadImageBy(index + 1)) {
+                            stopLoop()
+                        }
+                    }
+                }
+                loopTimerId = setInterval(loopView, loopTimer)
+                if (runAtOnce) loopView()
+            }
+        }
+        const isLooping = function() {
+            return loopTimer && loopTimerId
+        }
+
+        const stopLoop = function() {
+            if (loopTimerId) clearInterval(loopTimerId)
+            loopTimerId = null
+            loopTimer = 0
+        }
+        const pauseLoop = function() {
+            if (isLooping()) {
+                clearInterval(loopTimerId)
+                loopTimerId = null
+            }
+        }
+        const resumeLoop = function(runAtOnce) {
+            if (loopTimer && !loopTimerId)  startLoop(runAtOnce)
+        }
         /***********  事件处理  *************/
 
         const dblClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            if (loopTimer) loopTimer = 0
+            if (loopTimer) {
+                stopLoop()
+            }
             else {
                 if (!isReady) return
                 if (isFixed()){
@@ -455,7 +499,7 @@
                         y: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.clientY
                     }
                     realSize(page)
-                }else fitClient()
+                } else fitClient()
             }
         }
         let touchPos0 = {x:0, y:0}, touchPos1 = {x:0, y:0}, touchMinPos = {x:0, y:0}, touchMaxPos = {x:0, y:0}
@@ -468,7 +512,7 @@
             if ((event.touches && event.touches.length == 1) || (event.button == 0 && event.buttons == 1)) {
                 allowSingleSwipe = true
                 dragStart = true
-                let pos = event.touches ? { x: event.touches[0].pageX, y: event.touches[0].pageY} : { x: event.pageX, y: event.pageY }
+                let pos = event.touches ? { x: event.touches[0].pageX, y: event.touches[0].pageY} : { x: event.clientX, y: event.clientY }
                 touchPos0 = { x: pos.x, y: pos.y }
                 touchPos1 = { x: pos.x, y: pos.y }
                 touchMinPos = { x: pos.x, y: pos.y }
@@ -482,8 +526,8 @@
             event.preventDefault()
             if (!isReady) return
             if (dragStart && ((event.touches && event.touches.length == 1) || (event.button == 0 && event.buttons == 1) )) {
-                let x =  event.touches ?  event.touches[0].pageX : event.pageX,
-                    y =  event.touches ?  event.touches[0].pageY : event.pageY
+                let x =  event.touches ?  event.touches[0].pageX : event.clientX,
+                    y =  event.touches ?  event.touches[0].pageY : event.clientY
                 if (x < touchMinPos.x) touchMinPos.x =  x
                 else if (x > touchMaxPos.x) touchMaxPos.x =  x
                 if (y < touchMinPos.y) touchMinPos.y =  y
@@ -498,8 +542,8 @@
                         x: x - preClientX,
                         y: y - preClientY
                     })
-                    preClientX = event.pageX
-                    preClientY = event.pageY
+                    preClientX = event.clientX
+                    preClientY = event.clientY
                 }
             }
         }
@@ -509,8 +553,8 @@
             if (!isReady) return
             if (dragStart && ((event.changedTouches && event.changedTouches.length==1) || (event.button == 0 && event.buttons == 1) )) {
                 touchPos1={
-                    x: event.changedTouches ?  event.changedTouches[0].pageX : event.pageX,
-                    y: event.changedTouches ?  event.changedTouches[0].pageY : event.pageY
+                    x: event.changedTouches ?  event.changedTouches[0].pageX : event.clientX,
+                    y: event.changedTouches ?  event.changedTouches[0].pageY : event.clientY
                 }
                 let minX=Math.min(touchPos0.x,touchPos1.x),maxX=Math.max(touchPos0.x,touchPos1.x),minY=Math.min(touchPos0.y,touchPos1.y),maxY=Math.max(touchPos0.y,touchPos1.y)
                 if (((touchMinPos.x<minX-100)||(touchMaxPos.x>maxX+100))  // 线长 > 100
@@ -532,6 +576,10 @@
                     loadImageBy(index + (touchPos0.x > touchPos1.x ? 1 : -1))
                 }
             }
+            roundRotate()
+            calcSize()
+            if (scaleValue<=minScale()) translateHome()
+            else translate({x: translateX, y: translateY})
             allowSingleSwipe = false
             dragStart = false
         }
@@ -566,25 +614,42 @@
                     }
                 },
                 doubleTap:dblClick,
-                touchStart: touchStart,
+                touchStart: function(event) {
+                    pauseLoop()
+                    touchStart(event)
+                },
                 touchMove: touchMove,
-                touchEnd: touchEnd
+                touchEnd: function(event) {
+                    resumeLoop(false)
+                    touchEnd(event)
+                }
             });
         } else {
+            img.onmouseenter=function() {
+                pauseLoop()
+            }
+            img.onmouseleave = function() {
+                resumeLoop(true)
+            }
             img.ondblclick=dblClick
             img.onmousedown=touchStart
             img.onmousemove=touchMove
             img.onmouseup=touchEnd
+            img.onwheel = function (event) {
+                event.stopPropagation()
+                event.preventDefault()
+                scale(scaleValue + (event.deltaY > 0 ? 1 : -1)*0.1,{
+                    x: event.clientX, y: event.clientY
+                })
+            }
         }
 
         container.onclick=function (event) {
-            let limit = axisLimit(clientW,clientH)
-            let minX = limit.x.min + translateX ,
-                maxX = limit.x.max + translateX
-            let minPage = pageFromClient({x: minX, y:0}),
-                maxPage = pageFromClient({x: maxX, y:0})
-            if (event.pageX>maxPage.x ||event.pageX<minPage.x){
-                loadImageBy(event.pageX<minPage.x ? index-1 : index+1)
+            let limit=axisLimit(clientW,clientH)
+            let minX=limit.x.min+translateX,maxX=limit.x.max+translateX
+            let minPage=pageFromClient({x:minX,y:0}),maxPage=pageFromClient({x:maxX,y:0})
+            if (event.pageX>maxPage.x||event.pageX<minPage.x){
+                loadImageBy(event.pageX<minPage.x?index-1:index+1)
             }
         }
 
@@ -622,16 +687,10 @@
 
         changeImage(initialSrc)
 
-        if (loopTimer) {
-            const loopView = function() {
-                if (loopTimer && loadImageBy(index + 1)) setTimeout(loopView, loopTimer)
-            }
-            setTimeout(loopView, loopTimer)
-        }
+        startLoop()
     }
 
     /************  动态创建DOM元素  ***************/
-
     const addModel = function () {
         let node = document.createElement("div")
         node.className = 'tran-img__modal'
@@ -640,6 +699,10 @@
         document.querySelector('body').appendChild(node)
     }
     const removeImageDialog = function () {
+        if (loopTimerId) {
+            clearInterval(loopTimerId)
+            loopTimerId = null
+        }
         let m = document.querySelector('.tran-img__modal')
         if (m) m.remove()
         let d = document.querySelector('.tran-img__wrapper')

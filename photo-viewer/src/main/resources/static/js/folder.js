@@ -34,5 +34,10 @@ window.onload=function(){
             searchText(document.querySelector('.search-input').value)
         }
     }
-    TransformImage('.gird-cell-img',4168)
+    document.querySelectorAll('video').forEach(function(v) {
+        v.onclick = function() {
+            this.controls = !this.controls
+        }
+    })
+    TransformImage('.gird-cell-img',2000)
 }
