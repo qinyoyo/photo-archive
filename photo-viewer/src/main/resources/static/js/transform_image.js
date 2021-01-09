@@ -35,8 +35,7 @@
         })) return true
         else return false
     }
-    window.notSupportOrientation = isMobile() &&
-        (getBrowserType() === 'opera' || getBrowserType() === 'chrome')
+    window.notSupportOrientation = false
     window.toast  = function(msg,delay) {  // 显示提示信息，自动关闭
         if (typeof msg != 'string') return
         let toast = document.createElement("div")

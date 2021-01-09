@@ -36,7 +36,6 @@ public class PVController implements ApplicationRunner {
     private String rootPath;
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
-    private boolean isDebug = false;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
     List<PhotoInfo> mimeListInPath(String mime, String folder) {
@@ -89,9 +88,28 @@ public class PVController implements ApplicationRunner {
     }
     List<String> threadPathList = new ArrayList<>();
     @RequestMapping(value = "/")
-    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean debug) {
-        if (debug!=null) isDebug = debug;
-        model.addAttribute("debug",isDebug);
+    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+        String params = request.getQueryString();
+        String userAgent = request.getHeader("USER-AGENT");
+        System.out.println(userAgent);
+        boolean isMobile = userAgent.contains("Mobile") || userAgent.contains("Phone");
+        if (isMobile) {
+            String browsers = env.getProperty("photo.support-orientation");
+            boolean supportOrientation = false;
+            if (browsers!=null) {
+                String [] bs = browsers.split(",");
+                for (String b:bs) {
+                    if (userAgent.contains(b)) {
+                        supportOrientation = true;
+                        break;
+                    }
+                }
+            }
+            if (!supportOrientation || (params != null && params.contains("orientation"))) {
+                model.addAttribute("orientation", true);
+            }
+        }
+        if (params!=null && params.contains("debug")) model.addAttribute("debug",true);
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "error";
@@ -176,7 +194,7 @@ public class PVController implements ApplicationRunner {
             model.addAttribute("message","Not ready!!!");
             return "error";
         }
-        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "", null);
+        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "");
         text = text.trim().toLowerCase();
         model.addAttribute("separator", File.separator);
         List<String> dirs = new ArrayList<>();
@@ -216,7 +234,6 @@ public class PVController implements ApplicationRunner {
         }
         return "index";
     }
-
 
     @RequestMapping(value = "same")
     public String sameView(Model model) {

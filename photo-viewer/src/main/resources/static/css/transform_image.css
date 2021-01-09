@@ -117,3 +117,53 @@
     padding-top: 12px;
     color: #000;
 }
+
+.orientation-2 {
+    transform:rotateY(180deg);
+    -ms-transform:rotateY(180deg);
+    -moz-transform:rotateY(180deg);
+    -webkit-transform:rotateY(180deg);
+    -o-transform:rotateY(180deg);
+}
+.orientation-3 {
+    transform:rotate(180deg);
+    -ms-transform:rotate(180deg);
+    -moz-transform:rotate(180deg);
+    -webkit-transform:rotate(180deg);
+    -o-transform:rotate(180deg);
+}
+.orientation-4 {
+    transform:rotateX(180deg);
+    -ms-transform:rotateX(180deg);
+    -moz-transform:rotateX(180deg);
+    -webkit-transform:rotateX(180deg);
+    -o-transform:rotateX(180deg);
+}
+.orientation-5 {
+    transform:rotate(270deg) rotateY(180deg);
+    -ms-transform:rotate(270deg) rotateY(180deg);
+    -moz-transform:rotate(270deg) rotateY(180deg);
+    -webkit-transform:rotate(270deg) rotateY(180deg);
+    -o-transform:rotate(270deg) rotateY(180deg);
+}
+.orientation-6 {
+    transform:rotate(90deg);
+    -ms-transform:rotate(90deg);
+    -moz-transform:rotate(90deg);
+    -webkit-transform:rotate(90deg);
+    -o-transform:rotate(90deg);
+}
+.orientation-7 {
+    transform:rotate(90deg) rotateY(180deg);
+    -ms-transform:rotate(90deg) rotateY(180deg);
+    -moz-transform:rotate(90deg) rotateY(180deg);
+    -webkit-transform:rotate(90deg) rotateY(180deg);
+    -o-transform:rotate(90deg) rotateY(180deg);
+}
+.orientation-8 {
+    transform:rotate(270deg);
+    -ms-transform:rotate(270deg);
+    -moz-transform:rotate(270deg);
+    -webkit-transform:rotate(270deg);
+    -o-transform:rotate(270deg);
+}

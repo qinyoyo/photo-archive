@@ -26,9 +26,10 @@
     <script type="text/javascript" src="static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>
-<#if debug?? && debug>
+<#if (debug?? && debug) || (orientation?? && orientation)>
 <script>
-    window.enableDebug = true
+    <#if debug?? && debug>window.enableDebug = true</#if>
+    <#if orientation?? && orientation>window.notSupportOrientation = true</#if>
 </script>
 </#if>
 <body>
@@ -102,7 +103,7 @@
             <#list photos as p>
                 <div class="photo-item grid-cell">
                     <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if> title="${p.toString()}"
-                         class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>
         </div>

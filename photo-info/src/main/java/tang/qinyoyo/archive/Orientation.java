@@ -54,7 +54,7 @@ public enum Orientation {
     public static Orientation get(int ori) {
         switch (ori) {
             case 0: return UNKNOWN;
-            case 1: return  NONE;
+            case 1: return NONE;
             case 2: return M_H;
             case 3: return R180;
             case 4: return M_V;
