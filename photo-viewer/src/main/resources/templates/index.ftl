@@ -26,6 +26,11 @@
     <script type="text/javascript" src="static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>
+<#if debug?? && debug>
+<script>
+    window.enableDebug = true
+</script>
+</#if>
 <body>
 <div id="app">
     <div class="folder-head" >
@@ -96,7 +101,8 @@
         <div class="photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = "/.thumb${fileUrl(p)}" title="${p.toString()}" class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                    <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if> title="${p.toString()}"
+                         class="gird-cell-img img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>
         </div>

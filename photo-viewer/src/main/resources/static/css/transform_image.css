@@ -93,14 +93,14 @@
 .tran-img__debug {
     position: fixed;
     top: 0px;
-    right: 0px;
+    left: 0px;
     width: 100%;
-    height: 20px;
+    height: 16px;
     background: #fff;
     border: none;
     outline: none;
     font-size: 10px;
-    text-align: center;
+    text-align: left;
     color: #000;
     z-index:99999;
 }

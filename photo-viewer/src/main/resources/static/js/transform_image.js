@@ -3,17 +3,40 @@
  */
 
 ;(function () {
-    window.debug = function(text, append) {
-        if (window.debugElement) window.debugElement.innerHTML = (append ? window.debugElement.innerHTML + ' | ' + text : text)
+    window.debug = function(options) {
+        if (window.debugElement) {
+            if (typeof options === 'string')
+                window.debugElement.innerHTML = options
+            else {
+                if (options.position) {
+                    window.debugElement.style.left = options.position.x + 'px'
+                    window.debugElement.style.top = options.position.y + 'px'
+                }
+                window.debugElement.innerHTML =
+                    (options.append ? window.debugElement.innerHTML + ' | ' + options.text : options.text)
+            }
+        }
+    }
+    window.getBrowserType = function() {
+        const ua = navigator.userAgent.toLowerCase()
+        if (ua.indexOf("opera") > -1) return 'opera'
+        else if (ua.indexOf("compatible") > -1 && ua.indexOf("msie") > -1 ) return 'msie'
+        else if (ua.indexOf("edge") > -1) return 'edge'
+        else if (ua.indexOf("firefox") > -1) return 'firefox'
+        else if (ua.indexOf("safari") > -1 && ua.indexOf("chrome") == -1) return 'safari'
+        else if (ua.indexOf("chrome") > -1 && ua.indexOf("safari") > -1) return 'chrome'
     }
     window.isMobile = function() {
         const ua = navigator.userAgent.toLowerCase()
+        debug(ua)
         const agents = ["android", "iphone", "symbianos", "phone", "mobile"]
         if (agents.some(a => {
             if (ua.indexOf(a) >= 0) return true
         })) return true
         else return false
     }
+    window.notSupportOrientation = isMobile() &&
+        (getBrowserType() === 'opera' || getBrowserType() === 'chrome')
     window.toast  = function(msg,delay) {  // 显示提示信息，自动关闭
         if (typeof msg != 'string') return
         let toast = document.createElement("div")
@@ -26,7 +49,7 @@
         },delay ? delay : 500)
     }
 
-    const enableDebug = false
+    window.enableDebug = false
     const PI = 3.1415926
     let loopTimerId = null
 
@@ -73,7 +96,14 @@
     }
 
     /**********  通用变换 ***********/
-    const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV) {
+    const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV, orientation) {
+        if (window.notSupportOrientation && orientation) {
+            if (orientation=='2' || orientation=='5' || orientation=='7') mirrorH = !mirrorH
+            else if (orientation=='4') mirrorV = !mirrorH
+            if (orientation=='6'|| orientation=='7') rotateZ += 90
+            else if (orientation=='3') rotateZ += 180
+            else if (orientation=='5' || orientation=='8') rotateZ += 270
+        }
         let t = new Array()
         if (mirrorH && mirrorV) {
             rotateZ+=180
@@ -92,7 +122,7 @@
     }
 
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function (img, initialSrc, index, loopTimer) {
+    const initTransformImage = function ({img, initialSrc, index, orientation, loopTimer}) {
         /**  变量  */
         let translateX = 0, translateY = 0
         let rotateZ = 0, mirrorH = false, mirrorV = false
@@ -116,7 +146,8 @@
         const removeBtn = container.querySelector('.tran-img__remove')
         let   scaleValue = 1
         let   isReady = false
-        let   allowSingleSwipe = false
+        let   translateXChanged = false, translateYChanged = false
+        let   imgOrientation = orientation
 
         /********   image load, modify   **********/
         let removedIndexList = []
@@ -129,8 +160,9 @@
                 let thumb = document.querySelector('.img-index-' + imgIndex)
                 if (thumb) {
                     let src = thumb.getAttribute('src')
+                    let orientation = thumb.getAttribute('data-orientation')
                     if (src.indexOf('.thumb/') == 0 || src.indexOf('/.thumb/') == 0) src = src.substring(7)
-                    return src
+                    return { src, orientation }
                 }
             }
             return false
@@ -173,9 +205,9 @@
         }
         const loadImageBy = function (imgIndex, skipSave) {
             if (!skipSave) saveOrientation()
-            let src = srcByIndex(imgIndex)
+            let { src, orientation } = srcByIndex(imgIndex)
             if (src) {
-                changeImage(src, imgIndex < index)
+                changeImage({src, fromLeft :imgIndex < index, orientation})
                 index = imgIndex
                 return true
             } else {
@@ -184,13 +216,13 @@
             }
         }
         const preLoadImageBy = function(imgIndex) {
-            let src = srcByIndex(imgIndex)
+            let {src, orientation} = srcByIndex(imgIndex)
             if (src) {
                 const image = new Image()
                 image.setAttribute('src',src)
             }
         }
-        const changeImage = function(src, fromLeft) {
+        const changeImage = function({src, fromLeft, orientation }) {
             const loadImg = new Image()
             loadImg.onload = function() {
                 preLoadImageBy(index + (fromLeft? -1 : 1))  // 预加载文件
@@ -204,16 +236,6 @@
                 wrapper.parentElement.appendChild(newWrapper)
                 wrapper.style.left = left + 'px'
 
-                imageW = loadImg.naturalWidth
-                imageH = loadImg.naturalHeight
-                rotateZ = 0
-                mirrorV = mirrorH = false
-                scaleValue = 1
-                translateX = translateY = 0
-                realSizeScale = Math.max(imageW / pageW, imageH / pageH)
-                if (realSizeScale<1) realSizeScale = 1
-                calcSize()
-                transform(img, 0, 0, 0, mirrorH, mirrorV)
                 const moveImage = function() {
                     if (fromLeft) {
                         newLeft += step
@@ -233,15 +255,25 @@
                     }
                 }
                 img.onload = function() {
-                    if (img.complete) moveImage()
-                    else {
+                    if (!img.complete) {
                         let timer=setInterval(function (){
                             if (img.complete){
                                 clearInterval(timer)
-                                moveImage()
                             }
-                        },50)
+                        },10)
                     }
+                    imgOrientation = orientation
+                    imageW = img.naturalWidth
+                    imageH = img.naturalHeight
+                    rotateZ = 0
+                    mirrorV = mirrorH = false
+                    translateX = translateY = 0
+                    scaleValue = 1
+                    realSizeScale = Math.max(imageW / pageW, imageH / pageH)
+                    if (realSizeScale<1) realSizeScale = 1
+                    calcSize()
+                    transform(img, 0, 0, 0, mirrorH, mirrorV,imgOrientation)
+                    moveImage()
                 }
                 img.setAttribute('src', src)
             }
@@ -253,7 +285,10 @@
             waitingIcon.style.display = 'block'
             isReady = false
         }
-
+        const swapWHByOrientation = function () {
+            return (notSupportOrientation && (orientation=='5' || orientation=='6'
+                        || orientation=='7' || orientation=='8'))
+        }
         /*******  坐标变换  *************/
         const pageFromClient = function(client) {
             let paddingLeft = Math.max(0,(pageW - clientW)/2),
@@ -356,10 +391,11 @@
         const translate = function(p, justCalc) {
             if (p.x>translateLimit.x.max) p.x=translateLimit.x.max; else if (p.x<translateLimit.x.min) p.x=translateLimit.x.min;
             if (p.y>translateLimit.y.max) p.y=translateLimit.y.max; else if (p.y<translateLimit.y.min) p.y=translateLimit.y.min;
-            if (p.x != translateX) allowSingleSwipe = false
+            if (p.x != translateX) translateXChanged = true
+            if (p.y != translateY) translateYChanged = true
             translateX = p.x
             translateY = p.y
-            if (!justCalc) transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV)
+            if (!justCalc) transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
         }
         // 在当前位移的基础上，移动一个位移
         const move = function(p) {
@@ -388,6 +424,10 @@
             clientH = Math.trunc(imageH * scaleValue / realSizeScale)
             img.style.width = clientW +'px'
             img.style.height = clientH + 'px'
+            debug({
+                text:img.style.width+'x'+img.style.height,
+                append: true
+            })
             calcTranslateLimit()
         }
         const minScale = function() {
@@ -430,7 +470,7 @@
             let image=refPage?imageFromPage(refPage):null
             rotateZ=Math.trunc(angle)%360
             translate({x:translateX,y:translateY},true)
-            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV)
+            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
             if (refPage){
                 translateTo(image,refPage)
             } else translateHome()
@@ -441,7 +481,7 @@
             let angle = b90 * 90
             if (Math.abs(angle-rotateZ)<15 ) {
                 rotateZ = angle
-                transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV)
+                transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
             }
         }
 
@@ -455,7 +495,7 @@
                 mirrorH = mirrorV = false
                 rotateZ += 180
             }
-            transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV)
+            transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV,imgOrientation)
         }
 
         /*************   轮播  *************/
@@ -534,6 +574,10 @@
                         x: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageX : event.clientX,
                         y: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.clientY
                     }
+                    debug({
+                        position:page,
+                        text: page.x+','+page.y
+                    })
                     realSize(page)
                 } else fitClient()
             }
@@ -546,7 +590,8 @@
             event.preventDefault()
             if (!isReady) return
             if ((event.touches && event.touches.length == 1) || (event.button == 0 && event.buttons == 1)) {
-                allowSingleSwipe = true
+                translateXChanged = false
+                translateYChanged = false
                 dragStart = true
                 let pos = event.touches ? { x: event.touches[0].pageX, y: event.touches[0].pageY} : { x: event.clientX, y: event.clientY }
                 touchPos0 = { x: pos.x, y: pos.y }
@@ -587,28 +632,32 @@
             event.stopPropagation()
             event.preventDefault()
             if (!isReady) return
-            if (dragStart && ((event.changedTouches && event.changedTouches.length==1) || (event.button == 0 && event.buttons == 1) )) {
+            if (dragStart && (!translateXChanged || !translateYChanged) &&
+                ((event.changedTouches && event.changedTouches.length==1) || (event.button == 0) )) {
                 touchPos1={
                     x: event.changedTouches ?  event.changedTouches[0].pageX : event.clientX,
                     y: event.changedTouches ?  event.changedTouches[0].pageY : event.clientY
                 }
-                let minX=Math.min(touchPos0.x,touchPos1.x),maxX=Math.max(touchPos0.x,touchPos1.x),minY=Math.min(touchPos0.y,touchPos1.y),maxY=Math.max(touchPos0.y,touchPos1.y)
-                if (((touchMinPos.x<minX-100)||(touchMaxPos.x>maxX+100))  // 线长 > 100
-                    &&Math.abs(touchPos0.x-touchPos1.x)<50   // 末端对齐误差
-                    &&Math.abs(touchPos0.y-touchPos1.y)>50  // 开口
-                ){    // like  '<' '>'
-                    allowSingleSwipe=false
+                let minX=Math.min(touchPos0.x,touchPos1.x),
+                    maxX=Math.max(touchPos0.x,touchPos1.x),
+                    minY=Math.min(touchPos0.y,touchPos1.y),
+                    maxY=Math.max(touchPos0.y,touchPos1.y)
+                if ( !translateXChanged && !translateYChanged
+                    && ((touchMinPos.x<minX-100)||(touchMaxPos.x>maxX+100))  // 线长 > 100
+                    && Math.abs(touchPos0.x-touchPos1.x)<50   // 末端对齐误差
+                    && Math.abs(touchPos0.y-touchPos1.y)>50 ){  // 开口
+                    // like  '<' '>'
                     mirror(false)
-                }else if (((touchMinPos.y<minY-100)||(touchMaxPos.y>maxY+100))  // 线长 > 100
-                    &&Math.abs(touchPos0.y-touchPos1.y)<50  // 末端对齐误差
-                    &&Math.abs(touchPos0.x-touchPos1.x)>50  // 开口
-                ){    // like  'V' '^'
-                    allowSingleSwipe=false
+                } else if (!translateXChanged && !translateYChanged
+                    && ((touchMinPos.y<minY-100)||(touchMaxPos.y>maxY+100))  // 线长 > 100
+                    && Math.abs(touchPos0.y-touchPos1.y)<50  // 末端对齐误差
+                    && Math.abs(touchPos0.x-touchPos1.x)>50 ){  // 开口
+                    // like  'V' '^'
                     mirror(true)
-                } else if (touchMinPos.x<minX-30||touchMaxPos.x>maxX+30||touchMinPos.y<minY-30||touchMaxPos.y>maxY+30){
-                    allowSingleSwipe=false
-                } else if ( allowSingleSwipe && Math.abs(touchPos0.x - touchPos1.x) >= Math.abs(touchPos0.y - touchPos1.y) && Math.abs(touchPos0.x - touchPos1.x) > 30) {
-                    allowSingleSwipe = false
+                } else if (!translateXChanged
+                    && touchMinPos.x>minX-30 &&touchMaxPos.x < maxX+30 && touchMinPos.y>minY-30 && touchMaxPos.y<maxY+30
+                    && Math.abs(touchPos0.x - touchPos1.x) >= Math.abs(touchPos0.y - touchPos1.y)
+                    && Math.abs(touchPos0.x - touchPos1.x) > 30) {
                     loadImageBy(index + (touchPos0.x > touchPos1.x ? 1 : -1))
                 }
             }
@@ -616,7 +665,6 @@
             calcSize()
             if (scaleValue<=minScale()) translateHome()
             else translate({x: translateX, y: translateY})
-            allowSingleSwipe = false
             dragStart = false
         }
         if (isMobile()) {
@@ -626,26 +674,36 @@
                     event.stopPropagation()
                     event.preventDefault()
                     if (!isReady) return
-                    allowSingleSwipe = false
                     initScale = scaleValue
                 },
                 rotate:function(event){
                     event.stopPropagation();
                     event.preventDefault()
-                    allowSingleSwipe = false
-                    if (isReady) rotate(rotateZ + event.angle,{
-                        x: (event.touches[0].pageX + event.touches[1].pageX)/2,
-                        y: (event.touches[0].pageY + event.touches[1].pageY)/2
-                    })
+                    if (isReady) {
+                        const page = {
+                            x: (event.touches[0].pageX + event.touches[1].pageX)/2,
+                            y: (event.touches[0].pageY + event.touches[1].pageY)/2
+                        }
+                        rotate(rotateZ + event.angle,page)
+                        debug({
+                            position:page,
+                            text: 'rotate: '+page.x+','+page.y
+                        })
+                    }
+
                 },
                 pinch: function (event) {
                     event.stopPropagation();
                     event.preventDefault()
-                    allowSingleSwipe = false
                     if (isReady)  {
                         let sc=initScale*event.zoom;
-                        scale(sc,{
+                        const page = {
                             x:(event.touches[0].pageX+event.touches[1].pageX)/2,y:(event.touches[0].pageY+event.touches[1].pageY)/2
+                        }
+                        scale(sc,page)
+                        debug({
+                            position:page,
+                            text: 'scale: ('+page.x+','+page.y + ') '+sc
                         })
                     }
                 },
@@ -724,9 +782,7 @@
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
-
-        changeImage(initialSrc)
-
+        changeImage({ src: initialSrc, orientation })
         startLoop()
     }
 
@@ -756,7 +812,7 @@
         wrapper.style.zIndex = "6001"
         return wrapper
     }
-    const addImageDialog = function(src, index, loopTimer) {
+    const addImageDialog = function({ src, index, orientation, loopTimer}) {
         removeImageDialog()
         addModel()
         const pageW = window.innerWidth, pageH = window.innerHeight
@@ -825,7 +881,7 @@
             document.querySelector('body').onkeydown = null
             removeImageDialog()
         }
-        initTransformImage(img,src,index, loopTimer)
+        initTransformImage({img, initialSrc: src, index, orientation, loopTimer})
     }
 
     /*****************  入口函数  *********************
@@ -839,14 +895,20 @@
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
             const title = img.getAttribute('title')
+            const orientation = img.getAttribute('data-orientation')
             img.onclick=function (event){
                 event.stopPropagation()
-                if (title && event.offsetX<36 && event.offsetY<36) {
+                if (isMobile() && title && event.offsetX<36 && event.offsetY<36) {
                     alert(title)
                 } else {
                     let src = img.getAttribute('src')
                     if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
-                    addImageDialog(src,index==NaN?0:index, loopTimer)
+                    addImageDialog({
+                        src,
+                        index: index==NaN?0:index,
+                        orientation,
+                        loopTimer
+                    })
                 }
             }
         });

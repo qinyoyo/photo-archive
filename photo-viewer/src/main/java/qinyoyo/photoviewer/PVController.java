@@ -36,6 +36,8 @@ public class PVController implements ApplicationRunner {
     private String rootPath;
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
+    private boolean isDebug = false;
+    public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
     List<PhotoInfo> mimeListInPath(String mime, String folder) {
         if (!isReady) return null;
@@ -87,7 +89,9 @@ public class PVController implements ApplicationRunner {
     }
     List<String> threadPathList = new ArrayList<>();
     @RequestMapping(value = "/")
-    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean debug) {
+        if (debug!=null) isDebug = debug;
+        model.addAttribute("debug",isDebug);
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "error";
@@ -172,7 +176,7 @@ public class PVController implements ApplicationRunner {
             model.addAttribute("message","Not ready!!!");
             return "error";
         }
-        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "");
+        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "", null);
         text = text.trim().toLowerCase();
         model.addAttribute("separator", File.separator);
         List<String> dirs = new ArrayList<>();
@@ -298,7 +302,7 @@ public class PVController implements ApplicationRunner {
     @ResponseBody
     @RequestMapping(value = "stdout")
     public String stdout(HttpServletRequest request) {
-        File file = new File(PhotoViewerApplication.STDOUT);
+        File file = new File(STDOUT);
         if (request.getQueryString()!=null && request.getQueryString().toLowerCase().contains("truncate")) {
             ArchiveUtils.writeToFile(file,"","UTF8");
             return "ok";
@@ -419,6 +423,7 @@ public class PVController implements ApplicationRunner {
         return "ok";
     }
 
+
     @ResponseBody
     @RequestMapping(value = "shutdown")
     public String shutdown(HttpServletRequest request, HttpServletResponse response, Integer delay) {
@@ -432,19 +437,19 @@ public class PVController implements ApplicationRunner {
     }
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        rootPath = env.getProperty("photo.root-path");
-        if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
-
         String ffmpeg = env.getProperty("photo.ffmpeg");
         if (ffmpeg!=null) ArchiveInfo.FFMPEG = ffmpeg;
 
         String exiftool = env.getProperty("photo.exiftool");
         if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
+        new ArchiveInfo();
 
+        System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override
             public void run() {
-                ExifTool.getInstalledVersion();
+                rootPath = env.getProperty("photo.root-path");
+                if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
                 archiveInfo = new ArchiveInfo(rootPath);
                 if (!archiveInfo.isReadFromFile()) {
                     archiveInfo.sortInfos();
@@ -465,7 +470,5 @@ public class PVController implements ApplicationRunner {
                 isReady = true;
             }
         }.start();
-
-
     }
 }
