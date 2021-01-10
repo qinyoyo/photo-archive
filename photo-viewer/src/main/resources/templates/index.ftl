@@ -26,10 +26,17 @@
     <script type="text/javascript" src="static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>
-<#if (debug?? && debug) || (orientation?? && orientation)>
+<#if (debug?? && debug) || (orientation?? && orientation) || (loopTimer??)>
 <script>
-    <#if debug?? && debug>window.enableDebug = true</#if>
-    <#if orientation?? && orientation>window.notSupportOrientation = true</#if>
+    <#if debug?? && debug>
+    window.enableDebug = true
+    </#if>
+    <#if orientation?? && orientation>
+    window.notSupportOrientation = true
+    </#if>
+    <#if loopTimer??>
+    window.loopTimer = ${loopTimer?c}
+    </#if>
 </script>
 </#if>
 <body>

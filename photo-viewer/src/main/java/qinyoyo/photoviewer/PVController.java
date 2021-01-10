@@ -36,6 +36,7 @@ public class PVController implements ApplicationRunner {
     private String rootPath;
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
+    private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
     List<PhotoInfo> mimeListInPath(String mime, String folder) {
@@ -114,6 +115,7 @@ public class PVController implements ApplicationRunner {
             model.addAttribute("message","Not ready!!!");
             return "error";
         }
+        model.addAttribute("loopTimer",loopTimer);
         model.addAttribute("separator",File.separator);
         if (path!=null && !path.isEmpty()) {
             model.addAttribute("pathNames",path.split(File.separator.equals("\\")?"\\\\" : File.separator));
@@ -460,7 +462,9 @@ public class PVController implements ApplicationRunner {
         String exiftool = env.getProperty("photo.exiftool");
         if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
         new ArchiveInfo();
-
+        String lt = env.getProperty("photo.loop-timer");
+        if (lt!=null) loopTimer = Integer.parseInt(lt);
+        else loopTimer = 0;
         System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override

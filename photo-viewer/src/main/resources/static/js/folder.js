@@ -39,5 +39,5 @@ window.onload=function(){
             this.controls = !this.controls
         }
     })
-    TransformImage('.gird-cell-img',2000)
+    TransformImage('.gird-cell-img')
 }

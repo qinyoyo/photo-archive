@@ -3,6 +3,7 @@
  */
 
 ;(function () {
+    window.loopTimer = 4000
     window.debug = function(options) {
         if (window.debugElement) {
             if (typeof options === 'string')
@@ -121,7 +122,7 @@
     }
 
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function ({img, initialSrc, index, orientation, loopTimer}) {
+    const initTransformImage = function ({img, initialSrc, index, orientation}) {
         /**  变量  */
         let translateX = 0, translateY = 0
         let rotateZ = 0, mirrorH = false, mirrorV = false
@@ -811,7 +812,7 @@
         wrapper.style.zIndex = "6001"
         return wrapper
     }
-    const addImageDialog = function({ src, index, orientation, loopTimer}) {
+    const addImageDialog = function({ src, index, orientation}) {
         removeImageDialog()
         addModel()
         const pageW = window.innerWidth, pageH = window.innerHeight
@@ -880,16 +881,15 @@
             document.querySelector('body').onkeydown = null
             removeImageDialog()
         }
-        initTransformImage({img, initialSrc: src, index, orientation, loopTimer})
+        initTransformImage({img, initialSrc: src, index, orientation})
     }
 
     /*****************  入口函数  *********************
      *  selector : 一个缩略图 img 元素                *
      *      条件 ： src 以 .thumb/ 开头               *
      *             类 img-index-xx, xx为序号          *
-     *  loopTimer: 自动循环时长(ms),0或空不循环        *
      *************************************************/
-    window.TransformImage =function(selector, loopTimer){
+    window.TransformImage =function(selector){
         document.querySelectorAll(selector).forEach(function (img){
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
@@ -905,8 +905,7 @@
                     addImageDialog({
                         src,
                         index: index==NaN?0:index,
-                        orientation,
-                        loopTimer
+                        orientation
                     })
                 }
             }
