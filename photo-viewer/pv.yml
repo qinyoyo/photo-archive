@@ -29,6 +29,8 @@ logging:
       org.springframework: info
       qinyoyo: debug
 photo:
+   debug: true
+   removable: true
    loop-timer: 4000
    support-orientation: HeyTapBrowser,Firefox,Mac OS X,HuaweiBrowser,UCBrowser/13
    root-path: E:\Photo\Archived

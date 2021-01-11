@@ -39,5 +39,18 @@ window.onload=function(){
             this.controls = !this.controls
         }
     })
+    document.querySelectorAll('.collapse .collapse-item, .collapse .collapse-item-expanded').forEach(function(v) {
+        v.onclick = function() {
+            let cls = v.className
+            if (cls.indexOf('collapse-item-expanded') >=0) {
+                v.className = cls.replace('collapse-item-expanded','collapse-item')
+            } else {
+                v.parentElement.querySelectorAll('.collapse-item-expanded').forEach(function(v1){
+                    v1.className = v1.className.replace('collapse-item-expanded','collapse-item')
+                })
+                v.className = cls.replace('collapse-item','collapse-item-expanded')
+            }
+        }
+    })
     TransformImage('.gird-cell-img')
 }

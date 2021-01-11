@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
+import qinyoyo.utils.Util;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.FolderInfo;
@@ -36,6 +37,8 @@ public class PVController implements ApplicationRunner {
     private String rootPath;
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
+    private boolean isDebug = false;
+    private boolean canRemove = false;
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
@@ -83,16 +86,9 @@ public class PVController implements ApplicationRunner {
         }
     }
 
-    @RequestMapping(value = "thumbnail")
-    public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
-        return null;
-    }
-    List<String> threadPathList = new ArrayList<>();
-    @RequestMapping(value = "/")
-    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+    private void commonAttribute(Model model, HttpServletRequest request) {
         String params = request.getQueryString();
         String userAgent = request.getHeader("USER-AGENT");
-        System.out.println(userAgent);
         boolean isMobile = userAgent.contains("Mobile") || userAgent.contains("Phone");
         if (isMobile) {
             String browsers = env.getProperty("photo.support-orientation");
@@ -110,13 +106,24 @@ public class PVController implements ApplicationRunner {
                 model.addAttribute("orientation", true);
             }
         }
-        if (params!=null && params.contains("debug")) model.addAttribute("debug",true);
+        if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
+        if (canRemove) model.addAttribute("canRemove",true);
+        model.addAttribute("loopTimer",loopTimer);
+        model.addAttribute("separator",File.separator);
+    }
+
+    @RequestMapping(value = "thumbnail")
+    public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
+        return null;
+    }
+    List<String> threadPathList = new ArrayList<>();
+    @RequestMapping(value = "/")
+    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "error";
         }
-        model.addAttribute("loopTimer",loopTimer);
-        model.addAttribute("separator",File.separator);
+        commonAttribute(model,request);
         if (path!=null && !path.isEmpty()) {
             model.addAttribute("pathNames",path.split(File.separator.equals("\\")?"\\\\" : File.separator));
         } else path = "";
@@ -130,16 +137,28 @@ public class PVController implements ApplicationRunner {
                     return pathname.isDirectory();
                 }
             });
+            List<Map<String,Object>> subDirectories = new ArrayList<>();
+            if (!path.isEmpty()) {
+                Map<String,Object> map = new HashMap<>();
+                map.put("name","..");
+                try {
+                    String pp = dir.getParentFile().getCanonicalPath();
+                    if (pp.length()<=rootPath.length()) map.put("path","");
+                    else map.put("path", pp.substring(rootPath.length()+1));
+                    subDirectories.add(map);
+                }catch (Exception e) {}
+            }
             if (subDirs!=null && subDirs.length>0) {
-                List<Map<String,Object>> subDirectories = new ArrayList<>();
                 for (File f : subDirs) {
                     Map<String,Object> map = new HashMap<>();
                     map.put("name",f.getName());
                     try {
                         map.put("path", f.getCanonicalPath().substring(rootPath.length()+1));
+                        subDirectories.add(map);
                     }catch (Exception e) {}
-                    subDirectories.add(map);
                 }
+            }
+            if (subDirectories.size()>0) {
                 subDirectories.sort((a,b)->a.get("name").toString().compareTo(b.get("name").toString()));
                 model.addAttribute("subDirectories",subDirectories);
             }
@@ -196,16 +215,16 @@ public class PVController implements ApplicationRunner {
             model.addAttribute("message","Not ready!!!");
             return "error";
         }
+        commonAttribute(model,request);
         if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "");
         text = text.trim().toLowerCase();
-        model.addAttribute("separator", File.separator);
         List<String> dirs = new ArrayList<>();
         List<PhotoInfo> htmls = new ArrayList<>();
         List<PhotoInfo> videos = new ArrayList<>();
         List<PhotoInfo> audios = new ArrayList<>();
         List<PhotoInfo> photos = new ArrayList<>();
         for (PhotoInfo p : archiveInfo.getInfos()) {
-            if (p.getSubFolder().toLowerCase().contains(text) && !dirs.contains(p.getSubFolder()))
+            if (p.getSubFolder().toLowerCase().contains(text) && !p.getSubFolder().toLowerCase().endsWith(".web") && !dirs.contains(p.getSubFolder()))
                 dirs.add(p.getSubFolder());
             if (photoInfoContains(p,text)) {
                 String mime = p.getMimeType();
@@ -458,13 +477,15 @@ public class PVController implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         String ffmpeg = env.getProperty("photo.ffmpeg");
         if (ffmpeg!=null) ArchiveInfo.FFMPEG = ffmpeg;
-
         String exiftool = env.getProperty("photo.exiftool");
         if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
+
         new ArchiveInfo();
-        String lt = env.getProperty("photo.loop-timer");
-        if (lt!=null) loopTimer = Integer.parseInt(lt);
-        else loopTimer = 0;
+
+        loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),0);
+        isDebug = Util.boolValue(env.getProperty("photo.debug"));
+        canRemove = Util.boolValue(env.getProperty("photo.removable"));
+
         System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override

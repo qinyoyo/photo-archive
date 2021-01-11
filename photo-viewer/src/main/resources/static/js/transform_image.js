@@ -4,14 +4,23 @@
 
 ;(function () {
     window.loopTimer = 4000
+    window.enableRemove = false
+    window.notSupportOrientation = false
+    window.enableDebug = false
     window.debug = function(options) {
         if (window.debugElement) {
-            if (typeof options === 'string')
-                window.debugElement.innerHTML = options
+            if (typeof options === 'string'){
+                window.debugElement.style.left = '0px'
+                window.debugElement.style.top = '0px'
+                window.debugElement.innerHTML=options
+            }
             else {
                 if (options.position) {
                     window.debugElement.style.left = options.position.x + 'px'
                     window.debugElement.style.top = options.position.y + 'px'
+                } else {
+                    window.debugElement.style.left = '0px'
+                    window.debugElement.style.top = '0px'
                 }
                 window.debugElement.innerHTML =
                     (options.append ? window.debugElement.innerHTML + ' | ' + options.text : options.text)
@@ -29,14 +38,13 @@
     }
     window.isMobile = function() {
         const ua = navigator.userAgent.toLowerCase()
-        debug(ua)
         const agents = ["android", "iphone", "symbianos", "phone", "mobile"]
         if (agents.some(a => {
             if (ua.indexOf(a) >= 0) return true
         })) return true
         else return false
     }
-    window.notSupportOrientation = false
+
     window.toast  = function(msg,delay) {  // 显示提示信息，自动关闭
         if (typeof msg != 'string') return
         let toast = document.createElement("div")
@@ -49,7 +57,7 @@
         },delay ? delay : 500)
     }
 
-    window.enableDebug = false
+
     const PI = 3.1415926
     let loopTimerId = null
 
@@ -143,7 +151,7 @@
         const container = img.parentNode
         const wrapper = document.querySelector('.tran-img__wrapper')
         const waitingIcon = container.querySelector('.tran-img__waiting')
-        const removeBtn = container.querySelector('.tran-img__remove')
+        const removeBtn = window.enableRemove ? container.querySelector('.tran-img__remove') : null
         let   scaleValue = 1
         let   isReady = false
         let   translateXChanged = false, translateYChanged = false
@@ -286,7 +294,7 @@
             isReady = false
         }
         const swapWHByOrientation = function () {
-            return (notSupportOrientation && (orientation=='5' || orientation=='6'
+            return (window.notSupportOrientation && (orientation=='5' || orientation=='6'
                         || orientation=='7' || orientation=='8'))
         }
         /*******  坐标变换  *************/
@@ -389,6 +397,8 @@
 
         // 平移
         const translate = function(p, justCalc) {
+            debug(p.x+' :('+translateLimit.x.min + ' , ' + translateLimit.x.max + ') '
+               +  p.y+' :('+translateLimit.y.min + ' , ' + translateLimit.y.max + ')')
             if (p.x>translateLimit.x.max) p.x=translateLimit.x.max; else if (p.x<translateLimit.x.min) p.x=translateLimit.x.min;
             if (p.y>translateLimit.y.max) p.y=translateLimit.y.max; else if (p.y<translateLimit.y.min) p.y=translateLimit.y.min;
             if (p.x != translateX) translateXChanged = true
@@ -424,10 +434,6 @@
             clientH = Math.trunc(imageH * scaleValue / realSizeScale)
             img.style.width = clientW +'px'
             img.style.height = clientH + 'px'
-            debug({
-                text:img.style.width+'x'+img.style.height,
-                append: true
-            })
             calcTranslateLimit()
         }
         const minScale = function() {
@@ -500,27 +506,27 @@
 
         /*************   轮播  *************/
         const startLoop = function(runAtOnce) {
-            if (loopTimer) {
+            if (window.loopTimer) {
                 if (loopTimerId) clearInterval(loopTimerId)
                 const loopView = function() {
-                    if (loopTimer) {
+                    if (window.loopTimer) {
                         if (!loadImageBy(index + 1)) {
                             stopLoop()
                         }
                     }
                 }
-                loopTimerId = setInterval(loopView, loopTimer)
+                loopTimerId = setInterval(loopView, window.loopTimer)
                 if (runAtOnce) loopView()
             }
         }
         const isLooping = function() {
-            return loopTimer && loopTimerId
+            return window.loopTimer && loopTimerId
         }
 
         const stopLoop = function() {
             if (loopTimerId) clearInterval(loopTimerId)
             loopTimerId = null
-            loopTimer = 0
+            window.loopTimer = 0
         }
         const pauseLoop = function() {
             if (isLooping()) {
@@ -529,7 +535,7 @@
             }
         }
         const resumeLoop = function(runAtOnce) {
-            if (loopTimer && !loopTimerId)  startLoop(runAtOnce)
+            if (window.loopTimer && !loopTimerId)  startLoop(runAtOnce)
         }
         /***********  事件处理  *************/
 
@@ -548,7 +554,7 @@
             }
             return false
         }
-        removeBtn.onclick = function(event) {
+        if (removeBtn)  removeBtn.onclick = function(event) {
             if (confirm("确定要从磁盘删除该图像？")) {
                 const imgIndex = index
                 let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
@@ -564,24 +570,21 @@
         const dblClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            if (loopTimer) {
-                stopLoop()
-            }
-            else {
-                if (!isReady) return
-                if (isFixed()){
-                    let page = {
-                        x: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageX : event.clientX,
-                        y: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.clientY
-                    }
-                    debug({
-                        position:page,
-                        text: page.x+','+page.y
-                    })
-                    realSize(page)
-                } else fitClient()
-            }
+            if (window.loopTimer) stopLoop()
+            if (!isReady) return
+            if (isFixed()){
+                let page = {
+                    x: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageX : event.clientX,
+                    y: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.clientY
+                }
+                debug({
+                    position:page,
+                    text: page.x+','+page.y
+                })
+                realSize(page)
+            } else fitClient()
         }
+
         let touchPos0 = {x:0, y:0}, touchPos1 = {x:0, y:0}, touchMinPos = {x:0, y:0}, touchMaxPos = {x:0, y:0}
         let preClientX = 0, preClientY = 0
         let dragStart = false
@@ -852,26 +855,27 @@
         waitingI.className = 'fa fa-spinner fa-spin animated'
         waitingIcon.appendChild(waitingI)
 
-        let removeBtn = document.createElement("button")
-        removeBtn.className = 'tran-img__remove'
-        removeBtn.style.zIndex = '6006'
-        removeBtn.style.left = (pageW - 36)/2 + 'px'
-        removeBtn.style.display = 'none'
-
-        let removeI = document.createElement("i")
-        removeI.className = 'fa fa-trash-o'
-        removeBtn.appendChild(removeI)
-
         dialogBody.appendChild(img)
         dialogBody.appendChild(closeButton)
         dialogBody.appendChild(waitingIcon)
-        dialogBody.appendChild(removeBtn)
+
+        if (window.enableRemove){
+            let removeBtn=document.createElement("button")
+            removeBtn.className='tran-img__remove'
+            removeBtn.style.zIndex='6006'
+            removeBtn.style.left=(pageW-36)/2+'px'
+            removeBtn.style.display='none'
+            let removeI=document.createElement("i")
+            removeI.className='fa fa-trash-o'
+            removeBtn.appendChild(removeI)
+            dialogBody.appendChild(removeBtn)
+        }
 
         content.appendChild(dialogBody)
         wrapper.appendChild(content)
         body.appendChild(wrapper)
 
-        if (enableDebug) {
+        if (window.enableDebug) {
             window.debugElement = document.createElement("div")
             window.debugElement.className = 'tran-img__debug'
             body.appendChild(window.debugElement)
