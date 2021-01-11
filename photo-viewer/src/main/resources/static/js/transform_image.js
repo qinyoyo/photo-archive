@@ -397,8 +397,6 @@
 
         // 平移
         const translate = function(p, justCalc) {
-            debug(p.x+' :('+translateLimit.x.min + ' , ' + translateLimit.x.max + ') '
-               +  p.y+' :('+translateLimit.y.min + ' , ' + translateLimit.y.max + ')')
             if (p.x>translateLimit.x.max) p.x=translateLimit.x.max; else if (p.x<translateLimit.x.min) p.x=translateLimit.x.min;
             if (p.y>translateLimit.y.max) p.y=translateLimit.y.max; else if (p.y<translateLimit.y.min) p.y=translateLimit.y.min;
             if (p.x != translateX) translateXChanged = true
@@ -542,7 +540,7 @@
         const imgClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            let y = event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.offsetY
+            let y = event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].clientY : event.offsetY
             if (removeBtn && removeBtn.style.display == 'block') {
                 removeBtn.style.display = 'none'
                 resumeLoop()
@@ -574,8 +572,8 @@
             if (!isReady) return
             if (isFixed()){
                 let page = {
-                    x: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageX : event.clientX,
-                    y: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].pageY : event.clientY
+                    x: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].clientX : event.clientX,
+                    y: event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].clientY : event.clientY
                 }
                 debug({
                     position:page,
@@ -596,7 +594,7 @@
                 translateXChanged = false
                 translateYChanged = false
                 dragStart = true
-                let pos = event.touches ? { x: event.touches[0].pageX, y: event.touches[0].pageY} : { x: event.clientX, y: event.clientY }
+                let pos = event.touches ? { x: event.touches[0].clientX, y: event.touches[0].clientY} : { x: event.clientX, y: event.clientY }
                 touchPos0 = { x: pos.x, y: pos.y }
                 touchPos1 = { x: pos.x, y: pos.y }
                 touchMinPos = { x: pos.x, y: pos.y }
@@ -610,8 +608,8 @@
             event.preventDefault()
             if (!isReady) return
             if (dragStart && ((event.touches && event.touches.length == 1) || (event.button == 0 && event.buttons == 1) )) {
-                let x =  event.touches ?  event.touches[0].pageX : event.clientX,
-                    y =  event.touches ?  event.touches[0].pageY : event.clientY
+                let x =  event.touches ?  event.touches[0].clientX : event.clientX,
+                    y =  event.touches ?  event.touches[0].clientY : event.clientY
                 if (x < touchMinPos.x) touchMinPos.x =  x
                 else if (x > touchMaxPos.x) touchMaxPos.x =  x
                 if (y < touchMinPos.y) touchMinPos.y =  y
@@ -638,8 +636,8 @@
             if (dragStart && (!translateXChanged || !translateYChanged) &&
                 ((event.changedTouches && event.changedTouches.length==1) || (event.button == 0) )) {
                 touchPos1={
-                    x: event.changedTouches ?  event.changedTouches[0].pageX : event.clientX,
-                    y: event.changedTouches ?  event.changedTouches[0].pageY : event.clientY
+                    x: event.changedTouches ?  event.changedTouches[0].clientX : event.clientX,
+                    y: event.changedTouches ?  event.changedTouches[0].clientY : event.clientY
                 }
                 let minX=Math.min(touchPos0.x,touchPos1.x),
                     maxX=Math.max(touchPos0.x,touchPos1.x),
@@ -684,8 +682,8 @@
                     event.preventDefault()
                     if (isReady) {
                         const page = {
-                            x: (event.touches[0].pageX + event.touches[1].pageX)/2,
-                            y: (event.touches[0].pageY + event.touches[1].pageY)/2
+                            x: (event.touches[0].clientX + event.touches[1].clientX)/2,
+                            y: (event.touches[0].clientY + event.touches[1].clientY)/2
                         }
                         rotate(rotateZ + event.angle,page)
                         debug({
@@ -701,7 +699,7 @@
                     if (isReady)  {
                         let sc=initScale*event.zoom;
                         const page = {
-                            x:(event.touches[0].pageX+event.touches[1].pageX)/2,y:(event.touches[0].pageY+event.touches[1].pageY)/2
+                            x:(event.touches[0].clientX+event.touches[1].clientX)/2,y:(event.touches[0].clientY+event.touches[1].clientY)/2
                         }
                         scale(sc,page)
                         debug({

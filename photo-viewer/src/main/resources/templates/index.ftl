@@ -26,7 +26,7 @@
     <script type="text/javascript" src="static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>
-<#if (debug?? && debug) || (orientation?? && orientation) || (loopTimer??)>
+<#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
 <script>
     <#if debug?? && debug>
     window.enableDebug = true
