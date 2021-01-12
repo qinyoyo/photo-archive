@@ -39,6 +39,7 @@ public class PVController implements ApplicationRunner {
     private boolean isReady = false;
     private boolean isDebug = false;
     private boolean canRemove = false;
+    private boolean noVideoThumb = false;
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
@@ -108,6 +109,7 @@ public class PVController implements ApplicationRunner {
         }
         if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
         if (canRemove) model.addAttribute("canRemove",true);
+        if (noVideoThumb) model.addAttribute("noVideoThumb",true);
         model.addAttribute("loopTimer",loopTimer);
         model.addAttribute("separator",File.separator);
     }
@@ -485,7 +487,7 @@ public class PVController implements ApplicationRunner {
         loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),0);
         isDebug = Util.boolValue(env.getProperty("photo.debug"));
         canRemove = Util.boolValue(env.getProperty("photo.removable"));
-
+        noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
         System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override
