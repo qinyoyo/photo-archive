@@ -161,4 +161,7 @@ audio, video {
     .grid-box {
         grid-template-columns: repeat(5, 1fr);
     }
+    .resource-list .grid-box {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }

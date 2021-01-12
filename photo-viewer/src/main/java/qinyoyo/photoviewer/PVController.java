@@ -71,7 +71,27 @@ public class PVController implements ApplicationRunner {
                     list.addAll(list1);
                     return list;
                 }   else return list1;
-            } else return list;
+            } else {
+                // 子目录
+                File[] subDirs = new File(rootPath,folder).listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File pathname) {
+                        if (pathname.isDirectory() && pathname.getName().endsWith(".web")) {
+                            return new File(pathname,"index.html").exists();
+                        } else return false;
+                    }
+                });
+                if (subDirs!=null && subDirs.length>0) {
+                    if (list==null) list = new ArrayList<>();
+                    for (File d: subDirs) {
+                        PhotoInfo pi = new PhotoInfo(rootPath,new File(d,"index.html"));
+                        pi.setMimeType("text/html");
+                        pi.setSubTitle(d.getName().substring(0,d.getName().length()-4));
+                        list.add(pi);
+                    }
+                }
+                return list;
+            }
         } else return list;
     }
 
@@ -122,23 +142,13 @@ public class PVController implements ApplicationRunner {
         if (canRemove) model.addAttribute("canRemove",true);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
         model.addAttribute("loopTimer",loopTimer);
-        model.addAttribute("separator",File.separator);
     }
 
-    @RequestMapping(value = "thumbnail")
-    public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
-        return null;
-    }
-    List<String> threadPathList = new ArrayList<>();
-    @RequestMapping(value = "/")
-    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
-        if (!isReady) {
-            model.addAttribute("message","Not ready!!!");
-            return "error";
-        }
-        commonAttribute(model,request);
+    private Map<String,Object> getPathAttributes(String path, boolean just4ResourceList) {
+        Map<String,Object> model = new HashMap<>();
+        model.put("separator",File.separator);
         if (path!=null && !path.isEmpty()) {
-            model.addAttribute("pathNames",path.split(File.separator.equals("\\")?"\\\\" : File.separator));
+            model.put("pathNames",path.split("\\\\|/"));
         } else path = "";
         File dir = new File(rootPath+File.separator+path);
         if (dir.exists() && dir.isDirectory()) {
@@ -146,7 +156,7 @@ public class PVController implements ApplicationRunner {
             File[] subDirs = dir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File pathname) {
-                    if (pathname.getName().startsWith(".") || pathname.getName().endsWith(".web")) return false;
+                    if (pathname.getName().startsWith(".") || (!just4ResourceList && pathname.getName().endsWith(".web"))) return false;
                     return pathname.isDirectory();
                 }
             });
@@ -173,32 +183,48 @@ public class PVController implements ApplicationRunner {
             }
             if (subDirectories.size()>0) {
                 subDirectories.sort((a,b)->a.get("name").toString().compareTo(b.get("name").toString()));
-                model.addAttribute("subDirectories",subDirectories);
+                model.put("subDirectories",subDirectories);
             }
-            // html文件
-            List<PhotoInfo> htmls = mimeListInPath("html",path);
-            if (htmls!=null && htmls.size()>0)  model.addAttribute("htmls",htmls);
-
+            if (!just4ResourceList) {
+                // html文件
+                List<PhotoInfo> htmls = mimeListInPath("html", path);
+                if (htmls != null && htmls.size() > 0) model.put("htmls", htmls);
+            }
             // video文件
             List<PhotoInfo> videos = mimeListInPath("video",path);
-            if (videos!=null && videos.size()>0)  model.addAttribute("videos",videos);
+            if (videos!=null && videos.size()>0)  model.put("videos",videos);
 
             // audio文件
             List<PhotoInfo> audios = mimeListInPath("audio",path);
-            if (audios!=null && audios.size()>0)  model.addAttribute("audios",audios);
+            if (audios!=null && audios.size()>0)  model.put("audios",audios);
 
             //Photo Info
             List<PhotoInfo> photos = mimeListInPath("image",path);
             if (photos!=null && photos.size()>0) {
-                model.addAttribute("photos",photos);
+                model.put("photos",photos);
             }
-            if ((photos!=null && photos.size()>0) || (!noVideoThumb && videos!=null && videos.size()>0)) {
+            if (!just4ResourceList && ((photos!=null && photos.size()>0) || (!noVideoThumb && videos!=null && videos.size()>0)) ){
                 List<PhotoInfo> l = new ArrayList<>();
                 if (!noVideoThumb && videos!=null && videos.size()>0) l.addAll(videos);
                 if (photos!=null && photos.size()>0) l.addAll(photos);
                 createThumbsList(l, path);
             }
         }
+        return model;
+    }
+    @RequestMapping(value = "thumbnail")
+    public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
+        return null;
+    }
+    List<String> threadPathList = new ArrayList<>();
+    @RequestMapping(value = "/")
+    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "error";
+        }
+        commonAttribute(model,request);
+        model.addAllAttributes(getPathAttributes(path,false));
         return "index";
     }
     private String join(String sep,String ... strings) {
@@ -491,6 +517,27 @@ public class PVController implements ApplicationRunner {
         out.close();
     }
 
+    String freeMarkerWriter(final String ftl, Map<String,Object> model) throws Exception {
+        Template template;
+        template = CONFIGURATION.getTemplate(ftl);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(02400);
+        Writer out = new BufferedWriter(new OutputStreamWriter(bos, "utf-8"), 102400);
+        template.process(model, out);
+        out.close();
+        return new String(bos.toByteArray(),"utf-8");
+    }
+    @ResponseBody
+    @RequestMapping(value = "resource")
+    public String resource(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path==null || path.isEmpty()) return "error";
+        try {
+            String resourceHtml = freeMarkerWriter("resource.ftl", getPathAttributes(path, true));
+            return resourceHtml;
+        } catch (Exception e) {
+            return "error";
+        }
+    }
+
     @RequestMapping(value = "editor")
     public Object editor(Model model,HttpServletRequest request, HttpServletResponse response, String path) {
         if (path==null || path.isEmpty()) {
@@ -510,7 +557,9 @@ public class PVController implements ApplicationRunner {
         m = p.matcher(html);
         if (m.find()) attributes.put("body",m.group(1));
         try {
+            String resourceHtml = freeMarkerWriter("resource.ftl",getPathAttributes(new File(path).getParent(),true));
             String reUrl = path + "_ed.html";
+            attributes.put("resource",resourceHtml);
             freeMarkerWriter("edit_html.ftl", new File(rootPath,reUrl).getCanonicalPath(), attributes);
             return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
         } catch (Exception e) {

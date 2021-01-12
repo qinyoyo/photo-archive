@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/pv.css">
     <link rel="stylesheet" href="/static/css/editor.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/editor.js"></script>
@@ -57,6 +58,15 @@ ${body?replace('contenteditable="false"','contenteditable="true"')}
 <dialog id="select-link" style="width:300px">
     <h4 id="select-link-title">输入链接地址</h4>
     <input id="select-link-url" type="url" style="width:100%" />
+    <div style="padding-top: 10px;">
+        <button onclick="this.parentElement.parentElement.close(document.getElementById('select-link-url').value)">确定</button>
+        <button onclick="this.parentElement.parentElement.close()">取消</button>
+    </div>
+</dialog>
+<dialog id="select-resource" style="width:500px">
+    <div id="select-resource-content">
+        ${resource}
+    </div>
     <div style="padding-top: 10px;">
         <button onclick="this.parentElement.parentElement.close(document.getElementById('select-link-url').value)">确定</button>
         <button onclick="this.parentElement.parentElement.close()">取消</button>

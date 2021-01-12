@@ -1,3 +1,10 @@
+
+function adjustSize(img) {
+    let w = img.parentNode.clientWidth
+    let iw = img.naturalWidth, ih = img.naturalHeight
+    if (iw<=w) img.parentNode.style.height = Math.min(w,ih) + 'px'
+    else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px';
+}
 ;(function () {
 
     const RE = {};
@@ -293,30 +300,51 @@
         document.getElementById('select-color-title').innerText = msg
         showDialog(dialog, callback)
     }
-    const getImageResource = function() {
-        return 'res/rwert.jpg'
+    const getResource = function(type,callback) {
+        const dialog = document.getElementById('select-resource')
+        let e = dialog.querySelector('.'+type+'-list');
+        if (e) e.style.display = 'block'
+        if (type!='audio') {
+            e = dialog.querySelector('.audio-list');
+            if (e) e.style.display = 'none'
+        }
+        if (type!='video') {
+            e = dialog.querySelector('.video-list');
+            if (e) e.style.display = 'none'
+        }
+        if (type!='photo') {
+            e = dialog.querySelector('.photo-list');
+            if (e) e.style.display = 'none'
+        }
+        showDialog(dialog, callback)
     }
-    const getAudioResource = function() {
-        return 'audio-demo.mp3'
-    }
-    const getVideoResource = function() {
-        return 'video-demo.mp4'
-    }
-
     const getLinkResource = function(callback) {
         const dialog = document.getElementById('select-link')
         showDialog(dialog, callback)
     }
+    const initResource = function() {
+        const dialog = document.getElementById('select-resource')
+        dialog.querySelectorAll('.folder-item').forEach(function(d) {
+            let path = d.getAttribute('data-folder')
+            const url = path ? '/resource?path=' + encodeURI(path) : '/'
+            d.onclick=function () {
+                Ajax.get(url, function (responseText) {
+                    if (responseText && responseText!='error') {
+                        document.getElementById('select-resource-content').innerHTML = responseText
+                        initResource()
+                    }
+                })
+            }
+        });
+    }
+
     window.onload = function() {
         const sw =window.innerWidth,
               bw = document.querySelector('body').clientWidth
         document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
-/*        document.querySelector('body').onclick = function() {
-            console.log(window.getSelection())
-            console.log(document.activeElement)
-        }*/
         RE.editor = document.getElementById('editor');
         RE.setBaseFontSize('14px');
+        initResource()
         document.querySelectorAll('.float-editor__buttons img').forEach(function(img) {
             const action = img.getAttribute("data-action")
             img.onclick = function(){
@@ -334,25 +362,22 @@
                     case 'save':
                         break;
                     case 'insert_image':
-                        const imgUrl = getImageResource()
-                        if (imgUrl){
-                            RE.prepareInsert()
+                        RE.prepareInsert()
+                        getResource('photo',function(imgUrl) {
                             RE.insertImageW(imgUrl,imgUrl,'100%')
-                        }
+                        })
                         break;
                     case 'music':
-                        const audioUrl = getAudioResource()
-                        if (audioUrl){
-                            RE.prepareInsert()
+                        RE.prepareInsert()
+                        getResource('audio',function(audioUrl) {
                             RE.insertAudio(audioUrl);
-                        }
+                        })
                         break;
                     case 'video':
-                        const videoUrl = getVideoResource()
-                        if (videoUrl){
-                            RE.prepareInsert()
-                            RE.insertVideoW(videoUrl,700);
-                        }
+                        RE.prepareInsert()
+                        getResource('video',function(videoUrl) {
+                            RE.insertVideoW(videoUrl,'100%');
+                        })
                         break;
                     case 'indent':
                         RE.setIndent()
