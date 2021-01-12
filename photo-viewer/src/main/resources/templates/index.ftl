@@ -81,7 +81,7 @@
     </#if>
     <div class="collapse">
     <#if htmls??>
-        <div class = "collapse-item folder-list__item">
+        <div class = "collapse-item<#if !photos?? && !videos?? && !audios??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-text-o collapse__icon"></i>
             <span>足迹</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>
@@ -90,13 +90,13 @@
         <div class="collapse-content html-list">
         <#list htmls as h>
             <div class="folder-list__item">
-                <a href = "${fileUrl(h)}" class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
+                <a href = "/editor?path=${fileUrl(h)}" class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
             </div>
         </#list>
         </div>
     </#if>
     <#if audios??>
-        <div class = "collapse-item folder-list__item">
+        <div class = "collapse-item<#if !photos?? && !videos??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-audio-o collapse__icon"></i>
             <span>录音</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>
@@ -112,7 +112,7 @@
         </div>
     </#if>
     <#if videos??>
-        <div class = "collapse-item folder-list__item">
+        <div class = "collapse-item<#if !photos??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-video-o collapse__icon"></i>
             <span>视频</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>

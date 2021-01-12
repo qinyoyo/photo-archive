@@ -1,5 +1,11 @@
 package qinyoyo.photoviewer;
 
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.NullCacheStorage;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -8,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.view.RedirectView;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
 import qinyoyo.utils.Util;
@@ -21,6 +28,7 @@ import tang.qinyoyo.exiftool.ExifTool;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -28,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Controller
@@ -43,6 +53,7 @@ public class PVController implements ApplicationRunner {
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
+    private static final Configuration CONFIGURATION = new Configuration(Configuration.VERSION_2_3_22);
     List<PhotoInfo> mimeListInPath(String mime, String folder) {
         if (!isReady) return null;
         List<PhotoInfo> list = archiveInfo.getInfos().stream()
@@ -181,9 +192,9 @@ public class PVController implements ApplicationRunner {
             if (photos!=null && photos.size()>0) {
                 model.addAttribute("photos",photos);
             }
-            if ((photos!=null && photos.size()>0) || (videos!=null && videos.size()>0)) {
+            if ((photos!=null && photos.size()>0) || (!noVideoThumb && videos!=null && videos.size()>0)) {
                 List<PhotoInfo> l = new ArrayList<>();
-                if (videos!=null && videos.size()>0) l.addAll(videos);
+                if (!noVideoThumb && videos!=null && videos.size()>0) l.addAll(videos);
                 if (photos!=null && photos.size()>0) l.addAll(photos);
                 createThumbsList(l, path);
             }
@@ -471,6 +482,43 @@ public class PVController implements ApplicationRunner {
         return "ok";
     }
 
+    void freeMarkerWriter(final String ftl, String filePath, Map<String, Object> attributes) throws Exception {
+        Template template;
+        template = CONFIGURATION.getTemplate(ftl);
+        FileOutputStream fos = new FileOutputStream(filePath);
+        Writer out = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"), 102400);
+        template.process(attributes, out);
+        out.close();
+    }
+
+    @RequestMapping(value = "editor")
+    public Object editor(Model model,HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path==null || path.isEmpty()) {
+            model.addAttribute("message","请指定一个文件");
+            return "error";
+        }
+        String html = ArchiveUtils.getFromFile(new File(rootPath,path),"UTF8");
+        if (html==null) {
+            model.addAttribute("message",path + " 打开失败");
+            return "error";
+        }
+        Map<String, Object> attributes = new HashMap<>();
+        Pattern p=Pattern.compile("\\<title\\>(.*)\\</title\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+        Matcher m = p.matcher(html);
+        if (m.find()) attributes.put("title",m.group(1));
+        p=Pattern.compile("\\<body\\>(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+        m = p.matcher(html);
+        if (m.find()) attributes.put("body",m.group(1));
+        try {
+            String reUrl = path + "_ed.html";
+            freeMarkerWriter("edit_html.ftl", new File(rootPath,reUrl).getCanonicalPath(), attributes);
+            return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
+        } catch (Exception e) {
+            model.addAttribute("message",e.getMessage());
+            return "error";
+        }
+    }
+
     String setUseDefault(String value, String def) {
         if (value==null || value.trim().isEmpty()) return def;
         else return value;
@@ -488,6 +536,12 @@ public class PVController implements ApplicationRunner {
         isDebug = Util.boolValue(env.getProperty("photo.debug"));
         canRemove = Util.boolValue(env.getProperty("photo.removable"));
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
+
+        CONFIGURATION.setTemplateLoader(new ClassTemplateLoader(PVController.class, "/templates"));
+        CONFIGURATION.setDefaultEncoding("UTF-8");
+        CONFIGURATION.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        CONFIGURATION.setCacheStorage(NullCacheStorage.INSTANCE);
+
         System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override
