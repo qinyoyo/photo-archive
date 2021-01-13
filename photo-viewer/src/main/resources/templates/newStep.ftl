@@ -8,17 +8,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/static/css/pv.css">
     <link rel="stylesheet" href="/static/css/transform_image.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <title>${title}</title>
-    <script type="text/javascript">
-        window.onload=function() {
-            TransformImage('img')
-        }
-    </script>
     <style>
         html {
             line-height: 1.5;
@@ -235,7 +229,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="TransformImage('img')">
     <div>
         <h2 style="text-align: center;"> <u>${title}</u> </h2>
     </div>

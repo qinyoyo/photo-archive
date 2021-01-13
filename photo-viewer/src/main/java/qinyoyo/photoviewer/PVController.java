@@ -535,10 +535,10 @@ public class PVController implements ApplicationRunner {
         try {
             String html = ArchiveUtils.getFromFile(new File(source),"UTF8");
             if (html==null) return "文件错误";
-            Pattern p=Pattern.compile("\\<body\\>(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+            Pattern p=Pattern.compile("(\\<body[^\\>]*\\>)(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
             Matcher m = p.matcher(html);
             if (m.find()) {
-                html = html.substring(0,m.start())+"<body>\n" + body + "\n</body>" + html.substring(m.end());
+                html = html.substring(0,m.start())+m.group(1) +"\n" + body + "\n</body>" + html.substring(m.end());
                 ArchiveUtils.writeToFile(new File(source),html,"UTF8");
                 new File(source+"_ed.html").delete();
                 return "ok";
@@ -564,9 +564,9 @@ public class PVController implements ApplicationRunner {
         Pattern p=Pattern.compile("\\<title\\>(.*)\\</title\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
         Matcher m = p.matcher(html);
         if (m.find()) attributes.put("title",m.group(1));
-        p=Pattern.compile("\\<body\\>(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+        p=Pattern.compile("(\\<body[^\\>]*\\>)(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
         m = p.matcher(html);
-        if (m.find()) attributes.put("body",m.group(1));
+        if (m.find()) attributes.put("body",m.group(2));
         try {
             Map<String, Object> pa = getPathAttributes(new File(path).getParent(), true);
             pa.put("currentPath",new File(path).getParent().replaceAll("\\\\","/"));
