@@ -17,13 +17,13 @@
     <meta name="renderer" content="webkit">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="static/css/pv.css">
-    <link rel="stylesheet" href="static/css/transform_image.css">
-    <script type="text/javascript" src="static/js/ajax.js"></script>
-    <script type="text/javascript" src="static/js/alloy_finger.js"></script>
-    <script type="text/javascript" src="static/js/transform_image.js"></script>
-    <script type="text/javascript" src="static/js/folder.js"></script>
+    <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/pv.css">
+    <link rel="stylesheet" href="/static/css/transform_image.css">
+    <script type="text/javascript" src="/static/js/ajax.js"></script>
+    <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
+    <script type="text/javascript" src="/static/js/transform_image.js"></script>
+    <script type="text/javascript" src="/static/js/folder.js"></script>
     <title>Photo viewer</title>
 </head>
 <#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
@@ -90,7 +90,7 @@
         <div class="collapse-content html-list">
         <#list htmls as h>
             <div class="folder-list__item">
-                <a href = "/editor?path=${fileUrl(h)}" class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
+                <a href = <#if htmlEditable?? && htmlEditable>"/editor?path=${fileUrl(h)}"<#else>"${fileUrl(h)}"</#if> class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
             </div>
         </#list>
         </div>

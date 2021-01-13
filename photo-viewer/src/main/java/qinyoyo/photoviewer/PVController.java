@@ -4,7 +4,6 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
@@ -28,7 +28,6 @@ import tang.qinyoyo.exiftool.ExifTool;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -40,6 +39,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 @Controller
 public class PVController implements ApplicationRunner {
     @Autowired
@@ -50,6 +51,7 @@ public class PVController implements ApplicationRunner {
     private boolean isDebug = false;
     private boolean canRemove = false;
     private boolean noVideoThumb = false;
+    private boolean htmlEditable = false;
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
@@ -95,34 +97,14 @@ public class PVController implements ApplicationRunner {
         } else return list;
     }
 
-    void createThumbsList(List<PhotoInfo> photos,String key) {
-        if (photos!=null && photos.size()>0) {
-            final List<PhotoInfo> noThumbs = photos.stream().filter(p->{
-                String tp = null;
-                try {
-                    tp = p.fullThumbPath(rootPath);
-                    return !new File(tp).exists();
-                } catch (IOException e) {
-                    return false;
-                }
-            }).collect(Collectors.toList());
-            if (noThumbs!=null && noThumbs.size()>0 && !threadPathList.contains(key)) {
-                threadPathList.add(key);
-                new Thread() {
-                    @Override
-                    public void run() {
-                        for (PhotoInfo p : noThumbs) archiveInfo.createThumbFiles(p);
-                    }
-                }.start();
-            }
-        }
+    private boolean isMobile(HttpServletRequest request) {
+        String userAgent = request.getHeader("USER-AGENT");
+        return userAgent.contains("Mobile") || userAgent.contains("Phone");
     }
-
     private void commonAttribute(Model model, HttpServletRequest request) {
         String params = request.getQueryString();
         String userAgent = request.getHeader("USER-AGENT");
-        boolean isMobile = userAgent.contains("Mobile") || userAgent.contains("Phone");
-        if (isMobile) {
+        if (isMobile(request)) {
             String browsers = env.getProperty("photo.support-orientation");
             boolean supportOrientation = false;
             if (browsers!=null) {
@@ -141,6 +123,7 @@ public class PVController implements ApplicationRunner {
         if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
         if (canRemove) model.addAttribute("canRemove",true);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
+        if (htmlEditable && !isMobile(request)) model.addAttribute("htmlEditable",true);
         model.addAttribute("loopTimer",loopTimer);
     }
 
@@ -203,12 +186,6 @@ public class PVController implements ApplicationRunner {
             if (photos!=null && photos.size()>0) {
                 model.put("photos",photos);
             }
-            if (!just4ResourceList && ((photos!=null && photos.size()>0) || (!noVideoThumb && videos!=null && videos.size()>0)) ){
-                List<PhotoInfo> l = new ArrayList<>();
-                if (!noVideoThumb && videos!=null && videos.size()>0) l.addAll(videos);
-                if (photos!=null && photos.size()>0) l.addAll(photos);
-                createThumbsList(l, path);
-            }
         }
         return model;
     }
@@ -216,12 +193,24 @@ public class PVController implements ApplicationRunner {
     public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
         return null;
     }
-    List<String> threadPathList = new ArrayList<>();
+
     @RequestMapping(value = "/")
-    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, String newStep) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "error";
+        }
+        if (newStep!=null && !newStep.isEmpty()) {
+            try {
+                File dir = new File(new File(rootPath, path), newStep+".web");
+                if (dir.mkdirs()) {
+                    Map<String,Object> attr = new HashMap<String,Object>(){{
+                        put("title",newStep);
+                    }};
+                    freeMarkerWriter("newStep.ftl",dir.getAbsolutePath()+File.separator+"index.html",attr);
+                    archiveInfo.addFile(new File(dir,"index.html"));
+                }
+            } catch (Exception e) {}
         }
         commonAttribute(model,request);
         model.addAllAttributes(getPathAttributes(path,false));
@@ -255,7 +244,7 @@ public class PVController implements ApplicationRunner {
             return "error";
         }
         commonAttribute(model,request);
-        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "");
+        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "", null);
         text = text.trim().toLowerCase();
         List<String> dirs = new ArrayList<>();
         List<PhotoInfo> htmls = new ArrayList<>();
@@ -289,7 +278,6 @@ public class PVController implements ApplicationRunner {
         if (videos!=null && videos.size()>0)  model.addAttribute("videos",videos);
         if (audios!=null && audios.size()>0)  model.addAttribute("audios",audios);
         if (photos!=null && photos.size()>0) {
-            createThumbsList(photos,text);
             model.addAttribute("photos",photos);
         }
         return "index";
@@ -528,13 +516,36 @@ public class PVController implements ApplicationRunner {
     }
     @ResponseBody
     @RequestMapping(value = "resource")
-    public String resource(HttpServletRequest request, HttpServletResponse response, String path) {
+    public String resource(HttpServletRequest request, HttpServletResponse response, String path, String current) {
         if (path==null || path.isEmpty()) return "error";
         try {
-            String resourceHtml = freeMarkerWriter("resource.ftl", getPathAttributes(path, true));
+            Map<String, Object> pa = getPathAttributes(path, true);
+            pa.put("currentPath",current);
+            String resourceHtml = freeMarkerWriter("resource.ftl", pa);
             return resourceHtml;
         } catch (Exception e) {
             return "error";
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "save", method = POST)
+    public String saveEditor(HttpServletRequest request, String source,String body) {
+        if (source==null) return "error";
+        try {
+            String html = ArchiveUtils.getFromFile(new File(source),"UTF8");
+            if (html==null) return "文件错误";
+            Pattern p=Pattern.compile("\\<body\\>(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+            Matcher m = p.matcher(html);
+            if (m.find()) {
+                html = html.substring(0,m.start())+"<body>\n" + body + "\n</body>" + html.substring(m.end());
+                ArchiveUtils.writeToFile(new File(source),html,"UTF8");
+                new File(source+"_ed.html").delete();
+                return "ok";
+            } else return "not found body";
+
+        } catch (Exception e) {
+            return e.getMessage();
         }
     }
 
@@ -557,9 +568,12 @@ public class PVController implements ApplicationRunner {
         m = p.matcher(html);
         if (m.find()) attributes.put("body",m.group(1));
         try {
-            String resourceHtml = freeMarkerWriter("resource.ftl",getPathAttributes(new File(path).getParent(),true));
+            Map<String, Object> pa = getPathAttributes(new File(path).getParent(), true);
+            pa.put("currentPath",new File(path).getParent().replaceAll("\\\\","/"));
+            String resourceHtml = freeMarkerWriter("resource.ftl",pa);
             String reUrl = path + "_ed.html";
             attributes.put("resource",resourceHtml);
+            attributes.put("sourceFile",new File(rootPath,path).getCanonicalPath());
             freeMarkerWriter("edit_html.ftl", new File(rootPath,reUrl).getCanonicalPath(), attributes);
             return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
         } catch (Exception e) {
@@ -585,6 +599,7 @@ public class PVController implements ApplicationRunner {
         isDebug = Util.boolValue(env.getProperty("photo.debug"));
         canRemove = Util.boolValue(env.getProperty("photo.removable"));
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
+        htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
 
         CONFIGURATION.setTemplateLoader(new ClassTemplateLoader(PVController.class, "/templates"));
         CONFIGURATION.setDefaultEncoding("UTF-8");
@@ -605,14 +620,12 @@ public class PVController implements ApplicationRunner {
                     archiveInfo.saveInfos();
                 }
                 rootPath = archiveInfo.getPath();  // 标准化
-                if (!new File(rootPath,".thumb").exists()) {
-                    new Thread() {
+                new Thread() {
                         @Override
                         public void run() {
                             archiveInfo.createThumbFiles();
                         }
                     }.start();
-                }
                 System.out.println("Photo viewer started.");
                 isReady = true;
             }

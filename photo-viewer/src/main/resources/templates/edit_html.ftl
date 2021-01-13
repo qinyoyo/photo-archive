@@ -44,7 +44,7 @@
     <div><img src="/static/image/undo.png" data-action="undo"></div>
     <div><img src="/static/image/redo.png" data-action="redo"></div>
 </div>
-<div id="editor" contenteditable="true">
+<div id="editor" contenteditable="true" data-file="${sourceFile}">
 ${body?replace('contenteditable="false"','contenteditable="true"')}
 </div>
 <dialog id="select-color">
@@ -63,12 +63,12 @@ ${body?replace('contenteditable="false"','contenteditable="true"')}
         <button onclick="this.parentElement.parentElement.close()">取消</button>
     </div>
 </dialog>
-<dialog id="select-resource" style="width:500px">
+<dialog id="select-resource" style="width:600px; top:10px">
     <div id="select-resource-content">
         ${resource}
     </div>
     <div style="padding-top: 10px;">
-        <button onclick="this.parentElement.parentElement.close(document.getElementById('select-link-url').value)">确定</button>
+        <button onclick="resourceSelected(true)">确定</button>
         <button onclick="this.parentElement.parentElement.close()">取消</button>
     </div>
 </dialog>

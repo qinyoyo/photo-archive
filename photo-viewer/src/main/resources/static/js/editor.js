@@ -1,9 +1,26 @@
 
 function adjustSize(img) {
-    let w = img.parentNode.clientWidth
+    let w = 196
     let iw = img.naturalWidth, ih = img.naturalHeight
-    if (iw<=w) img.parentNode.style.height = Math.min(w,ih) + 'px'
-    else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px';
+    if (iw<=w) img.parentNode.style.height = (Math.min(w,ih) + 26) + 'px'
+    else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)+26) + 'px';
+}
+function resourceSelected(ok) {
+    const dialog = document.getElementById('select-resource')
+    if (ok) {
+        const type = document.getElementById('select-resource-content').className
+        if (type)  {
+            const form = document.getElementById(type+'-form')
+            if (form) {
+                let formData = new FormData(form)
+                let value = formData.getAll(type)
+                if (value instanceof Array) value = value.join(",")
+                dialog.close(value)
+                return
+            }
+        }
+    }
+    dialog.close()
 }
 ;(function () {
 
@@ -167,53 +184,48 @@ function adjustSize(img) {
         document.execCommand('formatBlock', false, '<blockquote>');
     }
 
-    RE.insertImage = function(url, alt) {
-        const html = '<div class="center-block"><img src="' + url + '" alt="' + alt + '"/></div>';
-        RE.insertHTML(html);
-    }
-
     RE.insertImageW = function(url, alt, width) {
-        const html = '<div class="center-block"><img src="' + url + '" alt="' + alt + '" width="' + width + '"/></div>';
-        RE.insertHTML(html);
-    }
-
-    RE.insertImageWH = function(url, alt, width, height) {
-        const html = '<div class="center-block"><img src="' + url + '" alt="' + alt + '" width="' + width + '" height="' + height +'"/></div>';
-        RE.insertHTML(html);
-    }
-
-    RE.insertVideo = function(url, alt) {
-        const html = '<div class="center-block"><video src="' + url + '" controls></video></div>';
+        if (!url || url.length==0) return
+        let html
+        if (typeof url === 'string' || url.length==1) html = '<div class="center-block"><img src="' + (typeof url === 'string' ? url : url[0])  + '" alt="' + (typeof alt === 'string' ? alt : alt[0]) + '" width="' + width + '"/></div>';
+        else {
+            width = Math.trunc((width - (url.length-1)*5)/url.length)
+            html = '<div class="center-block">'
+            for (let i=0;i<url.length;i++) {
+                html += ('<img src="' + url[i] + '" alt="' + alt[i] +'"' + (i<url.length-1 ? ' style="padding-right:5px; width:'+width+'px"':' style="width:'+width+'px"') +'></img>')
+            }
+            html += '</div>';
+        }
         RE.insertHTML(html);
     }
 
     RE.insertVideoW = function(url, width) {
-        const html = '<div class="center-block"><video src="' + url + '" width="' + width + '" controls></video></div>';
+        if (!url || url.length==0) return
+        let html
+        if (typeof url === 'string' || url.length==1) html = '<div class="center-block"><video src="' + (typeof url === 'string' ? url : url[0]) + '" width="' + width + '" controls></video></div>';
+        else {
+            width = Math.trunc((width - (url.length-1)*5)/url.length)
+            html = '<div class="center-block">'
+            for (let i=0;i<url.length;i++) {
+                html += ('<video src="' + url[i] + '" width="' + width + '" controls' + (i<url.length-1 ? ' style="padding-right:5px"':'') +'></video>')
+            }
+            html += '</div>';
+        }
         RE.insertHTML(html);
     }
 
-    RE.insertVideoWH = function(url, width, height) {
-        const html = '<div class="center-block"><video src="' + url + '" width="' + width + '" height="' + height + '" controls></video></div>';
-        RE.insertHTML(html);
-    }
-
-    RE.insertAudio = function(url, alt) {
-        const html = '<div class="center-block"><audio src="' + url + '" controls></audio></div>';
-        RE.insertHTML(html);
-    }
-
-    RE.insertYoutubeVideo = function(url) {
-        const html = '<iframe width="100%" height="100%" src="' + url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><br/>\n'
-        RE.insertHTML(html);
-    }
-
-    RE.insertYoutubeVideoW = function(url, width) {
-        const html = '<iframe width="' + width + '" src="' + url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><br/>\n'
-        RE.insertHTML(html);
-    }
-
-    RE.insertYoutubeVideoWH = function(url, width, height) {
-        const html = '<iframe width="' + width + '" height="' + height + '" src="' + url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><br/>\n'
+    RE.insertAudioW = function(url, width) {
+        if (!url || url.length==0) return
+        let html
+        if (typeof url === 'string' || url.length==1) html = '<div class="center-block"><audio src="' + (typeof url === 'string' ? url : url[0]) + '" controls></audio></div>';
+        else {
+            width = Math.trunc((width - (url.length-1)*5)/url.length)
+            html = '<div class="center-block">'
+            for (let i=0;i<url.length;i++) {
+                html += ('<audio src="' + url[i] + '" controls' + (i<url.length-1 ? ' style="padding-right:5px; width:'+width+'px"':' style="width:'+width+'px"') +'></audio>')
+            }
+            html += '</div>';
+        }
         RE.insertHTML(html);
     }
 
@@ -245,7 +257,7 @@ function adjustSize(img) {
     }
 
     RE.prepareInsert = function() {
-        RE.backuprange();
+        return RE.backuprange();
     }
 
     RE.backuprange = function(){
@@ -256,8 +268,10 @@ function adjustSize(img) {
                 "startContainer": range.startContainer,
                 "startOffset": range.startOffset,
                 "endContainer": range.endContainer,
-                "endOffset": range.endOffset};
+                "endOffset": range.endOffset
+            };
         }
+        return selection.rangeCount
     }
 
     RE.restorerange = function(){
@@ -302,20 +316,8 @@ function adjustSize(img) {
     }
     const getResource = function(type,callback) {
         const dialog = document.getElementById('select-resource')
-        let e = dialog.querySelector('.'+type+'-list');
-        if (e) e.style.display = 'block'
-        if (type!='audio') {
-            e = dialog.querySelector('.audio-list');
-            if (e) e.style.display = 'none'
-        }
-        if (type!='video') {
-            e = dialog.querySelector('.video-list');
-            if (e) e.style.display = 'none'
-        }
-        if (type!='photo') {
-            e = dialog.querySelector('.photo-list');
-            if (e) e.style.display = 'none'
-        }
+        document.getElementById('select-resource-content').className=type
+        dialog.querySelectorAll('input').forEach(function(e){ e.checked = false })
         showDialog(dialog, callback)
     }
     const getLinkResource = function(callback) {
@@ -326,7 +328,8 @@ function adjustSize(img) {
         const dialog = document.getElementById('select-resource')
         dialog.querySelectorAll('.folder-item').forEach(function(d) {
             let path = d.getAttribute('data-folder')
-            const url = path ? '/resource?path=' + encodeURI(path) : '/'
+            let currentPath = document.getElementById('resource-list').getAttribute("data-path")
+            const url = '/resource?current='+encodeURI(currentPath) + (path ? '&path=' + encodeURI(path) : '')
             d.onclick=function () {
                 Ajax.get(url, function (responseText) {
                     if (responseText && responseText!='error') {
@@ -339,12 +342,18 @@ function adjustSize(img) {
     }
 
     window.onload = function() {
+        window.onbeforeunload = function(e) {
+            const dialogText = '页面已修改';
+            e.returnValue = dialogText;
+            return dialogText;
+        };
         const sw =window.innerWidth,
               bw = document.querySelector('body').clientWidth
         document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
         RE.editor = document.getElementById('editor');
         RE.setBaseFontSize('14px');
         initResource()
+        let htmlSaved = RE.getHtml()
         document.querySelectorAll('.float-editor__buttons img').forEach(function(img) {
             const action = img.getAttribute("data-action")
             img.onclick = function(){
@@ -360,24 +369,38 @@ function adjustSize(img) {
                         RE.setJustifyCenter()
                         break;
                     case 'save':
+                        const html = RE.getHtml()
+                        if (html!=htmlSaved){
+                            const source=RE.editor.getAttribute("data-file")
+                            let data=new FormData()
+                            data.append("source",source)
+                            data.append("body",html)
+                            Ajax.post("/save",data,function (msg){
+                                if (msg=='ok') htmlSaved = html
+                                alert(msg)
+                            })
+                        } else alert('没有改变')
                         break;
                     case 'insert_image':
-                        RE.prepareInsert()
-                        getResource('photo',function(imgUrl) {
-                            RE.insertImageW(imgUrl,imgUrl,'100%')
-                        })
+                        if (RE.prepareInsert()){
+                            getResource('photo',function (url){
+                                RE.insertImageW(url.indexOf(',')>=0?url.split(','):url,url.indexOf(',')>=0?url.split(','):url,730)
+                            })
+                        }
                         break;
                     case 'music':
-                        RE.prepareInsert()
-                        getResource('audio',function(audioUrl) {
-                            RE.insertAudio(audioUrl);
-                        })
+                        if (RE.prepareInsert()){
+                            getResource('audio',function (url){
+                                RE.insertAudioW(url.indexOf(',')>=0?url.split(','):url,730);
+                            })
+                        }
                         break;
                     case 'video':
-                        RE.prepareInsert()
-                        getResource('video',function(videoUrl) {
-                            RE.insertVideoW(videoUrl,'100%');
-                        })
+                        if (RE.prepareInsert()){
+                            getResource('video',function (url){
+                                RE.insertVideoW(url.indexOf(',')>=0?url.split(','):url,730);
+                            })
+                        }
                         break;
                     case 'indent':
                         RE.setIndent()
@@ -428,25 +451,28 @@ function adjustSize(img) {
                         RE.setHeading('6')
                         break;
                     case 'txt_color':
-                        RE.prepareInsert()
-                        getColor('选择字体颜色', function(col) {
-                            RE.setTextColor(col)
-                        })
+                        if (RE.prepareInsert()){
+                            getColor('选择字体颜色',function (col){
+                                RE.setTextColor(col)
+                            })
+                        }
                         break;
                     case 'bg_color':
-                        RE.prepareInsert()
-                        getColor('选择背景颜色', function(col) {
-                            RE.setTextBackgroundColor(col)
-                        })
+                        if (RE.prepareInsert()){
+                            getColor('选择背景颜色',function (col){
+                                RE.setTextBackgroundColor(col)
+                            })
+                        }
                         break;
                     case 'blockquote':
                         RE.setBlockquote()
                         break;
                     case 'insert_link':
-                        RE.prepareInsert()
-                        getLinkResource(function(link) {
-                            RE.insertLink(link,link)
-                        })
+                        if (RE.prepareInsert()){
+                            getLinkResource(function (link){
+                                RE.insertLink(link,link)
+                            })
+                        }
                         break;
                     case 'undo':
                         RE.undo()

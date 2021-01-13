@@ -9,7 +9,7 @@
         <#return replaceSpecialChar('/'+h.fileName) />
     </#if>
 </#function>
-<div id="resource-list">
+<div id="resource-list" data-path="${currentPath}">
     <div class="folder-head" >
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
@@ -39,34 +39,50 @@
         </div>
     </#if>
     <#if audios??>
-        <div class="audio-list grid-box">
+        <div class="audio-list">
+            <form id="audio-form">
             <#list audios as a>
-                <div class="audio-item grid-cell">
+                <div class="audio-item">
                     <audio src = "${fileUrl(a)}" class="audio-index-${a?index}" controls></audio>
-                    <span>${a.fileName}</span>
+                    <div>
+                        <input type="radio" name="audio" id="audio-index-${a?index}" value="${a.urlPath(currentPath)}" />
+                        <label for="audio-index-${a?index}">${a.fileName}</label>
+                    </div>
                 </div>
             </#list>
+            </form>
         </div>
     </#if>
     <#if videos??>
-        <div class="collapse-content video-list grid-box">
+        <div class="video-list">
+            <form id="video-form">
             <#list videos as v>
-                <div class="video-item grid-cell">
+                <div class="video-item">
                     <video src = "${fileUrl(v)}" controls class="video-index-${v?index}"></video>
-                    <span>${v.fileName}</span>
+                    <div>
+                        <input type="radio" name="video" id="video-index-${v?index}" value="${v.urlPath(currentPath)}"/>
+                        <label for="video-index-${v?index}">${v.fileName}</label>
+                    </div>
                 </div>
             </#list>
+            </form>
         </div>
     </#if>
     <#if photos??>
-        <div class="collapse-content photo-list grid-box">
+        <form id="photo-form" class="photo-list">
+        <div class="grid-box3">
             <#list photos as p>
                 <div class="photo-item grid-cell">
                     <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if> title="${p.toString()}"
                          class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                    <div>
+                        <input type="checkbox" name="photo" id="img-index-${p?index}" value="${p.urlPath(currentPath)}"/>
+                        <label for="img-index-${p?index}">${p.fileName}</label>
+                    </div>
                 </div>
             </#list>
         </div>
+        </form>
     </#if>
 </div>
 

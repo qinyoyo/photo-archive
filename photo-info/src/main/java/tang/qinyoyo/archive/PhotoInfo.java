@@ -2,6 +2,7 @@ package tang.qinyoyo.archive;
 
 import lombok.Getter;
 import lombok.Setter;
+import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 import java.io.File;
@@ -242,6 +243,13 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
         fileName = file.getName();
         fileSize = file.length();
+        if (ArchiveUtils.isInWebFolder(subFolder) && fileName.equals("index.html")) {
+            setMimeType("text/html");
+            String subTitle = subFolder.substring(0,subFolder.length()-4);
+            int pos = subTitle.lastIndexOf(File.separator);
+            setSubTitle(pos>=0 ? subTitle.substring(pos+1) : subTitle);
+            System.out.println("    处理游记 : " + getSubTitle());
+        }
     }
     // 不读取exif信息，便于快速读取
     public  PhotoInfo(String rootPath, File file) {
@@ -439,6 +447,27 @@ public class PhotoInfo implements Serializable,Cloneable {
                 return new File(new File(root, sub), getFileName()).getCanonicalPath();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
+        }
+    }
+    public String urlPath(String currentPath) {
+        String sub = getSubFolder();
+        if (sub == null || sub.isEmpty()) {
+            return '/'+getFileName();
+        } else {
+            int uplevel = 0;
+            String url='/'+sub.replaceAll("\\\\","/") + '/' + getFileName();
+            currentPath = currentPath.replaceAll("\\\\","/");
+            if (currentPath.isEmpty() || currentPath.equals('/')) return url;
+            if (!currentPath.startsWith("/")) currentPath = "/" + currentPath;
+            if (!currentPath.endsWith("/")) currentPath = currentPath + '/';
+            while (!url.startsWith(currentPath)) {
+                uplevel ++;
+                int pos = currentPath.substring(0,currentPath.length()-1).lastIndexOf("/");
+                currentPath = currentPath.substring(0,pos+1);
+            }
+            url = url.substring(currentPath.length());
+            while (uplevel-- > 0) url = "../"+url;
+            return url;
         }
     }
     public String fullThumbPath(String root) throws IOException {

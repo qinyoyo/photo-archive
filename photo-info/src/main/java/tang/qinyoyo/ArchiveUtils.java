@@ -162,6 +162,13 @@ public class ArchiveUtils {
         }
         System.out.println("剩余照片数量 : " + all.size());
     }
+    public static boolean isInWebFolder(String folder) {
+        if (folder!=null && !folder.isEmpty()) {
+            String [] dd = folder.split("\\\\|/");
+            for (String d:dd) if (d.endsWith(".web")) return true;
+        }
+        return false;
+    }
     public static void removeEmptyFolder(File dir) {
         if (!dir.isDirectory()) return;
         File[] subDirs = dir.listFiles(new FileFilter() {

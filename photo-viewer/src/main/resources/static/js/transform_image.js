@@ -841,7 +841,7 @@
         closeButton.style.zIndex = "6005"
 
         let closeIcon = document.createElement("img")
-        closeIcon.src = 'static/image/close.png'
+        closeIcon.src = '/static/image/close.png'
         closeButton.appendChild(closeIcon)
 
         let waitingIcon = document.createElement("button")

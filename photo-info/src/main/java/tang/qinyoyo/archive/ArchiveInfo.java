@@ -122,7 +122,36 @@ public class ArchiveInfo {
         if (infos==null)  infos = new ArrayList<>();
     }
 
-    private void seekPhotoInfosInFolder(File dir) {
+    public void addFile(File f) {
+        try {
+            if (!f.exists()) return;
+            String p = f.getCanonicalPath();
+            if (!p.startsWith(path)) return;
+            if (f.isFile()) {
+                if (find(f)==null) {
+                    PhotoInfo pi = new PhotoInfo(path, f);
+                    pi.readProperties(path);
+                    infos.add(pi);
+                    sortInfos();
+                }
+            } else {
+                List<PhotoInfo> list = new ArrayList<>();
+                seekPhotoInfosInFolder(f,list);
+                if (list!=null && list.size()>1) {
+                    list.sort((a, b) -> a.compareTo(b));
+                    int count = 0;
+                    for (int i=0;i<list.size();i++) {
+                        if (find(new File(list.get(i).fullPath(path)))==null) {
+                            infos.add(list.get(i));
+                            count++;
+                        }
+                    }
+                    if (count>0) sortInfos();
+                }
+            }
+        } catch (Exception e) {}
+    }
+    private void seekPhotoInfosInFolder(File dir, List<PhotoInfo> infoList) {
         if (!dir.isDirectory() || !dir.exists()) return;
         File [] files = dir.listFiles(new FileFilter() {
             @Override
@@ -134,7 +163,6 @@ public class ArchiveInfo {
             System.out.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+files.length);
             for (File f : files) f.delete();
         }
-        Set<String> processedFiles = new HashSet<String>();
         System.out.println("批量搜索 "+dir.getAbsolutePath());
         Map<String, Map<Key, Object>> fileInfos = null;
 
@@ -153,10 +181,13 @@ public class ArchiveInfo {
 	                    if (SupportFileType.isSupport(file)) {
 	                        PhotoInfo photoInfo = new PhotoInfo(path, new File(dir, file));
 	                        photoInfo.setPropertiesBy(fileInfos.get(file));
-	                        infos.add(photoInfo);
-	                        count++;
+	                        if (dir.getName().endsWith(".web") && photoInfo.getMimeType()!=null && photoInfo.getMimeType().contains("html") && !photoInfo.getFileName().equals("index.html")) {
+                                System.out.println("    忽略文件 " + file);
+                            } else {
+                                infoList.add(photoInfo);
+                                count++;
+                            }
 	                    } else System.out.println("    忽略文件 " + file);
-	                    processedFiles.add(file);
 	                } catch (Exception e1) {
 	                }
             	}
@@ -177,17 +208,7 @@ public class ArchiveInfo {
             });
             for (File d : dirs) {
                 if (d.isDirectory()) {
-                    // .web 结束的子目录为游记目录，不递归处理，添加游记文件
-                    if (d.getName().endsWith(".web")) {
-                        File indexHtml = new File(d,"index.html");
-                        if (indexHtml.exists()) {
-                            PhotoInfo html = new PhotoInfo(path, indexHtml);
-                            html.setMimeType("text/html");
-                            html.setSubTitle(d.getName().substring(0,d.getName().length()-4));
-                            infos.add(html);
-                            System.out.println("    处理游记 : "+html.getSubTitle());
-                        }
-                    } else seekPhotoInfosInFolder(d);
+                    seekPhotoInfosInFolder(d,infoList);
                 }
             }
         }
@@ -195,7 +216,7 @@ public class ArchiveInfo {
     public void seekPhotoInfo() {
         File dir = new File(path);
         infos = new ArrayList<>();
-        seekPhotoInfosInFolder(dir);
+        seekPhotoInfosInFolder(dir, infos);
     }
     public void readInfos() {
         File af = new File(path, ARCHIVE_FILE);
@@ -230,14 +251,6 @@ public class ArchiveInfo {
                 System.out.println("Create thumbnail of " + imgPath);
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
             } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
-               /*String size = "300x200";
-                if (p.getHeight()!=null && p.getWidth()!=null) {
-                    float scale = Math.min(300.0f/p.getWidth(),200.0f/p.getHeight());
-                    int w = (int)(scale * p.getWidth()), h = (int)(scale * p.getHeight());
-                    size = w + "x" + h;
-                }
-
-                */
                 System.out.println("Create thumbnail of " + imgPath);
                 CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2", "-t", "0.001",
                         // "-s", size,
@@ -449,19 +462,23 @@ public class ArchiveInfo {
         List<PhotoInfo> all = getInfos();
         System.out.println("照片数量 : " + all.size());
         for (int i = 0; i < all.size(); i++) {
-            Date dt0 = all.get(i).getShootTime();
+            PhotoInfo pii = all.get(i);
+            if (ArchiveUtils.isInWebFolder(pii.getSubFolder())) continue;
+            Date dt0 = pii.getShootTime();
             for (int j = i + 1; j < all.size(); j++) {
-                Date dt1 = all.get(j).getShootTime();
+                PhotoInfo pij = all.get(j);
+                if (ArchiveUtils.isInWebFolder(pij.getSubFolder())) continue;
+                Date dt1 = pij.getShootTime();
                 if (!ArchiveUtils.equals(dt0, dt1))
                     break;
                 boolean same = false;
                 try {
-                    same = all.get(i).sameAs(all.get(j));
+                    same = pii.sameAs(pij);
                 } catch (Exception e) {
                 }
                 if (same) {
-                    rm.add(all.get(i));
-                    sameAs.add(all.get(j));
+                    rm.add(pii);
+                    sameAs.add(pij);
                     break;
                 }
             }
@@ -487,25 +504,31 @@ public class ArchiveInfo {
         }
         j0 = jstart;
         for (int i = 0; i < all.size(); i++) {
-            Date dt0 = all.get(i).getShootTime();
+            PhotoInfo pii = all.get(i);
+            if (ArchiveUtils.isInWebFolder(pii.getSubFolder())) continue;
+            Date dt0 = pii.getShootTime();
             if (dt0 == null) { // 没有拍摄日期的互相比较
                 for (int j = j0; j < jstart; j++) {
+                    PhotoInfo pij = refInfos.get(j);
+                    if (ArchiveUtils.isInWebFolder(pij.getSubFolder())) continue;
                     boolean same = false;
                     try {
-                        same = all.get(i).sameAs(refInfos.get(j));
+                        same = pii.sameAs(pij);
                     } catch (Exception e) {
-                        same = ArchiveUtils.contentCompare(all.get(i).fullPath(getPath()),refInfos.get(j).fullPath(ref.getPath())) == 0;
+                        same = ArchiveUtils.contentCompare(pii.fullPath(getPath()),pij.fullPath(ref.getPath())) == 0;
                     }
                     if (same) {
-                        rm.add(all.get(i));
-                        sameAs.add(refInfos.get(j));
+                        rm.add(pii);
+                        sameAs.add(pij);
                         break;
                     }
                 }
             } else {
                 boolean j0set = false;
                 for (int j = j0; j < refInfos.size(); j++) {
-                    Date dt1 = refInfos.get(j).getShootTime();
+                    PhotoInfo pij = refInfos.get(j);
+                    if (ArchiveUtils.isInWebFolder(pij.getSubFolder())) continue;
+                    Date dt1 = pij.getShootTime();
                     if (dt1.getTime() == dt0.getTime()) {
                         if (!j0set) {
                             j0 = j;
@@ -513,13 +536,13 @@ public class ArchiveInfo {
                         }
                         boolean same = false;
                         try {
-                            same = all.get(i).sameAs(refInfos.get(j));
+                            same = pii.sameAs(pij);
                         } catch (Exception e) {
-                            same = ArchiveUtils.contentCompare(all.get(i).fullPath(getPath()),refInfos.get(j).fullPath(ref.getPath())) == 0;
+                            same = ArchiveUtils.contentCompare(pii.fullPath(getPath()),pij.fullPath(ref.getPath())) == 0;
                         }
                         if (same) {
-                            rm.add(all.get(i));
-                            sameAs.add(refInfos.get(j));
+                            rm.add(pii);
+                            sameAs.add(pij);
                             break;
                         }
                     } else if (dt1.getTime() > dt0.getTime()) {
