@@ -217,13 +217,18 @@
             vertical-align: middle;
             width:100%;
         }
-        .center-block img,video,audio {
+        .center-block img {
             max-width:100%;
             max-height:100%;
             margin: 0 auto;
         }
+        .center-block video,audio {
+            max-width:100%;
+            max-height:260px;
+            margin: 0 auto;
+        }
         body {
-            max-width: 739px;
+            max-width: 738px;
             padding: 10px;
             margin: auto;
         }

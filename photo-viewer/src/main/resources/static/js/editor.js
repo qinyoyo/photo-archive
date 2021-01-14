@@ -186,13 +186,20 @@ function resourceSelected(ok) {
 
     RE.insertImageW = function(url, alt, width) {
         if (!url || url.length==0) return
+        const getAlt = function(i) {
+            if (!alt) return 'photo'
+            else if (i<alt.length) return alt[i]
+            else return alt[0]
+        }
+        url = (typeof url === 'string' ? url.split(',') : url)
+        alt = (typeof alt === 'string' ? alt.split(',') : alt)
         let html
-        if (typeof url === 'string' || url.length==1) html = '<div class="center-block"><img src="' + (typeof url === 'string' ? url : url[0])  + '" alt="' + (typeof alt === 'string' ? alt : alt[0]) + '" width="' + width + '"/></div>';
+        if (url.length==1) html = '<div class="center-block"><img src="' + url[0]  + '" alt="' + getAlt(0) + '" width="' + width + '"/></div>';
         else {
-            width = Math.trunc((width - (url.length-1)*5)/url.length)
+            width = Math.trunc((100 - url.length)/url.length) + '%'
             html = '<div class="center-block">'
             for (let i=0;i<url.length;i++) {
-                html += ('<img src="' + url[i] + '" alt="' + alt[i] +'"' + (i<url.length-1 ? ' style="padding-right:5px; width:'+width+'px"':' style="width:'+width+'px"') +'></img>')
+                html += ('<img src="' + url[i] + '" alt="' + getAlt(i) +'"' + ' style="width:'+width+'"' +'></img>')
             }
             html += '</div>';
         }
@@ -384,21 +391,21 @@ function resourceSelected(ok) {
                     case 'insert_image':
                         if (RE.prepareInsert()){
                             getResource('photo',function (url){
-                                RE.insertImageW(url.indexOf(',')>=0?url.split(','):url,url.indexOf(',')>=0?url.split(','):url,730)
+                                RE.insertImageW(url.indexOf(',')>=0?url.split(','):url,url.indexOf(',')>=0?url.split(','):url,720)
                             })
                         }
                         break;
                     case 'music':
                         if (RE.prepareInsert()){
                             getResource('audio',function (url){
-                                RE.insertAudioW(url.indexOf(',')>=0?url.split(','):url,730);
+                                RE.insertAudioW(url.indexOf(',')>=0?url.split(','):url,720);
                             })
                         }
                         break;
                     case 'video':
                         if (RE.prepareInsert()){
                             getResource('video',function (url){
-                                RE.insertVideoW(url.indexOf(',')>=0?url.split(','):url,730);
+                                RE.insertVideoW(url.indexOf(',')>=0?url.split(','):url,720);
                             })
                         }
                         break;
