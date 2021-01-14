@@ -25,6 +25,9 @@
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <script type="text/javascript" src="/static/js/folder.js"></script>
     <title>Photo viewer</title>
+    <#if backgroundMusic??>
+        <audio src="${backgroundMusic}"  autoplay="autoplay" loop></audio>
+    </#if>
 </head>
 <#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
 <script>

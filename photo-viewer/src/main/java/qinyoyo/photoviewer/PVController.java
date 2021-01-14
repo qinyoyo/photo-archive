@@ -194,6 +194,37 @@ public class PVController implements ApplicationRunner {
         return null;
     }
 
+    String [] randomMusic = null;
+    int randomIndex = 0;
+    private void setBackgroundMusic(Model model,String path) {
+        String bkm = (path==null || path.isEmpty() ? "" : "/"+path)+ "/.music.mp3";
+        if (new File(rootPath,bkm).exists()) model.addAttribute("backgroundMusic",bkm.replaceAll("\\\\","/"));
+        else if (randomIndex>=0) {
+            if (randomMusic==null) {
+                File [] mp3s = new File(rootPath,".music").listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        return file.getName().endsWith(".mp3");
+                    }
+                });
+                if (mp3s==null || mp3s.length==0) {
+                    randomIndex = -1;
+                    return;
+                }
+                randomMusic = new String[mp3s.length];
+                for (int i=0;i<mp3s.length;i++) {
+                    randomMusic[i] = "/.music/"+mp3s[i].getName();
+                }
+                model.addAttribute("backgroundMusic",randomMusic[0]);
+                randomIndex=1;
+                if (randomIndex>=randomMusic.length) randomIndex=0;
+            } else {
+                model.addAttribute("backgroundMusic",randomMusic[randomIndex]);
+                randomIndex++;
+                if (randomIndex>=randomMusic.length) randomIndex=0;
+            }
+        }
+    }
     @RequestMapping(value = "/")
     public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, String newStep) {
         if (!isReady) {
@@ -214,6 +245,7 @@ public class PVController implements ApplicationRunner {
         }
         commonAttribute(model,request);
         model.addAllAttributes(getPathAttributes(path,false));
+        setBackgroundMusic(model,path);
         return "index";
     }
     private String join(String sep,String ... strings) {
