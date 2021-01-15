@@ -93,7 +93,10 @@
         <div class="collapse-content html-list">
         <#list htmls as h>
             <div class="folder-list__item">
-                <a href = <#if htmlEditable?? && htmlEditable>"/editor?path=${fileUrl(h)}"<#else>"${fileUrl(h)}"</#if> class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
+                <#if htmlEditable?? && htmlEditable>
+                <a href = "/editor?path=${fileUrl(h)}" style="padding-right: 8px;" ><i class="fa fa-edit"></i></a>
+                </#if>
+                <a href = "${fileUrl(h)}" class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
             </div>
         </#list>
         </div>
