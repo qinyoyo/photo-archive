@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="/static/css/pv.css">
     <link rel="stylesheet" href="/static/css/transform_image.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
+    <script type="text/javascript" src="/static/js/full_screen.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <script type="text/javascript" src="/static/js/folder.js"></script>
@@ -49,6 +50,7 @@
 <div id="app">
     <div class="folder-head" >
         <div class="folder-head__left">
+            <i class="fa fa fa-arrows-alt full-screen"></i>
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
                 <#assign path = '' />

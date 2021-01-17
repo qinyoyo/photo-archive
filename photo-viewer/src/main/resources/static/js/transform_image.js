@@ -151,7 +151,7 @@
         const container = img.parentNode
         const wrapper = document.querySelector('.tran-img__wrapper')
         const waitingIcon = container.querySelector('.tran-img__waiting')
-        const removeBtn = window.enableRemove ? container.querySelector('.tran-img__remove') : null
+        const removeBtn = window.enableRemove ? container.querySelector('.tran-img__fb-wrapper .remove') : null
         let   scaleValue = 1
         let   isReady = false
         let   translateXChanged = false, translateYChanged = false
@@ -537,37 +537,43 @@
         }
         /***********  事件处理  *************/
 
+        let clickTimer = null
         const imgClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            let y = event.changedTouches && event.changedTouches.length>0 ? event.changedTouches[0].clientY : event.offsetY
-            if (removeBtn && removeBtn.style.display == 'block') {
-                removeBtn.style.display = 'none'
-                resumeLoop()
-                return true
-            } else if (y<50 && removeBtn && removeBtn.style.display == 'none') {
-                pauseLoop()
-                removeBtn.style.display = 'block'
-                return true
+            if (!clickTimer) {
+                clickTimer = setTimeout(function() {
+                    if (isLooping()) pauseLoop()
+                    else if (loopTimer) resumeLoop(true)
+                    clickTimer = null
+                },300)
             }
-            return false
         }
         if (removeBtn)  removeBtn.onclick = function(event) {
-            if (confirm("确定要从磁盘删除该图像？")) {
-                const imgIndex = index
-                let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
-                Ajax.get(url, function (responseText) {
-                    if ("ok" == responseText) {
-                        removedIndexList.push(imgIndex)
-                        document.querySelector('.img-index-' + imgIndex).remove()
-                    }
-                })
-                loadImageBy(index + 1, true)
-            }
+            event.stopPropagation()
+            event.preventDefault()
+            const floatButtons = document.querySelector('.tran-img__fb-wrapper')
+            if (floatButtons.className.indexOf('show')>=0) {
+                if (confirm("确定要从磁盘删除该图像？")) {
+                    const imgIndex = index
+                    let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
+                    Ajax.get(url, function (responseText) {
+                        if ("ok" == responseText) {
+                            removedIndexList.push(imgIndex)
+                            document.querySelector('.img-index-' + imgIndex).remove()
+                        }
+                    })
+                    loadImageBy(index + 1, true)
+                }
+            } else floatButtons.className = 'tran-img__fb-wrapper show'
         }
         const dblClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
+            if (clickTimer) {
+                clearTimeout(clickTimer)
+                clickTimer = null
+            }
             if (window.loopTimer) stopLoop()
             if (!isReady) return
             if (isFixed()){
@@ -710,24 +716,12 @@
                 },
                 tap: imgClick,
                 doubleTap:dblClick,
-                touchStart: function(event) {
-                    pauseLoop()
-                    touchStart(event)
-                },
+                touchStart: touchStart,
                 touchMove: touchMove,
-                touchEnd: function(event) {
-                    resumeLoop(false)
-                    touchEnd(event)
-                }
+                touchEnd: touchEnd
             });
         } else {
             img.onclick = imgClick
-            img.onmouseenter=function() {
-                pauseLoop()
-            }
-            img.onmouseleave = function() {
-                if (!removeBtn || removeBtn.style.display == 'none')  resumeLoop(true)
-            }
             img.ondblclick=dblClick
             img.onmousedown=touchStart
             img.onmousemove=touchMove
@@ -742,13 +736,14 @@
         }
 
         container.onclick=function (event) {
-            if (!imgClick(event)) {
-                let limit = axisLimit(clientW, clientH)
-                let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
-                let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
-                if (event.pageX > maxPage.x || event.pageX < minPage.x) {
-                    loadImageBy(event.pageX < minPage.x ? index - 1 : index + 1)
-                }
+            let limit = axisLimit(clientW, clientH)
+            let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
+            let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
+            if (event.pageX > maxPage.x || event.pageX < minPage.x) {
+                loadImageBy(event.pageX < minPage.x ? index - 1 : index + 1)
+            } else {
+                if (isLooping()) pauseLoop()
+                else if (loopTimer) resumeLoop(true)
             }
         }
 
@@ -835,39 +830,38 @@
         img.className = 'center-transform'
         img.style.zIndex = "6004"
 
-        let closeButton = document.createElement("button")
-        closeButton.className = 'tran-img__close'
-        closeButton.style.left = (pageW - 36)/2 + 'px'
-        closeButton.style.zIndex = "6005"
-
-        let closeIcon = document.createElement("img")
-        closeIcon.src = '/static/image/close.png'
-        closeButton.appendChild(closeIcon)
-
         let waitingIcon = document.createElement("button")
         waitingIcon.className = 'tran-img__waiting'
-        waitingIcon.style.zIndex = '6006'
+        waitingIcon.style.zIndex = '6005'
         waitingIcon.style.left = (pageW - 50)/2 + 'px'
 
         let waitingI = document.createElement("i")
         waitingI.className = 'fa fa-spinner fa-spin animated'
         waitingIcon.appendChild(waitingI)
 
-        dialogBody.appendChild(img)
-        dialogBody.appendChild(closeButton)
-        dialogBody.appendChild(waitingIcon)
+        let floatButtons = document.createElement("div")
+        floatButtons.className = 'tran-img__fb-wrapper'
+        floatButtons.style.zIndex = "6006"
 
-        if (window.enableRemove){
-            let removeBtn=document.createElement("button")
-            removeBtn.className='tran-img__remove'
-            removeBtn.style.zIndex='6006'
-            removeBtn.style.left=(pageW-36)/2+'px'
-            removeBtn.style.display='none'
-            let removeI=document.createElement("i")
-            removeI.className='fa fa-trash-o'
-            removeBtn.appendChild(removeI)
-            dialogBody.appendChild(removeBtn)
+        let closeButton = document.createElement("button")
+        closeButton.className = 'tran-img__float-button close'
+        let closeIcon = document.createElement("i")
+        closeIcon.className = 'fa fa-power-off'
+        closeButton.appendChild(closeIcon)
+        floatButtons.appendChild(closeButton)
+
+        if (window.enableRemove) {
+            let removeBtn = document.createElement("button")
+            removeBtn.className = 'tran-img__float-button remove'
+            let removeIcon = document.createElement("i")
+            removeIcon.className = 'fa fa-trash-o'
+            removeBtn.appendChild(removeIcon)
+            floatButtons.appendChild(removeBtn)
         }
+
+        dialogBody.appendChild(img)
+        dialogBody.appendChild(waitingIcon)
+        dialogBody.appendChild(floatButtons)
 
         content.appendChild(dialogBody)
         wrapper.appendChild(content)
@@ -879,9 +873,28 @@
             body.appendChild(window.debugElement)
         }
 
-        closeButton.onclick = function() {
-            document.querySelector('body').onkeydown = null
-            removeImageDialog()
+        floatButtons.onmouseenter=function() {
+            floatButtons.className='tran-img__fb-wrapper show'
+        }
+        floatButtons.onmouseleave = function() {
+            floatButtons.className = 'tran-img__fb-wrapper'
+        }
+        floatButtons.onclick = function(event) {
+            event.stopPropagation()
+            event.preventDefault()
+            if (floatButtons.className.indexOf('show')>=0) floatButtons.className = 'tran-img__fb-wrapper'
+            else floatButtons.className='tran-img__fb-wrapper show'
+        }
+
+        closeButton.onclick = function(event) {
+            event.stopPropagation()
+            event.preventDefault()
+            if (floatButtons.className.indexOf('show')>=0) {
+                document.querySelector('body').onkeydown = null
+                removeImageDialog()
+            } else {
+                floatButtons.className='tran-img__fb-wrapper show'
+            }
         }
         initTransformImage({img, initialSrc: src, index, orientation})
     }

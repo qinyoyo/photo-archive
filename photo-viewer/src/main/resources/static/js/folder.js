@@ -36,6 +36,9 @@ window.onload=function(){
             searchText(this.value)
         }
     }
+    document.querySelector('.full-screen').onclick = function() {
+        window.handleFullScreen()
+    }
     document.querySelector('.search-item').onclick = function() {
         const inputWrapper = document.querySelector('.search-input__wrapper')
         if (inputWrapper.style.display == 'none') inputWrapper.style.display = 'initial';
