@@ -207,7 +207,7 @@
                         if (responseText && responseText.indexOf('ok,')===0){
                             const pp=responseText.split(',')
                             imgOrientation = pp[1]
-                            imgRating = pp[2]
+                            favorite(pp[2])
                             let thumb = document.querySelector('.img-index-'+imgIndex)
                             thumb.setAttribute('data-orientation',pp[1])
                             thumb.setAttribute('data-rating',pp[2])

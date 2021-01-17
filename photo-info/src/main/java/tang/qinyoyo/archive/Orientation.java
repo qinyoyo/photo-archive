@@ -118,11 +118,11 @@ public enum Orientation {
         try {
             Map<String, List<String>> result;
             if (orientation!=null && rating!=null)
-                result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)), "-rating="+(rating==0?"":rating), "-overwrite_original");
+                result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)), "-rating="+rating, "-overwrite_original");
             else if (orientation!=null)
                 result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)),  "-overwrite_original");
             else if (rating!=null)
-                result = ExifTool.getInstance().excute(imgFile,  "-rating="+(rating==0?"":rating), "-overwrite_original");
+                result = ExifTool.getInstance().excute(imgFile,  "-rating="+rating, "-overwrite_original");
             else return false;
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList==null || msgList.size()==0) return false;

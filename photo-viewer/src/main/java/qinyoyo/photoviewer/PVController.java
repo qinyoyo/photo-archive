@@ -431,7 +431,7 @@ public class PVController implements ApplicationRunner {
            afterChanged();
            return "ok,"+
                    (pi.getOrientation()==null?"":pi.getOrientation())+
-                   ","+(pi.getRating()==null?"":pi.getRating());
+                   ","+(pi.getRating()==null?"0":pi.getRating());
        }
        else return "fail";
     }
