@@ -18,7 +18,7 @@
             efs.call(document);
         }
     }
-    window.handleFullScreen = function (element){
+    window.fullScreenElement = function() {
         const fullscreenEnabled = document.fullscreenEnabled       ||
             document.mozFullScreenEnabled    ||
             document.webkitFullscreenEnabled ||
@@ -27,10 +27,13 @@
             const fullscreenElement = document.fullscreenElement    ||
                 document.mozFullScreenElement ||
                 document.webkitFullscreenElement;
-            if (fullscreenElement) exitFullscreen()
-            else  setFullscreen(element);
-        } else {
-            console.log('浏览器当前不能全屏');
-        }
+            return  fullscreenElement
+        } else return 0
+    }
+    window.handleFullScreen = function (element){
+        const e = fullScreenElement()
+        if (e) exitFullscreen()
+        else if (e===0) console.log('浏览器当前不能全屏');
+        else setFullscreen(element);
     }
 })();

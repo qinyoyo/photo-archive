@@ -75,6 +75,9 @@
 .show .close {
     color: #fff;
 }
+.show .music {
+    color: #06f;
+}
 .show .remove{
     color:#f00;
 }

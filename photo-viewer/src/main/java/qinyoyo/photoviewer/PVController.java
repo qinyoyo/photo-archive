@@ -194,12 +194,15 @@ public class PVController implements ApplicationRunner {
         return null;
     }
 
+    @RequestMapping(value = "favicon.ico")
+    String favicon() {
+        return "/static/image/favicon.ico";
+    }
     String [] randomMusic = null;
     int randomIndex = 0;
-    private void setBackgroundMusic(Model model,String path) {
-        String bkm = (path==null || path.isEmpty() ? "" : "/"+path)+ "/.music.mp3";
-        if (new File(rootPath,bkm).exists()) model.addAttribute("backgroundMusic",bkm.replaceAll("\\\\","/"));
-        else if (randomIndex>=0) {
+    @RequestMapping(value = "music")
+    String switchMusic() {
+        if (randomIndex>=0) {
             if (randomMusic==null) {
                 File [] mp3s = new File(rootPath,".music").listFiles(new FileFilter() {
                     @Override
@@ -209,19 +212,27 @@ public class PVController implements ApplicationRunner {
                 });
                 if (mp3s==null || mp3s.length==0) {
                     randomIndex = -1;
-                    return;
+                    return null;
+                } else {
+                    randomMusic=new String[mp3s.length];
+                    for (int i=0;i<mp3s.length;i++) {
+                        randomMusic[i]="/.music/"+mp3s[i].getName();
+                    }
                 }
-                randomMusic = new String[mp3s.length];
-                for (int i=0;i<mp3s.length;i++) {
-                    randomMusic[i] = "/.music/"+mp3s[i].getName();
-                }
-                model.addAttribute("backgroundMusic",randomMusic[0]);
-                randomIndex=1;
-                if (randomIndex>=randomMusic.length) randomIndex=0;
-            } else {
-                model.addAttribute("backgroundMusic",randomMusic[randomIndex]);
-                randomIndex++;
-                if (randomIndex>=randomMusic.length) randomIndex=0;
+                randomIndex=-1;
+            }
+            randomIndex++;
+            if (randomIndex>=randomMusic.length) randomIndex=0;
+            return randomMusic[randomIndex];
+        }  else return null;
+    }
+    private void setBackgroundMusic(Model model,String path) {
+        String bkm = (path==null || path.isEmpty() ? "" : "/"+path)+ "/.music.mp3";
+        if (new File(rootPath,bkm).exists()) model.addAttribute("backgroundMusic",bkm.replaceAll("\\\\","/"));
+        else {
+            String url = switchMusic();
+            if (url!=null) {
+                model.addAttribute("backgroundMusic",url);
             }
         }
     }

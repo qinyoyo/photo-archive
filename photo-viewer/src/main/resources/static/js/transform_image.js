@@ -144,7 +144,7 @@
                 max: 0
             }
         }
-        const pageW = window.innerWidth, pageH = window.innerHeight
+        let pageW = window.innerWidth, pageH = window.innerHeight
         let   imageW = pageW, imageH = pageH
         let   clientW = pageW, clientH = pageH
         let   realSizeScale = 1
@@ -292,6 +292,16 @@
             loadImg.setAttribute('src', src)
             waitingIcon.style.display = 'block'
             isReady = false
+        }
+        this.resize = function() {
+            pageW = window.innerWidth
+            pageH = window.innerHeight
+            realSizeScale = Math.max(imageW / pageW, imageH / pageH)
+            if (realSizeScale<1) realSizeScale = 1
+            let ms = minScale()
+            if (scaleValue < ms) scaleValue = ms
+            calcSize()
+            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
         }
         const swapWHByOrientation = function () {
             return (window.notSupportOrientation && (orientation=='5' || orientation=='6'
@@ -808,6 +818,18 @@
         wrapper.style.zIndex = "6001"
         return wrapper
     }
+    let transformObject = null
+    const resizeEvent = function() {
+        const pageW = window.innerWidth, pageH = window.innerHeight
+        const dialogBody = document.querySelector('.tran-img__body')
+        if (dialogBody) {
+            dialogBody.style.width = pageW + 'px'
+            dialogBody.style.height = pageH + 'px'
+        }
+        if (transformObject) {
+            transformObject.resize()
+        }
+    }
     const addImageDialog = function({ src, index, orientation}) {
         removeImageDialog()
         addModel()
@@ -842,6 +864,19 @@
         let floatButtons = document.createElement("div")
         floatButtons.className = 'tran-img__fb-wrapper'
         floatButtons.style.zIndex = "6006"
+
+        const bkMusic = document.querySelector('.background-music')
+        if (bkMusic) {
+            let musicBtn = document.createElement("button")
+            musicBtn.className = 'tran-img__float-button music'
+            let musicIcon = document.createElement("i")
+            musicIcon.className = 'fa fa-music'
+            musicBtn.appendChild(musicIcon)
+            floatButtons.appendChild(musicBtn)
+            musicBtn.onclick = function() {
+                bkMusic.src = '/music?click='+new Date().getTime()
+            }
+        }
 
         let closeButton = document.createElement("button")
         closeButton.className = 'tran-img__float-button close'
@@ -891,12 +926,13 @@
             event.preventDefault()
             if (floatButtons.className.indexOf('show')>=0) {
                 document.querySelector('body').onkeydown = null
+                window.onresize = null
                 removeImageDialog()
             } else {
                 floatButtons.className='tran-img__fb-wrapper show'
             }
         }
-        initTransformImage({img, initialSrc: src, index, orientation})
+        transformObject = new initTransformImage({img, initialSrc: src, index, orientation})
     }
 
     /*****************  入口函数  *********************
@@ -915,8 +951,11 @@
                 if (isMobile() && title && event.offsetX<36 && event.offsetY<36) {
                     alert(title)
                 } else {
+                    window.onresize = resizeEvent
                     let src = img.getAttribute('src')
                     if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
+                    const e = fullScreenElement()
+                    if (e===null) handleFullScreen()
                     addImageDialog({
                         src,
                         index: index==NaN?0:index,
