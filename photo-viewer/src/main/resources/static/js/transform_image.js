@@ -202,12 +202,14 @@
                     let url = '/orientation?path='+encodeURI(path)+
                         (orientations? ('&orientations='+orientations) : '') +
                         (imgRating && imgRating.indexOf('+')===0 ?
-                           ('&rating='+(imgRating=='+5'?'0':5)) :'')
+                           ('&rating='+(imgRating=='+5'?'0':'5')) :'')
                     Ajax.get(url, function(responseText) {
                         if (responseText && responseText.indexOf('ok,')===0){
                             const pp=responseText.split(',')
-                            imgOrientation = pp[1]
-                            favorite(pp[2])
+                            if (index==imgIndex) {
+                                imgOrientation = pp[1]
+                                favorite(pp[2])
+                            }
                             let thumb = document.querySelector('.img-index-'+imgIndex)
                             thumb.setAttribute('data-orientation',pp[1])
                             thumb.setAttribute('data-rating',pp[2])
