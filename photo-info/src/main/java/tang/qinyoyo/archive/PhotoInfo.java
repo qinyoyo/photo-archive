@@ -484,7 +484,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     public boolean modifyOrientation(String root, Integer newRating, Integer ... operations) {
         if (mimeType==null || !mimeType.contains("image/")) return false;
         Integer newOrientation = null;
-        if (operations.length>0) {
+        if (operations!=null && operations.length>0) {
             orientation = Orientation.getOrientation(new File(fullPath(root)));
             int orientation1=0;
             if (orientation==null || orientation==Orientation.NONE.getValue()) orientation1 = Orientation.by(operations);

@@ -424,7 +424,7 @@ public class PVController implements ApplicationRunner {
         if (!isReady) {
             return "error";
         }
-       if (path==null || orientations==null || orientations.length==0) return "error";
+       if (path==null) return "error";
        PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
        if (pi==null) return "error";
        if (pi.modifyOrientation(rootPath, rating, orientations)) {

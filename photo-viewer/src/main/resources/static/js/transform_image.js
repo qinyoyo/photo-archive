@@ -201,7 +201,8 @@
                 if (orientations || (imgRating && imgRating.indexOf('+')===0)) {
                     let url = '/orientation?path='+encodeURI(path)+
                         (orientations? ('&orientations='+orientations) : '') +
-                        (imgRating && imgRating.indexOf('+')===0? ('&rating='+imgRating.substring(1)) :'')
+                        (imgRating && imgRating.indexOf('+')===0 ?
+                           ('&rating='+(imgRating=='+5'?'0':5)) :'')
                     Ajax.get(url, function(responseText) {
                         if (responseText && responseText.indexOf('ok,')===0){
                             const pp=responseText.split(',')
@@ -280,7 +281,7 @@
                         },10)
                     }
                     imgOrientation = orientation
-                    imgRating = rating
+                    favorite(rating)
                     imageW = img.naturalWidth
                     imageH = img.naturalHeight
                     rotateZ = 0
@@ -313,19 +314,21 @@
             calcSize()
             transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
         }
-        this.favorite = function(f) {
+        const favorite = function(f) {
             if (f=='toggle') {
                 if (imgRating && imgRating.indexOf('+')==0)
                     imgRating = imgRating.substring(1)
                 else if (imgRating) imgRating = '+' + imgRating
                 else imgRating = '+0'
             } else imgRating = f
-            imgRating = f
             const e = document.querySelector('.tran-img__float-button.favorite i.fa')
-            if (e && (imgRating==='5'|| imgRating.indexOf('+')===0))
+            if (e && imgRating && imgRating!='+5' && (imgRating==='5'|| imgRating.indexOf('+')===0))
                 e.className = 'fa fa-heart'
             else if (e)
                 e.className = 'fa fa-heart-o'
+        }
+        this.toggleFavorite = function() {
+            favorite('toggle')
         }
         const swapWHByOrientation = function () {
             return (window.notSupportOrientation && (orientation=='5' || orientation=='6'
@@ -782,6 +785,7 @@
         }
 
         const imageKeyEvent = function(event) {
+            console.log(event.code)
             if (event.code=='ArrowLeft' || event.code=='Numpad4'){
                 move({x: -10, y: 0})
             } else if (event.code=='ArrowRight' || event.code=='Numpad6'){
@@ -790,7 +794,7 @@
                 move({x: 0, y: -10})
             } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
                 move({x: 0, y: 10})
-            } else if (event.code=='Space'){
+            } else if (event.code=='Slash' || event.code=='NumpadDivide'){
                 rotate(rotateZ+(event.shiftKey ? -90 : 90))
                 calcSize()
             } else if ((event.code=='Equal' || event.code=='NumpadAdd') && scaleValue<realSizeScale){
@@ -812,7 +816,7 @@
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
-        changeImage({ src: initialSrc, orientation })
+        changeImage({ src: initialSrc, orientation, rating })
         startLoop()
     }
 
@@ -956,7 +960,7 @@
             event.stopPropagation()
             event.preventDefault()
             if (floatButtons.className.indexOf('show')>=0) {
-                if (transformObject) transformObject.favorite('toggle')
+                if (transformObject) transformObject.toggleFavorite()
             } else {
                 floatButtons.className='tran-img__fb-wrapper show'
             }
