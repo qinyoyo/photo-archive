@@ -145,7 +145,7 @@
         <div class="collapse-content photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if> title="${p.toString()}"
+                    <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
                          class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>

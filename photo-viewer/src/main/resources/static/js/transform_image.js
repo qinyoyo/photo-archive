@@ -130,7 +130,7 @@
     }
 
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function ({img, initialSrc, index, orientation}) {
+    const initTransformImage = function ({img, initialSrc, index, orientation, rating}) {
         /**  变量  */
         let translateX = 0, translateY = 0
         let rotateZ = 0, mirrorH = false, mirrorV = false
@@ -156,6 +156,7 @@
         let   isReady = false
         let   translateXChanged = false, translateYChanged = false
         let   imgOrientation = orientation
+        let   imgRating = rating
 
         /********   image load, modify   **********/
         let removedIndexList = []
@@ -169,8 +170,9 @@
                 if (thumb) {
                     let src = thumb.getAttribute('src')
                     let orientation = thumb.getAttribute('data-orientation')
+                    let rating = thumb.getAttribute('data-rating')
                     if (src.indexOf('.thumb/') == 0 || src.indexOf('/.thumb/') == 0) src = src.substring(7)
-                    return { src, orientation }
+                    return { src, orientation, rating }
                 }
             }
             return false
@@ -196,11 +198,18 @@
                     else if (rotateZ==180) orientations += '3'
                     else if (rotateZ==270) orientations += '8'
                 }
-                if (orientations) {
-                    let url = '/orientation?path='+encodeURI(path)+'&orientations='+orientations
+                if (orientations || (imgRating && imgRating.indexOf('+')===0)) {
+                    let url = '/orientation?path='+encodeURI(path)+
+                        (orientations? ('&orientations='+orientations) : '') +
+                        (imgRating && imgRating.indexOf('+')===0? ('&rating='+imgRating.substring(1)) :'')
                     Ajax.get(url, function(responseText) {
-                        if ("ok"==responseText){
+                        if (responseText && responseText.indexOf('ok,')===0){
+                            const pp=responseText.split(',')
+                            imgOrientation = pp[1]
+                            imgRating = pp[2]
                             let thumb = document.querySelector('.img-index-'+imgIndex)
+                            thumb.setAttribute('data-orientation',pp[1])
+                            thumb.setAttribute('data-rating',pp[2])
                             let tp = thumb.getAttribute('src')
                             let pos = tp.indexOf('?')
                             if (pos>=0) tp = tp.substring(0,pos)
@@ -213,9 +222,9 @@
         }
         const loadImageBy = function (imgIndex, skipSave) {
             if (!skipSave) saveOrientation()
-            let { src, orientation } = srcByIndex(imgIndex)
+            let { src, orientation, rating } = srcByIndex(imgIndex)
             if (src) {
-                changeImage({src, fromLeft :imgIndex < index, orientation})
+                changeImage({src, fromLeft :imgIndex < index, orientation, rating})
                 index = imgIndex
                 return true
             } else {
@@ -224,13 +233,13 @@
             }
         }
         const preLoadImageBy = function(imgIndex) {
-            let {src, orientation} = srcByIndex(imgIndex)
+            let {src} = srcByIndex(imgIndex)
             if (src) {
                 const image = new Image()
                 image.setAttribute('src',src)
             }
         }
-        const changeImage = function({src, fromLeft, orientation }) {
+        const changeImage = function({src, fromLeft, orientation, rating }) {
             const loadImg = new Image()
             loadImg.onload = function() {
                 preLoadImageBy(index + (fromLeft? -1 : 1))  // 预加载文件
@@ -271,6 +280,7 @@
                         },10)
                     }
                     imgOrientation = orientation
+                    imgRating = rating
                     imageW = img.naturalWidth
                     imageH = img.naturalHeight
                     rotateZ = 0
@@ -302,6 +312,20 @@
             if (scaleValue < ms) scaleValue = ms
             calcSize()
             transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
+        }
+        this.favorite = function(f) {
+            if (f=='toggle') {
+                if (imgRating && imgRating.indexOf('+')==0)
+                    imgRating = imgRating.substring(1)
+                else if (imgRating) imgRating = '+' + imgRating
+                else imgRating = '+0'
+            } else imgRating = f
+            imgRating = f
+            const e = document.querySelector('.tran-img__float-button.favorite i.fa')
+            if (e && (imgRating==='5'|| imgRating.indexOf('+')===0))
+                e.className = 'fa fa-heart'
+            else if (e)
+                e.className = 'fa fa-heart-o'
         }
         const swapWHByOrientation = function () {
             return (window.notSupportOrientation && (orientation=='5' || orientation=='6'
@@ -830,7 +854,7 @@
             transformObject.resize()
         }
     }
-    const addImageDialog = function({ src, index, orientation}) {
+    const addImageDialog = function({ src, index, orientation, rating}) {
         removeImageDialog()
         addModel()
         const pageW = window.innerWidth, pageH = window.innerHeight
@@ -885,6 +909,13 @@
         closeButton.appendChild(closeIcon)
         floatButtons.appendChild(closeButton)
 
+        let favoriteButton = document.createElement("button")
+        favoriteButton.className = 'tran-img__float-button favorite'
+        let favoriteIcon = document.createElement("i")
+        favoriteIcon.className = 'fa fa-heart-o'
+        favoriteButton.appendChild(favoriteIcon)
+        floatButtons.appendChild(favoriteButton)
+
         if (window.enableRemove) {
             let removeBtn = document.createElement("button")
             removeBtn.className = 'tran-img__float-button remove'
@@ -921,6 +952,16 @@
             else floatButtons.className='tran-img__fb-wrapper show'
         }
 
+        favoriteButton.onclick = function(event) {
+            event.stopPropagation()
+            event.preventDefault()
+            if (floatButtons.className.indexOf('show')>=0) {
+                if (transformObject) transformObject.favorite('toggle')
+            } else {
+                floatButtons.className='tran-img__fb-wrapper show'
+            }
+        }
+
         closeButton.onclick = function(event) {
             event.stopPropagation()
             event.preventDefault()
@@ -932,7 +973,7 @@
                 floatButtons.className='tran-img__fb-wrapper show'
             }
         }
-        transformObject = new initTransformImage({img, initialSrc: src, index, orientation})
+        transformObject = new initTransformImage({img, initialSrc: src, index, orientation, rating})
     }
 
     /*****************  入口函数  *********************
@@ -946,6 +987,7 @@
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
             const title = img.getAttribute('title')
             const orientation = img.getAttribute('data-orientation')
+            const rating = img.getAttribute('data-rating')
             img.onclick=function (event){
                 event.stopPropagation()
                 if (isMobile() && title && event.offsetX<36 && event.offsetY<36) {
@@ -959,7 +1001,8 @@
                     addImageDialog({
                         src,
                         index: index==NaN?0:index,
-                        orientation
+                        orientation,
+                        rating
                     })
                 }
             }

@@ -121,7 +121,7 @@ public class ImageUtil {
         try {
             ImageIO.write(newImg, outImgPath.substring(outImgPath
                     .lastIndexOf(".") + 1), new File(outImgPath));
-            Orientation.setOrientation(file,orientation);
+            Orientation.setOrientationAndRating(file,orientation,null);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

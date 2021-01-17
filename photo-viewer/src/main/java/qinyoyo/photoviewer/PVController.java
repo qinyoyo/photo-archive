@@ -323,6 +323,7 @@ public class PVController implements ApplicationRunner {
         if (photos!=null && photos.size()>0) {
             model.addAttribute("photos",photos);
         }
+        setBackgroundMusic(model,null);
         return "index";
     }
 
@@ -419,16 +420,18 @@ public class PVController implements ApplicationRunner {
 
     @ResponseBody
     @RequestMapping(value = "orientation")
-    public String orientation(HttpServletRequest request, String path, Integer [] orientations) {
+    public String orientation(HttpServletRequest request, String path, Integer [] orientations, Integer rating) {
         if (!isReady) {
             return "error";
         }
        if (path==null || orientations==null || orientations.length==0) return "error";
        PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
        if (pi==null) return "error";
-       if (pi.modifyOrientation(rootPath, orientations)) {
+       if (pi.modifyOrientation(rootPath, rating, orientations)) {
            afterChanged();
-           return "ok";
+           return "ok,"+
+                   (pi.getOrientation()==null?"":pi.getOrientation())+
+                   ","+(pi.getRating()==null?"":pi.getRating());
        }
        else return "fail";
     }

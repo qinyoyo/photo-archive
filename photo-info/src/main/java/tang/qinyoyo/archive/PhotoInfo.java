@@ -481,30 +481,36 @@ public class PhotoInfo implements Serializable,Cloneable {
         return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
     }
 
-    public boolean modifyOrientation(String root, Integer ... operations) {
-        if (mimeType!=null && mimeType.contains("image/") && operations.length>0) {
+    public boolean modifyOrientation(String root, Integer newRating, Integer ... operations) {
+        if (mimeType==null || !mimeType.contains("image/")) return false;
+        Integer newOrientation = null;
+        if (operations.length>0) {
             orientation = Orientation.getOrientation(new File(fullPath(root)));
             int orientation1=0;
-            if (orientation==null || orientation==1) orientation1 = Orientation.by(operations);
+            if (orientation==null || orientation==Orientation.NONE.getValue()) orientation1 = Orientation.by(operations);
             else {
                 Integer [] ops = new Integer[operations.length+1];
                 ops[0]=orientation;
                 for (int i=0;i<operations.length;i++) ops[i+1] = operations[i];
                 orientation1 = Orientation.by(ops);
             }
-            if ((orientation==null && orientation1==Orientation.NONE.getValue()) || (orientation!=null && orientation == orientation1)) return false;
-            String imgPath = fullPath(root);
-            try {
-                if (Orientation.setOrientation(new File(imgPath), orientation1)) {
-                    orientation = orientation1;
-                    String thumbPath = fullThumbPath(root);
-                    if (!Orientation.setOrientation(new File(thumbPath), orientation)) {
-                        System.out.println("Orientation  of thumbnail error: "+thumbPath);
-                    }
-                    return true;
-                }
-            } catch (IOException e) {
+            if ((orientation==null && orientation1!=Orientation.NONE.getValue()) || (orientation!=null && orientation1!=orientation)) {
+                newOrientation = orientation1;
             }
+        }
+        if (newRating==null && newOrientation==null) return false;
+        String imgPath = fullPath(root);
+        try {
+            if (Orientation.setOrientationAndRating(new File(imgPath), newOrientation, newRating)) {
+                if (newOrientation!=null) orientation = newOrientation;
+                if (newRating!=null) rating = newRating;
+                String thumbPath = fullThumbPath(root);
+                if (!Orientation.setOrientationAndRating(new File(thumbPath), newOrientation, newRating)) {
+                    System.out.println("Orientation and rating of thumbnail error: "+thumbPath);
+                }
+                return true;
+            }
+        } catch (IOException e) {
         }
         return false;
     }

@@ -114,9 +114,16 @@ public enum Orientation {
         }
         return r;
     }
-    public static boolean setOrientation(File imgFile, Integer orientation) {
+    public static boolean setOrientationAndRating(File imgFile, Integer orientation, Integer rating) {
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)), "-overwrite_original");
+            Map<String, List<String>> result;
+            if (orientation!=null && rating!=null)
+                result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)), "-rating="+rating, "-overwrite_original");
+            else if (orientation!=null)
+                result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)),  "-overwrite_original");
+            else if (rating!=null)
+                result = ExifTool.getInstance().excute(imgFile,  "-rating="+rating, "-overwrite_original");
+            else return false;
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList==null || msgList.size()==0) return false;
             for (String msg : msgList) {

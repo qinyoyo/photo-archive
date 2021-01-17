@@ -78,6 +78,9 @@
 .show .music {
     color: #06f;
 }
+.show .favorite {
+    color: #f88;
+}
 .show .remove{
     color:#f00;
 }
