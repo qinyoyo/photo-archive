@@ -50,7 +50,6 @@
 <div id="app">
     <div class="folder-head" >
         <div class="folder-head__left">
-            <i class="fa fa fa-arrows-alt full-screen"></i>
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
                 <#assign path = '' />
@@ -71,6 +70,7 @@
             <input type="text" autocomplete="off" placeholder="搜索关键词" class="search-input">
             <i  class="fa fa-times-circle-o search-clear-icon"></i>
             </span>
+            <i class="fa <#if favoriteFilter?? && favoriteFilter>fa-heart<#else>fa-heart-o</#if> favorite-item folder-head__item"></i>
         </div>
     </div>
     <#if subDirectories??>

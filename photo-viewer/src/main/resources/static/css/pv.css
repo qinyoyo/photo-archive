@@ -15,8 +15,11 @@ body {
     border-bottom: 1px solid #cebead;
 }
 
-.folder-item, .search-item, .search-clear-icon, .collapse-item, .collapse-item-expanded {
+.folder-item, .search-item, .favorite-item, .search-clear-icon, .collapse-item, .collapse-item-expanded {
     cursor: pointer;
+}
+.fa-heart.favorite-item {
+    color: #f66;
 }
 .folder-list__item {
     font-size: 16px;

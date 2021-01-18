@@ -36,8 +36,16 @@ window.onload=function(){
             searchText(this.value)
         }
     }
-    document.querySelector('.full-screen').onclick = function() {
-        window.handleFullScreen()
+    document.querySelector('.favorite-item').onclick = function() {
+        const favorite = this.className.indexOf('fa-heart-o')>=0;
+        const _this=this
+        Ajax.get('/favorite?filter='+(favorite?'true':'false'), function(txt) {
+            if (txt=='ok') {
+                if (favorite) _this.className = 'fa fa-heart favorite-item'
+                else _this.className = 'fa fa-heart-o favorite-item'
+                window.location.reload()
+            }
+        })
     }
     document.querySelector('.search-item').onclick = function() {
         const inputWrapper = document.querySelector('.search-input__wrapper')

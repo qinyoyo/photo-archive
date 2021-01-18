@@ -13,7 +13,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
@@ -52,6 +51,7 @@ public class PVController implements ApplicationRunner {
     private boolean canRemove = false;
     private boolean noVideoThumb = false;
     private boolean htmlEditable = false;
+    private boolean favoriteFilter = false;
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
@@ -60,7 +60,8 @@ public class PVController implements ApplicationRunner {
         if (!isReady) return null;
         List<PhotoInfo> list = archiveInfo.getInfos().stream()
                 .filter(p->
-                        folder.equals(p.getSubFolder()) && p.getMimeType()!=null && p.getMimeType().contains(mime)
+                        folder.equals(p.getSubFolder()) && p.getMimeType()!=null && p.getMimeType().contains(mime) &&
+                                (!favoriteFilter || !mime.equals("image") || (p.getRating()!=null && p.getRating()==5))
                 ).collect(Collectors.toList());
         if (mime.equals("html")) {  // 游记文件，特殊处理
             List<PhotoInfo> list1 = archiveInfo.getInfos().stream()
@@ -123,6 +124,7 @@ public class PVController implements ApplicationRunner {
         if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
         if (canRemove) model.addAttribute("canRemove",true);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
+        if (favoriteFilter) model.addAttribute("favoriteFilter",true);
         if (htmlEditable && !isMobile(request)) model.addAttribute("htmlEditable",true);
         model.addAttribute("loopTimer",loopTimer);
     }
@@ -189,9 +191,19 @@ public class PVController implements ApplicationRunner {
         }
         return model;
     }
+
     @RequestMapping(value = "thumbnail")
     public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
         return null;
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "favorite")
+    public String setFavorite(HttpServletRequest request, HttpServletResponse response, Boolean filter) {
+        if (filter!=null) {
+            favoriteFilter = filter;
+            return "ok";
+        } else return "error";
     }
 
     @RequestMapping(value = "favicon.ico")
@@ -303,7 +315,7 @@ public class PVController implements ApplicationRunner {
                 if (mime.contains("html")) htmls.add(p);
                 else if (mime.contains("audio")) audios.add(p);
                 else if (mime.contains("video")) videos.add(p);
-                else if (mime.contains("image")) photos.add(p);
+                else if (mime.contains("image") && (!favoriteFilter || (p.getRating()!=null && p.getRating()==5))) photos.add(p);
             }
         }
         if (dirs.size() > 0) {
