@@ -50,10 +50,10 @@
 }
 .tran-img__fb-wrapper {
     position: fixed;
-    bottom: 12px;
+    bottom: 0;
     left: 0;
     width: 100%;
-    height: 36px;
+    height: 48px;
     background: transparent;
     color:transparent;
     color: transparent;

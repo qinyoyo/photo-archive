@@ -45,7 +45,7 @@
 </#if>
 <body>
 <#if backgroundMusic??>
-    <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay preload loop="loop"></audio>
+    <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
 </#if>
 <div id="app">
     <div class="folder-head" >
