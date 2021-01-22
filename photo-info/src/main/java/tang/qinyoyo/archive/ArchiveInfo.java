@@ -227,6 +227,44 @@ public class ArchiveInfo {
             try {
                 infos = (ArrayList<PhotoInfo>) obj;
                 readFromFile = true;
+                File oldFile = new File(path, ARCHIVE_FILE+".old");
+                if (oldFile.exists()) {
+                    Object oldObj = readObj(oldFile);
+                    if (oldObj!=null) {
+                        ArrayList<PhotoInfo> oldInfos = (ArrayList<PhotoInfo>) oldObj;
+                        Iterator<PhotoInfo> iter = oldInfos.iterator();
+                        int success = 0, failed = 0;
+                        for (PhotoInfo pi: infos) {
+                            while (iter.hasNext()) {
+                                PhotoInfo oldPi = iter.next();
+                                if (oldPi.getFileName().equals(pi.getFileName()) && oldPi.getSubFolder().equals(pi.getSubFolder())) {
+                                    Integer orientation = null;
+                                    if (!ArchiveUtils.equals(pi.getOrientation(),oldPi.getOrientation())) {
+                                        orientation = pi.getOrientation();
+                                        if (orientation == null) orientation = Orientation.NONE.getValue();
+                                    }
+                                    Integer rating = null;
+                                    if (!ArchiveUtils.equals(pi.getRating(),oldPi.getRating())) {
+                                        rating = pi.getRating();
+                                        if (rating == null) rating = 0;
+                                    }
+                                    if (orientation!=null || rating!=null) {
+                                        String filePath = pi.fullPath(path);
+                                        if (!Orientation.setOrientationAndRating(new File(filePath), orientation, rating)) {
+                                            System.out.println("Sync orientation , rating failed: " + filePath);
+                                            failed++;
+                                        } else success++;
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!iter.hasNext()) break;
+                        }
+                        if (success>0 || failed>0) {
+                            System.out.println(String.format("Sync orientation , rating success %d files, failed %d files ",success,failed));
+                        }
+                    }
+                }
             } catch (Exception e) {
                 seekPhotoInfo();
             }

@@ -107,7 +107,25 @@ public class ExifTool {
             if (stdErr!=null && stdErr.size()>0) put(ERROR,stdErr);
         }};
     }
-
+    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
+        try {
+            if (attrs == null || attrs.size() == 0) return false;
+            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0)];
+            int i = 0;
+            for (Key key : attrs.keySet()) {
+                Object v = attrs.get(key);
+                argsList[i++] = "-" + key.name() + "=" + (v == null ? "" : v.toString());
+            }
+            if (overwriteOriginal) argsList[attrs.size()] = "-overwrite_original";
+            Map<String, List<String>> result = excute(dir, argsList);
+            List<String> msgList = result.get(ExifTool.RESULT);
+            if (msgList == null || msgList.size() == 0) return false;
+            for (String msg : msgList) {
+                if (msg.contains("1") && msg.contains("file") && msg.contains("updated")) return true;
+            }
+        } catch (Exception e) {}
+        return false;
+    }
     private <T> Map<String,Map<Key, T>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
         Map<String,Map<Key, T>> queryResult = new HashMap<>();
         if (stdErr.size() > 0) {
@@ -167,4 +185,5 @@ public class ExifTool {
             }
         }
     }
+
 }

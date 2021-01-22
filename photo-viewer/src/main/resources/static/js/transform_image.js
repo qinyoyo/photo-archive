@@ -165,7 +165,7 @@
         let   translateXChanged = false, translateYChanged = false
         let   imgOrientation = orientation
         let   imgRating = rating
-
+        const loopTimerSaved = window.loopTimer
         /********   image load, modify   **********/
         let removedIndexList = []
         const srcByIndex = function (imgIndex) {
@@ -707,6 +707,7 @@
                     && touchMinPos.x>minX-30 &&touchMaxPos.x < maxX+30 && touchMinPos.y>minY-30 && touchMaxPos.y<maxY+30
                     && Math.abs(touchPos0.x - touchPos1.x) >= Math.abs(touchPos0.y - touchPos1.y)
                     && Math.abs(touchPos0.x - touchPos1.x) > 30) {
+                    stopLoop()
                     loadImageBy(index + (touchPos0.x > touchPos1.x ? 1 : -1))
                 }
             }
@@ -782,11 +783,22 @@
             let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
             let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
             if (event.pageX > maxPage.x || event.pageX < minPage.x) {
+                stopLoop()
                 loadImageBy(event.pageX < minPage.x ? index - 1 : index + 1)
-            } else {
-                if (isLooping()) pauseLoop()
-                else if (loopTimer) resumeLoop(true)
             }
+        }
+        const dblStartLoop = function(event) {
+            if (!window.loopTimer){
+                window.loopTimer=loopTimerSaved
+                startLoop(true)
+            }
+        }
+        if (isMobile()) {
+            new AlloyFinger(container, {
+                doubleTap : dblStartLoop
+            })
+        } else{
+            container.ondblclick=dblStartLoop
         }
 
         const imageKeyEvent = function(event) {

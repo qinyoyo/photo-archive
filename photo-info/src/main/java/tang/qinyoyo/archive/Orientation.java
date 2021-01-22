@@ -2,9 +2,11 @@ package tang.qinyoyo.archive;
 
 import lombok.Getter;
 import tang.qinyoyo.exiftool.ExifTool;
+import tang.qinyoyo.exiftool.Key;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,23 +117,10 @@ public enum Orientation {
         return r;
     }
     public static boolean setOrientationAndRating(File imgFile, Integer orientation, Integer rating) {
-        try {
-            Map<String, List<String>> result;
-            if (orientation!=null && rating!=null)
-                result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)), "-rating="+rating, "-overwrite_original");
-            else if (orientation!=null)
-                result = ExifTool.getInstance().excute(imgFile, "-orientation=" + (orientation==null?"":Orientation.name(orientation)),  "-overwrite_original");
-            else if (rating!=null)
-                result = ExifTool.getInstance().excute(imgFile,  "-rating="+rating, "-overwrite_original");
-            else return false;
-            List<String> msgList = result.get(ExifTool.RESULT);
-            if (msgList==null || msgList.size()==0) return false;
-            for (String msg : msgList) {
-                if (msg.contains("1") && msg.contains("file") && msg.contains("updated")) return true;
-            }
-        } catch (IOException e) {
-        }
-        return false;
+        Map<Key, Object> attrs = new HashMap<>();
+        if (orientation!=null) attrs.put(Key.ORIENTATION, Orientation.name(orientation));
+        if (rating!=null) attrs.put(Key.RATING, rating);
+        return ExifTool.getInstance().modifyAttributes(imgFile,attrs, true);
     }
     public static Integer getOrientation(File imgFile) {
         try {

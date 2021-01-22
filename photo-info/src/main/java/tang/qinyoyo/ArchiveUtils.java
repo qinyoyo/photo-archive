@@ -11,6 +11,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ArchiveUtils {
+    public static boolean equals(Integer i1,Integer i2) {
+        if (i1==null && i2==null) return true;
+        else if (i1 != null && i2 != null)
+            return i1.equals(i2);
+        else
+            return false;
+    }
     public static boolean equals(Date s1, Date s2) {
         if (s1 == null && s2 == null)
             return true;

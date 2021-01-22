@@ -46,7 +46,11 @@
     display: table-cell;
     border: none;
     outline: none;
-    /*background: transparent;*/
+    -moz-user-select:none;
+    -webkit-user-select:none;
+    -ms-user-select:none;
+    -khtml-user-select:none;
+    user-select:none;
 }
 .tran-img__fb-wrapper {
     position: fixed;
