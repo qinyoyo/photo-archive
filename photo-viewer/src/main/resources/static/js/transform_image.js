@@ -7,6 +7,7 @@
     window.enableRemove = false
     window.notSupportOrientation = false
     window.enableDebug = false
+
     window.debug = function(options) {
         if (window.debugElement) {
             if (typeof options === 'string'){
@@ -45,16 +46,32 @@
         else return false
     }
 
-    window.toast  = function(msg,delay) {  // 显示提示信息，自动关闭
+    window.toast  = function(msg,delay,onclose) {  // 显示提示信息，自动关闭
         if (typeof msg != 'string') return
         let toast = document.createElement("div")
         toast.className = 'tran-img__toast'
         toast.style.zIndex = "9999"
-        toast.innerText = msg
+        toast.style.display = 'hide'
+        toast.style.padding = '5px'
+        let span = document.createElement("span")
+        span.innerHTML = msg.replace(/\n/g,'<br>')
+        toast.appendChild(span)
         document.querySelector('body').appendChild(toast)
-        setTimeout(function(){
+        const w = 10 + span.offsetWidth, h = 10 + span.offsetHeight
+        toast.style.left = (window.innerWidth - w)/2  + 'px'
+        toast.style.top = (window.innerHeight - h)/2  + 'px'
+        toast.style.display = 'block'
+        const remove = function() {
             toast.remove()
-        },delay ? delay : 500)
+            if (typeof onclose === 'function') onclose.call()
+        }
+        let toastTimer = setTimeout(remove,delay ? delay : 1000)
+        toast.onclick = function() {
+            if (toastTimer) {
+                clearTimeout(toastTimer)
+                toastTimer = null
+            } else remove()
+        }
     }
 
 
@@ -139,7 +156,7 @@
     }
 
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function ({img, initialSrc, index, orientation, rating}) {
+    const initTransformImage = function ({img, initialSrc, index, orientation, rating, title}) {
         /**  变量  */
         let translateX = 0, translateY = 0
         let rotateZ = 0, mirrorH = false, mirrorV = false
@@ -165,6 +182,7 @@
         let   translateXChanged = false, translateYChanged = false
         let   imgOrientation = orientation
         let   imgRating = rating
+        let   imgInfo = title
         const loopTimerSaved = window.loopTimer
         /********   image load, modify   **********/
         let removedIndexList = []
@@ -176,11 +194,12 @@
             if (imgIndex>=0) {
                 let thumb = document.querySelector('.img-index-' + imgIndex)
                 if (thumb) {
+                    let title = thumb.getAttribute('title')
                     let src = thumb.getAttribute('src')
                     let orientation = thumb.getAttribute('data-orientation')
                     let rating = thumb.getAttribute('data-rating')
                     if (src.indexOf('.thumb/') == 0 || src.indexOf('/.thumb/') == 0) src = src.substring(7)
-                    return { src, orientation, rating }
+                    return { src, orientation, rating, title }
                 }
             }
             return false
@@ -233,9 +252,9 @@
         }
         const loadImageBy = function (imgIndex, skipSave) {
             if (!skipSave) saveOrientation()
-            let { src, orientation, rating } = srcByIndex(imgIndex)
+            let { src, orientation, rating, title } = srcByIndex(imgIndex)
             if (src) {
-                changeImage({src, fromLeft :imgIndex < index, orientation, rating})
+                changeImage({src, fromLeft :imgIndex < index, orientation, rating, title})
                 index = imgIndex
                 return true
             } else {
@@ -250,7 +269,7 @@
                 image.setAttribute('src',src)
             }
         }
-        const changeImage = function({src, fromLeft, orientation, rating }) {
+        const changeImage = function({src, fromLeft, orientation, rating, title }) {
             const loadImg = new Image()
             loadImg.onload = function() {
                 preLoadImageBy(index + (fromLeft? -1 : 1))  // 预加载文件
@@ -291,6 +310,7 @@
                         },10)
                     }
                     imgOrientation = orientation
+                    imgInfo = title
                     favorite(rating)
                     imageW = img.naturalWidth
                     imageH = img.naturalHeight
@@ -339,6 +359,12 @@
         }
         this.toggleFavorite = function() {
             favorite('toggle')
+        }
+        this.showInfo = function() {
+            pauseLoop()
+            toast(imgInfo,2000, function () {
+               resumeLoop(true)
+            })
         }
         const swapWHByOrientation = function () {
             return (window.notSupportOrientation && (orientation=='5' || orientation=='6'
@@ -875,7 +901,7 @@
             transformObject.resize()
         }
     }
-    const addImageDialog = function({ src, index, orientation, rating}) {
+    const addImageDialog = function({ src, index, orientation, rating, title}) {
         removeImageDialog()
         addModel()
         const pageW = window.innerWidth, pageH = window.innerHeight
@@ -910,6 +936,44 @@
         floatButtons.className = 'tran-img__fb-wrapper'
         floatButtons.style.zIndex = "6006"
 
+        let closeButton = document.createElement("button")
+        closeButton.className = 'tran-img__float-button close'
+        let closeIcon = document.createElement("i")
+        closeIcon.className = 'fa fa-power-off'
+        closeButton.appendChild(closeIcon)
+        floatButtons.appendChild(closeButton)
+        closeButton.onclick = function(event) {
+            floatButtonClick(event,function() {
+                document.querySelector('body').onkeydown = null
+                window.onresize = null
+                removeImageDialog()
+            })
+        }
+
+        let favoriteButton = document.createElement("button")
+        favoriteButton.className = 'tran-img__float-button favorite'
+        let favoriteIcon = document.createElement("i")
+        favoriteIcon.className = 'fa fa-heart-o'
+        favoriteButton.appendChild(favoriteIcon)
+        floatButtons.appendChild(favoriteButton)
+        favoriteButton.onclick = function(event) {
+            floatButtonClick(event,function() {
+                if (transformObject) transformObject.toggleFavorite()
+            })
+        }
+
+        let infoButton = document.createElement("button")
+        infoButton.className = 'tran-img__float-button close'
+        let infoIcon = document.createElement("i")
+        infoIcon.className = 'fa fa-info-circle'
+        infoButton.appendChild(infoIcon)
+        floatButtons.appendChild(infoButton)
+        infoButton.onclick = function(event) {
+            floatButtonClick(event,function() {
+                if (transformObject) transformObject.showInfo()
+            })
+        }
+
         const bkMusic = document.querySelector('.background-music')
         if (bkMusic) {
             let musicBtn = document.createElement("button")
@@ -928,34 +992,6 @@
             }
         }
 
-        let closeButton = document.createElement("button")
-        closeButton.className = 'tran-img__float-button close'
-        let closeIcon = document.createElement("i")
-        closeIcon.className = 'fa fa-power-off'
-        closeButton.appendChild(closeIcon)
-        floatButtons.appendChild(closeButton)
-
-        closeButton.onclick = function(event) {
-            floatButtonClick(event,function() {
-                document.querySelector('body').onkeydown = null
-                window.onresize = null
-                removeImageDialog()
-            })
-        }
-
-        let favoriteButton = document.createElement("button")
-        favoriteButton.className = 'tran-img__float-button favorite'
-        let favoriteIcon = document.createElement("i")
-        favoriteIcon.className = 'fa fa-heart-o'
-        favoriteButton.appendChild(favoriteIcon)
-        floatButtons.appendChild(favoriteButton)
-
-        favoriteButton.onclick = function(event) {
-            floatButtonClick(event,function() {
-                if (transformObject) transformObject.toggleFavorite()
-            })
-        }
-
         if (window.enableRemove) {
             let removeBtn = document.createElement("button")
             removeBtn.className = 'tran-img__float-button remove'
@@ -969,6 +1005,23 @@
                 })
             }
         }
+
+        let shareButton = document.createElement("button")
+        shareButton.className = 'tran-img__float-button close'
+        let shareIcon = document.createElement("i")
+        shareIcon.className = 'fa fa-telegram'
+        shareButton.appendChild(shareIcon)
+        floatButtons.appendChild(shareButton)
+        shareButton.onclick = function(event) {
+            floatButtonClick(event,function() {
+                const src = img.getAttribute('src')
+                if (src) {
+                    Ajax.get('/share?path='+encodeURI(src))
+                }
+            })
+        }
+
+
 
         if (!isMobile()){
             floatButtons.onmouseenter=function (event){
@@ -1002,7 +1055,7 @@
             body.appendChild(window.debugElement)
         }
 
-        transformObject = new initTransformImage({img, initialSrc: src, index, orientation, rating})
+        transformObject = new initTransformImage({img, initialSrc: src, index, orientation, rating, title})
     }
 
     /*****************  入口函数  *********************
@@ -1020,7 +1073,7 @@
             img.onclick=function (event){
                 event.stopPropagation()
                 if (isMobile() && title && event.offsetX<36 && event.offsetY<36) {
-                    alert(title)
+                    toast(title,2000)
                 } else {
                     window.onresize = resizeEvent
                     let src = img.getAttribute('src')
@@ -1031,7 +1084,8 @@
                         src,
                         index: index==NaN?0:index,
                         orientation,
-                        rating
+                        rating,
+                        title
                     })
                 }
             }

@@ -75,19 +75,20 @@ public class PhotoInfo implements Serializable,Cloneable {
             for (int i=0;i<rating;i++) sb.append("★");
             sb.append("\n");
         }
+
+        sb.append(subFolder).append(File.separator).append(fileName).append("\n");
+
+        if (shootTime!=null) sb.append(DateUtil.date2String(shootTime)).append("\n");
+        else if (createTime!=null) sb.append(DateUtil.date2String(createTime)).append("\n");
+
         if (headline!=null && !headline.isEmpty()) sb.append(headline).append("\n");
 
         if (subTitle!=null && !subTitle.isEmpty()) sb.append(subTitle).append("\n");
 
-        if (!subFolder.isEmpty()) sb.append(subFolder).append("\n");
+        if (width!=null && height!=null) sb.append(width).append("x").append(height);
+        sb.append("(").append(lengString(fileSize)).append(")\n");
 
-        sb.append(fileName).append("(").append(lengString(fileSize));
-        if (width!=null && height!=null) sb.append(" ").append(width).append("x").append(height);
-        sb.append(")\n");
         if (orientation!=null) sb.append(Orientation.name(orientation)).append("\n");
-        if (shootTime!=null) sb.append(DateUtil.date2String(shootTime)).append("\n");
-        else if (createTime!=null) sb.append(DateUtil.date2String(createTime)).append("\n");
-
         if (artist!=null && !artist.isEmpty()) sb.append("by ").append(artist).append("\n");
 
         if (model!=null && !model.isEmpty()) {

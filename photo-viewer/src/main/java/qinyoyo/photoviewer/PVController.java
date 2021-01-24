@@ -449,6 +449,23 @@ public class PVController implements ApplicationRunner {
     }
 
     @ResponseBody
+    @RequestMapping(value = "share")
+    public String share(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) return "error";
+        if (path==null) return "error";
+        File src = new File(rootPath , path);
+        if (src.exists()) {
+            File target = new File(rootPath+File.separator+".share",src.getName());
+            target.getParentFile().mkdirs();
+            try {
+                Files.copy(src.toPath(), target.toPath());
+                return "ok";
+            } catch (Exception e) {}
+        }
+        return "error";
+    }
+
+    @ResponseBody
     @RequestMapping(value = "remove")
     public String remove(HttpServletRequest request, HttpServletResponse response, String path) {
         if (!isReady) {

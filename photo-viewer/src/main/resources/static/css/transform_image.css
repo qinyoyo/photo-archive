@@ -119,15 +119,9 @@
 }
 .tran-img__toast {
     position: fixed;
-    bottom: calc(50% - 16px);
-    left: calc(50% - 50px);
-    width: 100px;
-    height: 32px;
     background: white;
     border: 1px solid #1e1e20;
     font-size: 12px;
-    text-align: center;
-    padding-top: 12px;
     color: #000;
 }
 
