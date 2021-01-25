@@ -30,6 +30,6 @@ photo:
 #   no-video-thumb: true
 #   html-editable: true
    support-orientation: HeyTapBrowser,Firefox,Mac OS X,HuaweiBrowser,UCBrowser/13
-   root-path: G:\Photo\Archived
-   ffmpeg: G:\Photo\ffmpeg.exe
-   exiftool: G:\Photo\exiftool.exe
+   root-path: E:\Photo\Archived
+   ffmpeg: E:\Photo\ffmpeg.exe
+   exiftool: E:\Photo\exiftool.exe

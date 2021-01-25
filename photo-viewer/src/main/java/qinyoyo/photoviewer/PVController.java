@@ -192,6 +192,25 @@ public class PVController implements ApplicationRunner {
         return model;
     }
 
+    private Map<String,Object> getPathLoopImages(final String path) {
+        Map<String,Object> model = new HashMap<>();
+        model.put("separator",File.separator);
+        List<PhotoInfo> photos;
+        if (path!=null && !path.isEmpty()) {
+            model.put("pathNames",path.split("\\\\|/"));
+            photos = archiveInfo.getInfos().stream().filter(p ->
+                    (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
+                    p.getMimeType()!=null && p.getMimeType().contains("image/") && p.getSubFolder().indexOf(path) == 0
+            ).collect(Collectors.toList());
+        } else photos = archiveInfo.getInfos().stream().filter(p ->
+                    (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
+                    p.getMimeType()!=null && p.getMimeType().contains("image/")
+               ).collect(Collectors.toList());
+        // photos.sort((a,b)->a.compareTo(b));
+        if (photos!=null && photos.size()>0) model.put("photos",photos);
+        return model;
+    }
+
     @RequestMapping(value = "thumbnail")
     public String getThumbnail(HttpServletRequest request, HttpServletResponse response, String path) {
         return null;
@@ -268,6 +287,23 @@ public class PVController implements ApplicationRunner {
         }
         commonAttribute(model,request);
         model.addAllAttributes(getPathAttributes(path,false));
+        setBackgroundMusic(model,path);
+        return "index";
+    }
+
+    @RequestMapping(value = "play")
+    public String playFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "error";
+        }
+        commonAttribute(model,request);
+        model.addAttribute("debug",false);
+        model.addAttribute("canRemove",false);
+        model.addAttribute("htmlEditable",false);
+        if (loopTimer==0) model.addAttribute("loopTimer",4000);
+        model.addAttribute("loopPlay",true);
+        model.addAllAttributes(getPathLoopImages(path));
         setBackgroundMusic(model,path);
         return "index";
     }

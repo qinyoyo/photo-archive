@@ -71,7 +71,7 @@ public enum Key {
     OFFSETTIMEORIGINAL("OffsetTimeOriginal", String.class, "time zone for DateTimeOriginal"),
     ORIENTATION("Orientation", String.class),
     OWNER_NAME("OwnerName", String.class),
-    RATING("Rating", Integer.class),
+    RATING("exif:Rating", Integer.class),
     RATING_PERCENT("RatingPercent", Integer.class),
     ROTATION("Rotation", Integer.class),
     SATURATION("Saturation", Integer.class),

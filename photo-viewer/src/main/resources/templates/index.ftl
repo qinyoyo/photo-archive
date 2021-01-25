@@ -24,7 +24,9 @@
     <script type="text/javascript" src="/static/js/full_screen.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
+    <#if !loopPlay??>
     <script type="text/javascript" src="/static/js/folder.js"></script>
+    </#if>
     <title>Photo viewer</title>
 </head>
 <#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
@@ -41,6 +43,11 @@
     <#if loopTimer??>
     window.loopTimer = ${loopTimer?c}
     </#if>
+    <#if loopPlay?? && photos??>
+    window.onload=function(){
+        window.AutoLoopPlayImage()
+    }
+    </#if>
 </script>
 </#if>
 <body>
@@ -48,7 +55,20 @@
     <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
 </#if>
 <div id="app">
+    <#if loopPlay??>
+    <#if photos??>
+    <div class="auto-play-loop-images" style="display:none">
+        <#list photos as p>
+        <img data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
+             class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}"/>
+        </#list>
+    </div>
+    <#else>
+        没有可循环播放的图像
+    </#if>
+    <#else>
     <div class="folder-head" >
+        <#assign path = '' />
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
@@ -71,6 +91,7 @@
             <i  class="fa fa-times-circle-o search-clear-icon"></i>
             </span>
             <i class="fa <#if favoriteFilter?? && favoriteFilter>fa-heart<#else>fa-heart-o</#if> favorite-item folder-head__item"></i>
+            <i class="fa fa-play folder-head__item" data-folder="${path}"></i>
         </div>
     </div>
     <#if subDirectories??>
@@ -145,13 +166,14 @@
         <div class="collapse-content photo-list grid-box">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
+                    <img src="/.thumb${fileUrl(p)}" data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
                          class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>
         </div>
     </#if>
     </div>
+    </#if>
 </div>
 </body>
 </html>

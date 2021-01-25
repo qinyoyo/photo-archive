@@ -15,7 +15,7 @@ body {
     border-bottom: 1px solid #cebead;
 }
 
-.folder-item, .search-item, .favorite-item, .search-clear-icon, .collapse-item, .collapse-item-expanded {
+.folder-item, .folder-head__item, .search-clear-icon, .collapse-item, .collapse-item-expanded {
     cursor: pointer;
 }
 .fa-heart.favorite-item {

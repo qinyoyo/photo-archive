@@ -47,6 +47,12 @@ window.onload=function(){
             }
         })
     }
+
+    document.querySelector('.fa-play.folder-head__item').onclick = function() {
+        let path = this.getAttribute('data-folder')
+        window.location.href = '/play?path=' + (path ? encodeURI(path) : '')
+    }
+
     document.querySelector('.search-item').onclick = function() {
         const inputWrapper = document.querySelector('.search-input__wrapper')
         if (inputWrapper.style.display == 'none') inputWrapper.style.display = 'initial';

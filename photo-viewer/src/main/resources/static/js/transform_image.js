@@ -195,10 +195,9 @@
                 let thumb = document.querySelector('.img-index-' + imgIndex)
                 if (thumb) {
                     let title = thumb.getAttribute('title')
-                    let src = thumb.getAttribute('src')
+                    let src = thumb.getAttribute('data-src')
                     let orientation = thumb.getAttribute('data-orientation')
                     let rating = thumb.getAttribute('data-rating')
-                    if (src.indexOf('.thumb/') == 0 || src.indexOf('/.thumb/') == 0) src = src.substring(7)
                     return { src, orientation, rating, title }
                 }
             }
@@ -258,6 +257,10 @@
                 index = imgIndex
                 return true
             } else {
+                const autoLoop = document.querySelector('.auto-play-loop-images')
+                if (imgIndex > 0 && autoLoop ) {
+                    return loadImageBy(0,skipSave)
+                }
                 toast('没有更多了')
                 return false
             }
@@ -293,6 +296,9 @@
                     }
                     if ((!fromLeft && left<=0) || (fromLeft && left>=0)) {
                         newWrapper.remove()
+                        document.querySelectorAll('.tran-img__wrapper').forEach(w=>{
+                            if (w !== wrapper) w.remove()
+                        })
                         wrapper.style.left = '0px'
                         isReady = true
                     } else {
@@ -329,6 +335,20 @@
             loadImg.onerror = function() {
                 waitingIcon.style.display = 'none'
                 toast('加载失败')
+                img.setAttribute('src', src)
+                img.setAttribute('alt', src)
+                imgOrientation = 1
+                imgInfo = title
+                favorite(rating)
+                imageW = 32
+                imageH = 32
+                rotateZ = 0
+                mirrorV = mirrorH = false
+                translateX = translateY = 0
+                scaleValue = 1
+                realSizeScale = 1
+                calcSize()
+                isReady = true
             }
             loadImg.setAttribute('src', src)
             waitingIcon.style.display = 'block'
@@ -610,10 +630,17 @@
         }
         /***********  事件处理  *************/
 
+        let checkFullScreen = function() {
+            const e = fullScreenElement()
+            if (e==null) handleFullScreen()
+            checkFullScreen = null
+        }
+
         let clickTimer = null
         const imgClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
+            if (typeof checkFullScreen === 'function') checkFullScreen()
             if (!clickTimer) {
                 clickTimer = setTimeout(function() {
                     if (isLooping()) pauseLoop()
@@ -805,6 +832,7 @@
         }
 
         container.onclick=function (event) {
+            if (typeof checkFullScreen === 'function') checkFullScreen()
             let limit = axisLimit(clientW, clientH)
             let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
             let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
@@ -947,6 +975,9 @@
                 document.querySelector('body').onkeydown = null
                 window.onresize = null
                 removeImageDialog()
+                if (document.querySelector('.auto-play-loop-images')) {
+                    history.back()
+                }
             })
         }
 
@@ -1016,12 +1047,12 @@
             floatButtonClick(event,function() {
                 const src = img.getAttribute('src')
                 if (src) {
-                    Ajax.get('/share?path='+encodeURI(src))
+                    Ajax.get('/share?path='+encodeURI(src),function(reposeText) {
+                        if (reposeText=='ok') toast('成功分享到指定目录')
+                    })
                 }
             })
         }
-
-
 
         if (!isMobile()){
             floatButtons.onmouseenter=function (event){
@@ -1090,6 +1121,19 @@
                 }
             }
         });
+    }
+    window.AutoLoopPlayImage =function(){
+        const firstImg = document.querySelector('.img-index-0')
+        if (firstImg) {
+            window.onresize = resizeEvent
+            addImageDialog({
+                src: firstImg.getAttribute('data-src'),
+                index: 0,
+                orientation: firstImg.getAttribute('data-orientation'),
+                rating: firstImg.getAttribute('data-rating'),
+                title: firstImg.getAttribute('title')
+            })
+        }
     }
 
 })();
