@@ -152,10 +152,12 @@ function resourceSelected(ok) {
     }
 
     RE.setFontSize = function(fontSize){
+        RE.removeFormat()
         document.execCommand("fontSize", false, fontSize);
     }
 
     RE.setHeading = function(heading) {
+        RE.removeFormat()
         document.execCommand('formatBlock', false, '<h'+heading+'>');
     }
 
@@ -196,10 +198,10 @@ function resourceSelected(ok) {
         let html
         if (url.length==1) html = '<div class="center-block"><img src="' + url[0]  + '" alt="' + getAlt(0) + '" width="' + width + '"/></div>';
         else {
-            width = Math.trunc((100 - url.length)/url.length) + '%'
+            width = Math.trunc((url.length<5 ? 990 : 980)/url.length)/10 + '%'
             html = '<div class="center-block">'
             for (let i=0;i<url.length;i++) {
-                html += ('<img src="' + url[i] + '" alt="' + getAlt(i) +'"' + ' style="width:'+width+'"' +'></img>')
+                html += ('<img src="' + url[i] + '" alt="' + getAlt(i) +'"' + ' style="width:'+width+'; padding-right: 2px;"' +'></img>')
             }
             html += '</div>';
         }
@@ -363,8 +365,7 @@ function resourceSelected(ok) {
         let htmlSaved = RE.getHtml()
         document.querySelectorAll('.float-editor__buttons img').forEach(function(img) {
             const action = img.getAttribute("data-action")
-            img.onclick = function(){
-                console.log(action)
+            img.onclick = function(event){
                 switch (action) {
                     case 'justify_left':
                         RE.setJustifyLeft()
@@ -390,8 +391,40 @@ function resourceSelected(ok) {
                         break;
                     case 'insert_image':
                         if (RE.prepareInsert()){
-                            getResource('photo',function (url){
-                                RE.insertImageW(url.indexOf(',')>=0?url.split(','):url,url.indexOf(',')>=0?url.split(','):url,720)
+                            getResource('photo',function (values){
+                                const indexs = values.split(',')
+                                let url = []
+                                let alt = []
+                                let title = []
+                                indexs.forEach(i=>{
+                                    const img = document.querySelector('#photo-form img.img-index-'+i)
+                                    url.push(img.getAttribute("data-value"))
+                                    alt.push(img.getAttribute("alt"))
+                                    const attrs = img.getAttribute("title")
+                                    if (attrs) title.push(eval(eval("(" + attrs + ")")))
+                                })
+                                RE.insertImageW(url,alt,720)
+                                if (title.length>0) {
+                                    title.forEach(o=>{
+                                        let html = '<div>'
+                                        if (o.createTime) html += '<span style="color: rgb(0, 255, 255);">' + o.createTime + '</span>'
+                                        let poi = o.poi
+                                        if (!poi && o.location) poi = o.location
+                                        else if (!poi && o.city) poi = o.city
+                                        else if (!poi && o.province) poi = o.province
+                                        else if (!poi && o.country) poi = o.country
+                                        else if (!poi) poi = 'poi'
+                                        if (poi && o.longitude && o.latitude) {
+                                            html += '<a href="' +
+                                                "https://uri.amap.com/marker?src=mySteps" + "&name=" + poi
+                                                + "&position=" + o.longitude +"," + o.latitude
+                                                + "&coordinate=wgs84"
+                                                + '">' + poi + '</a>'
+                                        }
+                                        html += '</div>'
+                                        if (RE.prepareInsert()) RE.insertHTML(html)
+                                    })
+                                }
                             })
                         }
                         break;
@@ -440,22 +473,28 @@ function resourceSelected(ok) {
                         RE.setUnderline()
                         break;
                     case 'h1':
-                        RE.setHeading('1')
+                        if (event.shiftKey) RE.setFontSize(6)
+                        else RE.setHeading('1')
                         break;
                     case 'h2':
-                        RE.setHeading('2')
+                        if (event.shiftKey) RE.setFontSize(5)
+                        else RE.setHeading('2')
                         break;
                     case 'h3':
-                        RE.setHeading('3')
+                        if (event.shiftKey) RE.setFontSize(4)
+                        else RE.setHeading('3')
                         break;
                     case 'h4':
-                        RE.setHeading('4')
+                        if (event.shiftKey) RE.setFontSize(3)
+                        else RE.setHeading('4')
                         break;
                     case 'h5':
-                        RE.setHeading('5')
+                        if (event.shiftKey) RE.setFontSize(2)
+                        else RE.setHeading('5')
                         break;
                     case 'h6':
-                        RE.setHeading('6')
+                        if (event.shiftKey) RE.setFontSize(1)
+                        else RE.setHeading('6')
                         break;
                     case 'txt_color':
                         if (RE.prepareInsert()){

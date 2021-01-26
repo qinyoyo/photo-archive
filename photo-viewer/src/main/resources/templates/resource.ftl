@@ -73,10 +73,11 @@
         <div class="grid-box3">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = "/.thumb${fileUrl(p)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                    <img src = "/.thumb${fileUrl(p)}" data-value="${p.urlPath(currentPath)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if>
+                         title="${p.toString()?replace('\"','\'')}" alt="${p.fileName}" onload="adjustSize(this)"
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}"/>
                     <div>
-                        <input type="checkbox" name="photo" id="img-index-${p?index}" value="${p.urlPath(currentPath)}"/>
+                        <input type="checkbox" name="photo" id="img-index-${p?index}" value="${p?index}"/>
                         <label for="img-index-${p?index}">${p.fileName}</label>
                     </div>
                 </div>

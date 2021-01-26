@@ -45,7 +45,7 @@
     </#if>
     <#if loopPlay?? && photos??>
     window.onload=function(){
-        window.AutoLoopPlayImage()
+        window.AutoLoopPlayImage(<#if startFrom??>${startFrom}<#else>0</#if>)
     }
     </#if>
 </script>
@@ -57,9 +57,9 @@
 <div id="app">
     <#if loopPlay??>
     <#if photos??>
-    <div class="auto-play-loop-images" style="display:none">
+    <div class="auto-play-loop-images photo-list" data-size="${photos?size}" style="display:none">
         <#list photos as p>
-        <img data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
+        <img data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()?replace('\"','\'')}"
              class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}"/>
         </#list>
     </div>
@@ -163,10 +163,10 @@
             <i class="folder-item__arrow fa fa-angle-right" ></i>
             <i class="folder-item__arrow fa fa-angle-down" ></i>
         </div>
-        <div class="collapse-content photo-list grid-box">
+        <div class="collapse-content photo-list grid-box" data-size="${photos?size}">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src="/.thumb${fileUrl(p)}" data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()}"
+                    <img src="/.thumb${fileUrl(p)}" data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()?replace('\"','\'')}"
                          class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>

@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,50 +70,61 @@ public class PhotoInfo implements Serializable,Cloneable {
             return (v>=0.0?"N":"S")+r;
         }  return (v>=0.0?"E":"W")+r;
     }
+
     @Override
     public String toString() {
-        StringBuilder sb=new StringBuilder();
+        Map<String,Object> attributes = new LinkedHashMap<>();
         if (rating!=null && rating>0) {
-            for (int i=0;i<rating;i++) sb.append("★");
-            sb.append("\n");
+            String s = "";
+            for (int i=0;i<rating;i++) s += "★";
+            attributes.put("rating",s);
         }
 
-        sb.append(subFolder).append(File.separator).append(fileName).append("\n");
+        attributes.put("file",subFolder + File.separator + fileName);
 
-        if (shootTime!=null) sb.append(DateUtil.date2String(shootTime)).append("\n");
-        else if (createTime!=null) sb.append(DateUtil.date2String(createTime)).append("\n");
+        if (shootTime!=null) attributes.put("createTime",DateUtil.date2String(shootTime));
+        else if (createTime!=null) attributes.put("createTime",DateUtil.date2String(createTime));
 
-        if (headline!=null && !headline.isEmpty()) sb.append(headline).append("\n");
+        if (headline!=null && !headline.isEmpty()) attributes.put("title",headline);
 
-        if (subTitle!=null && !subTitle.isEmpty()) sb.append(subTitle).append("\n");
+        if (subTitle!=null && !subTitle.isEmpty()) attributes.put("subTitle",subTitle);
 
-        if (width!=null && height!=null) sb.append(width).append("x").append(height);
-        sb.append("(").append(lengString(fileSize)).append(")\n");
+        if (width!=null) attributes.put("width",width);
+        if (height!=null) attributes.put("height",height);
+        attributes.put("fileSize",lengString(fileSize));
 
-        if (orientation!=null) sb.append(Orientation.name(orientation)).append("\n");
-        if (artist!=null && !artist.isEmpty()) sb.append("by ").append(artist).append("\n");
+        if (orientation!=null) attributes.put("orientation",Orientation.name(orientation));
+        if (artist!=null && !artist.isEmpty()) attributes.put("artist",artist);
 
         if (model!=null && !model.isEmpty()) {
-            sb.append(model);
-            if (lens!=null && !lens.isEmpty()) sb.append(" - ").append(lens);
-            sb.append("\n");
+            String s = model;
+            if (lens!=null && !lens.isEmpty()) s += (" - " + lens);
+            attributes.put("device",s);
         }
 
-        if (subjectCode!=null && !subjectCode.isEmpty()) sb.append(subjectCode).append("\n");
+        if (subjectCode!=null && !subjectCode.isEmpty()) attributes.put("poi",subjectCode);
 
-        if (!allNull(country,province,city,location)) {
-            if (country!=null) sb.append(country).append(" ");
-            if (province!=null) sb.append(province).append(" ");
-            if (city!=null) sb.append(city).append(" ");
-            if (location!=null) sb.append(location).append(" ");
-            sb.append("\n");
+        if (country!=null) attributes.put("country",country);
+        if (province!=null) attributes.put("province",province);
+        if (city!=null) attributes.put("city",city);
+        if (location!=null) attributes.put("location",location);
+
+        if (longitude!=null) attributes.put("longitude",longitude);
+        if (latitude!=null) attributes.put("latitude",latitude);
+        if (altitude!=null) attributes.put("altitude",Math.round(altitude));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        int i = 0, size = attributes.size();
+        for (String k : attributes.keySet()) {
+            sb.append("\"").append(k).append("\"").append(": ");
+            Object o = attributes.get(k);
+            if (o instanceof String) sb.append("\"").append(o).append("\"");
+            else if (o instanceof Double) sb.append(String.format("%.6f",(Double)o));
+            else sb.append(o.toString());
+            if (i < size-1) sb.append(",\n");
         }
-        if (longitude!=null) {
-            sb.append(gpsString(longitude,false));
-            if (latitude!=null) sb.append(" ").append(gpsString(latitude,true));
-            if (altitude!=null) sb.append(" ").append(Math.round(altitude)).append("m");
-            sb.append("\n");
-        }
+        sb.append("}");
         return sb.toString();
     }
     public PhotoInfo cloneObject() throws CloneNotSupportedException {

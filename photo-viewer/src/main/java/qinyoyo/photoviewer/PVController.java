@@ -192,6 +192,11 @@ public class PVController implements ApplicationRunner {
         return model;
     }
 
+    private boolean loopFilter(PhotoInfo p) {
+        return (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
+                p.getMimeType()!=null && p.getMimeType().contains("image/") &&
+                !p.getSubFolder().endsWith(".web") && p.getSubFolder().indexOf(".web"+File.separator)<0;
+    }
     private Map<String,Object> getPathLoopImages(final String path) {
         Map<String,Object> model = new HashMap<>();
         model.put("separator",File.separator);
@@ -199,12 +204,9 @@ public class PVController implements ApplicationRunner {
         if (path!=null && !path.isEmpty()) {
             model.put("pathNames",path.split("\\\\|/"));
             photos = archiveInfo.getInfos().stream().filter(p ->
-                    (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
-                    p.getMimeType()!=null && p.getMimeType().contains("image/") && p.getSubFolder().indexOf(path) == 0
+                    loopFilter(p) && p.getSubFolder().indexOf(path) == 0
             ).collect(Collectors.toList());
-        } else photos = archiveInfo.getInfos().stream().filter(p ->
-                    (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
-                    p.getMimeType()!=null && p.getMimeType().contains("image/")
+        } else photos = archiveInfo.getInfos().stream().filter(p -> loopFilter(p)
                ).collect(Collectors.toList());
         // photos.sort((a,b)->a.compareTo(b));
         if (photos!=null && photos.size()>0) model.put("photos",photos);
@@ -292,7 +294,7 @@ public class PVController implements ApplicationRunner {
     }
 
     @RequestMapping(value = "play")
-    public String playFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String playFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, Integer index) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "error";
@@ -303,6 +305,7 @@ public class PVController implements ApplicationRunner {
         model.addAttribute("htmlEditable",false);
         if (loopTimer==0) model.addAttribute("loopTimer",4000);
         model.addAttribute("loopPlay",true);
+        model.addAttribute("startFrom",index);
         model.addAllAttributes(getPathLoopImages(path));
         setBackgroundMusic(model,path);
         return "index";

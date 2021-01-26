@@ -155,9 +155,33 @@
         element.style.transform = element.style.msTransform = element.style.OTransform = element.style.MozTransform = t.join(' ')
     }
 
+
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function ({img, initialSrc, index, orientation, rating, title}) {
+    const initTransformImage = function (img, index) {
+        let removedIndexList = []
+        const srcByIndex = function (imgIndex) {
+            while (removedIndexList.indexOf(imgIndex)>=0) {
+                if (imgIndex<index) imgIndex--
+                else imgIndex++
+            }
+            if (imgIndex>=0) {
+                let thumb = document.querySelector('.img-index-' + imgIndex)
+                if (thumb) {
+                    let title = thumb.getAttribute('title')
+                    let src = thumb.getAttribute('data-src')
+                    let click = thumb.getAttribute('src')
+                    if (click && click.indexOf('?click=')>=0) {
+                        src = src + click.substring(click.indexOf('?click='))
+                    }
+                    let orientation = thumb.getAttribute('data-orientation')
+                    let rating = thumb.getAttribute('data-rating')
+                    return { src, orientation, rating, title }
+                }
+            }
+            return false
+        }
         /**  变量  */
+        let { src, orientation, rating, title } = srcByIndex(index)
         let translateX = 0, translateY = 0
         let rotateZ = 0, mirrorH = false, mirrorV = false
         let translateLimit = {
@@ -185,24 +209,7 @@
         let   imgInfo = title
         const loopTimerSaved = window.loopTimer
         /********   image load, modify   **********/
-        let removedIndexList = []
-        const srcByIndex = function (imgIndex) {
-            while (removedIndexList.indexOf(imgIndex)>=0) {
-                if (imgIndex<index) imgIndex--
-                else imgIndex++
-            }
-            if (imgIndex>=0) {
-                let thumb = document.querySelector('.img-index-' + imgIndex)
-                if (thumb) {
-                    let title = thumb.getAttribute('title')
-                    let src = thumb.getAttribute('data-src')
-                    let orientation = thumb.getAttribute('data-orientation')
-                    let rating = thumb.getAttribute('data-rating')
-                    return { src, orientation, rating, title }
-                }
-            }
-            return false
-        }
+
         const saveOrientation = function () {
             const imgIndex = index
             let path = img.getAttribute('src')
@@ -240,6 +247,7 @@
                             thumb.setAttribute('data-orientation',pp[1])
                             thumb.setAttribute('data-rating',pp[2])
                             let tp = thumb.getAttribute('src')
+                            if (tp==null) tp=''
                             let pos = tp.indexOf('?')
                             if (pos>=0) tp = tp.substring(0,pos)
                             thumb.setAttribute('src', tp + '?click='+(new Date().getTime()))
@@ -253,12 +261,14 @@
             if (!skipSave) saveOrientation()
             let { src, orientation, rating, title } = srcByIndex(imgIndex)
             if (src) {
-                changeImage({src, fromLeft :imgIndex < index, orientation, rating, title})
+                let fromLeft = (imgIndex ===0 && index > 1 ? false : imgIndex < index)
+                changeImage({src, fromLeft, orientation, rating, title})
                 index = imgIndex
                 return true
             } else {
                 const autoLoop = document.querySelector('.auto-play-loop-images')
                 if (imgIndex > 0 && autoLoop ) {
+                    toast('重新开始')
                     return loadImageBy(0,skipSave)
                 }
                 toast('没有更多了')
@@ -381,15 +391,13 @@
             favorite('toggle')
         }
         this.showInfo = function() {
+            let totalImages = document.querySelector('.photo-list').getAttribute('data-size')
             pauseLoop()
-            toast(imgInfo,2000, function () {
+            toast(imgInfo.replace(/'|,|{|}/g,'') + '<div style="color: #1f63d2; text-align: center">' + index + '/' + totalImages +'</div>',2000, function () {
                resumeLoop(true)
             })
         }
-        const swapWHByOrientation = function () {
-            return (window.notSupportOrientation && (orientation=='5' || orientation=='6'
-                        || orientation=='7' || orientation=='8'))
-        }
+
         /*******  坐标变换  *************/
         const pageFromClient = function(client) {
             let paddingLeft = Math.max(0,(pageW - clientW)/2),
@@ -887,7 +895,7 @@
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
-        changeImage({ src: initialSrc, orientation, rating })
+        changeImage({ src, orientation, rating, title })
         startLoop()
     }
 
@@ -929,7 +937,7 @@
             transformObject.resize()
         }
     }
-    const addImageDialog = function({ src, index, orientation, rating, title}) {
+    const addImageDialog = function(index) {
         removeImageDialog()
         addModel()
         const pageW = window.innerWidth, pageH = window.innerHeight
@@ -954,7 +962,6 @@
         let waitingIcon = document.createElement("button")
         waitingIcon.className = 'tran-img__waiting'
         waitingIcon.style.zIndex = '6005'
-        waitingIcon.style.left = (pageW - 50)/2 + 'px'
 
         let waitingI = document.createElement("i")
         waitingI.className = 'fa fa-spinner fa-spin animated'
@@ -1086,7 +1093,7 @@
             body.appendChild(window.debugElement)
         }
 
-        transformObject = new initTransformImage({img, initialSrc: src, index, orientation, rating, title})
+        transformObject = new initTransformImage(img, index)
     }
 
     /*****************  入口函数  *********************
@@ -1099,40 +1106,31 @@
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
             const title = img.getAttribute('title')
-            const orientation = img.getAttribute('data-orientation')
-            const rating = img.getAttribute('data-rating')
             img.onclick=function (event){
                 event.stopPropagation()
                 if (isMobile() && title && event.offsetX<36 && event.offsetY<36) {
                     toast(title,2000)
                 } else {
                     window.onresize = resizeEvent
-                    let src = img.getAttribute('src')
-                    if (src.indexOf('/.thumb/')==0 || src.indexOf('.thumb/')==0) src=src.substring(7)
                     const e = fullScreenElement()
                     if (e==null) handleFullScreen()
-                    addImageDialog({
-                        src,
-                        index: index==NaN?0:index,
-                        orientation,
-                        rating,
-                        title
-                    })
+                    addImageDialog(index==NaN?0:index)
                 }
             }
         });
     }
-    window.AutoLoopPlayImage =function(){
-        const firstImg = document.querySelector('.img-index-0')
+    window.AutoLoopPlayImage =function(starterIndex){
+        starterIndex = starterIndex ? starterIndex : 0
+        let firstImg = document.querySelector('.img-index-'+starterIndex)
         if (firstImg) {
             window.onresize = resizeEvent
-            addImageDialog({
-                src: firstImg.getAttribute('data-src'),
-                index: 0,
-                orientation: firstImg.getAttribute('data-orientation'),
-                rating: firstImg.getAttribute('data-rating'),
-                title: firstImg.getAttribute('title')
-            })
+            addImageDialog(starterIndex)
+        } else if (starterIndex) {
+            firstImg = document.querySelector('.img-index-0')
+            if (firstImg) {
+                window.onresize = resizeEvent
+                addImageDialog(0)
+            }
         }
     }
 
