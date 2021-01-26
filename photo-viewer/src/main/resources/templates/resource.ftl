@@ -43,10 +43,10 @@
             <form id="audio-form">
             <#list audios as a>
                 <div class="audio-item">
-                    <audio src = "${fileUrl(a)}" class="audio-index-${a?index}" controls></audio>
+                    <audio src = "${fileUrl(a)}" class="audio-index-${a?index?c}" controls></audio>
                     <div>
-                        <input type="radio" name="audio" id="audio-index-${a?index}" value="${a.urlPath(currentPath)}" />
-                        <label for="audio-index-${a?index}">${a.fileName}</label>
+                        <input type="radio" name="audio" id="audio-index-${a?index?c}" value="${a.urlPath(currentPath)}" />
+                        <label for="audio-index-${a?index?c}">${a.fileName}</label>
                     </div>
                 </div>
             </#list>
@@ -58,10 +58,10 @@
             <form id="video-form">
             <#list videos as v>
                 <div class="video-item">
-                    <video src = "${fileUrl(v)}" controls class="video-index-${v?index}"></video>
+                    <video src = "${fileUrl(v)}" controls class="video-index-${v?index?c}"></video>
                     <div>
-                        <input type="radio" name="video" id="video-index-${v?index}" value="${v.urlPath(currentPath)}"/>
-                        <label for="video-index-${v?index}">${v.fileName}</label>
+                        <input type="radio" name="video" id="video-index-${v?index?c}" value="${v.urlPath(currentPath)}"/>
+                        <label for="video-index-${v?index?c}">${v.fileName}</label>
                     </div>
                 </div>
             </#list>
@@ -75,10 +75,10 @@
                 <div class="photo-item grid-cell">
                     <img src = "/.thumb${fileUrl(p)}" data-value="${p.urlPath(currentPath)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if>
                          title="${p.toString()?replace('\"','\'')}" alt="${p.fileName}" onload="adjustSize(this)"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}"/>
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"/>
                     <div>
-                        <input type="checkbox" name="photo" id="img-index-${p?index}" value="${p?index}"/>
-                        <label for="img-index-${p?index}">${p.fileName}</label>
+                        <input type="checkbox" name="photo" id="img-index-${p?index?c}" value="${p?index?c}"/>
+                        <label for="img-index-${p?index?c}">${p.fileName}</label>
                     </div>
                 </div>
             </#list>

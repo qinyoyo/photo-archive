@@ -45,7 +45,7 @@
     </#if>
     <#if loopPlay?? && photos??>
     window.onload=function(){
-        window.AutoLoopPlayImage(<#if startFrom??>${startFrom}<#else>0</#if>)
+        window.AutoLoopPlayImage(<#if startFrom??>${startFrom?c}<#else>0</#if>)
     }
     </#if>
 </script>
@@ -60,7 +60,7 @@
     <div class="auto-play-loop-images photo-list" data-size="${photos?size}" style="display:none">
         <#list photos as p>
         <img data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()?replace('\"','\'')}"
-             class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}"/>
+             class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"/>
         </#list>
     </div>
     <#else>
@@ -119,7 +119,7 @@
                 <#if htmlEditable?? && htmlEditable>
                 <a href = "/editor?path=${fileUrl(h)}" style="padding-right: 8px;" ><i class="fa fa-edit"></i></a>
                 </#if>
-                <a href = "${fileUrl(h)}" class="html-index-${h?index}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
+                <a href = "${fileUrl(h)}" class="html-index-${h?index?c}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
             </div>
         </#list>
         </div>
@@ -134,7 +134,7 @@
         <div class="collapse-content audio-list grid-box">
         <#list audios as a>
             <div class="audio-item grid-cell">
-                <audio src = "${fileUrl(a)}" class="audio-index-${a?index}" controls></audio>
+                <audio src = "${fileUrl(a)}" class="audio-index-${a?index?c}" controls></audio>
                 <span>${a.fileName}</span>
             </div>
         </#list>
@@ -150,7 +150,7 @@
         <div class="collapse-content video-list grid-box">
         <#list videos as v>
             <div class="video-item grid-cell">
-                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index}"></video>
+                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}"></video>
                 <span>${v.fileName}</span>
             </div>
         </#list>
@@ -167,7 +167,7 @@
             <#list photos as p>
                 <div class="photo-item grid-cell">
                     <img src="/.thumb${fileUrl(p)}" data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()?replace('\"','\'')}"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}" alt="${p.fileName}" onload="adjustSize(this)"/>
                 </div>
             </#list>
         </div>
