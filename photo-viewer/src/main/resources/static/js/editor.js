@@ -2,8 +2,14 @@
 function adjustSize(img) {
     let w = 196
     let iw = img.naturalWidth, ih = img.naturalHeight
-    if (iw<=w) img.parentNode.style.height = (Math.min(w,ih) + 26) + 'px'
-    else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)+26) + 'px';
+    if (iw<=w) {
+        img.style.height = Math.min(w,ih) + 'px'
+        img.parentNode.style.height = (Math.min(w,ih) + 26) + 'px'
+    }
+    else {
+        img.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px'
+        img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)+26) + 'px'
+    }
 }
 function resourceSelected(ok) {
     const dialog = document.getElementById('select-resource')
@@ -310,7 +316,42 @@ function resourceSelected(ok) {
         document.execCommand('removeFormat', false, null);
     }
 
-    const showDialog = function(dialog, callback) {
+    const getColor = function(msg, callback) {
+        window.input({
+            title: msg,
+            dialogStyle: {
+                width: '300px'
+            },
+            inputStyle: {
+                width: '100%',
+                height: '40px'
+            },
+            inputType: 'color',
+            callback: function(v) {
+                if (v) setTimeout(function() { callback(v) },100)
+            }
+        })
+    }
+    const getLinkResource = function(callback) {
+        window.input({
+            title: '输入一个链接地址',
+            dialogStyle: {
+                width: '300px'
+            },
+            inputStyle: {
+                width: '100%',
+            },
+            inputType: 'url',
+            callback: function(v) {
+                if (v) setTimeout(function() { callback(v) },100)
+            }
+        })
+    }
+
+    const getResource = function(type,callback) {
+        const dialog = document.getElementById('select-resource')
+        document.getElementById('select-resource-content').className=type
+        dialog.querySelectorAll('input').forEach(function(e){ e.checked = false })
         dialog.showModal()
         dialog.onclose = function(){
             if (dialog.returnValue) {
@@ -318,21 +359,7 @@ function resourceSelected(ok) {
             }
         };
     }
-    const getColor = function(msg, callback) {
-        const dialog = document.getElementById('select-color')
-        document.getElementById('select-color-title').innerText = msg
-        showDialog(dialog, callback)
-    }
-    const getResource = function(type,callback) {
-        const dialog = document.getElementById('select-resource')
-        document.getElementById('select-resource-content').className=type
-        dialog.querySelectorAll('input').forEach(function(e){ e.checked = false })
-        showDialog(dialog, callback)
-    }
-    const getLinkResource = function(callback) {
-        const dialog = document.getElementById('select-link')
-        showDialog(dialog, callback)
-    }
+
     const initResource = function() {
         const dialog = document.getElementById('select-resource')
         dialog.querySelectorAll('.folder-item').forEach(function(d) {
@@ -392,37 +419,45 @@ function resourceSelected(ok) {
                     case 'insert_image':
                         if (RE.prepareInsert()){
                             getResource('photo',function (values){
-                                const indexs = values.split(',')
+                                const indexes = values.split(',')
                                 let url = []
                                 let alt = []
-                                let title = []
-                                indexs.forEach(i=>{
+                                let imgs = []
+                                indexes.forEach(i=>{
                                     const img = document.querySelector('#photo-form img.img-index-'+i)
                                     url.push(img.getAttribute("data-value"))
                                     alt.push(img.getAttribute("alt"))
-                                    const attrs = img.getAttribute("title")
-                                    if (attrs) title.push(eval(eval("(" + attrs + ")")))
+                                    imgs.push(img)
                                 })
                                 RE.insertImageW(url,alt,720)
-                                if (title.length>0) {
-                                    title.forEach(o=>{
-                                        let html = '<div>'
-                                        if (o.createTime) html += '<span style="color: rgb(0, 255, 255);">' + o.createTime + '</span>'
-                                        let poi = o.poi
-                                        if (!poi && o.location) poi = o.location
-                                        else if (!poi && o.city) poi = o.city
-                                        else if (!poi && o.province) poi = o.province
-                                        else if (!poi && o.country) poi = o.country
-                                        else if (!poi) poi = 'poi'
-                                        if (poi && o.longitude && o.latitude) {
+                                if (imgs.length>0) {
+                                    imgs.forEach(img=>{
+                                        let html = '<div class="gps-block">'
+                                        let v = img.getAttribute('data-createTime')
+                                        if (v) html += '<span style="color: rgb(0, 255, 255);">' + v + '</span>'
+                                        let poi = ''
+                                        v = img.getAttribute('data-province')
+                                        if (v) poi += v + ' '
+                                        v = img.getAttribute('data-city')
+                                        if (v) poi += v + ' '
+                                        v = img.getAttribute('data-location')
+                                        if (v) poi += v + ' '
+                                        v = img.getAttribute('data-subjectCode')
+                                        if (v) poi += v
+                                        if (!poi) poi = 'poi'
+                                        let longitude = img.getAttribute('data-longitude')
+                                        let latitude = img.getAttribute('data-latitude')
+                                        if (longitude && latitude) {
                                             html += '<a href="' +
                                                 "https://uri.amap.com/marker?src=mySteps" + "&name=" + poi
-                                                + "&position=" + o.longitude +"," + o.latitude
+                                                + "&position=" + longitude +"," + latitude
                                                 + "&coordinate=wgs84"
-                                                + '">' + poi + '</a>'
+                                                + '">' + poi + '</a><br>'
                                         }
                                         html += '</div>'
-                                        if (RE.prepareInsert()) RE.insertHTML(html)
+                                        if (RE.prepareInsert()) {
+                                            RE.insertHTML(html)
+                                        }
                                     })
                                 }
                             })

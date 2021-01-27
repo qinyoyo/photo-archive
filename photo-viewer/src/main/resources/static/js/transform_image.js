@@ -244,14 +244,16 @@
                                 favorite(pp[2])
                             }
                             let thumb = document.querySelector('.img-index-'+imgIndex)
-                            thumb.setAttribute('data-orientation',pp[1])
                             thumb.setAttribute('data-rating',pp[2])
-                            let tp = thumb.getAttribute('src')
-                            if (tp==null) tp=''
-                            let pos = tp.indexOf('?')
-                            if (pos>=0) tp = tp.substring(0,pos)
-                            thumb.setAttribute('src', tp + '?click='+(new Date().getTime()))
-                            preLoadImageBy(imgIndex)  // 预加载文件
+                            if (orientations){
+                                thumb.setAttribute('data-orientation',pp[1])
+                                let tp=thumb.getAttribute('src')
+                                if (tp==null) tp=''
+                                let pos=tp.indexOf('?')
+                                if (pos>=0) tp=tp.substring(0,pos)
+                                thumb.setAttribute('src',tp+'?click='+(new Date().getTime()))
+                                preLoadImageBy(imgIndex)  // 预加载文件
+                            }
                         }
                     })
                 }

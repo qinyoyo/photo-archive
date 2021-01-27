@@ -1,14 +1,4 @@
-<#function replaceSpecialChar s>
-    <#assign ns = s?replace('[','%5B')?replace(']','%5D') />
-    <#return ns />
-</#function>
-<#function fileUrl h>
-    <#if h.subFolder?? && h.subFolder!=''>
-        <#return replaceSpecialChar('/'+h.subFolder?replace('\\','/')+'/'+h.fileName) />
-    <#else>
-        <#return replaceSpecialChar('/'+h.fileName) />
-    </#if>
-</#function>
+<#include "./photo_attributes.ftl" />
 <div id="resource-list" data-path="${currentPath}">
     <div class="folder-head" >
         <div class="folder-head__left">
@@ -73,9 +63,9 @@
         <div class="grid-box3">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src = "/.thumb${fileUrl(p)}" data-value="${p.urlPath(currentPath)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if>
-                         title="${p.toString()?replace('\"','\'')}" alt="${p.fileName}" onload="adjustSize(this)"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"/>
+                    <img src = "/.thumb${fileUrl(p)}" data-value="${p.urlPath(currentPath)}" alt="${p.fileName}" onload="adjustSize(this)"
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+                         <@photoAttributes p /> />
                     <div>
                         <input type="checkbox" name="photo" id="img-index-${p?index?c}" value="${p?index?c}"/>
                         <label for="img-index-${p?index?c}">${p.fileName}</label>

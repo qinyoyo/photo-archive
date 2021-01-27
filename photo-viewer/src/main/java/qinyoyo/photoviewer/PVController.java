@@ -2,9 +2,8 @@ package qinyoyo.photoviewer;
 
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.NullCacheStorage;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateExceptionHandler;
+import freemarker.ext.beans.BeansWrapper;
+import freemarker.template.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -98,14 +97,23 @@ public class PVController implements ApplicationRunner {
         } else return list;
     }
 
+    public static void initStatics(final Object model) {
+        BeansWrapper wrapper = new BeansWrapper(new Version(2, 3, 27));
+        TemplateModel statics = wrapper.getStaticModels();
+        if (model instanceof Model) ((Model)model).addAttribute("statics", statics);
+        else if (model instanceof Map) ((Map)model).put("statics", statics);
+    }
+
     private boolean isMobile(HttpServletRequest request) {
         String userAgent = request.getHeader("USER-AGENT");
         return userAgent.contains("Mobile") || userAgent.contains("Phone");
     }
     private void commonAttribute(Model model, HttpServletRequest request) {
+        initStatics(model);
         String params = request.getQueryString();
         String userAgent = request.getHeader("USER-AGENT");
         if (isMobile(request)) {
+            model.addAttribute("isMobile",true);
             String browsers = env.getProperty("photo.support-orientation");
             boolean supportOrientation = false;
             if (browsers!=null) {
@@ -624,6 +632,7 @@ public class PVController implements ApplicationRunner {
         template = CONFIGURATION.getTemplate(ftl);
         ByteArrayOutputStream bos = new ByteArrayOutputStream(02400);
         Writer out = new BufferedWriter(new OutputStreamWriter(bos, "utf-8"), 102400);
+        initStatics(model);
         template.process(model, out);
         out.close();
         return new String(bos.toByteArray(),"utf-8");
@@ -640,6 +649,28 @@ public class PVController implements ApplicationRunner {
         } catch (Exception e) {
             return "error";
         }
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "scan")
+    public String scan(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path==null || path.isEmpty()) return "error";
+        new Thread() {
+            @Override
+            public void run() {
+                File dir = new File(rootPath, path);
+                if (dir.exists() && dir.isDirectory()) {
+                    ArchiveUtils.removeEmptyFolder(dir);
+                    if (dir.exists()) {
+                        archiveInfo.seekPhotoInfosInFolder(dir,archiveInfo.getInfos());
+                        archiveInfo.getInfos().stream().filter(p->p.getSubFolder().startsWith(path)).forEach(p->archiveInfo.createThumbFiles(p));
+                        archiveInfo.sortInfos();
+                        archiveInfo.saveInfos();
+                    }
+                }
+            }
+        }.start();
+        return "ok";
     }
 
     @ResponseBody
@@ -763,7 +794,7 @@ public class PVController implements ApplicationRunner {
         CONFIGURATION.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         CONFIGURATION.setCacheStorage(NullCacheStorage.INSTANCE);
 
-        if (!isDebug) System.setOut(new PrintStream(new File(STDOUT)));
+//        if (!isDebug) System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override
             public void run() {

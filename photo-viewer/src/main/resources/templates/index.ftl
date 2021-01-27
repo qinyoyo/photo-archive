@@ -1,14 +1,4 @@
-<#function replaceSpecialChar s>
-    <#assign ns = s?replace('[','%5B')?replace(']','%5D') />
-    <#return ns />
-</#function>
-<#function fileUrl h>
-    <#if h.subFolder?? && h.subFolder!=''>
-        <#return replaceSpecialChar('/'+h.subFolder?replace('\\','/')+'/'+h.fileName) />
-    <#else>
-        <#return replaceSpecialChar('/'+h.fileName) />
-    </#if>
-</#function>
+<#include "./photo_attributes.ftl" />
 <!DOCTYPE html>
 <html>
 <head>
@@ -50,6 +40,7 @@
     </#if>
 </script>
 </#if>
+<#assign path = '' />
 <body>
 <#if backgroundMusic??>
     <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
@@ -59,8 +50,8 @@
     <#if photos??>
     <div class="auto-play-loop-images photo-list" data-size="${photos?size}" style="display:none">
         <#list photos as p>
-        <img data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()?replace('\"','\'')}"
-             class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"/>
+        <img class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+             <@photoAttributes p /> />
         </#list>
     </div>
     <#else>
@@ -68,7 +59,6 @@
     </#if>
     <#else>
     <div class="folder-head" >
-        <#assign path = '' />
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
@@ -85,13 +75,16 @@
             </#if>
         </div>
         <div class="folder-head__right">
-            <i class = "fa fa-search search-item folder-head__item"></i>
+            <i class = "fa fa-search search-item folder-head__item" title="关键词搜索"></i>
             <span style="display: none" class="search-input__wrapper">
             <input type="text" autocomplete="off" placeholder="搜索关键词" class="search-input">
             <i  class="fa fa-times-circle-o search-clear-icon"></i>
             </span>
-            <i class="fa <#if favoriteFilter?? && favoriteFilter>fa-heart<#else>fa-heart-o</#if> favorite-item folder-head__item"></i>
-            <i class="fa fa-play folder-head__item" data-folder="${path}"></i>
+            <#if !isMobile?? && !htmls?? && htmlEditable?? && htmlEditable>
+            <i class="fa fa-edit add-new-step folder-head__item" title="新建游记" data-folder="${path}"></i>
+            </#if>
+            <i class="fa <#if favoriteFilter?? && favoriteFilter>fa-heart<#else>fa-heart-o</#if> favorite-item folder-head__item" title="只显示收藏图片"></i>
+            <i class="fa fa-play folder-head__item" data-folder="${path}" title="循环播放该目录下图片"></i>
         </div>
     </div>
     <#if subDirectories??>
@@ -117,9 +110,9 @@
         <#list htmls as h>
             <div class="folder-list__item">
                 <#if htmlEditable?? && htmlEditable>
-                <a href = "/editor?path=${fileUrl(h)}" style="padding-right: 8px;" ><i class="fa fa-edit"></i></a>
+                <a href = "/editor?path=${fileUrl(h)}" style="padding-right: 8px;" ><i class="fa fa-edit" title="编辑游记"></i></a>
                 </#if>
-                <a href = "${fileUrl(h)}" class="html-index-${h?index?c}" ><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
+                <a href = "${fileUrl(h)}" class="html-index-${h?index?c}" title="阅读游记"><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
             </div>
         </#list>
         </div>
@@ -166,13 +159,20 @@
         <div class="collapse-content photo-list grid-box" data-size="${photos?size}">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src="/.thumb${fileUrl(p)}" data-src="${fileUrl(p)?substring(1)}"<#if p.orientation??> data-orientation="${p.orientation}"</#if><#if p.rating??> data-rating="${p.rating}"</#if> title="${p.toString()?replace('\"','\'')}"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}" alt="${p.fileName}" onload="adjustSize(this)"/>
+                    <img src="/.thumb${fileUrl(p)}" alt="${p.fileName}" onload="adjustSize(this)"
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+                         <@photoAttributes p /> />
+                    <i class="fa fa-heart img-favorite-state"></i>
                 </div>
             </#list>
         </div>
     </#if>
     </div>
+    <#if !photos?? && !videos?? && !htmls?? && !audios?? && !favoriteFilter??>
+        <div class="scan-folder" data-folder="${path}" style="font-size: 50px;" title="没有发现资源，单机重新扫描">
+        <i class="fa fa-refresh"></i>
+        </div>
+    </#if>
     </#if>
 </div>
 </body>

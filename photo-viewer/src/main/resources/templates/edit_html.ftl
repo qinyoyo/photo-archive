@@ -47,14 +47,6 @@
 <div id="editor" contenteditable="true" data-file="${sourceFile}">
 ${body?replace('contenteditable="false"','contenteditable="true"')}
 </div>
-<dialog id="select-color">
-    <h4 id="select-color-title">选择颜色</h4>
-    <input id="select-color-color" type="color" style="width:100%" />
-    <div style="padding-top: 10px;">
-        <button onclick="this.parentElement.parentElement.close(document.getElementById('select-color-color').value)">确定</button>
-        <button onclick="this.parentElement.parentElement.close()">取消</button>
-    </div>
-</dialog>
 <dialog id="select-link" style="width:300px">
     <h4 id="select-link-title">输入链接地址</h4>
     <input id="select-link-url" type="url" style="width:100%" />

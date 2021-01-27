@@ -151,7 +151,7 @@ public class ArchiveInfo {
             }
         } catch (Exception e) {}
     }
-    private void seekPhotoInfosInFolder(File dir, List<PhotoInfo> infoList) {
+    public void seekPhotoInfosInFolder(File dir, List<PhotoInfo> infoList) {
         if (!dir.isDirectory() || !dir.exists()) return;
         File [] files = dir.listFiles(new FileFilter() {
             @Override
