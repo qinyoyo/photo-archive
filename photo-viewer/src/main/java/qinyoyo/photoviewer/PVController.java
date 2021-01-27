@@ -295,6 +295,9 @@ public class PVController implements ApplicationRunner {
                 }
             } catch (Exception e) {}
         }
+        if (path!=null && !path.isEmpty() && (new File(rootPath+File.separator+path+File.separator+".need-scan").exists()
+                || !archiveInfo.getInfos().stream().anyMatch(p->p.getSubFolder().equals(path) || p.getSubFolder().startsWith(path+File.separator)) ) )
+            model.addAttribute("needScan",true);
         commonAttribute(model,request);
         model.addAllAttributes(getPathAttributes(path,false));
         setBackgroundMusic(model,path);
@@ -662,7 +665,8 @@ public class PVController implements ApplicationRunner {
                 if (dir.exists() && dir.isDirectory()) {
                     ArchiveUtils.removeEmptyFolder(dir);
                     if (dir.exists()) {
-                        archiveInfo.seekPhotoInfosInFolder(dir,archiveInfo.getInfos());
+                        new File(rootPath+File.separator+path+File.separator+".need-scan").delete();
+                        archiveInfo.addFile(dir);
                         archiveInfo.getInfos().stream().filter(p->p.getSubFolder().startsWith(path)).forEach(p->archiveInfo.createThumbFiles(p));
                         archiveInfo.sortInfos();
                         archiveInfo.saveInfos();

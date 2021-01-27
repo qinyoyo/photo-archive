@@ -168,7 +168,7 @@
         </div>
     </#if>
     </div>
-    <#if !photos?? && !videos?? && !htmls?? && !audios?? && !favoriteFilter??>
+    <#if needScan?? && needScan>
         <div class="scan-folder" data-folder="${path}" style="font-size: 50px;" title="没有发现资源，单机重新扫描">
         <i class="fa fa-refresh"></i>
         </div>

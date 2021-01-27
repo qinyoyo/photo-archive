@@ -18,11 +18,11 @@
     <#assign r = r + '&#x2727;' + p.gpsString(p.longitude,false) + ' '+p.gpsString(p.latitude,true) + '\n' />
     </#if>
     <#if p.subjectCode?? || p.location?? || p.province?? || p.city?? >
-        <#if p.province??><#assign r = r + p.province + ' '/></#if>
-        <#if p.city??><#assign r = r + p.city + ' '/></#if>
-        <#if p.location??><#assign r = r + p.location + ' '/></#if>
+        <#if p.province??><#assign r = r + p.province + ','/></#if>
+        <#if p.city??><#assign r = r + p.city + ','/></#if>
+        <#if p.location??><#assign r = r + p.location + ','/></#if>
         <#if p.subjectCode??><#assign r = r + p.subjectCode /></#if>
-        <#assign r = '\n' />
+        <#assign r = r+'\n' />
     </#if>
     <#if p.shootTime??>
         <#assign r = r + statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss') + '\n' />

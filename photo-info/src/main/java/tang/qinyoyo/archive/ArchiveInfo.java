@@ -128,12 +128,24 @@ public class ArchiveInfo {
             String p = f.getCanonicalPath();
             if (!p.startsWith(path)) return;
             if (f.isFile()) {
-                if (find(f)==null) {
-                    PhotoInfo pi = new PhotoInfo(path, f);
-                    pi.readProperties(path);
+                PhotoInfo pi = find(f);
+                Integer orientation = null;
+                if (pi==null) {
+                    pi = new PhotoInfo(path, f);
                     infos.add(pi);
-                    sortInfos();
+                } else {
+                    orientation = pi.getOrientation();
+                    if (orientation==null) orientation = Orientation.NONE.getValue();
                 }
+                pi.readProperties(path);
+                File thumb = new File(pi.fullThumbPath(path));
+                if (thumb.exists()) {
+                    Integer ori = pi.getOrientation();
+                    if (ori==null) ori = Orientation.NONE.getValue();
+                    if (ori.equals(orientation)) thumb.setLastModified(new Date().getTime());
+                    else Orientation.setOrientationAndRating(thumb,ori,null);
+                }
+                sortInfos();
             } else {
                 List<PhotoInfo> list = new ArrayList<>();
                 seekPhotoInfosInFolder(f,list);
@@ -141,10 +153,22 @@ public class ArchiveInfo {
                     list.sort((a, b) -> a.compareTo(b));
                     int count = 0;
                     for (int i=0;i<list.size();i++) {
-                        if (find(new File(list.get(i).fullPath(path)))==null) {
-                            infos.add(list.get(i));
-                            count++;
+                        PhotoInfo pi = find(new File(list.get(i).fullPath(path)));
+                        Integer orientation = null;
+                        if (pi!=null) {
+                            orientation = pi.getOrientation();
+                            if (orientation==null) orientation = Orientation.NONE.getValue();
+                            infos.remove(pi);
                         }
+                        infos.add(list.get(i));
+                        File thumb = new File(list.get(i).fullThumbPath(path));
+                        if (thumb.exists()) {
+                            Integer ori = list.get(i).getOrientation();
+                            if (ori==null) ori = Orientation.NONE.getValue();
+                            if (ori.equals(orientation)) thumb.setLastModified(new Date().getTime());
+                            else Orientation.setOrientationAndRating(thumb,ori,null);
+                        }
+                        count++;
                     }
                     if (count>0) sortInfos();
                 }
