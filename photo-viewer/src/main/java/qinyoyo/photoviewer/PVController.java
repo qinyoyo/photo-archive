@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import qinyoyo.utils.BaiduGeo;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
 import qinyoyo.utils.Util;
@@ -534,6 +535,7 @@ public class PVController implements ApplicationRunner {
                     }.start();
                 System.out.println("Photo viewer started.");
                 isReady = true;
+                BaiduGeo.seekAddressInfo(archiveInfo);
             }
         }.start();
     }
