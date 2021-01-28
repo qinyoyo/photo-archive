@@ -17,7 +17,7 @@
     <#if !loopPlay??>
     <script type="text/javascript" src="/static/js/folder.js"></script>
     </#if>
-    <title>Photo viewer</title>
+    <title>Photo Viewer</title>
 </head>
 <#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
 <script>
@@ -45,7 +45,7 @@
 <#if backgroundMusic??>
     <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
 </#if>
-<div id="app">
+<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>">
     <#if loopPlay??>
     <#if photos??>
     <div class="auto-play-loop-images photo-list" data-size="${photos?size}" style="display:none">
@@ -169,8 +169,8 @@
     </#if>
     </div>
     <#if needScan?? && needScan>
-        <div class="scan-folder" data-folder="${path}" style="font-size: 50px;" title="没有发现资源，单机重新扫描">
-        <i class="fa fa-refresh"></i>
+        <div class="scan-folder" data-folder="${path}">
+        <span><i class="fa fa-refresh"></i>强制重新扫描</span>
         </div>
     </#if>
     </#if>

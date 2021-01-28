@@ -48,6 +48,7 @@
 
     window.toast  = function(msg,delay,onclose) {  // 显示提示信息，自动关闭
         if (typeof msg != 'string') return
+        document.querySelectorAll('.tran-img__toast').forEach(e=>e.remove())
         let toast = document.createElement("div")
         toast.className = 'tran-img__toast'
         toast.style.zIndex = "9999"
@@ -364,7 +365,11 @@
             }
             loadImg.setAttribute('src', src)
             waitingIcon.style.display = 'block'
+            let pathLength = document.getElementById('app').getAttribute('data-folder').length
+            document.querySelector('head title').innerText = (pathLength ? src.substring(pathLength+1) : src)
             isReady = false
+            const totalImages = document.querySelector('.photo-list').getAttribute('data-size')
+            document.querySelector('.tran-img__title').innerHTML = title.replace(/\n/g,'<br>') + '<div>' + index + '/' + totalImages +'</div>'
         }
         this.resize = function() {
             pageW = window.innerWidth
@@ -398,6 +403,9 @@
             toast(imgInfo.replace(/'|,|{|}/g,'') + '<div style="color: #1f63d2; text-align: center">' + index + '/' + totalImages +'</div>',2000, function () {
                resumeLoop(true)
             })
+            const div = document.querySelector('.tran-img__title')
+            if (div.style.display === 'none') div.style.display = 'block'
+            else div.style.display = 'none'
         }
 
         /*******  坐标变换  *************/
@@ -640,17 +648,10 @@
         }
         /***********  事件处理  *************/
 
-        let checkFullScreen = function() {
-            const e = fullScreenElement()
-            if (e==null) handleFullScreen()
-            checkFullScreen = null
-        }
-
         let clickTimer = null
         const imgClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            if (typeof checkFullScreen === 'function') checkFullScreen()
             if (!clickTimer) {
                 clickTimer = setTimeout(function() {
                     if (isLooping()) pauseLoop()
@@ -842,7 +843,6 @@
         }
 
         container.onclick=function (event) {
-            if (typeof checkFullScreen === 'function') checkFullScreen()
             let limit = axisLimit(clientW, clientH)
             let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
             let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
@@ -949,6 +949,11 @@
         let content = document.createElement("div")
         content.className = 'tran-img__content'
         content.style.zIndex = "6002"
+
+        const titleDiv = document.createElement("div")
+        titleDiv.className = 'tran-img__title'
+        titleDiv.style.display = 'none'
+
         let dialogBody = document.createElement("div")
         dialogBody.className = 'tran-img__body'
         dialogBody.style.zIndex = "6003"
@@ -984,6 +989,7 @@
                 document.querySelector('body').onkeydown = null
                 window.onresize = null
                 removeImageDialog()
+                document.querySelector('head title').innerText = 'Photo Viewer'
                 if (document.querySelector('.auto-play-loop-images')) {
                     history.back()
                 }
@@ -1031,7 +1037,17 @@
                 bkMusic.src = '/music?click='+new Date().getTime()
             }
         }
-
+        if (fullScreenElement() !==0 ) {
+            let fullBtn = document.createElement("button")
+            fullBtn.className = 'tran-img__float-button close'
+            let fullIcon = document.createElement("i")
+            fullIcon.className = 'fa fa-arrows-alt'
+            fullBtn.appendChild(fullIcon)
+            floatButtons.appendChild(fullBtn)
+            fullBtn.onclick = function(event) {
+                handleFullScreen()
+            }
+        }
         if (window.enableRemove) {
             let removeBtn = document.createElement("button")
             removeBtn.className = 'tran-img__float-button remove'
@@ -1085,6 +1101,8 @@
         dialogBody.appendChild(waitingIcon)
         dialogBody.appendChild(floatButtons)
 
+
+        content.appendChild(titleDiv)
         content.appendChild(dialogBody)
         wrapper.appendChild(content)
         body.appendChild(wrapper)
@@ -1114,8 +1132,6 @@
                     toast(title,2000)
                 } else {
                     window.onresize = resizeEvent
-                    const e = fullScreenElement()
-                    if (e==null) handleFullScreen()
                     addImageDialog(index==NaN?0:index)
                 }
             }

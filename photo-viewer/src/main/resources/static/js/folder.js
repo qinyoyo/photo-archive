@@ -76,7 +76,10 @@ window.onload=function(){
     if (scanFolder) scanFolder.onclick = function() {
         const path = this.getAttribute('data-folder')
         Ajax.get('/scan?path=' + (path ? encodeURI(path) : ''), function(res) {
-            if (res=='ok') toast('已提交后台执行')
+            if (res=='ok') {
+                toast('已提交后台执行')
+                scanFolder.remove()
+            }
         })
     }
 

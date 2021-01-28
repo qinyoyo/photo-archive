@@ -10,7 +10,7 @@
         }
     }
     function exitFullscreen(){
-        const efs = document.exitFullscreen       ||
+        const efs = document.exitFullscreen ||
             document.webkitExitFullscreen ||
             document.mozCancelFullScreen  ||
             document.msExitFullscreen;

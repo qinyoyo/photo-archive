@@ -176,7 +176,13 @@ audio, video {
 img[data-rating="5"] + .img-favorite-state {
     display: block;
 }
-
+.scan-folder {
+    margin-top: 20px;
+    text-align: center;
+    color: #d29411;
+    font-size: 36px;
+    cursor: pointer;
+}
 #resource-list {
     max-height: 800px;
     overflow-y: auto;
