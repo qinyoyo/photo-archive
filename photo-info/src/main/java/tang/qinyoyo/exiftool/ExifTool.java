@@ -114,7 +114,7 @@ public class ExifTool {
             int i = 0;
             for (Key key : attrs.keySet()) {
                 Object v = attrs.get(key);
-                argsList[i++] = "-" + key.name() + "=" + (v == null ? "" : v.toString());
+                argsList[i++] = "-" + Key.getName(key) + "=" + (v == null ? "" : v.toString());
             }
             if (overwriteOriginal) argsList[attrs.size()] = "-overwrite_original";
             Map<String, List<String>> result = excute(dir, argsList);

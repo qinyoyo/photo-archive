@@ -10,19 +10,11 @@ public enum Key {
     // Exif
 
     APERTURE("ApertureValue", Double.class),
-    ARTIST("Artist", String.class),
-    AUTHOR("XPAuthor", String.class),
-    AVG_BITRATE("AvgBitrate", String.class),
-    CAPTION_ABSTRACT("Caption-Abstract", String.class),
+    ARTIST("IFD0:Artist", String.class),
     COLOR_SPACE("ColorSpace", Integer.class),
-    COMMENT("XPComment", String.class),
     CONTRAST("Contrast", Integer.class),
-    COPYRIGHT("Copyright", String.class),
-    COPYRIGHT_NOTICE("CopyrightNotice", String.class),
     CREATEDATE("CreateDate", String.class, "called DateTimeDigitized by the EXIF spec"),
     SUB_SEC_TIME_CREATE("SubSecTimeDigitized",String.class),
-    CREATION_DATE("CreationDate", String.class),
-    CREATOR("Creator", String.class),
     DATETIMEORIGINAL("DateTimeOriginal", String.class, "date/time when original image was taken"),
 
     DIGITAL_ZOOM_RATIO("DigitalZoomRatio", Double.class),
@@ -38,6 +30,7 @@ public enum Key {
     FLASH("Flash", Integer.class),
     FOCAL_LENGTH("FocalLength", Double.class),
     FOCAL_LENGTH_35MM("FocalLengthIn35mmFormat", Integer.class),
+
     GPS_ALTITUDE("GPSAltitude", String.class),
     GPS_ALTITUDE_REF("GPSAltitudeRef", Integer.class),
     GPS_BEARING("GPSDestBearing", Double.class),
@@ -50,14 +43,17 @@ public enum Key {
     GPS_SPEED("GPSSpeed", Double.class),
     GPS_SPEED_REF("GPSSpeedRef", String.class),
     GPS_TIMESTAMP("GPSTimeStamp", String.class),
+
     IMAGE_HEIGHT("ImageHeight", Integer.class),
     IMAGE_WIDTH("ImageWidth", Integer.class),
-    INTEROPINDEX("InteropIndex", String.class, "'R03' = R03 - DCF option file (Adobe RGB), 'R98' = R98 - DCF basic file (sRGB), 'THM' = THM - DCF thumbnail file"),
-    IPTC_KEYWORDS("Keywords", String.class),
+
+    IPTC_KEYWORDS("IPTC:Keywords", String.class, 64),
+
     IPTCDigest("IPTCDigest", String.class),
     DOCUMENT_ID("OriginalDocumentID",String.class),
+
     ISO("ISO", Integer.class),
-    KEYWORDS("XPKeywords", String.class),
+
     LENS_ID("LensID", String.class),
     LENS_MAKE("LensMake", String.class),
     LENS_MODEL("LensModel", String.class),
@@ -66,7 +62,6 @@ public enum Key {
     MIME_TYPE("MIMEType", String.class),
     MODEL("Model", String.class),
     MODIFYDATE("ModifyDate", String.class, "called DateTime by the EXIF spec"),
-    OBJECT_NAME("ObjectName", String.class),
     OFFSETTIME("OffsetTime", String.class, "time zone for ModifyDate"),
     OFFSETTIMEORIGINAL("OffsetTimeOriginal", String.class, "time zone for DateTimeOriginal"),
     ORIENTATION("Orientation", String.class),
@@ -81,41 +76,49 @@ public enum Key {
     SOFTWARE("Software", String.class),
     SUBJECT("XPSubject", String.class),
     SUB_SEC_TIME_ORIGINAL("SubSecTimeOriginal", Integer.class),
-    TITLE("XPTitle", String.class),
+
     WHITE_BALANCE("WhiteBalance", Integer.class),
     X_RESOLUTION("XResolution", Double.class),
     Y_RESOLUTION("YResolution", Double.class),
 
-    DESCRIPTION("Description",String.class),   // 说明
+    COUNTRY("IPTC:Country-PrimaryLocationName",String.class,64),
+    STATE("IPTC:Province-State",String.class, 32),
+    CITY("IPTC:City",String.class,32),
+    LOCATION("IPTC:Sub-location",String.class,32),
 
-    COUNTRY("Country",String.class),
-    STATE("State",String.class),
-    CITY("City",String.class),
-    LOCATION("Location",String.class),
-    SUB_LOCATION("Sub-location",String.class),
+    SUBJECT_CODE("XMP-iptcCore:SubjectCode",String.class),  // IPTC 主题， 记录 POI， step
+    SCENE("XMP-iptcCore:Scene",String.class),  // 场景代码
+    CATEGORY("IPTC:Category",String.class,3),  // 类别
 
-    SUBJECT_CODE("SubjectCode",String.class),  // IPTC 主题
-    SCENE("Scene",String.class),  // 场景代码
-    CATEGORY("Category",String.class),  // 类别
-    HEADLINE("Headline",String.class),  // 题要
-   ;
+    TITLE("XMP-dc:Title", String.class),  // 标题
+    OBJECT_NAME("IPTC:ObjectName", String.class,64),  // 标题
+    DESCRIPTION("IPTC:Caption-Abstract",String.class,2000),   // 说明，副标题
+    HEADLINE("IPTC:Headline",String.class,256),  // 题要
+    ;
 
     private static final Map<String, Key> ENTRY_MAP = Arrays.stream(Key.values()).collect(Collectors.toMap(Key::getName, k -> k));
 
     private final String notes;
     private final Class<?> clazz;
     private final String name;
+    private final int maxLength;
 
     Key(String name, Class<?> clazz) {
-        this(name, clazz, "");
+        this(name, clazz, "",0);
     }
 
     Key(String name, Class<?> clazz, String notes) {
+        this(name,clazz,notes,0);
+    }
+    Key(String name, Class<?> clazz, int len) {
+        this(name,clazz,"",len);
+    }
+    Key(String name, Class<?> clazz, String notes, int length) {
         this.name = name;
         this.clazz = clazz;
         this.notes = notes;
+        maxLength = length;
     }
-
     @SuppressWarnings("unchecked")
     public static <T> T parse(Key key, String value) {
         Class<?> type = key.clazz;
@@ -147,6 +150,10 @@ public enum Key {
 
     public static String getNotes(Key key) {
         return key.notes;
+    }
+
+    public static int getMaxLength(Key key) {
+        return key.maxLength;
     }
 
 }

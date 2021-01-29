@@ -5,11 +5,11 @@ import lombok.Setter;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -553,7 +553,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             return na.compareTo(nb);
         }
     }
-    int compareTo(PhotoInfo p) {
+    public int compareTo(PhotoInfo p) {
         Date d1 = getShootTime(), d2 = p.getShootTime();
         if (d1==null && d2==null) return nameCompare(p);
         else if (d1==null)
@@ -565,5 +565,134 @@ public class PhotoInfo implements Serializable,Cloneable {
         else if (d1.getTime() < d2.getTime())
             return -1;
         else return nameCompare(p);
+    }
+    public String formattedAddress(boolean useCountryName) {
+        if (allNull(country,province,city,location)) return subjectCode==null ? "" : subjectCode;
+        boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
+        if (cc) {
+            String address = ArchiveUtils.join(null,useCountryName ? country : "", province, ArchiveUtils.equals(province,city)?"":city, location);
+            if (subjectCode!=null && !subjectCode.isEmpty() && !address.contains(subjectCode)) return address.isEmpty() ? subjectCode : address + "," + subjectCode;
+            else return address;
+        } else {
+            String address = ArchiveUtils.join(",",location, city, ArchiveUtils.equals(province,city)?"":province, useCountryName ? country : "");
+            if (subjectCode!=null && !subjectCode.isEmpty() && !address.contains(subjectCode)) return address.isEmpty() ? subjectCode : subjectCode + "," + address;
+            else return address;
+        }
+    }
+    public String xmlString(Key ... keys) {
+        StringBuilder sb=new StringBuilder();
+        for (Key key : keys) {
+            String value = null;
+            switch (key) {
+                case DATETIMEORIGINAL:
+                    if (shootTime!=null) {
+                        value = DateUtil.date2String(shootTime,"yyyy:MM:dd HH:mm:ss");
+                        if (shootTime.getTime() % 1000 > 0) {
+                            sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
+                              .append(shootTime.getTime() % 1000)
+                              .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append( ">\n");
+                        }
+                    }
+                    break;
+                case CREATEDATE:
+                    if (createTime!=null) {
+                        value = DateUtil.date2String(createTime,"yyyy:MM:dd HH:mm:ss");
+                        if (createTime.getTime() % 1000 > 0) {
+                            sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
+                                    .append(shootTime.getTime() % 1000)
+                                    .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append( ">\n");
+                        }
+                    }
+                    break;
+                case DOCUMENT_ID:
+                    value = documentId;
+                    break;
+                case IPTCDigest:
+                    value = digest;
+                    break;
+                case MODEL:
+                    value = model;
+                    break;
+                case LENS_ID:
+                    value = lens;
+                    break;
+                case GPS_LONGITUDE:
+                    if (longitude!=null) {
+                        String SN = (longitude < 0 ? "S" : "N");
+                        double lon = Math.abs(longitude);
+                        int du = (int)lon;
+                        int fen = (int)((lon - du) * 60.0);
+                        double m = ((lon - du)*60.0 - fen)*60.0;
+                        value = String.format("%d,%d,%.6f%s",du, fen, m, SN);
+                    }
+                    break;
+                case GPS_LATITUDE:
+                    if (latitude!=null) {
+                        String EW = (latitude < 0 ? "W" : "E");
+                        double lat = Math.abs(latitude);
+                        int du = (int)lat;
+                        int fen = (int)((lat - du) * 60.0);
+                        double m = ((lat - du)*60.0 - fen)*60.0;
+                        value = String.format("%d,%d,%.6f%s",du, fen, m, EW);
+                    }
+                    break;
+                case GPS_ALTITUDE:
+                    if (altitude!=null) {
+                        sb.append("\t<exif:GPSAltitude>")
+                                .append(String.format("%.6f",Math.abs(altitude)))
+                                .append("</exif:GPSAltitude>\n");
+                        sb.append("\t<exif:GPSAltitudeRef>")
+                                .append(altitude>0.0 ? 1 : 0)
+                                .append("</exif:GPSAltitudeRef>\n");
+                    }
+                    break;
+                case ARTIST:
+                    if (artist!=null) {
+                        value = artist;
+                        sb.append("\t<IPTC:By-line>")
+                                .append(artist)
+                                .append("</IPTC:By-line>\n");
+                    }
+                    break;
+                case HEADLINE:
+                    value = headline;
+                    break;
+                case DESCRIPTION:
+                    value = subTitle;
+                    break;
+                case RATING:
+                    if (rating!=null) value = String.valueOf(rating);
+                    break;
+                case ORIENTATION:
+                    if (orientation!=null) value = Orientation.name(orientation);
+                case SCENE:
+                    value = scene;
+                    break;
+                case COUNTRY:
+                    value = country;
+                    break;
+                case STATE:
+                    value = province;
+                    break;
+                case CITY:
+                    value = city;
+                    break;
+                case LOCATION:
+                    value = location;
+                    break;
+                case SUBJECT_CODE:
+                    value = subjectCode;
+                    break;
+                default:
+            }
+            if (value!=null) sb.append("\t<").append(Key.getName(key)).append(">").append(value).append("</").append(Key.getName(key)).append( ">\n");
+        }
+        String r = sb.toString();
+        String header = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+                "<rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>\n" +
+                "<rdf:Description rdf:about=''>\n";
+        String tail = "</rdf:Description>\n</rdf:RDF>\n";
+        if (r.isEmpty()) return r;
+        else return header + r + tail;
     }
 }

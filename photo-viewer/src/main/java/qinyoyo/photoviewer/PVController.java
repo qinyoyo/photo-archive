@@ -2,7 +2,8 @@ package qinyoyo.photoviewer;
 
 
 import freemarker.ext.beans.BeansWrapper;
-import freemarker.template.*;
+import freemarker.template.TemplateModel;
+import freemarker.template.Version;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -23,18 +24,15 @@ import tang.qinyoyo.exiftool.ExifTool;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Controller
 public class PVController implements ApplicationRunner {
@@ -291,23 +289,10 @@ public class PVController implements ApplicationRunner {
         return "ok";
     }
 
-    private String join(String sep,String ... strings) {
-        StringBuilder sb=new StringBuilder();
-        boolean first = true;
-        for (String s : strings) {
-            if (s!=null) {
-                if (first) {
-                    sb.append(s);
-                    first = false;
-                } else sb.append(sep).append(s);
-            }
-        }
-        return sb.toString();
-    }
     private boolean photoInfoContains(PhotoInfo p,String text) {
         String s = p.getFileName();
         if (s!=null && s.toLowerCase().contains(text)) return true;
-        s = join(" ", p.getCountry(),p.getProvince(),p.getCity(),p.getLocation(),p.getSubjectCode(),p.getHeadline(),p.getSubTitle(),
+        s = ArchiveUtils.join(" ", p.getCountry(),p.getProvince(),p.getCity(),p.getLocation(),p.getSubjectCode(),p.getHeadline(),p.getSubTitle(),
                 DateUtil.date2String(p.getShootTime(),null),p.getModel(),p.getLens());
         if (s!=null && s.toLowerCase().contains(text)) return true;
         return false;

@@ -13,8 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static java.lang.Double.parseDouble;
-
 public class ArchiveInfo {
     public static final Key[] NEED_KEYS = new Key[]{
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
@@ -310,10 +308,8 @@ public class ArchiveInfo {
             if( thumbFile.exists() && thumbFile.lastModified() >= imgFile.lastModified()) return;
             thumbFile.getParentFile().mkdirs();
             if (p.getMimeType().contains("image/")) {
-                System.out.println("Create thumbnail of " + imgPath);
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
             } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
-                System.out.println("Create thumbnail of " + imgPath);
                 CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2", "-t", "0.001",
                         // "-s", size,
                         thumbPath);
@@ -327,7 +323,6 @@ public class ArchiveInfo {
             for (PhotoInfo p : infos) {
                 if (!subFolder.equals(p.getSubFolder())) {
                     subFolder = p.getSubFolder();
-                    System.out.println("创建缩略图: "+subFolder);
                 }
                 createThumbFiles(p);
             }
