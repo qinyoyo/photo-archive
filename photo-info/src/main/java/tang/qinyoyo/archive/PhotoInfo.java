@@ -9,9 +9,7 @@ import tang.qinyoyo.exiftool.Key;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -528,11 +526,15 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         return false;
     }
-    public boolean delete(String rootPath) {
+    public boolean delete(String rootPath,boolean needRecord) {
         try {
             new File(fullThumbPath(rootPath)).delete();
         } catch (Exception e) {}
-        return new File(fullPath(rootPath)).delete();
+        if (new File(fullPath(rootPath)).delete()) {
+            if (needRecord) ArchiveUtils.appendToFile(new File(rootPath,ArchiveInfo.DELETED_FILES),
+                    subFolder.isEmpty() ? fileName : subFolder + File.separator + fileName);
+            return true;
+        } else return false;
     }
     private static String nameWithoutExt(String name) {
         int p = name.lastIndexOf(".");
@@ -580,6 +582,9 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
     }
     public String xmlString(Key ... keys) {
+        return xmlString(Arrays.asList(keys));
+    }
+    public String xmlString(List<Key> keys) {
         StringBuilder sb=new StringBuilder();
         for (Key key : keys) {
             String value = null;
@@ -694,5 +699,39 @@ public class PhotoInfo implements Serializable,Cloneable {
         String tail = "</rdf:Description>\n</rdf:RDF>\n";
         if (r.isEmpty()) return r;
         else return header + r + tail;
+    }
+    public void updateThumbFile(String rootPath,Integer ori) {
+        try {
+            File thumb = new File(fullThumbPath(rootPath));
+            if (thumb.exists()) {
+                if (ori != null) Orientation.setOrientationAndRating(thumb, ori, null);
+                // else thumb.setLastModified(new Date().getTime());
+            }
+        } catch (Exception e) {}
+    }
+    public boolean updateExifInfo(String rootPath, List<Key> keys) {
+        boolean r = true;
+        File file = new File(fullPath(rootPath));
+        File xmpFile = new File(file.getParentFile(), "_g_s_t_" + ArchiveUtils.nameUseExt(".xmp", fileName));
+        String xmlContent = xmlString(keys);
+        if (xmlContent != null && !xmlContent.isEmpty()) {
+            ArchiveUtils.writeToFile(xmpFile, xmlContent, "UTF-8");
+            try {
+                Map<String, List<String>> result = ExifTool.getInstance().excute(file, "-overwrite_original",
+                        "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
+                        "-tagsfromfile", xmpFile.getName());
+                List<String> error = result.get(ExifTool.ERROR);
+                if (error != null && error.size() > 0) {
+                    for (String err : error) if (err.indexOf("Error opening file") < 0) System.out.println(err);
+                    r = false;
+                }
+                xmpFile.delete();
+                updateThumbFile(rootPath,keys.contains(Key.ORIENTATION)?(orientation==null?1:orientation):null);
+            } catch (IOException e) {
+                r = false;
+                e.printStackTrace();
+            }
+        }
+        return r;
     }
 }

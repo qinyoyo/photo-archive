@@ -12,10 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import qinyoyo.utils.BaiduGeo;
-import qinyoyo.utils.DateUtil;
-import qinyoyo.utils.SpringContextUtil;
-import qinyoyo.utils.Util;
+import qinyoyo.utils.*;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.PhotoInfo;
@@ -26,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -234,18 +232,9 @@ public class PVController implements ApplicationRunner {
     @ResponseBody
     @RequestMapping(value = "remove")
     public String remove(HttpServletRequest request, HttpServletResponse response, String path) {
-        if (!isReady) {
-            return "error";
-        }
-        if (path==null) return "error";
-        PhotoInfo pi = archiveInfo.find(new File(rootPath , path));
-        if (pi!=null) {
-            pi.delete(rootPath);
-            archiveInfo.getInfos().remove(pi);
-            afterChanged();
-            return "ok";
-        }
-        return "error";
+        if (!isReady) return "error";
+        if (ArchiveUtils.deletePhoto(archiveInfo,path,true)) return "ok";
+        else return "error";
     }
 
 
@@ -510,7 +499,14 @@ public class PVController implements ApplicationRunner {
                     archiveInfo.scanSameFiles(false);
                     ArchiveUtils.removeEmptyFolder(new File(rootPath));
                     archiveInfo.saveInfos();
+                    new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync").delete();
                 }
+                new Thread() {
+                    @Override
+                    public void run() {
+                        ArchiveUtils.syncExifAttributes(archiveInfo);
+                    }
+                }.start();
                 rootPath = archiveInfo.getPath();  // 标准化
                 new Thread() {
                         @Override
@@ -518,6 +514,7 @@ public class PVController implements ApplicationRunner {
                             archiveInfo.createThumbFiles();
                         }
                     }.start();
+
                 System.out.println("Photo viewer started.");
                 isReady = true;
                 BaiduGeo.seekAddressInfo(archiveInfo);

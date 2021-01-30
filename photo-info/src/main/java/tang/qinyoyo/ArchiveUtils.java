@@ -1,5 +1,6 @@
 package tang.qinyoyo;
 
+import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
@@ -124,7 +125,42 @@ public class ArchiveUtils {
             }
         }
     }
+    public static void saveObj(File file, Object object) {
+        try {
+            FileOutputStream outputStream = new FileOutputStream(file);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+            objectOutputStream.writeObject(object);
 
+            objectOutputStream.close();
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static Object readObj(File file) {
+        FileInputStream fileInputStream = null;
+        ObjectInputStream objectInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            objectInputStream = new ObjectInputStream(fileInputStream);
+            return objectInputStream.readObject();
+        } catch (Exception e) {
+            // e.printStackTrace();
+        } finally {
+            if (objectInputStream != null)
+                try {
+                    objectInputStream.close();
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+            if (fileInputStream != null)
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                }
+        }
+        return null;
+    }
     public static File bakNameOf(File file) {
         if (!file.exists()) return file;
         String path = file.getAbsolutePath();
@@ -264,12 +300,100 @@ public class ArchiveUtils {
                             "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                             "-tagsfromfile", "_g_s_t_" + File.separator + "%f.xmp");
                     List<String> error = result.get(ExifTool.ERROR);
-                    if (error!=null && error.size()>0) for (String err : error) if (!error.contains("Error opening file")) System.out.println(err);
+                    if (error!=null && error.size()>0) for (String err : error) if (err.indexOf("Error opening file")<0) System.out.println(err);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 removeFilesInDir(xmpDir, true);
+                /*
+                File[] thumbs = new File(rootPath+File.separator+".thumb"+File.separator + folder).listFiles();
+                if (thumbs!=null && thumbs.length>0) {
+                    long now = new Date().getTime();
+                    for (File f: thumbs) f.setLastModified(now);
+                }
+                 */
             }
         }
+    }
+    public static List<Key> differentOf(PhotoInfo p1, PhotoInfo p2) {
+        List<Key> diff = new ArrayList<>();
+        if(!equals(p1.getOrientation(),p2.getOrientation())) diff.add(Key.ORIENTATION);
+        if(!equals(p1.getRating(),p2.getRating())) diff.add(Key.RATING);
+        if(!equals(p1.getCountry(),p2.getCountry())) diff.add(Key.COUNTRY);
+        if(!equals(p1.getProvince(),p2.getProvince())) diff.add(Key.STATE);
+        if(!equals(p1.getCity(),p2.getCity())) diff.add(Key.CITY);
+        if(!equals(p1.getLocation(),p2.getLocation())) diff.add(Key.LOCATION);
+        if(!equals(p1.getSubjectCode(),p2.getSubjectCode())) diff.add(Key.SUBJECT_CODE);
+        if(!equals(p1.getShootTime(),p2.getShootTime())) diff.add(Key.DATETIMEORIGINAL);
+        if(!equals(p1.getCreateTime(),p2.getCreateTime())) diff.add(Key.CREATEDATE);
+        if(!equals(p1.getDocumentId(),p2.getDocumentId())) diff.add(Key.DOCUMENT_ID);
+        if(!equals(p1.getDigest(),p2.getDigest())) diff.add(Key.IPTCDigest);
+        if(!equals(p1.getModel(),p2.getModel())) diff.add(Key.MODEL);
+        if(!equals(p1.getLens(),p2.getLens())) diff.add(Key.LENS_ID);
+        if(!equals(p1.getLongitude(),p2.getLongitude())) diff.add(Key.GPS_LONGITUDE);
+        if(!equals(p1.getLatitude(),p2.getLatitude())) diff.add(Key.GPS_LATITUDE);
+        if(!equals(p1.getAltitude(),p2.getAltitude())) diff.add(Key.GPS_ALTITUDE);
+        if(!equals(p1.getArtist(),p2.getArtist())) diff.add(Key.ARTIST);
+        if(!equals(p1.getHeadline(),p2.getHeadline())) diff.add(Key.HEADLINE);
+        if(!equals(p1.getSubTitle(),p2.getSubTitle())) diff.add(Key.DESCRIPTION);
+        if(!equals(p1.getScene(),p2.getScene())) diff.add(Key.SCENE);
+        return diff;
+    }
+    /*
+    同步 A，B服务器数据：
+    A修改后，将 A的 .archived.dat 和 .deleted.dat 更名为 .archived.dat.sync 和 .deleted.dat.sync拷贝到 B
+    重启B的服务即可
+     */
+    public static void syncExifAttributes(ArchiveInfo archiveInfo) {
+        File syncFile = new File(archiveInfo.getPath(), ArchiveInfo.ARCHIVE_FILE+".sync");
+        int success = 0, failed = 0;
+        if (syncFile.exists()) {
+            Object syncObj = readObj(syncFile);
+            if (syncObj != null) {
+                ArrayList<PhotoInfo> syncInfos = (ArrayList<PhotoInfo>) syncObj;
+                Iterator<PhotoInfo> iter = archiveInfo.getInfos().iterator();
+                for (PhotoInfo pi : syncInfos ) {
+                    while (iter.hasNext()) {
+                        PhotoInfo oldPi = iter.next();
+                        if (oldPi.getFileName().equals(pi.getFileName()) && oldPi.getSubFolder().equals(pi.getSubFolder())) {
+                            List<Key> diff = differentOf(pi,oldPi);
+                            if (!diff.isEmpty()) {
+                                if (pi.updateExifInfo(archiveInfo.getPath(),diff)) success++;
+                                else failed++;
+                            }
+                        }
+                    }
+                    if (!iter.hasNext()) break;
+                }
+                if (success > 0 || failed > 0) {
+                    System.out.println(String.format("Sync orientation , rating success %d files, failed %d files ", success, failed));
+                }
+                archiveInfo.setInfos(syncInfos);
+                syncFile.delete();
+            }
+        }
+        int removed = 0;
+        String deleted = getFromFile(new File(archiveInfo.getPath(),ArchiveInfo.DELETED_FILES+".sync"));
+        if (deleted!=null) {
+            String[] files = deleted.split("\n");
+            for (String path : files) {
+                path=path.trim();
+                if (!path.isEmpty()) {
+                    if (deletePhoto(archiveInfo,path,false)) removed ++;
+                }
+            }
+            new File(archiveInfo.getPath(),ArchiveInfo.DELETED_FILES+".sync").delete();
+        }
+        if (success>0 || removed>0) archiveInfo.saveInfos();
+    }
+    public static boolean deletePhoto(ArchiveInfo archiveInfo,String path, boolean needRecord) {
+        if (path==null) return false;
+        PhotoInfo pi = archiveInfo.find(new File(archiveInfo.getPath() , path));
+        if (pi!=null) {
+            pi.delete(archiveInfo.getPath(),needRecord);
+            archiveInfo.getInfos().remove(pi);
+            return true;
+        }
+        return false;
     }
 }

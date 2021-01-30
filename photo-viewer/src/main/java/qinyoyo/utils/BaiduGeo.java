@@ -40,7 +40,7 @@ public class BaiduGeo {
     public static void seekAddressInfo(ArchiveInfo archiveInfo) {
         List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->
                 p.getLatitude()!=null && p.getLongitude()!=null
-                // && p.getProvince()==null && p.getCity()==null && p.getLocation()==null && p.getCountry()==null
+                && p.getProvince()==null && p.getCity()==null && p.getLocation()==null && p.getCountry()==null
         ).collect(Collectors.toList());
         //ArchiveUtils.writeAddress(archiveInfo.getInfos(),archiveInfo.getPath());
         if (list!=null && list.size()>0) {

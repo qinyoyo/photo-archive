@@ -29,7 +29,7 @@ public class ArchiveInfo {
     public static final String manual_archive_bat = ".manual_archive.bat";
     public static final String folder_info_dat = ".folder_info.dat";
     public static final String folder_info_lost_log = ".folder_info_lost.log";
-
+    public static final String DELETED_FILES = ".deleted.dat";
     public static String FFMPEG = "ffmpeg";
     private static String FFMPEG_VERSION = null;
     private String path; // 末尾不带分隔符
@@ -140,8 +140,8 @@ public class ArchiveInfo {
                 if (thumb.exists()) {
                     Integer ori = pi.getOrientation();
                     if (ori==null) ori = Orientation.NONE.getValue();
-                    if (ori.equals(orientation)) thumb.setLastModified(new Date().getTime());
-                    else Orientation.setOrientationAndRating(thumb,ori,null);
+                    if (!ori.equals(orientation)) Orientation.setOrientationAndRating(thumb,ori,null);
+                    //else thumb.setLastModified(new Date().getTime());
                 }
                 sortInfos();
             } else {
@@ -163,8 +163,8 @@ public class ArchiveInfo {
                         if (thumb.exists()) {
                             Integer ori = list.get(i).getOrientation();
                             if (ori==null) ori = Orientation.NONE.getValue();
-                            if (ori.equals(orientation)) thumb.setLastModified(new Date().getTime());
-                            else Orientation.setOrientationAndRating(thumb,ori,null);
+                            if (!ori.equals(orientation)) Orientation.setOrientationAndRating(thumb,ori,null);
+                            //else thumb.setLastModified(new Date().getTime());
                         }
                         count++;
                     }
@@ -243,50 +243,12 @@ public class ArchiveInfo {
     public void readInfos() {
         File af = new File(path, ARCHIVE_FILE);
         System.out.println("从 "+af.getAbsolutePath()+" 读取数据");
-        Object obj = readObj(af);
+        Object obj = ArchiveUtils.readObj(af);
         if (obj==null) seekPhotoInfo();
         else {
             try {
                 infos = (ArrayList<PhotoInfo>) obj;
                 readFromFile = true;
-                File oldFile = new File(path, ARCHIVE_FILE+".old");
-                if (oldFile.exists()) {
-                    Object oldObj = readObj(oldFile);
-                    if (oldObj!=null) {
-                        ArrayList<PhotoInfo> oldInfos = (ArrayList<PhotoInfo>) oldObj;
-                        Iterator<PhotoInfo> iter = oldInfos.iterator();
-                        int success = 0, failed = 0;
-                        for (PhotoInfo pi: infos) {
-                            while (iter.hasNext()) {
-                                PhotoInfo oldPi = iter.next();
-                                if (oldPi.getFileName().equals(pi.getFileName()) && oldPi.getSubFolder().equals(pi.getSubFolder())) {
-                                    Integer orientation = null;
-                                    if (!ArchiveUtils.equals(pi.getOrientation(),oldPi.getOrientation())) {
-                                        orientation = pi.getOrientation();
-                                        if (orientation == null) orientation = Orientation.NONE.getValue();
-                                    }
-                                    Integer rating = null;
-                                    if (!ArchiveUtils.equals(pi.getRating(),oldPi.getRating())) {
-                                        rating = pi.getRating();
-                                        if (rating == null) rating = 0;
-                                    }
-                                    if (orientation!=null || rating!=null) {
-                                        String filePath = pi.fullPath(path);
-                                        if (!Orientation.setOrientationAndRating(new File(filePath), orientation, rating)) {
-                                            System.out.println("Sync orientation , rating failed: " + filePath);
-                                            failed++;
-                                        } else success++;
-                                    }
-                                    break;
-                                }
-                            }
-                            if (!iter.hasNext()) break;
-                        }
-                        if (success>0 || failed>0) {
-                            System.out.println(String.format("Sync orientation , rating success %d files, failed %d files ",success,failed));
-                        }
-                    }
-                }
             } catch (Exception e) {
                 seekPhotoInfo();
             }
@@ -305,7 +267,7 @@ public class ArchiveInfo {
             File imgFile = new File(imgPath);
 
             if (!imgFile.exists() || p.getMimeType()==null) return;
-            if( thumbFile.exists() && thumbFile.lastModified() >= imgFile.lastModified()) return;
+            if (thumbFile.exists()) return;
             thumbFile.getParentFile().mkdirs();
             if (p.getMimeType().contains("image/")) {
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
@@ -433,49 +395,14 @@ public class ArchiveInfo {
     	if (infos==null) return;
         File af = new File(path, ARCHIVE_FILE);
         System.out.println("向 "+af.getAbsolutePath()+" 写入数据");
-        saveObj(af, infos);
+        ArchiveUtils.saveObj(af, infos);
     }
     public long lastModified() {
         File af = new File(path, ARCHIVE_FILE);
         if (af.exists()) return af.lastModified();
         else return new Date().getTime();
     }
-    private static void saveObj(File file, Object object) {
-        try {
-            FileOutputStream outputStream = new FileOutputStream(file);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(object);
 
-            objectOutputStream.close();
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    private static Object readObj(File file) {
-        FileInputStream fileInputStream = null;
-        ObjectInputStream objectInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(file);
-            objectInputStream = new ObjectInputStream(fileInputStream);
-            return objectInputStream.readObject();
-        } catch (Exception e) {
-            // e.printStackTrace();
-        } finally {
-            if (objectInputStream != null)
-                try {
-                    objectInputStream.close();
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-            if (fileInputStream != null)
-                try {
-                    fileInputStream.close();
-                } catch (IOException e) {
-                }
-        }
-        return null;
-    }
     public void moveNoShootTimeFiles() {
         try {
             List<PhotoInfo> all = getInfos();
@@ -626,7 +553,7 @@ public class ArchiveInfo {
                     if (one.exists() && two.exists()) {
                         if (ArchiveUtils.contentCompare(rm.get(i).fullPath(rootName),sameAs.get(i).fullPath(rootName))==0) {  // 完全相同，删除一个
                             System.out.println("删除完全一致文件 : " + rm.get(i).fullPath(rootName));
-                            rm.get(i).delete(rootName);
+                            rm.get(i).delete(rootName,false);
                             infos.remove(rm.get(i));
                         } else sb.append(one.getCanonicalPath() + " <-> " + two.getCanonicalPath()).append("\r\n");
                     }
@@ -662,7 +589,7 @@ public class ArchiveInfo {
                     try {
                         if (ArchiveUtils.contentCompare(p.fullPath(rootName),sameAs.get(i).fullPath(ref == null ? rootName : ref.getPath()))==0) {  // 完全相同，删除一个
                             System.out.println("删除完全一致文件 : " + p.fullPath(rootName));
-                            p.delete(rootName);
+                            p.delete(rootName,false);
                             infos.remove(p);
                         } else {
                             File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? rmf : new File(rmf, p.getSubFolder());

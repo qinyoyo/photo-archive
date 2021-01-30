@@ -76,7 +76,7 @@ public class SamePhotoController {
                 String rootPath = pvController.getRootPath();
                 String fp = file.getCanonicalPath();
                 if (fp.indexOf(rootPath) == 0) {
-                    return new PhotoInfo(rootPath, file).delete(rootPath);
+                    return new PhotoInfo(rootPath, file).delete(rootPath,false);
                 } else return file.delete();
             } catch (Exception e) {}
         }
@@ -109,7 +109,7 @@ public class SamePhotoController {
         }
         if (path==null) return null;
         String rootPath = pvController.getRootPath();
-        if (new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath)) {
+        if (new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath,false)) {
             return "ok";
         }
         return "error";
