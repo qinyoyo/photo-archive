@@ -9,16 +9,7 @@ function adjustSize(img) {
     else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px';
 }
 window.onload=function(){
-    if (navigator.userAgent.toLowerCase().indexOf('mac os')>=0) {
-        const playBkMusic = function() {
-            const music = document.querySelector('.background-music')
-            if (music) {
-                music.play()
-            }
-            window.removeEventListener('touchstart',playBkMusic)
-        }
-        window.addEventListener('touchstart',playBkMusic)
-    }
+    macPlayOSBackMusic()
     document.querySelectorAll('.folder-item').forEach(function(d) {
         let path = d.getAttribute('data-folder')
         const url = path ? '/?path=' + encodeURI(path) : '/'

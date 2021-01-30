@@ -74,7 +74,18 @@
             } else remove()
         }
     }
-
+    window.macPlayOSBackMusic = function() {
+        if (navigator.userAgent.toLowerCase().indexOf('mac os') >= 0) {
+            const playBkMusic = function () {
+                const music = document.querySelector('.background-music')
+                if (music) {
+                    music.play()
+                }
+                window.removeEventListener('touchstart', playBkMusic)
+            }
+            window.addEventListener('touchstart', playBkMusic)
+        }
+    }
 
     const PI = 3.1415926
     let loopTimerId = null

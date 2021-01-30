@@ -35,6 +35,7 @@
     </#if>
     <#if loopPlay?? && photos??>
     window.onload=function(){
+        macPlayOSBackMusic()
         window.AutoLoopPlayImage(<#if startFrom??>${startFrom?c}<#else>0</#if>)
     }
     </#if>
