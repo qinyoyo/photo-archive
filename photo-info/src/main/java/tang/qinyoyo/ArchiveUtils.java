@@ -6,10 +6,11 @@ import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class ArchiveUtils {
     public static boolean equals(Object obj1, Object obj2) {
@@ -275,48 +276,59 @@ public class ArchiveUtils {
         if (removeDir) dir.delete();
     }
 
-
-    private static void updatePathExif(List<PhotoInfo> subList,String path,String rootPath, List<Key> keys) {
-        File xmpDir = new File(rootPath,path+File.separator+"_g_s_t_");
+    // 在子目录下生成xml文件
+    private static void writeXmpExif(PhotoInfo p, String rootPath, List<Key> keys) {
+        File xmpDir = new File(rootPath,p.getSubFolder()+File.separator+"_g_s_t_");
         xmpDir.mkdirs();
-        removeFilesInDir(xmpDir, false);
-        for (PhotoInfo p: subList) {
-            File xmpFile = new File(xmpDir, nameUseExt(".xmp", p.getFileName()));
-            String xmlContent = p.xmlString(keys);
-            if (xmlContent!=null && !xmlContent.isEmpty()) writeToFile(xmpFile, xmlContent,"UTF-8");
-        }
+        File xmpFile = new File(xmpDir, nameUseExt(".xmp", p.getFileName()));
+        String xmlContent = p.xmlString(keys);
+        if (xmlContent!=null && !xmlContent.isEmpty()) writeToFile(xmpFile, xmlContent,"UTF-8");
+    }
+
+    // 根据子目录下的xml文件来更新exif
+    private static void updatePathExif(String path,String rootPath) {
+        File xmpDir = new File(rootPath,path+File.separator+"_g_s_t_");
+        if (!xmpDir.exists()) return;
+        File photoDir = new File(rootPath,path);
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().excute(xmpDir.getParentFile(), "-overwrite_original",
+            Map<String, List<String>> result = ExifTool.getInstance().excute(photoDir, "-overwrite_original", "-m",
                     "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                     "-tagsfromfile", "_g_s_t_" + File.separator + "%f.xmp");
             List<String> error = result.get(ExifTool.ERROR);
-            if (error!=null && error.size()>0) for (String err : error) if (err.indexOf("Error opening file")<0) System.out.println(err);
+            if (error != null && error.size() > 0) {
+                for (String err : error)
+                    if (err.indexOf("Error opening file") < 0)
+                        System.out.println(err);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
         removeFilesInDir(xmpDir, true);
     }
-    public static void writeExif(List<PhotoInfo> list,String rootPath, List<Key> keys) {
+
+    public static void updateExif(List<PhotoInfo> list,String rootPath, List<Key> keys) {
         if (list!=null && list.size()>0) {
             nameSort(list);
             String path=list.get(0).getSubFolder();
-            List<PhotoInfo> subList = new ArrayList<>();
+
+            int subList = 0;
             for (PhotoInfo pi : list) {
                 if (pi.getSubFolder().equals(path)) {
-                    subList.add(pi);
+                    writeXmpExif(pi,rootPath,keys);
+                    subList++;
                     continue;
                 } else {
-                    if (subList.size()>0) updatePathExif(subList,path,rootPath,keys);
-                    subList.clear();
+                    if (subList>0) updatePathExif(path,rootPath);
+                    subList=1;
                     path = pi.getSubFolder();
-                    subList.add(pi);
+                    writeXmpExif(pi,rootPath,keys);
                 }
             }
-            if (subList.size()>0) updatePathExif(subList,path,rootPath,keys);
+            if (subList>0) updatePathExif(path,rootPath);
         }
     }
     public static void writeAddress(List<PhotoInfo> list,String rootPath) {
-        writeExif(list, rootPath, new ArrayList<Key>() {{
+        updateExif(list, rootPath, new ArrayList<Key>() {{
             add(Key.COUNTRY);
             add(Key.STATE);
             add(Key.CITY);
@@ -348,6 +360,24 @@ public class ArchiveUtils {
         if(!equals(p1.getScene(),p2.getScene())) diff.add(Key.SCENE);
         return diff;
     }
+    private static void deleteFile(PhotoInfo pi,String rootPath) {
+        try {
+            File targetDir = new File(rootPath + File.separator + ".deleted" + File.separator, pi.getSubFolder());
+            targetDir.mkdirs();
+            File target = new File(targetDir, pi.getFileName());
+            File source = new File(pi.fullPath(rootPath));
+            if (source.exists())
+                Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            File sourceThumb = new File(pi.fullThumbPath(rootPath));
+            if (sourceThumb.exists()) {
+                targetDir = new File(rootPath + File.separator + ".deleted" + File.separator + ".thumb", pi.getSubFolder());
+                targetDir.mkdirs();
+                target = new File(targetDir, pi.getFileName());
+                Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (Exception e) {}
+
+    }
     private static int sync2List(List<PhotoInfo> list1, List<PhotoInfo> list2, String rootPath) {
         Iterator<PhotoInfo> iter = list1.iterator();
         int index = 0;
@@ -360,19 +390,24 @@ public class ArchiveUtils {
                 int pc = p.getSubFolder().compareTo(pi.getSubFolder());
                 if ( pc < 0) continue;
                 else if (pc > 0) {
-                    if (rootPath!=null) pi.delete(rootPath,false);
+                    if (rootPath!=null) deleteFile(pi,rootPath);
                     iter.remove();
                     removed++;
+                    index++;
                     break;
                 }
                 else {
                     int nc = p.getFileName().compareTo(pi.getFileName());
                     if (nc < 0) continue;
-                    else if (nc==0) break;
+                    else if (nc==0) {
+                        index++;
+                        break;
+                    }
                     else {
-                        if (rootPath!=null) pi.delete(rootPath,false);
+                        if (rootPath!=null) deleteFile(pi,rootPath);
                         iter.remove();
                         removed++;
+                        index++;
                         break;
                     }
                 }
@@ -385,54 +420,48 @@ public class ArchiveUtils {
     A修改后，将 A的 .archived.dat 更名为 .archived.dat.sync 拷贝到 B, 重启B的服务即可
      */
     public static void syncExifAttributes(ArchiveInfo archiveInfo) {
-        File syncFile = new File(archiveInfo.getPath(), ArchiveInfo.ARCHIVE_FILE+".sync");
-        int success = 0, failed = 0;
+        List<PhotoInfo> infos = archiveInfo.getInfos();
+        Iterator<PhotoInfo> iter = infos.iterator();
+        String rootPath = archiveInfo.getPath();
+        while (iter.hasNext()) {
+            PhotoInfo pi = iter.next();
+            if (!new File(pi.fullPath(rootPath)).exists()) iter.remove();
+        }
+        File syncFile = new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync");
         if (syncFile.exists()) {
             Object syncObj = readObj(syncFile);
             if (syncObj != null) {
                 ArrayList<PhotoInfo> syncInfos = (ArrayList<PhotoInfo>) syncObj;
-                List<PhotoInfo> infos = archiveInfo.getInfos();
                 nameSort(syncInfos);
                 nameSort(infos);
                 int removed = sync2List(syncInfos,infos,null);
                 if (removed>0) System.out.println("Sync : deleted files1 = "+removed);
 
-                removed = sync2List(infos,syncInfos,archiveInfo.getPath());
+                removed = sync2List(infos,syncInfos,rootPath);
                 if (removed>0) System.out.println("Sync : deleted files2 = "+removed);
 
-                syncInfos.forEach(p->p.setScene(null));
-                List<Key> keys = new ArrayList<Key> () {{
-                    add(Key.COUNTRY);
-                    add(Key.STATE);
-                    add(Key.CITY);
-                    add(Key.LOCATION);
-                    add(Key.SUBJECT_CODE);
-                    add(Key.RATING);
-                    add(Key.ORIENTATION);
-                    add(Key.SCENE);
-                    add(Key.HEADLINE);
-                    add(Key.DESCRIPTION);
-                }};
+                syncInfos.forEach(p->p.setScene(p.getSubFolder().indexOf("Landscape")>=0 ? "Landscape" :
+                        (p.getSubFolder().indexOf("Portrait")>=0 ? "Portrait" : null)));
 
-                writeExif(syncInfos,archiveInfo.getPath(),keys);
-
-                /*
+                String path = syncInfos.get(0).getSubFolder();
+                int modified = 0;
                 for (int i=0; i< syncInfos.size(); i++) {
                     PhotoInfo pi = syncInfos.get(i);
                     PhotoInfo oldPi = infos.get(i);
                     if (oldPi.getFileName().equals(pi.getFileName()) && oldPi.getSubFolder().equals(pi.getSubFolder())) {
                         List<Key> diff = differentOf(pi,oldPi);
                         if (!diff.isEmpty()) {
-                            if (pi.updateExifInfo(archiveInfo.getPath(),diff)) success++;
-                            else failed++;
+                            writeXmpExif(pi,rootPath,diff);
+                            if (!pi.getSubFolder().equals(path)) {
+                                if (modified>0) updatePathExif(path,rootPath);
+                                path = pi.getSubFolder();
+                                modified = 1;
+                            } else modified++;
                         }
                     }
                 }
-                */
+                if (modified>0) updatePathExif(path,rootPath);
 
-                if (success > 0 || failed > 0) {
-                    System.out.println(String.format("Sync orientation , rating success %d files, failed %d files ", success, failed));
-                }
                 archiveInfo.setInfos(syncInfos);
                 syncFile.delete();
 

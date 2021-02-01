@@ -23,26 +23,31 @@ public class BaiduGeo {
         return HttpUtils.doJsonGet(url,null);
     }
 
+    static int utf8Length(String s) {
+        if (s==null) return 0;
+        else {
+            try {
+                return s.getBytes("utf-8").length;
+            } catch (UnsupportedEncodingException e) {
+                return s.length();
+            }
+        }
+    }
     static String trunc(String s,Key key) {
         int maxLength = Key.getMaxLength(key);
         if (maxLength==0) return s;
-        try {
-            int utf8size = s.getBytes("utf-8").length;
-            while (utf8size > maxLength) {
-                s=s.substring(0,s.length()-1);
-                utf8size = s.getBytes("utf-8").length;
-            }
-            return s;
-        } catch (UnsupportedEncodingException e) {
-            return "";
+        int utf8size = utf8Length(s);
+        while (utf8size > maxLength) {
+            s=s.substring(0,s.length()-1);
+            utf8size = utf8Length(s);
         }
+        return s;
     }
     public static void seekAddressInfo(ArchiveInfo archiveInfo) {
         List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->
                 p.getLatitude()!=null && p.getLongitude()!=null
                 && p.getProvince()==null && p.getCity()==null && p.getLocation()==null && p.getCountry()==null
         ).collect(Collectors.toList());
-        //ArchiveUtils.writeAddress(archiveInfo.getInfos(),archiveInfo.getPath());
         if (list!=null && list.size()>0) {
             list.sort((a,b)->{
                 int r = a.getSubFolder().compareTo(b.getSubFolder());
@@ -73,32 +78,31 @@ public class BaiduGeo {
                                 if (status == 0) {
                                     JSONObject result = json.getJSONObject("result");
                                     JSONObject addressComponent = result.getJSONObject("addressComponent");
+
                                     p.setCountry(trunc(addressComponent.getString("country"),Key.COUNTRY));
                                     p.setProvince(trunc(addressComponent.getString("province"),Key.STATE));
                                     p.setCity(trunc(addressComponent.getString("city"),Key.CITY));
                                     boolean cc = ArchiveUtils.hasChinese(p.getCountry()) || ArchiveUtils.hasChinese(p.getProvince()) ||ArchiveUtils.hasChinese(p.getCity());
-                                    String loc = cc ? ArchiveUtils.join(null, addressComponent.getString("district"),
-                                            addressComponent.getString("town"),
-                                            addressComponent.getString("street"))
-                                            : ArchiveUtils.join(",", addressComponent.getString("street"),
-                                            addressComponent.getString("town"),
-                                            addressComponent.getString("district"));
-                                    String newLoc = trunc(loc,Key.LOCATION);
-                                    if (newLoc.length()<loc.length()) {
-                                        loc = cc ? ArchiveUtils.join(null,addressComponent.getString("district"),
-                                                addressComponent.getString("street")) :
-                                                ArchiveUtils.join(",",addressComponent.getString("street"),
-                                                        addressComponent.getString("district"));
-                                        if (loc==null || loc.isEmpty()) loc = newLoc;
-                                        else newLoc = trunc(loc,Key.LOCATION);
-                                        if (newLoc.length()<loc.length()) {
-                                            loc = addressComponent.getString("street");
-                                            if (loc==null || loc.isEmpty()) loc = addressComponent.getString("district");
-                                            newLoc = trunc(loc,Key.LOCATION);
+
+                                    String town = addressComponent.getString("town"), district = addressComponent.getString("district"),
+                                           street = addressComponent.getString("street");
+                                    String loc = cc ? ArchiveUtils.join(null, district, town, street)
+                                            : ArchiveUtils.join(",", street, town, district);
+                                    int maxLocLen = Key.getMaxLength(Key.LOCATION);
+                                    if (utf8Length(loc) > maxLocLen) {
+                                        loc = cc ? ArchiveUtils.join(null, district, town)
+                                                : ArchiveUtils.join(",", town, district);
+                                        if (loc==null || loc.isEmpty()) loc = street;
+                                        if (utf8Length(loc) > maxLocLen) {
+                                            loc = district;
+                                            if (loc==null || loc.isEmpty()) loc = town;
+                                            if (loc==null || loc.isEmpty()) loc = street;
                                         }
+                                        loc=trunc(loc,Key.LOCATION);
                                     }
-                                    p.setLocation(newLoc);
-                                    if (p.getSubjectCode() == null) {
+                                    p.setLocation(loc);
+
+                                    if (p.getSubjectCode() == null || p.getSubjectCode().indexOf("行摄")>=0 || p.getSubjectCode().indexOf("人像")>=0 || p.getSubjectCode().equals("风景")) {
                                         JSONArray pois = result.getJSONArray("pois");
                                         if (!pois.isNull(0)) {
                                             JSONObject poi = pois.getJSONObject(0);
@@ -108,6 +112,8 @@ public class BaiduGeo {
                                     count++;
                                     p0 = p;
                                     changedList.add(p);
+                                } else {
+                                    System.out.println(json.getString("message"));
                                 }
                             }
                         } catch (Exception e) {

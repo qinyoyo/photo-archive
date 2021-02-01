@@ -282,9 +282,6 @@ public class ArchiveInfo {
         String subFolder = "";
         if (infos!=null && infos.size()>0) {
             for (PhotoInfo p : infos) {
-                if (!subFolder.equals(p.getSubFolder())) {
-                    subFolder = p.getSubFolder();
-                }
                 createThumbFiles(p);
             }
         }
@@ -366,6 +363,7 @@ public class ArchiveInfo {
     }
     public boolean moveFile(PhotoInfo pi,String sourceRootPath, File target) {
         try {
+            target.getParentFile().mkdirs();
             Files.move(new File(pi.fullPath(sourceRootPath)).toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             File sourceThumb = new File(pi.fullThumbPath(sourceRootPath));
             if (sourceThumb.exists()) {
