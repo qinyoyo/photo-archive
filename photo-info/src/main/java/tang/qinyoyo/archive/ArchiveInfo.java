@@ -256,8 +256,7 @@ public class ArchiveInfo {
     }
 
     public void sortInfos() {
-    	if (infos!=null && infos.size()>1)
-	        infos.sort((a,b)->a.compareTo(b));
+    	ArchiveUtils.defaultSort(infos);
     }
     public void createThumbFiles(PhotoInfo p) {
         try {

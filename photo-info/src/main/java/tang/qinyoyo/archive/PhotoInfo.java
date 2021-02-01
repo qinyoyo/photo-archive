@@ -347,6 +347,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                         break;
                     case ORIENTATION:
                         orientation = Orientation.value(s);
+                        break;
                     case SCENE:
                         scene = s;
                         break;
@@ -531,8 +532,8 @@ public class PhotoInfo implements Serializable,Cloneable {
             new File(fullThumbPath(rootPath)).delete();
         } catch (Exception e) {}
         if (new File(fullPath(rootPath)).delete()) {
-            if (needRecord) ArchiveUtils.appendToFile(new File(rootPath,ArchiveInfo.DELETED_FILES),
-                    subFolder.isEmpty() ? fileName : subFolder + File.separator + fileName);
+            //if (needRecord) ArchiveUtils.appendToFile(new File(rootPath,ArchiveInfo.DELETED_FILES),
+            //        subFolder.isEmpty() ? fileName : subFolder + File.separator + fileName);
             return true;
         } else return false;
     }
@@ -690,7 +691,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                     break;
                 default:
             }
-            if (value!=null) sb.append("\t<").append(Key.getName(key)).append(">").append(value).append("</").append(Key.getName(key)).append( ">\n");
+            sb.append("\t<").append(Key.getName(key)).append(">").append(value==null?"":value).append("</").append(Key.getName(key)).append( ">\n");
         }
         String r = sb.toString();
         String header = "<?xml version='1.0' encoding='UTF-8'?>\n" +
