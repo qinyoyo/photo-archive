@@ -488,7 +488,8 @@ public class PVController implements ApplicationRunner {
         canRemove = Util.boolValue(env.getProperty("photo.removable"));
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
         htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
-
+        String vca = env.getProperty("photo.video-capture-at");
+        if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
 //        if (!isDebug) System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override

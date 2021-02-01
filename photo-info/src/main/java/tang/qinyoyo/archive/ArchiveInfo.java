@@ -273,7 +273,7 @@ public class ArchiveInfo {
             } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
                 CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2",
                         // "-t","0.0001",
-                        "-frames:v", "1", "-ss", "00:00:02",
+                        "-frames:v", "1", "-ss", ArchiveUtils.VIDEO_CAPTURE_AT,
                         // "-s", size,
                         thumbPath);
             }

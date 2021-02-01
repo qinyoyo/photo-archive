@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ArchiveUtils {
+    public static String VIDEO_CAPTURE_AT = "00:00:01";
     public static boolean equals(Object obj1, Object obj2) {
         if (obj1 == null && obj2 == null) return true;
         else if (obj1 != null && obj2 != null) return obj1.equals(obj2);
