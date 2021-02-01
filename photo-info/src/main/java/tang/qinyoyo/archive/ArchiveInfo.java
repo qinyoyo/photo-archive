@@ -271,7 +271,9 @@ public class ArchiveInfo {
             if (p.getMimeType().contains("image/")) {
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
             } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
-                CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2", "-t", "0.001",
+                CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2",
+                        // "-t","0.0001",
+                        "-frames:v", "1", "-ss", "00:00:02",
                         // "-s", size,
                         thumbPath);
             }
