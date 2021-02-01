@@ -489,4 +489,25 @@ public class ArchiveUtils {
         if (infos!=null && infos.size()>1)
             infos.sort((a,b)->(a.getSubFolder()+File.separator+a.getFileName()).compareTo(b.getSubFolder()+File.separator+b.getFileName()));
     }
+    public static int xcopy(String source,String target) {
+        File [] files = new File(source).listFiles(f->!f.getName().equals(".") && !f.getName().equals(".."));
+        if (files==null || files.length==0) return 0;
+        int count = 0;
+        for (File f: files) {
+            if (f.isFile()) {
+                File tf=new File(target, f.getName());
+                if (!tf.exists()) {
+                    tf.getParentFile().mkdirs();
+                    try {
+                        Files.copy(f.toPath(),tf.toPath());
+                        count++;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else count += xcopy(source+File.separator+f.getName(),target+File.separator+f.getName());
+        }
+        if (count>0) System.out.println("copy "+count +" files from "+source +" to "+target);
+        return count;
+    }
 }
