@@ -394,7 +394,6 @@ public class ArchiveUtils {
                     if (rootPath!=null) deleteFile(pi,rootPath);
                     iter.remove();
                     removed++;
-                    index++;
                     break;
                 }
                 else {
@@ -408,7 +407,6 @@ public class ArchiveUtils {
                         if (rootPath!=null) deleteFile(pi,rootPath);
                         iter.remove();
                         removed++;
-                        index++;
                         break;
                     }
                 }
