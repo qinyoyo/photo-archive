@@ -510,4 +510,31 @@ public class ArchiveUtils {
         if (count>0) System.out.println("copy "+count +" files from "+source +" to "+target);
         return count;
     }
+
+    public static  Map<String,String> dirContainer(String source) {
+        Map<String,String> map=new HashMap<>();
+        File [] files = new File(source).listFiles(f->!f.getName().equals(".") && !f.getName().equals(".."));
+        if (files==null || files.length==0) return map;
+        for (File f: files) {
+            if (f.isFile()) {
+                int pos = f.getName().lastIndexOf(".");
+                if (pos>=0) map.put(f.getName().substring(0,pos),f.getName().substring(pos));
+                else map.put(f.getName(),"");
+            } else map.putAll( dirContainer(source+File.separator+f.getName()));
+        }
+        return map;
+    }
+    public static int deleteFilesInMap(String source,Map<String,String> map) {
+        File [] files = new File(source).listFiles(f->!f.getName().equals(".") && !f.getName().equals(".."));
+        if (files==null || files.length==0) return 0;
+        int count = 0;
+        for (File f: files) {
+            if (f.isFile()) {
+                int pos = f.getName().lastIndexOf(".");
+                String name = (pos>=0 ? f.getName().substring(0,pos) : f.getName());
+                if (map.containsKey(name) && f.delete()) count++;
+            } else count += deleteFilesInMap( source+File.separator+f.getName(),map);
+        }
+        return count;
+    }
 }
