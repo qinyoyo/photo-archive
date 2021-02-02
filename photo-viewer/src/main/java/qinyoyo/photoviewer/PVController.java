@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -476,6 +477,7 @@ public class PVController implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        ArchiveUtils.setOutput(this.getClass(),STDOUT);
         String ffmpeg = env.getProperty("photo.ffmpeg");
         if (ffmpeg!=null) ArchiveInfo.FFMPEG = ffmpeg;
         String exiftool = env.getProperty("photo.exiftool");
@@ -490,7 +492,6 @@ public class PVController implements ApplicationRunner {
         htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
-//        if (!isDebug) System.setOut(new PrintStream(new File(STDOUT)));
         new Thread() {
             @Override
             public void run() {

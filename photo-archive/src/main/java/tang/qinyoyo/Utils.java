@@ -526,7 +526,7 @@ public class Utils {
 		});
 	}
 	public static void main(String[] argv) {
-
+		ArchiveUtils.setOutput(Utils.class,"stdout.log");
 		Map<String,Object> params = null;
 		try {
 			params = parseArgv(argv);

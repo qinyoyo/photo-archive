@@ -452,7 +452,10 @@ public class ArchiveUtils {
                         if (!diff.isEmpty()) {
                             writeXmpExif(pi,rootPath,diff);
                             if (!pi.getSubFolder().equals(path)) {
-                                if (modified>0) updatePathExif(path,rootPath);
+                                if (modified>0) {
+                                    System.out.println("sync exif info in "+path+", "+modified+" files.");
+                                    updatePathExif(path,rootPath);
+                                }
                                 path = pi.getSubFolder();
                                 modified = 1;
                             } else modified++;
@@ -534,5 +537,15 @@ public class ArchiveUtils {
             } else count += deleteFilesInMap( source+File.separator+f.getName(),map);
         }
         return count;
+    }
+    public static void setOutput(Class clazz,String stdoutFilePath) {
+        if (System.console()==null && !("file".equals(clazz.getResource("").getProtocol()))) {
+            try {
+                System.setOut(new PrintStream(new File(stdoutFilePath)));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }
