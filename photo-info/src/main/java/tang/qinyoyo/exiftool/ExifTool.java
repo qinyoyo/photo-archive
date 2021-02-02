@@ -133,6 +133,7 @@ public class ExifTool {
         }
         StringBuilder sb=new StringBuilder();
         for (String line : stdOut) {
+            if (line.endsWith("\t")) line = line+"-";
             List<String> lineSeparated = Arrays.asList(line.split("\t"));
             if (lineSeparated.size() < keys.length + 1) {
             	sb.append(line).append("\n");

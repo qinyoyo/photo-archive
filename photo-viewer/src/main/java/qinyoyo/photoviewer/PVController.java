@@ -4,6 +4,7 @@ package qinyoyo.photoviewer;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.TemplateModel;
 import freemarker.template.Version;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -18,6 +19,7 @@ import qinyoyo.utils.SpringContextUtil;
 import qinyoyo.utils.Util;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.archive.ArchiveInfo;
+import tang.qinyoyo.archive.Orientation;
 import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.CommandRunner;
 import tang.qinyoyo.exiftool.ExifTool;
@@ -26,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -197,9 +198,20 @@ public class PVController implements ApplicationRunner {
         return "index";
     }
 
+
+    @ResponseBody
+    @RequestMapping(value = "remove")
+    public String remove(String path) {
+        if (!isReady) return "error";
+        if (ArchiveUtils.deletePhoto(archiveInfo,path,true)) {
+            Modification.save(new Modification(Modification.Remove,path,null));
+            return "ok";
+        }
+        else return "error";
+    }
     @ResponseBody
     @RequestMapping(value = "orientation")
-    public String orientation(HttpServletRequest request, String path, Integer [] orientations, Integer rating) {
+    public String orientation(String path, Integer [] orientations, Integer rating) {
         if (!isReady) {
             return "error";
         }
@@ -207,12 +219,51 @@ public class PVController implements ApplicationRunner {
         PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
         if (pi==null) return "error";
         if (pi.modifyOrientation(rootPath, rating, orientations)) {
+            Map<String,Object> map = new HashMap<>();
+            if (rating!=null) map.put("rating",rating);
+            if (orientations!=null) map.put("orientation",pi.getOrientation()==null? Orientation.NONE.getValue() : pi.getOrientation());
+            Modification.save(new Modification(Modification.Rating_Orientation,path,map));
             afterChanged();
             return "ok,"+
                     (pi.getOrientation()==null?"":pi.getOrientation())+
                     ","+(pi.getRating()==null?"0":pi.getRating());
         }
         else return "fail";
+    }
+
+    void syncFromModification() {
+        List<Modification> list = Modification.read();
+        if (list!=null) {
+            for (Modification m : list) {
+                switch (m.action) {
+                    case Modification.Rating_Orientation:
+                        if (m.path != null && m.params != null) {
+                            try {
+                                JSONObject json = new JSONObject(m.params);
+                                Integer rating = (json.has("rating") ? json.getInt("rating") : null);
+                                Integer orientation = (json.has("orientation") ? json.getInt("rating") : null);
+                                PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + m.path));
+                                if (pi != null) {
+                                    if (orientation!=null) pi.setOrientation(orientation);
+                                    if (rating!=null) pi.setRating(rating);
+                                    Orientation.setOrientationAndRating(new File(pi.fullPath(rootPath)), orientation, rating);
+                                    if (orientation!=null) Orientation.setOrientationAndRating(new File(pi.fullThumbPath(rootPath)), orientation, null);
+                                }
+                            } catch (Exception e) {
+                            }
+                        }
+                        break;
+                    case Modification.Remove:
+                        if (m.path != null) {
+                            ArchiveUtils.deletePhoto(archiveInfo, m.path, true);
+                        }
+                        break;
+                    default:
+                }
+            }
+            Modification.resetSyncAction();
+            afterChanged();
+        }
     }
 
     @ResponseBody
@@ -232,13 +283,7 @@ public class PVController implements ApplicationRunner {
         return "error";
     }
 
-    @ResponseBody
-    @RequestMapping(value = "remove")
-    public String remove(HttpServletRequest request, HttpServletResponse response, String path) {
-        if (!isReady) return "error";
-        if (ArchiveUtils.deletePhoto(archiveInfo,path,true)) return "ok";
-        else return "error";
-    }
+
 
 
     @ResponseBody
@@ -503,19 +548,20 @@ public class PVController implements ApplicationRunner {
                     archiveInfo.scanSameFiles(false);
                     ArchiveUtils.removeEmptyFolder(new File(rootPath));
                     archiveInfo.saveInfos();
-                    new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync").delete();
+                    //new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync").delete();
                 }
                 rootPath = archiveInfo.getPath();  // 标准化
+                Modification.setRootPath(rootPath);
 
                 new Thread() {
                     @Override
                     public void run() {
-                        ArchiveUtils.syncExifAttributes(archiveInfo);
+                        //ArchiveUtils.syncExifAttributes(archiveInfo);
+                        syncFromModification();
                         BaiduGeo.seekAddressInfo(archiveInfo);
                         archiveInfo.createThumbFiles();
                     }
                 }.start();
-
                 System.out.println("Photo viewer started.");
                 isReady = true;
 
