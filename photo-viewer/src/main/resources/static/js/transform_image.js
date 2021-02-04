@@ -405,6 +405,9 @@
             else if (e)
                 e.className = 'fa fa-heart-o'
         }
+        this.indexImg = function() {
+            return document.querySelector('img.img-index-'+index)
+        }
         this.toggleFavorite = function() {
             favorite('toggle')
         }
@@ -877,7 +880,7 @@
         }
 
         const imageKeyEvent = function(event) {
-            console.log(event.code)
+            if (document.querySelector('.common-dialog')) return
             if (event.code=='ArrowLeft' || event.code=='Numpad4'){
                 move({x: -10, y: 0})
             } else if (event.code=='ArrowRight' || event.code=='Numpad6'){
@@ -972,7 +975,7 @@
         dialogBody.style.height = pageH+'px'
         dialogBody.tabIndex = -1
 
-        let img = document.createElement("img")
+        const img = document.createElement("img")
         img.draggable = false
         img.className = 'center-transform'
         img.style.zIndex = "6004"
@@ -989,14 +992,47 @@
         floatButtons.className = 'tran-img__fb-wrapper'
         floatButtons.style.zIndex = "6006"
 
-        let closeButton = document.createElement("button")
-        closeButton.className = 'tran-img__float-button close'
-        let closeIcon = document.createElement("i")
-        closeIcon.className = 'fa fa-power-off'
-        closeButton.appendChild(closeIcon)
-        floatButtons.appendChild(closeButton)
-        closeButton.onclick = function(event) {
-            floatButtonClick(event,function() {
+        const createButton=function({className, iconClass, onclick}) {
+            const button = document.createElement("button")
+            button.className = 'tran-img__float-button ' + className
+            const icon = document.createElement("i")
+            icon.className = iconClass
+            button.appendChild(icon)
+            floatButtons.appendChild(button)
+            button.onclick = function(event) {
+                floatButtonClick(event,onclick)
+            }
+        }
+        let rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
+            {
+                exif: document.getElementById("app").getAttribute("data-rangeExif")
+            } : null
+        if (rangeExif) {
+            const rangeButton = createButton({
+                className: 'close',
+                iconClass: 'fa fa-angle-left',
+                onclick: function (){
+                    if (transformObject) {
+                        const e = transformObject.indexImg()
+                        if (e) rangeExif.start = e.getAttribute("data-createTime")
+                        if (rangeExif.start) {
+                            window.input({
+                                title: '批量设置 ' + rangeExif.exif +' 起点',
+                                label: rangeExif.exif.toUpperCase(),
+                                callback: function(exif) {
+                                    rangeExif.value = exif
+                                }
+                            })
+                        }
+                    }
+                }
+            })
+        }
+
+        const closeButton = createButton({
+            className:'close',
+            iconClass:'fa fa-power-off',
+            onclick:function (){
                 document.querySelector('body').onkeydown = null
                 window.onresize = null
                 removeImageDialog()
@@ -1004,92 +1040,98 @@
                 if (document.querySelector('.auto-play-loop-images')) {
                     history.back()
                 }
-            })
-        }
+            }
+        })
 
-        let favoriteButton = document.createElement("button")
-        favoriteButton.className = 'tran-img__float-button favorite'
-        let favoriteIcon = document.createElement("i")
-        favoriteIcon.className = 'fa fa-heart-o'
-        favoriteButton.appendChild(favoriteIcon)
-        floatButtons.appendChild(favoriteButton)
-        favoriteButton.onclick = function(event) {
-            floatButtonClick(event,function() {
+        const favoriteButton = createButton({
+            className:'favorite',
+            iconClass:'fa fa-heart-o',
+            onclick:function (){
                 if (transformObject) transformObject.toggleFavorite()
-            })
-        }
+            }
+        })
 
-        let infoButton = document.createElement("button")
-        infoButton.className = 'tran-img__float-button close'
-        let infoIcon = document.createElement("i")
-        infoIcon.className = 'fa fa-info-circle'
-        infoButton.appendChild(infoIcon)
-        floatButtons.appendChild(infoButton)
-        infoButton.onclick = function(event) {
-            floatButtonClick(event,function() {
+        const infoButton = createButton({
+            className:'close',
+            iconClass:'fa fa-info-circle',
+            onclick:function (){
                 if (transformObject) transformObject.showInfo()
-            })
-        }
+            }
+        })
 
         const bkMusic = document.querySelector('.background-music')
         if (bkMusic) {
-            let musicBtn = document.createElement("button")
-            musicBtn.className = 'tran-img__float-button music'
-            let musicIcon = document.createElement("i")
-            musicIcon.className = 'fa fa-music'
-            musicBtn.appendChild(musicIcon)
-            floatButtons.appendChild(musicBtn)
-            musicBtn.onclick = function(event) {
-                floatButtonClick(event,function() {
+            const musicBtn = createButton({
+                className:'music',
+                iconClass:'fa fa-music',
+                onclick:function (){
                     bkMusic.src = '/music?click='+new Date().getTime()
-                })
-            }
+                }
+            })
             bkMusic.onended = function() {
                 bkMusic.src = '/music?click='+new Date().getTime()
             }
         }
         if (fullScreenElement() !==0 ) {
-            let fullBtn = document.createElement("button")
-            fullBtn.className = 'tran-img__float-button close'
-            let fullIcon = document.createElement("i")
-            fullIcon.className = 'fa fa-arrows-alt'
-            fullBtn.appendChild(fullIcon)
-            floatButtons.appendChild(fullBtn)
-            fullBtn.onclick = function(event) {
-                handleFullScreen()
-            }
+            const fullBtn = createButton({
+                className:'close',
+                iconClass:'fa fa-arrows-alt',
+                onclick:function (){
+                    handleFullScreen()
+                }
+            })
         }
         if (window.enableRemove) {
-            let removeBtn = document.createElement("button")
-            removeBtn.className = 'tran-img__float-button remove'
-            let removeIcon = document.createElement("i")
-            removeIcon.className = 'fa fa-trash-o'
-            removeBtn.appendChild(removeIcon)
-            floatButtons.appendChild(removeBtn)
-            removeBtn.onclick = function(event) {
-                floatButtonClick(event,function() {
+            const removeBtn = createButton({
+                className:'remove',
+                iconClass:'fa fa-trash-o',
+                onclick:function (event){
                     if (transformObject) transformObject.removeImage(event)
-                })
-            }
+                }
+            })
         }
 
-        let shareButton = document.createElement("button")
-        shareButton.className = 'tran-img__float-button close'
-        let shareIcon = document.createElement("i")
-        shareIcon.className = 'fa fa-telegram'
-        shareButton.appendChild(shareIcon)
-        floatButtons.appendChild(shareButton)
-        shareButton.onclick = function(event) {
-            floatButtonClick(event,function() {
+        const shareButton = createButton({
+            className:'close',
+            iconClass:'fa fa-telegram',
+            onclick:function (){
                 const src = img.getAttribute('src')
                 if (src) {
                     Ajax.get('/share?path='+encodeURI(src),function(reposeText) {
                         if (reposeText=='ok') toast('成功分享到指定目录')
                     })
                 }
+            }
+        })
+        if (rangeExif) {
+            const rangeButton = createButton({
+                className: 'close',
+                iconClass: 'fa fa-angle-right',
+                onclick: function (){
+                    if (rangeExif.start && transformObject) {
+                        const e = transformObject.indexImg()
+                        if (e) rangeExif.end = e.getAttribute("data-createTime")
+                        if (rangeExif.end) {
+                            let msg = (rangeExif.value ? '批量设置 '+ rangeExif.exif +'=' + rangeExif.value : '批量删除 '+ rangeExif.exif) + ' ?\n' +
+                                '['+ rangeExif.start + ' 至 ' + rangeExif.end + ']'
+                            if (confirm(msg)) {
+                                let url = '/' + rangeExif.exif +'?value=' + encodeURI(rangeExif.value)
+                                     +'&start=' + encodeURI(rangeExif.start) +'&end=' + encodeURI(rangeExif.end)
+                                     +'&path=' + encodeURI(document.getElementById('app').getAttribute('data-folder'))
+                                rangeExif.value = null
+                                rangeExif.start = null
+                                rangeExif.end = null
+                                Ajax.get(url, function (responseText) {
+                                    if ("ok" == responseText) {
+                                        toast('已提交后台执行')
+                                    } else toast(responseText)
+                                })
+                            }
+                        }
+                    }
+                }
             })
         }
-
         if (!isMobile()){
             floatButtons.onmouseenter=function (event){
                 floatButtonClick(event,function (){

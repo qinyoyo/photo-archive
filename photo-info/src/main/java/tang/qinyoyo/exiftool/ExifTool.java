@@ -86,7 +86,7 @@ public class ExifTool {
         return processQueryResult(dir, stdOut, stdErr, keys);
     }
 
-    public Map<String,List<String>> excute(File dir, String ... options) throws IOException {
+    public Map<String,List<String>> execute(File dir, String ... options) throws IOException {
         List<String> argsList = new ArrayList<>();
         argsList.add(EXIFTOOL);
 
@@ -116,7 +116,7 @@ public class ExifTool {
                 argsList[i++] = "-" + Key.getName(key) + "=" + (v == null ? "" : v.toString());
             }
             if (overwriteOriginal) argsList[attrs.size()] = "-overwrite_original";
-            Map<String, List<String>> result = excute(dir, argsList);
+            Map<String, List<String>> result = execute(dir, argsList);
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList == null || msgList.size() == 0) return false;
             for (String msg : msgList) {

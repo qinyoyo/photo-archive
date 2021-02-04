@@ -223,7 +223,7 @@ public class Modification {
     }
     private static void executeExiftool(File xmpDir, File imgDir, Map<String,File> files) {
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().excute(imgDir, "-m",
+            Map<String, List<String>> result = ExifTool.getInstance().execute(imgDir, "-m",
                     "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                     "-tagsfromfile", XMP + File.separator + "%f.xmp");
             List<String> error = result.get(ExifTool.ERROR);
@@ -313,10 +313,10 @@ public class Modification {
                 if (m.params.containsKey(start_time_key) && m.params.containsKey(end_time_key)) {
                     try {
                         long start = Long.parseLong(m.params.get(start_time_key).toString()),
-                             end = Long.parseLong(m.params.get(start_time_key).toString());
-                        archiveInfo.getInfos().stream().filter(p->
-                                p.getSubFolder().startsWith(m.path) && p.getShootTime()!=null
-                                && p.getShootTime().getTime()>=start && p.getShootTime().getTime()<=end
+                             end = Long.parseLong(m.params.get(end_time_key).toString());
+                        archiveInfo.getInfos().stream().filter(p ->
+                                   p.getSubFolder().startsWith(m.path) && p.getShootTime() != null
+                                && p.getShootTime().getTime() >= start && p.getShootTime().getTime() <= end
                         ).reduce(pathList,(acc,p)-> {
                             acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
                             return acc;

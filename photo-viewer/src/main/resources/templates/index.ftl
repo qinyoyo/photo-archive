@@ -46,7 +46,7 @@
 <#if backgroundMusic??>
     <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
 </#if>
-<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>">
+<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}"</#if>>
     <#if loopPlay??>
     <#if photos??>
     <div class="auto-play-loop-images photo-list" data-size="${photos?size}" style="display:none">

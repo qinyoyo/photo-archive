@@ -612,7 +612,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (xmlContent != null && !xmlContent.isEmpty()) {
             ArchiveUtils.writeToFile(xmpFile, xmlContent, "UTF-8");
             try {
-                Map<String, List<String>> result = ExifTool.getInstance().excute(file, "-overwrite_original",
+                Map<String, List<String>> result = ExifTool.getInstance().execute(file, "-overwrite_original",
                         "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                         "-tagsfromfile", xmpFile.getName());
                 List<String> error = result.get(ExifTool.ERROR);

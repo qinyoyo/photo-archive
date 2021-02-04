@@ -606,4 +606,11 @@ public class ArchiveUtils {
             }
         }
     }
+    public static String formatterSubFolder(String path) {
+        if (path==null) return "";
+        if (!File.separator.equals("/")) path = path.replace("/",File.separator);
+        if (path.startsWith(File.separator)) path=path.substring(1);
+        else if (path.endsWith(File.separator)) path = path.substring(0,path.length()-1);
+        return path;
+    }
 }

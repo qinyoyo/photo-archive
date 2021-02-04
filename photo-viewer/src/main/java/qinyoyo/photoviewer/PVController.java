@@ -46,6 +46,7 @@ public class PVController implements ApplicationRunner {
     private boolean noVideoThumb = false;
     private boolean htmlEditable = false;
     private boolean favoriteFilter = false;
+    private String  rangeExif = null;
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
@@ -272,16 +273,18 @@ public class PVController implements ApplicationRunner {
 
     @ResponseBody
     @RequestMapping(value = "poi")
-    public String poi(HttpServletRequest request, HttpServletResponse response, String path, String poi, String start,String end) {
-        if (path==null || path.isEmpty()) return "error";
+    public String poi(String path, String value, String start,String end) {
+        final String subPath=ArchiveUtils.formatterSubFolder(path);
         Date date0 = DateUtil.string2Date(start), date1 = DateUtil.string2Date(end);
         if (date0==null || date1==null) return "error";
         new Thread() {
             @Override
             public void run() {
-                Map<String,Object> map = new HashMap<String,Object>(){{ put(Key.getName(Key.SUBJECT_CODE),poi);}};
-                if (Modification.rangeExifAction(path,archiveInfo,date0,date1, map))
-                    Modification.save(new Modification(Modification.Exif,path,map),rootPath);
+                Map<String,Object> map = new HashMap<String,Object>(){{ put(Key.getName(Key.SUBJECT_CODE),value);}};
+                if (Modification.rangeExifAction(subPath,archiveInfo,date0,date1, map)) {
+                    afterChanged();
+                    Modification.save(new Modification(Modification.Exif, subPath, map), rootPath);
+                }
             }
         }.start();
         return "ok";
@@ -386,6 +389,7 @@ public class PVController implements ApplicationRunner {
                 model.addAttribute("orientation", true);
             }
         }
+        if (rangeExif!=null) model.addAttribute("rangeExif",rangeExif);
         if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
         if (canRemove) model.addAttribute("canRemove",true);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
@@ -512,6 +516,7 @@ public class PVController implements ApplicationRunner {
         canRemove = Util.boolValue(env.getProperty("photo.removable"));
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
         htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
+        rangeExif = env.getProperty("photo.range-exif");
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
         new Thread() {
