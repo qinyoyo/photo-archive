@@ -613,4 +613,21 @@ public class ArchiveUtils {
         else if (path.endsWith(File.separator)) path = path.substring(0,path.length()-1);
         return path;
     }
+    public static String poiFromPath(String path) {
+        if (path==null) return null;
+        String [] dirs = path.split("\\\\|/");
+        for (int i=dirs.length-1; i>=0; i--) {
+            String d = dirs[i].toLowerCase();
+            if (d.equals("l") || d.equals("p") || d.equals("g") || d.equals("jpg") || d.equals("raw") || d.equals("nef")) continue;
+            if (d.equals("landscape") || d.equals("portrait") ) continue;
+            if (d.equals("camera") || d.equals("video") || d.equals("mov") || d.equals("audio")
+                    || d.equals("mp4") || d.equals("mp3") || d.equals("res") || d.equals("resource")) continue;
+            if (d.contains("风景") || d.contains("景物") || d.contains("人物") || d.contains("人像") || d.contains("生活")) continue;
+            d = dirs[i].trim();
+            while (!d.isEmpty() && d.charAt(0)>='0' && d.charAt(0)<='9') d=d.substring(1);
+            d=d.trim();
+            if (!d.isEmpty()) return d;
+        }
+        return null;
+    }
 }

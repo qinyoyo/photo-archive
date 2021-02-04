@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-
 public class ImageUtil {
     /** * 图片文件读取 * * @param srcImgPath * @return */
     private static BufferedImage InputImage(String srcImgPath) {
@@ -18,12 +17,11 @@ public class ImageUtil {
         try {
             File file = new File(srcImgPath);
             if (file.exists()) {
-
                 FileInputStream in = new FileInputStream(srcImgPath);
                 srcImage = javax.imageio.ImageIO.read(in);
             }
         } catch (IOException e) {
-            System.out.println("读取图片文件出错！" + e.getMessage());
+            System.out.println("读取<"+srcImgPath+">出错！" + e.getMessage());
             e.printStackTrace();
         }
         return srcImage;

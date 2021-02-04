@@ -53,7 +53,14 @@ public class Modification {
         return json.toString();
     }
     public static void save(Modification mod,String rootPath) {
-        ArchiveUtils.appendToFile(new File(rootPath,save_path), mod.toString());
+        File bak = new File(rootPath,save_path+".bak");
+        File src = new File(rootPath,save_path);
+        try {
+            Files.copy(src.toPath(),bak.toPath(),StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ArchiveUtils.appendToFile(src, mod.toString());
     }
     public static List<Modification> read(String rootPath) {
         String actions = ArchiveUtils.getFromFile(new File(rootPath,save_path+".sync"));

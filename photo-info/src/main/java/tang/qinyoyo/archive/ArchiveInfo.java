@@ -377,7 +377,10 @@ public class ArchiveInfo {
     }
     public void saveInfos() {
     	if (infos==null) return;
+        File bak = new File(path, ArchiveUtils.ARCHIVE_FILE+".bak");
+        bak.delete();
         File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
+        af.renameTo(bak);
         System.out.println("向 "+af.getAbsolutePath()+" 写入数据");
         ArchiveUtils.saveObj(af, infos);
     }

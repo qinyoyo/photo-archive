@@ -131,30 +131,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     }
     public static final String RENAME_PATTERN = "%y%M%d-%h%m%s_%u={p}%%E";
     private String pathProperty(String rootPath) {
-        String [] dirs = new File(rootPath,subFolder).getAbsolutePath().split(File.separator.equals("\\")?"\\\\":File.separator);
-        String value="";
-        if (dirs!=null && dirs.length>0) {
-            for (int i=dirs.length-1; i>=0; i--) {
-                String d = dirs[i].toLowerCase();
-                if (d.equals("l") || d.equals("p") || d.equals("g") || d.equals("jpg") || d.equals("raw") || d.equals("nef")) continue;
-                if (d.equals("landscape") || d.equals("portrait") ) continue;
-                if (d.equals("camera") || d.equals("video") || d.equals("mov") || d.equals("audio")
-                        || d.equals("mp4") || d.equals("mp3") || d.equals("res") || d.equals("resource")) continue;
-                if (d.equals("风景") || d.equals("景物") || d.equals("人物") || d.equals("人像")) continue;
-                if (d.endsWith("生活")) {
-                	value="U";
-                	break;
-                };
-                d = dirs[i].trim();
-                while (!d.isEmpty() && d.charAt(0)>='0' && d.charAt(0)<='9') d=d.substring(1);
-                d=d.trim();
-                if (!d.isEmpty()) {
-                    value = d;
-                    break;
-                }
-            }
-        }
-        return value;
+        return ArchiveUtils.poiFromPath(subFolder);
     }
     private String fileProperty() {
         int pos = fileName.lastIndexOf(".");
@@ -579,13 +556,15 @@ public class PhotoInfo implements Serializable,Cloneable {
     public String formattedAddress(boolean useCountryName) {
         if (allNull(country,province,city,location)) return subjectCode==null ? "" : subjectCode;
         boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
+        String poi = subjectCode;
+        if (poi==null || poi.isEmpty()) poi=ArchiveUtils.poiFromPath(subFolder);
         if (cc) {
             String address = ArchiveUtils.join(null,useCountryName ? country : "", province, ArchiveUtils.equals(province,city)?"":city, location);
-            if (subjectCode!=null && !subjectCode.isEmpty() && !address.contains(subjectCode)) return address.isEmpty() ? subjectCode : address + "," + subjectCode;
+            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : address + "," + poi;
             else return address;
         } else {
             String address = ArchiveUtils.join(",",location, city, ArchiveUtils.equals(province,city)?"":province, useCountryName ? country : "");
-            if (subjectCode!=null && !subjectCode.isEmpty() && !address.contains(subjectCode)) return address.isEmpty() ? subjectCode : subjectCode + "," + address;
+            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : poi + "," + address;
             else return address;
         }
     }
