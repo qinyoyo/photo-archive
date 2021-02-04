@@ -554,10 +554,10 @@ public class PhotoInfo implements Serializable,Cloneable {
         else return nameCompare(p);
     }
     public String formattedAddress(boolean useCountryName) {
-        if (allNull(country,province,city,location)) return subjectCode==null ? "" : subjectCode;
-        boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
         String poi = subjectCode;
         if (poi==null || poi.isEmpty()) poi=ArchiveUtils.poiFromPath(subFolder);
+        if (allNull(country,province,city,location)) return poi==null ? "" : poi;
+        boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
         if (cc) {
             String address = ArchiveUtils.join(null,useCountryName ? country : "", province, ArchiveUtils.equals(province,city)?"":city, location);
             if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : address + "," + poi;
