@@ -10,5 +10,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="photo-info" />
+    <orderEntry type="library" name="Maven: org.json:json:20180813" level="project" />
   </component>
 </module>

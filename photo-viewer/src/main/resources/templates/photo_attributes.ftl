@@ -10,30 +10,33 @@
     </#if>
 </#function>
 <#function photoTitle p>
-    <#assign r = fileUrl(p)?substring(1) + '\n' />
-    <#if p.width?? && p.height??>
-    <#assign r = r + p.width + 'x' + p.height + '(' + p.fileSize + ')\n' />
-    </#if>
-    <#if p.longitude?? && p.latitude??>
-    <#assign r = r + '&#x2727;' + p.gpsString(p.longitude,false) + ' '+p.gpsString(p.latitude,true) + '\n' />
-    </#if>
-    <#assign address = p.formattedAddress(false) />
-    <#if address?? && address!="" >
-        <#assign r = r + address + '\n' />
-    </#if>
+    <#assign r = '' />
     <#if p.shootTime??>
         <#assign r = r + statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss') + '\n' />
     <#elseif p.createTime??>
         <#assign r = r + statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss') + '\n'/>
     </#if>
+    <#assign address = p.formattedAddress(false) />
+    <#if address?? && address!="" >
+        <#if p.longitude?? && p.latitude??>
+            <#assign r = r + '&#x2727;' + address + '\n'/>
+        <#else>
+            <#assign r = r + address + '\n' />
+        </#if>
+    </#if>
     <#if p.model??>
         <#assign r = r + p.model />
         <#if p.lens??>
-            <#assign r = r + ' - ' + p.lens + '\n' />
+            <#assign r = r + ' - ' + p.lens />
         </#if>
+        <#if p.artist??>
+            <#assign r = r + ' by ' + p.artist />
+        </#if>
+        <#assign r = r + '\n' />
     </#if>
-    <#if p.artist??>
-        <#assign r = r + p.artist />
+    <#assign r = r + fileUrl(p)?substring(1) + '\n' />
+    <#if p.width?? && p.height??>
+    <#assign r = r + p.width + 'x' + p.height + '(' + p.fileSize + ')\n' />
     </#if>
     <#return r />
 </#function>

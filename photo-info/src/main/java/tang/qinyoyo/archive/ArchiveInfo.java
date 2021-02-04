@@ -14,24 +14,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ArchiveInfo {
-    public static final Key[] NEED_KEYS = new Key[]{
-            Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
-            Key.MODEL, Key.LENS_ID, Key.ORIENTATION, Key.IMAGE_WIDTH, Key.IMAGE_HEIGHT,
-            Key.DOCUMENT_ID, Key.IPTCDigest,
-            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
-            Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
-            Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
-    public static final String no_shottime_log = ".no_shottime.log";
-    public static final String manual_other_bat = ".manual_other.bat";
-    public static final String same_photo_log = ".same_photo.log";
-    public static final String manual_rm_bat = ".manual_rm.bat";
-    public static final String ARCHIVE_FILE = ".archive_info.dat";
-    public static final String manual_archive_bat = ".manual_archive.bat";
-    public static final String folder_info_dat = ".folder_info.dat";
-    public static final String folder_info_lost_log = ".folder_info_lost.log";
-    public static final String DELETED_FILES = ".deleted.dat";
-    public static String FFMPEG = "ffmpeg";
-    private static String FFMPEG_VERSION = null;
     private String path; // 末尾不带分隔符
     private List<PhotoInfo> infos;
     private ExifTool exifTool;
@@ -60,25 +42,25 @@ public class ArchiveInfo {
 		this.exifTool = exifTool;
 	}
 	public void checkFfmpeg() {
-        while (FFMPEG_VERSION==null) {
+        while (ArchiveUtils.FFMPEG_VERSION==null) {
             List<String> argsList = new ArrayList<>();
-            argsList.add(FFMPEG);
+            argsList.add(ArchiveUtils.FFMPEG);
             argsList.add("-version");
             try {
                 Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false, argsList);
                 if (result.getKey().size() == 0) {
-                    throw new RuntimeException("Could not get version of <" + FFMPEG + ">.");
+                    throw new RuntimeException("Could not get version of <" + ArchiveUtils.FFMPEG + ">.");
                 }
                 Pattern p = Pattern.compile("version\\s+(\\S+)",Pattern.CASE_INSENSITIVE);
                 for (String s : result.getKey()) {
                     Matcher m = p.matcher(s);
                     if (m.find()) {
-                        FFMPEG_VERSION = m.group(1);
+                        ArchiveUtils.FFMPEG_VERSION = m.group(1);
                         break;
                     }
                 }
-                if (FFMPEG_VERSION==null) FFMPEG_VERSION = result.getKey().get(0);
-                System.out.println("Installed <" + FFMPEG + "> Version: " + FFMPEG_VERSION);
+                if (ArchiveUtils.FFMPEG_VERSION==null) ArchiveUtils.FFMPEG_VERSION = result.getKey().get(0);
+                System.out.println("Installed <" + ArchiveUtils.FFMPEG + "> Version: " + ArchiveUtils.FFMPEG_VERSION);
                 return;
             } catch (Exception e) {
                 System.out.println(e.getMessage()+" Where is ffmpeg installed or 'q' for skip?");
@@ -86,11 +68,11 @@ public class ArchiveInfo {
                     Scanner in = new Scanner(System.in);
                     String input = in.nextLine().trim();
                     if (input.equals("q")) {
-                        FFMPEG = null;
-                        FFMPEG_VERSION="";
+                        ArchiveUtils.FFMPEG = null;
+                        ArchiveUtils.FFMPEG_VERSION="";
                         return;
                     }
-                    FFMPEG = new File(input, "ffmpeg").getCanonicalPath();
+                    ArchiveUtils.FFMPEG = new File(input, "ffmpeg").getCanonicalPath();
                 } catch (IOException ex) {
                 }
             }
@@ -114,7 +96,7 @@ public class ArchiveInfo {
         }
 
         if (path.endsWith(File.separator)) path=path.substring(0,path.length()-1);
-        File af = new File(d, ARCHIVE_FILE);
+        File af = new File(d, ArchiveUtils.ARCHIVE_FILE);
         if (af.exists()) readInfos();
         else seekPhotoInfo();
         if (infos==null)  infos = new ArrayList<>();
@@ -186,11 +168,11 @@ public class ArchiveInfo {
             for (File f : files) f.delete();
         }
         System.out.println("批量搜索 "+dir.getAbsolutePath());
-        Map<String, Map<Key, Object>> fileInfos = null;
+        Map<String, Map<String, Object>> fileInfos = null;
 
         int count = 0; 
         try {
-            fileInfos = exifTool.query(dir, NEED_KEYS);
+            fileInfos = exifTool.query(dir, ArchiveUtils.NEED_KEYS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -203,6 +185,9 @@ public class ArchiveInfo {
 	                    if (SupportFileType.isSupport(file)) {
 	                        PhotoInfo photoInfo = new PhotoInfo(path, new File(dir, file));
 	                        photoInfo.setPropertiesBy(fileInfos.get(file));
+                            if (photoInfo.getShootTime()==null && photoInfo.getCreateTime()!=null && photoInfo.getMimeType()!=null && !photoInfo.getMimeType().toLowerCase().startsWith("image"))
+                                photoInfo.setShootTime(photoInfo.getCreateTime());
+                            if (photoInfo.getShootTime()==null) photoInfo.setShootTime(DateUtil.getShootTimeFromFileName(photoInfo.getFileName()));
 	                        if (dir.getName().endsWith(".web") && photoInfo.getMimeType()!=null && photoInfo.getMimeType().contains("html") && !photoInfo.getFileName().equals("index.html")) {
                                 System.out.println("    忽略文件 " + file);
                             } else {
@@ -241,7 +226,7 @@ public class ArchiveInfo {
         seekPhotoInfosInFolder(dir, infos);
     }
     public void readInfos() {
-        File af = new File(path, ARCHIVE_FILE);
+        File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
         System.out.println("从 "+af.getAbsolutePath()+" 读取数据");
         Object obj = ArchiveUtils.readObj(af);
         if (obj==null) seekPhotoInfo();
@@ -270,8 +255,8 @@ public class ArchiveInfo {
             thumbFile.getParentFile().mkdirs();
             if (p.getMimeType().contains("image/")) {
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
-            } else if (FFMPEG!=null && p.getMimeType().contains("video/")) {
-                CommandRunner.run(FFMPEG,"-i", imgPath, "-y", "-f", "image2",
+            } else if (ArchiveUtils.FFMPEG!=null && p.getMimeType().contains("video/")) {
+                CommandRunner.run(ArchiveUtils.FFMPEG,"-i", imgPath, "-y", "-f", "image2",
                         // "-t","0.0001",
                         "-frames:v", "1", "-ss", ArchiveUtils.VIDEO_CAPTURE_AT,
                         // "-s", size,
@@ -308,7 +293,7 @@ public class ArchiveInfo {
     }
     public boolean deleteFile(String subFolder,String fileName) {
         File file = new File(new File(getPath(),subFolder),fileName);
-        File thumb = new File(new File(new File(getPath(),".thumb"),subFolder),fileName);
+        File thumb = new File(new File(new File(getPath(),ArchiveUtils.THUMB),subFolder),fileName);
         if (file.delete()) {
             thumb.delete();
             for (int i=0;i<infos.size();i++) {
@@ -370,7 +355,7 @@ public class ArchiveInfo {
             File sourceThumb = new File(pi.fullThumbPath(sourceRootPath));
             if (sourceThumb.exists()) {
                 try {
-                    String fullP = path + File.separator + ".thumb" + target.getCanonicalPath().substring(path.length());
+                    String fullP = path + File.separator + ArchiveUtils.THUMB + target.getCanonicalPath().substring(path.length());
                     File targetThumb = new File(fullP);
                     Files.move(sourceThumb.toPath(), targetThumb.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
                 } catch (Exception e) {}
@@ -392,12 +377,12 @@ public class ArchiveInfo {
     }
     public void saveInfos() {
     	if (infos==null) return;
-        File af = new File(path, ARCHIVE_FILE);
+        File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
         System.out.println("向 "+af.getAbsolutePath()+" 写入数据");
         ArchiveUtils.saveObj(af, infos);
     }
     public long lastModified() {
-        File af = new File(path, ARCHIVE_FILE);
+        File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
         if (af.exists()) return af.lastModified();
         else return new Date().getTime();
     }
@@ -430,7 +415,7 @@ public class ArchiveInfo {
                     }
                 }
                 String batcmd = sb.toString().trim();
-                if (!batcmd.isEmpty()) ArchiveUtils.writeToFile(new File(getPath(), manual_other_bat), batcmd);
+                if (!batcmd.isEmpty()) ArchiveUtils.writeToFile(new File(getPath(), ArchiveUtils.manual_other_bat), batcmd);
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
@@ -542,7 +527,7 @@ public class ArchiveInfo {
         try {
             if (rm.size() > 0) {
                 List<PhotoInfo> all = getInfos();
-                File logFile = new File(getPath(), same_photo_log);
+                File logFile = new File(getPath(), ArchiveUtils.same_photo_log);
                 System.out.println("重复照片数量 : " + rm.size());
                 StringBuilder sb = new StringBuilder();
                 String rootName = getPath();
@@ -552,7 +537,7 @@ public class ArchiveInfo {
                     if (one.exists() && two.exists()) {
                         if (ArchiveUtils.contentCompare(rm.get(i).fullPath(rootName),sameAs.get(i).fullPath(rootName))==0) {  // 完全相同，删除一个
                             System.out.println("删除完全一致文件 : " + rm.get(i).fullPath(rootName));
-                            rm.get(i).delete(rootName,false);
+                            rm.get(i).delete(rootName);
                             infos.remove(rm.get(i));
                         } else sb.append(one.getCanonicalPath() + " <-> " + two.getCanonicalPath()).append("\r\n");
                     }
@@ -569,9 +554,9 @@ public class ArchiveInfo {
         try {
             if (rm.size() > 0) {
                 List<PhotoInfo> all = getInfos();
-                File logFile = new File(getPath(), same_photo_log);
+                File logFile = new File(getPath(), ArchiveUtils.same_photo_log);
                 System.out.println("重复照片数量 : " + rm.size());
-                File rmf = new File(new File(getPath()), ".delete");
+                File rmf = new File(new File(getPath()), ArchiveUtils.DELETED);
                 rmf.mkdirs();
                 ArchiveInfo rma = new ArchiveInfo();
                 rma.setPath(rmf.getCanonicalPath());
@@ -588,7 +573,7 @@ public class ArchiveInfo {
                     try {
                         if (ArchiveUtils.contentCompare(p.fullPath(rootName),sameAs.get(i).fullPath(ref == null ? rootName : ref.getPath()))==0) {  // 完全相同，删除一个
                             System.out.println("删除完全一致文件 : " + p.fullPath(rootName));
-                            p.delete(rootName,false);
+                            p.delete(rootName);
                             infos.remove(p);
                         } else {
                             File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? rmf : new File(rmf, p.getSubFolder());
@@ -605,7 +590,7 @@ public class ArchiveInfo {
                     }
                 }
                 String cmd = sb.toString().trim();
-                if (!cmd.isEmpty()) ArchiveUtils.appendToFile(new File(getPath(), manual_rm_bat), sb.toString());
+                if (!cmd.isEmpty()) ArchiveUtils.appendToFile(new File(getPath(), ArchiveUtils.manual_rm_bat), sb.toString());
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());

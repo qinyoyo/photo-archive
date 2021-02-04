@@ -12,7 +12,7 @@ import java.util.*;
 
 public class Utils {
 	public static void saveFolderInfos(List<FolderInfo> infos, ArchiveInfo archived) {
-		File f=new File(archived.getPath(),ArchiveInfo.folder_info_dat);
+		File f=new File(archived.getPath(),ArchiveUtils.folder_info_dat);
 		String rootPath = archived.getPath();
 		StringBuilder sb=new StringBuilder();
 		for (FolderInfo fi : infos) {
@@ -21,7 +21,7 @@ public class Utils {
 		ArchiveUtils.writeToFile(f,sb.toString());
 	}
 	public static List<FolderInfo> getFolderInfos(ArchiveInfo archived) {
-		File f=new File(archived.getPath(),ArchiveInfo.folder_info_dat);
+		File f=new File(archived.getPath(),ArchiveUtils.folder_info_dat);
 		String rootPath = archived.getPath();
 		List<FolderInfo> list = new ArrayList<>();
 		if (f.exists()) {
@@ -124,7 +124,7 @@ public class Utils {
 		for (FolderInfo fi: folderInfos) {
 			new File(fi.getPath(),fi.getCamera()).mkdirs();
 		}
-		String sameLog = ArchiveUtils.getFromFile(new File(camera.getPath(),ArchiveInfo.same_photo_log));
+		String sameLog = ArchiveUtils.getFromFile(new File(camera.getPath(),ArchiveUtils.same_photo_log));
 		if (sameLog==null) sameLog="";
 		StringBuilder mvfailed=new StringBuilder();
 		StringBuilder notarchived = new StringBuilder();
@@ -158,9 +158,9 @@ public class Utils {
 			}
 		}
 		processDir(archived,false,false);
-		if (!sameLog.isEmpty()) ArchiveUtils.writeToFile(new File(camera.getPath(),ArchiveInfo.same_photo_log),sameLog.trim());
-		ArchiveUtils.writeToFile(new File(root,ArchiveInfo.no_shottime_log),notarchived.toString());
-		ArchiveUtils.writeToFile(new File(root,ArchiveInfo.manual_archive_bat),mvfailed.toString());
+		if (!sameLog.isEmpty()) ArchiveUtils.writeToFile(new File(camera.getPath(),ArchiveUtils.same_photo_log),sameLog.trim());
+		ArchiveUtils.writeToFile(new File(root,ArchiveUtils.no_shottime_log),notarchived.toString());
+		ArchiveUtils.writeToFile(new File(root,ArchiveUtils.manual_archive_bat),mvfailed.toString());
 	}
 
 	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
@@ -180,14 +180,14 @@ public class Utils {
 	private static ArchiveInfo getArchiveInfo(String path, boolean clearInfo, boolean removeSameFile, boolean moveOtherFile) {
 		if (path==null || path.isEmpty() || "-".equals(path)) return null;
 		if (clearInfo) {
-			new File(path,ArchiveInfo.ARCHIVE_FILE).delete();
-			new File(path,ArchiveInfo.ARCHIVE_FILE+ ".sorted.dat").delete();
-			new File(path,ArchiveInfo.same_photo_log).delete();
-			new File(path,ArchiveInfo.manual_other_bat).delete();
-			new File(path,ArchiveInfo.manual_rm_bat).delete();
-			new File(path,ArchiveInfo.manual_archive_bat).delete();
-			new File(path,ArchiveInfo.no_shottime_log).delete();
-			new File(path,ArchiveInfo.folder_info_dat).delete();
+			new File(path,ArchiveUtils.ARCHIVE_FILE).delete();
+			new File(path,ArchiveUtils.ARCHIVE_FILE+ ".sorted.dat").delete();
+			new File(path,ArchiveUtils.same_photo_log).delete();
+			new File(path,ArchiveUtils.manual_other_bat).delete();
+			new File(path,ArchiveUtils.manual_rm_bat).delete();
+			new File(path,ArchiveUtils.manual_archive_bat).delete();
+			new File(path,ArchiveUtils.no_shottime_log).delete();
+			new File(path,ArchiveUtils.folder_info_dat).delete();
 		}
 		ArchiveInfo	a = new ArchiveInfo(path);
 		if (!a.isReadFromFile()) processDir(a, removeSameFile, moveOtherFile);
@@ -387,7 +387,7 @@ public class Utils {
 		}
 		String logmsg=sb.toString();
 		if (!logmsg.isEmpty()) {
-			ArchiveUtils.writeToFile(new File(archived.getPath(),ArchiveInfo.folder_info_lost_log),logmsg);
+			ArchiveUtils.writeToFile(new File(archived.getPath(),ArchiveUtils.folder_info_lost_log),logmsg);
 		}
 		if (folderInfos.size()>0) {
 			folderInfos.sort((a, b) -> a.compareTo(b));
@@ -419,7 +419,7 @@ public class Utils {
 			else if (input.startsWith("2")) {
 				input = getInputString("输入待查看的目录路径", "E:\\Camera");
 				try {
-					checkDeletedFile(new File(input, ArchiveInfo.same_photo_log).getCanonicalPath());
+					checkDeletedFile(new File(input, ArchiveUtils.same_photo_log).getCanonicalPath());
 				} catch (Exception e) {
 					throw new RuntimeException(e.getMessage());
 				}
@@ -606,7 +606,7 @@ public class Utils {
 		v = params.get(PARAM_VIEW_DIR);
 		if (v!=null) {
 			try {
-				checkDeletedFile(new File(v.toString(), ArchiveInfo.same_photo_log).getCanonicalPath());
+				checkDeletedFile(new File(v.toString(), ArchiveUtils.same_photo_log).getCanonicalPath());
 			} catch (Exception e) {
 				throw new RuntimeException(e.getMessage());
 			}

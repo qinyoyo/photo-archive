@@ -2,7 +2,6 @@ package tang.qinyoyo;
 
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.PhotoInfo;
-import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 
 import java.io.*;
@@ -13,7 +12,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ArchiveUtils {
+    public static final Key[] NEED_KEYS = new Key[]{
+            Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
+            Key.MODEL, Key.LENS_ID, Key.ORIENTATION, Key.IMAGE_WIDTH, Key.IMAGE_HEIGHT,
+            Key.DOCUMENT_ID, Key.IPTCDigest,
+            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+            Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
+            Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
+    public static final String no_shottime_log = ".no_shottime.log";
+    public static final String manual_other_bat = ".manual_other.bat";
+    public static final String same_photo_log = ".same_photo.log";
+    public static final String manual_rm_bat = ".manual_rm.bat";
+    public static final String ARCHIVE_FILE = ".archive_info.dat";
+    public static final String manual_archive_bat = ".manual_archive.bat";
+    public static final String folder_info_dat = ".folder_info.dat";
+    public static final String folder_info_lost_log = ".folder_info_lost.log";
+    public static final String DELETED_FILES = ".deleted.dat";
+    public static String FFMPEG = "ffmpeg";
+    public static String FFMPEG_VERSION = null;
     public static String VIDEO_CAPTURE_AT = "00:00:01";
+    public static String THUMB = ".thumb";
+    public static String DELETED = ".deleted";
     public static boolean equals(Object obj1, Object obj2) {
         if (obj1 == null && obj2 == null) return true;
         else if (obj1 != null && obj2 != null) return obj1.equals(obj2);
@@ -25,10 +44,13 @@ public class ArchiveUtils {
     }
 
     public static String getFromFile(File file, String charset) {
+        FileInputStream s = null;
+        InputStreamReader r = null;
+        BufferedReader in = null;
         try {
-            FileInputStream s = new FileInputStream(file);
-            InputStreamReader r = new InputStreamReader(s, charset);
-            BufferedReader in = new BufferedReader(r);
+            s = new FileInputStream(file);
+            r = new InputStreamReader(s, charset);
+            in = new BufferedReader(r);
             StringBuilder sb = new StringBuilder();
             String str;
             boolean firstLine = true;
@@ -42,6 +64,12 @@ public class ArchiveUtils {
             return sb.toString();
         } catch (IOException e) {
             return null;
+        } finally {
+            try {
+                if (in != null) in.close();
+                if (r != null) r.close();
+                if (s != null) s.close();
+            } catch (IOException e) {}
         }
     }
 
@@ -50,10 +78,13 @@ public class ArchiveUtils {
     }
 
     public static void writeToFile(File file, String string, String charset) {
+        FileOutputStream s = null;
+        OutputStreamWriter w = null;
+        PrintWriter pw = null;
         try {
-            FileOutputStream s = new FileOutputStream(file);
-            OutputStreamWriter w = new OutputStreamWriter(s, charset);
-            PrintWriter pw = new PrintWriter(w);
+            s = new FileOutputStream(file);
+            w = new OutputStreamWriter(s, charset);
+            pw = new PrintWriter(w);
             pw.write(string);
             pw.flush();
             pw.close();
@@ -61,6 +92,12 @@ public class ArchiveUtils {
             s.close();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (pw != null) pw.close();
+                if (w != null) w.close();
+                if (s != null) s.close();
+            } catch (IOException e) {}
         }
     }
 
@@ -277,6 +314,7 @@ public class ArchiveUtils {
         if (removeDir) dir.delete();
     }
 
+    /*
     // 在子目录下生成xml文件
     private static void writeXmpExif(PhotoInfo p, String rootPath, List<Key> keys) {
         File xmpDir = new File(rootPath,p.getSubFolder()+File.separator+"_g_s_t_");
@@ -306,8 +344,15 @@ public class ArchiveUtils {
         }
         removeFilesInDir(xmpDir, true);
     }
-
-    public static void updateExif(List<PhotoInfo> list,String rootPath, List<Key> keys) {
+    */
+    public static void updateExif(List<PhotoInfo> list,ArchiveInfo archiveInfo, List<Key> keys) {
+        List<Modification> modifications = new ArrayList<>();
+        list.stream().reduce(modifications,(acc,pi)->{
+                acc.add(new Modification(pi,keys));
+                return acc;
+        },(acc,pi)->null);
+        Modification.execute(modifications,archiveInfo);
+        /*
         if (list!=null && list.size()>0) {
             nameSort(list);
             String path=list.get(0).getSubFolder();
@@ -327,9 +372,11 @@ public class ArchiveUtils {
             }
             if (subList>0) updatePathExif(path,rootPath);
         }
+
+         */
     }
-    public static void writeAddress(List<PhotoInfo> list,String rootPath) {
-        updateExif(list, rootPath, new ArrayList<Key>() {{
+    public static void writeAddress(List<PhotoInfo> list,ArchiveInfo archiveInfo) {
+        updateExif(list, archiveInfo, new ArrayList<Key>() {{
             add(Key.COUNTRY);
             add(Key.STATE);
             add(Key.CITY);
@@ -363,7 +410,7 @@ public class ArchiveUtils {
     }
     private static void deleteFile(PhotoInfo pi,String rootPath) {
         try {
-            File targetDir = new File(rootPath + File.separator + ".deleted" + File.separator, pi.getSubFolder());
+            File targetDir = new File(rootPath + File.separator + DELETED + File.separator, pi.getSubFolder());
             targetDir.mkdirs();
             File target = new File(targetDir, pi.getFileName());
             File source = new File(pi.fullPath(rootPath));
@@ -371,7 +418,7 @@ public class ArchiveUtils {
                 Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             File sourceThumb = new File(pi.fullThumbPath(rootPath));
             if (sourceThumb.exists()) {
-                targetDir = new File(rootPath + File.separator + ".deleted" + File.separator + ".thumb", pi.getSubFolder());
+                targetDir = new File(rootPath + File.separator + DELETED + File.separator + THUMB, pi.getSubFolder());
                 targetDir.mkdirs();
                 target = new File(targetDir, pi.getFileName());
                 Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -419,14 +466,15 @@ public class ArchiveUtils {
     A修改后，将 A的 .archived.dat 更名为 .archived.dat.sync 拷贝到 B, 重启B的服务即可
      */
     public static void syncExifAttributes(ArchiveInfo archiveInfo) {
+        String rootPath = archiveInfo.getPath();
         List<PhotoInfo> infos = archiveInfo.getInfos();
         Iterator<PhotoInfo> iter = infos.iterator();
-        String rootPath = archiveInfo.getPath();
+
         while (iter.hasNext()) {
             PhotoInfo pi = iter.next();
             if (!new File(pi.fullPath(rootPath)).exists()) iter.remove();
         }
-        File syncFile = new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync");
+        File syncFile = new File(rootPath, ARCHIVE_FILE+".sync");
         if (syncFile.exists()) {
             Object syncObj = readObj(syncFile);
             if (syncObj != null) {
@@ -439,30 +487,18 @@ public class ArchiveUtils {
                 removed = sync2List(infos,syncInfos,rootPath);
                 if (removed>0) System.out.println("Sync : deleted files2 = "+removed);
 
-                syncInfos.forEach(p->p.setScene(p.getSubFolder().indexOf("Landscape")>=0 ? "Landscape" :
-                        (p.getSubFolder().indexOf("Portrait")>=0 ? "Portrait" : null)));
-
-                String path = syncInfos.get(0).getSubFolder();
-                int modified = 0;
+                List<Modification> modifications = new ArrayList<>();
                 for (int i=0; i< syncInfos.size(); i++) {
                     PhotoInfo pi = syncInfos.get(i);
                     PhotoInfo oldPi = infos.get(i);
                     if (oldPi.getFileName().equals(pi.getFileName()) && oldPi.getSubFolder().equals(pi.getSubFolder())) {
                         List<Key> diff = differentOf(pi,oldPi);
                         if (!diff.isEmpty()) {
-                            writeXmpExif(pi,rootPath,diff);
-                            if (!pi.getSubFolder().equals(path)) {
-                                if (modified>0) {
-                                    System.out.println("sync exif info in "+path+", "+modified+" files.");
-                                    updatePathExif(path,rootPath);
-                                }
-                                path = pi.getSubFolder();
-                                modified = 1;
-                            } else modified++;
+                            modifications.add(new Modification(pi,diff));
                         }
                     }
                 }
-                if (modified>0) updatePathExif(path,rootPath);
+                if (modifications.size()>0) Modification.execute(modifications,archiveInfo);
 
                 archiveInfo.setInfos(syncInfos);
                 syncFile.delete();
@@ -472,11 +508,11 @@ public class ArchiveUtils {
             }
         }
     }
-    public static boolean deletePhoto(ArchiveInfo archiveInfo,String path, boolean needRecord) {
+    public static boolean deletePhoto(ArchiveInfo archiveInfo,String path) {
         if (path==null) return false;
         PhotoInfo pi = archiveInfo.find(new File(archiveInfo.getPath() , path));
         if (pi!=null) {
-            pi.delete(archiveInfo.getPath(),needRecord);
+            pi.delete(archiveInfo.getPath());
             archiveInfo.getInfos().remove(pi);
             return true;
         }
@@ -547,5 +583,27 @@ public class ArchiveUtils {
             }
         }
 
+    }
+    public static void recoveryFrom(String path,ArchiveInfo archiveInfo) {
+        String rootPath = archiveInfo.getPath();
+        List<PhotoInfo> infos = archiveInfo.getInfos();
+        Iterator<PhotoInfo> iter = infos.iterator();
+        while (iter.hasNext()) {
+            PhotoInfo pi = iter.next();
+            File img = new File(pi.fullPath(rootPath));
+            if (!img.exists() || img.length()==0) {
+                File rec = new File(pi.fullPath("H:\\Photo\\Archived"));
+                if (rec.exists() && rec.length()>0) {
+                    try {
+                        Files.copy(rec.toPath(),img.toPath(),StandardCopyOption.REPLACE_EXISTING);
+                        System.out.println("Recovery file :"+img.getAbsolutePath());
+                    } catch (IOException e) {
+                        pi.delete(rootPath);
+                        iter.remove();
+                        appendToFile(new File("recovery.bat"),"copy \""+rec.getAbsolutePath()+"\" \""+img.getAbsolutePath()+"\"");
+                    }
+                } else System.out.println("No recovery file :"+img.getAbsolutePath());
+            }
+        }
     }
 }

@@ -76,7 +76,7 @@ public class SamePhotoController {
                 String rootPath = pvController.getRootPath();
                 String fp = file.getCanonicalPath();
                 if (fp.indexOf(rootPath) == 0) {
-                    return new PhotoInfo(rootPath, file).delete(rootPath,false);
+                    return new PhotoInfo(rootPath, file).delete(rootPath);
                 } else return file.delete();
             } catch (Exception e) {}
         }
@@ -86,7 +86,7 @@ public class SamePhotoController {
         try {
             if (file1.exists() && file2.exists()) {
                 String f1 = file1.getCanonicalPath(), f2 = file2.getCanonicalPath();
-                String s_d = File.separator + ".delete" + File.separator;
+                String s_d = File.separator + ArchiveUtils.DELETED + File.separator;
                 String s_c = File.separator + FolderInfo.DEFPATH + File.separator;
                 if (f1.contains(s_d)) return deleteFile(file1);
                 else if (f2.contains(s_d)) return deleteFile(file2);
@@ -109,7 +109,7 @@ public class SamePhotoController {
         }
         if (path==null) return null;
         String rootPath = pvController.getRootPath();
-        if (new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath,false)) {
+        if (new PhotoInfo(rootPath,new File(rootPath + File.separator + path)).delete(rootPath)) {
             return "ok";
         }
         return "error";
@@ -128,7 +128,7 @@ public class SamePhotoController {
             BufferedReader ins=null;
             StringBuilder sb=new StringBuilder();
             for (String fn : ll) {
-                if (fn.startsWith(".delete"+File.separator)) {
+                if (fn.startsWith(ArchiveUtils.DELETED+File.separator)) {
                     try {
                         Files.move(new File(rootPath, fn).toPath(),new File(rootPath, fn.substring(8)).toPath(), StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException e) {
@@ -136,7 +136,7 @@ public class SamePhotoController {
                 }
             }
             try {
-                File logFile = new File(rootPath, ArchiveInfo.same_photo_log);
+                File logFile = new File(rootPath, ArchiveUtils.same_photo_log);
                 ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
                 String line = null;
                 boolean found= false;
@@ -163,7 +163,7 @@ public class SamePhotoController {
         StringBuilder sb=new StringBuilder();
         try {
             String rootPath = pvController.getRootPath();
-            File logFile = new File(rootPath, ArchiveInfo.same_photo_log);
+            File logFile = new File(rootPath, ArchiveUtils.same_photo_log);
             ins = new BufferedReader(new InputStreamReader(new FileInputStream(logFile),"GBK"));
             String line = null;
             while ((line=ins.readLine())!=null) {

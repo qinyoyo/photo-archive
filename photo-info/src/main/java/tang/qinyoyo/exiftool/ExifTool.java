@@ -50,11 +50,10 @@ public class ExifTool {
      * 获得目录或文件的exif信息
      * @param dir  目录或文件
      * @param keys  需要获取的exif信息tag
-     * @param <T>   标签类别
      * @return 标签值，key为文件名，值为标签及值的map
      * @throws IOException io异常
      */
-    public <T> Map<String,Map<Key, T>> query(File dir, Key ... keys) throws IOException {
+    public Map<String,Map<String, Object>> query(File dir, Key ... keys) throws IOException {
         // exiftool.exe -T -charset filename="" -c "%+.7f" -filename -SubSecDateTimeOriginal -DateTimeOriginal -Make -Model -LensID -GPSLongitude -GPSLatitude -GPSAltitude
 
         List<String> argsList = new ArrayList<>();
@@ -126,8 +125,8 @@ public class ExifTool {
         } catch (Exception e) {}
         return false;
     }
-    private <T> Map<String,Map<Key, T>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
-        Map<String,Map<Key, T>> queryResult = new HashMap<>();
+    private Map<String,Map<String, Object>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
+        Map<String,Map<String, Object>> queryResult = new HashMap<>();
         if (stdErr.size() > 0) {
            throw new RuntimeException(String.join("\n", stdErr));
         }
@@ -139,17 +138,17 @@ public class ExifTool {
             	sb.append(line).append("\n");
                 continue;
             }
-            Map<Key, T> oneResult = new HashMap<>();
+            Map<String, Object> oneResult = new HashMap<>();
             for (int i=0;i< keys.length; i++) {
                 String value = lineSeparated.get(i+(dir.isDirectory()?1:0)).trim();
-                if (!value.isEmpty() && !value.equals("-")) oneResult.put(keys[i],Key.parse(keys[i], value));
+                if (!value.isEmpty() && !value.equals("-")) oneResult.put(Key.getName(keys[i]),Key.parse(keys[i], value));
             }
             queryResult.put(dir.isDirectory() ? lineSeparated.get(0) : dir.getName(),oneResult);
         }
         String error=sb.toString();
         if (error!=null && !error.isEmpty()) {
-        	Map<Key, T> emap = new HashMap<>();
-        	emap.put(Key.DESCRIPTION, Key.parse(Key.DESCRIPTION,error));
+            Map<String, Object> emap = new HashMap<>();
+        	emap.put(Key.getName(Key.DESCRIPTION), Key.parse(Key.DESCRIPTION,error));
         	queryResult.put(ERROR, emap);
         }
         return queryResult;

@@ -119,7 +119,7 @@ public final class TwoImageViewer {
 					removeIndex();
 					return;
 				}
-				boolean isDeleteFolder = file1.getCanonicalPath().contains(File.separator+".delete"+File.separator);
+				boolean isDeleteFolder = file1.getCanonicalPath().contains(File.separator+ArchiveUtils.DELETED+File.separator);
 				if (!file2.exists()) {
 					if (isDeleteFolder) {
 						Files.move(file1.toPath(), file2.toPath());

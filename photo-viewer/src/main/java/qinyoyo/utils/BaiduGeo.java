@@ -122,7 +122,7 @@ public class BaiduGeo {
                     }
                     System.out.println(count + " geo points seeked");
                     archiveInfo.saveInfos();
-                    ArchiveUtils.writeAddress(changedList,archiveInfo.getPath());
+                    ArchiveUtils.writeAddress(changedList,archiveInfo);
                 }
             }.start();
         }

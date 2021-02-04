@@ -4,7 +4,6 @@ package qinyoyo.photoviewer;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.TemplateModel;
 import freemarker.template.Version;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -18,21 +17,20 @@ import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
 import qinyoyo.utils.Util;
 import tang.qinyoyo.ArchiveUtils;
+import tang.qinyoyo.Modification;
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.Orientation;
 import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.CommandRunner;
 import tang.qinyoyo.exiftool.ExifTool;
+import tang.qinyoyo.exiftool.Key;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -203,8 +201,8 @@ public class PVController implements ApplicationRunner {
     @RequestMapping(value = "remove")
     public String remove(String path) {
         if (!isReady) return "error";
-        if (ArchiveUtils.deletePhoto(archiveInfo,path,true)) {
-            Modification.save(new Modification(Modification.Remove,path,null));
+        if (Modification.removeAction(path,archiveInfo)) {
+            Modification.save(new Modification(Modification.Remove,path,null),rootPath);
             return "ok";
         }
         else return "error";
@@ -220,9 +218,10 @@ public class PVController implements ApplicationRunner {
         if (pi==null) return "error";
         if (pi.modifyOrientation(rootPath, rating, orientations)) {
             Map<String,Object> map = new HashMap<>();
-            if (rating!=null) map.put("rating",rating);
-            if (orientations!=null) map.put("orientation",pi.getOrientation()==null? Orientation.NONE.getValue() : pi.getOrientation());
-            Modification.save(new Modification(Modification.Rating_Orientation,path,map));
+            if (rating!=null) map.put(Key.getName(Key.RATING),rating);
+            if (orientations!=null) map.put(Key.getName(Key.ORIENTATION),
+                    Orientation.name(pi.getOrientation()==null? Orientation.NONE.getValue() : pi.getOrientation()));
+            Modification.save(new Modification(Modification.Exif,path,map),rootPath);
             afterChanged();
             return "ok,"+
                     (pi.getOrientation()==null?"":pi.getOrientation())+
@@ -232,36 +231,10 @@ public class PVController implements ApplicationRunner {
     }
 
     void syncFromModification() {
-        List<Modification> list = Modification.read();
+        List<Modification> list = Modification.read(rootPath);
         if (list!=null) {
-            for (Modification m : list) {
-                switch (m.action) {
-                    case Modification.Rating_Orientation:
-                        if (m.path != null && m.params != null) {
-                            try {
-                                JSONObject json = new JSONObject(m.params);
-                                Integer rating = (json.has("rating") ? json.getInt("rating") : null);
-                                Integer orientation = (json.has("orientation") ? json.getInt("rating") : null);
-                                PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + m.path));
-                                if (pi != null) {
-                                    if (orientation!=null) pi.setOrientation(orientation);
-                                    if (rating!=null) pi.setRating(rating);
-                                    Orientation.setOrientationAndRating(new File(pi.fullPath(rootPath)), orientation, rating);
-                                    if (orientation!=null) Orientation.setOrientationAndRating(new File(pi.fullThumbPath(rootPath)), orientation, null);
-                                }
-                            } catch (Exception e) {
-                            }
-                        }
-                        break;
-                    case Modification.Remove:
-                        if (m.path != null) {
-                            ArchiveUtils.deletePhoto(archiveInfo, m.path, true);
-                        }
-                        break;
-                    default:
-                }
-            }
-            Modification.resetSyncAction();
+            Modification.execute(list,archiveInfo);
+            Modification.resetSyncAction(rootPath);
             afterChanged();
         }
     }
@@ -283,9 +256,6 @@ public class PVController implements ApplicationRunner {
         return "error";
     }
 
-
-
-
     @ResponseBody
     @RequestMapping(value = "scan")
     public String scan(HttpServletRequest request, HttpServletResponse response, String path) {
@@ -293,30 +263,37 @@ public class PVController implements ApplicationRunner {
         new Thread() {
             @Override
             public void run() {
-                File dir = new File(rootPath, path);
-                if (dir.exists() && dir.isDirectory()) {
-                    ArchiveUtils.removeEmptyFolder(dir);
-                    if (dir.exists()) {
-                        new File(rootPath+File.separator+path+File.separator+".need-scan").delete();
-                        archiveInfo.addFile(dir);
-                        archiveInfo.getInfos().stream().filter(p->p.getSubFolder().startsWith(path)).forEach(p->archiveInfo.createThumbFiles(p));
-                        archiveInfo.sortInfos();
-                        archiveInfo.saveInfos();
-                    }
-                }
+                if (Modification.scanAction(path,archiveInfo))
+                        Modification.save(new Modification(Modification.Scan,path,null),rootPath);
             }
         }.start();
         return "ok";
     }
 
     @ResponseBody
+    @RequestMapping(value = "poi")
+    public String poi(HttpServletRequest request, HttpServletResponse response, String path, String poi, String start,String end) {
+        if (path==null || path.isEmpty()) return "error";
+        Date date0 = DateUtil.string2Date(start), date1 = DateUtil.string2Date(end);
+        if (date0==null || date1==null) return "error";
+        new Thread() {
+            @Override
+            public void run() {
+                Map<String,Object> map = new HashMap<String,Object>(){{ put(Key.getName(Key.SUBJECT_CODE),poi);}};
+                if (Modification.rangeExifAction(path,archiveInfo,date0,date1, map))
+                    Modification.save(new Modification(Modification.Exif,path,map),rootPath);
+            }
+        }.start();
+        return "ok";
+    }
+    @ResponseBody
     @RequestMapping(value = "stdout")
     public String stdout(HttpServletRequest request) {
         File file = new File(STDOUT);
         if (request.getQueryString()!=null && request.getQueryString().toLowerCase().contains("truncate")) {
-            ArchiveUtils.writeToFile(file,"","UTF8");
+            ArchiveUtils.writeToFile(file,"");
             return "ok";
-        } else return ArchiveUtils.getFromFile(file,"UTF8").replace("\n","<br>").replaceAll("\\u001B[^m]*m","");
+        } else return ArchiveUtils.getFromFile(file).replace("\n","<br>").replaceAll("\\u001B[^m]*m","");
     }
 
     @ResponseBody
@@ -524,7 +501,7 @@ public class PVController implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         ArchiveUtils.setOutput(this.getClass(),STDOUT);
         String ffmpeg = env.getProperty("photo.ffmpeg");
-        if (ffmpeg!=null) ArchiveInfo.FFMPEG = ffmpeg;
+        if (ffmpeg!=null) ArchiveUtils.FFMPEG = ffmpeg;
         String exiftool = env.getProperty("photo.exiftool");
         if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
 
@@ -551,12 +528,10 @@ public class PVController implements ApplicationRunner {
                     //new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync").delete();
                 }
                 rootPath = archiveInfo.getPath();  // 标准化
-                Modification.setRootPath(rootPath);
 
                 new Thread() {
                     @Override
                     public void run() {
-                        //ArchiveUtils.syncExifAttributes(archiveInfo);
                         syncFromModification();
                         BaiduGeo.seekAddressInfo(archiveInfo);
                         archiveInfo.createThumbFiles();
@@ -564,7 +539,6 @@ public class PVController implements ApplicationRunner {
                 }.start();
                 System.out.println("Photo viewer started.");
                 isReady = true;
-
             }
         }.start();
     }

@@ -116,6 +116,12 @@ public enum Orientation {
         }
         return r;
     }
+    public static boolean equals(Integer o0,Integer o1) {
+        if (o0==null && o1==null) return true;
+        else if (o0==null) return o1.intValue()==NONE.value;
+        else if (o1==null) return o0.intValue()==NONE.value;
+        else return o0.equals(o1);
+    }
     public static boolean setOrientationAndRating(File imgFile, Integer orientation, Integer rating) {
         Map<Key, Object> attrs = new HashMap<>();
         if (orientation!=null) attrs.put(Key.ORIENTATION, Orientation.name(orientation));

@@ -3,6 +3,7 @@ package tang.qinyoyo.archive;
 import lombok.Getter;
 import lombok.Setter;
 import tang.qinyoyo.ArchiveUtils;
+import tang.qinyoyo.Modification;
 import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 
@@ -276,111 +277,121 @@ public class PhotoInfo implements Serializable,Cloneable {
     private boolean emptyValue(Object v) {
         return v==null || v.toString().isEmpty() || v.toString().equals("-");
     }
-    public void setPropertiesBy(Map<Key, Object> attrs) {
+    public void setPropertiesBy(Map<String, Object> attrs) {
         if (attrs==null) return;
-        for (Key k : attrs.keySet()) {
+        for (String k : attrs.keySet()) {
             Object v=attrs.get(k);
-            if (emptyValue(v)) continue;
-            String s = v.toString();
+            String s = emptyValue(v)?null : v.toString();
             Date dt=null;
             try {
-                switch (k) {
-                    case DATETIMEORIGINAL:
-                        if (!s.startsWith("0000")) {
-                            Object subSec = attrs.get(Key.SUB_SEC_TIME_ORIGINAL);
-                            shootTime = DateUtil.string2Date(v.toString()+(
-                                        emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
-                                ));
-                        }
-                        break;
-                    case CREATEDATE:
-                        if (!s.startsWith("0000")) {
-                            Object subSec = attrs.get(Key.SUB_SEC_TIME_CREATE);
-                            createTime = DateUtil.string2Date(v.toString()+(
+                if (k.equals(Key.getName(Key.DATETIMEORIGINAL))) {
+                    if (s==null) shootTime=null;
+                    else if (!s.startsWith("0000")) {
+                        Object subSec = attrs.get(Key.SUB_SEC_TIME_ORIGINAL);
+                        shootTime = DateUtil.string2Date(v.toString()+(
                                     emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
-                                    ));
-                        }
-                        break;
-                    case IMAGE_WIDTH:
-                        width = Integer.parseInt(s);
-                        break;
-                    case IMAGE_HEIGHT:
-                        height = Integer.parseInt(s);
-                        break;
-                    case DOCUMENT_ID:
-                        documentId = s;
-                        break;
-                    case IPTCDigest:
-                        digest = s;
-                        break;
-                    case MODEL:
-                        model = s;
-                        break;
-                    case LENS_ID:
-                        lens = s;
-                        break;
-                    case GPS_LONGITUDE:
-                        longitude = Double.parseDouble(s);
-                        break;
-                    case GPS_LATITUDE:
-                        latitude = Double.parseDouble(s);
-                        break;
-                    case GPS_ALTITUDE:
+                            ));
+                    }
+                }
+                else if (k.equals(Key.getName(Key.CREATEDATE))) {
+                    if (s==null) createTime=null;
+                    else if (!s.startsWith("0000")) {
+                        Object subSec = attrs.get(Key.SUB_SEC_TIME_CREATE);
+                        createTime = DateUtil.string2Date(v.toString()+(
+                                emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
+                                ));
+                    }
+                }
+                else if (k.equals(Key.getName(Key.IMAGE_WIDTH))) {
+                    if (s==null) width=null;
+                    else width = Integer.parseInt(s);
+                }
+                else if (k.equals(Key.getName(Key.IMAGE_HEIGHT))) {
+                    if (s==null) height=null;
+                    else height = Integer.parseInt(s);
+                }
+                else if (k.equals(Key.getName(Key.DOCUMENT_ID))) {
+                    documentId = s;
+                }
+                else if (k.equals(Key.getName(Key.IPTCDigest))) {
+                    digest = s;
+                }
+                else if (k.equals(Key.getName(Key.MODEL))) {
+                    model = s;
+                }
+                else if (k.equals(Key.getName(Key.LENS_ID))) {
+                    lens = s;
+                }
+                else if (k.equals(Key.getName(Key.GPS_LONGITUDE))) {
+                    longitude=Modification.fromDFM(s);
+                }
+                else if (k.equals(Key.getName(Key.GPS_LATITUDE))) {
+                    latitude=Modification.fromDFM(s);
+                }
+                else if (k.equals(Key.getName(Key.GPS_ALTITUDE))) {
+                    if (s==null) latitude=null;
+                    else {
                         String[] vv = s.split(" ");
                         altitude = Double.parseDouble(vv[0]);
                         if (v.toString().toLowerCase().contains("below")) altitude = -altitude;
-                        break;
-                    case MIME_TYPE:
-                        mimeType = s;
-                        break;
-                    case ARTIST:
-                        artist = s;
-                        break;
-                    case HEADLINE:
-                        headline = s;
-                        break;
-                    case DESCRIPTION:
-                        subTitle = s;
-                        break;
-                    case RATING:
-                        rating = Integer.parseInt(s);
-                        break;
-                    case ORIENTATION:
-                        orientation = Orientation.value(s);
-                        break;
-                    case SCENE:
-                        scene = s;
-                        break;
-                    case COUNTRY:
-                        country = s;
-                        break;
-                    case STATE:
-                        province = s;
-                        break;
-                    case CITY:
-                        city = s;
-                        break;
-                    case LOCATION:
-                        location = s;
-                        break;
-                    case SUBJECT_CODE:
-                        subjectCode = s;
-                        break;
-                    default:
+                        else {
+                            Object ref = attrs.get(Key.getName(Key.GPS_ALTITUDE_REF));
+                            if (ref!=null && ref.toString().equals("0")) altitude = -altitude;
+                        }
+                    }
+                }
+                else if (k.equals(Key.getName(Key.MIME_TYPE))) {
+                    mimeType = s;
+                }
+                else if (k.equals(Key.getName(Key.ARTIST))) {
+                    artist = s;
+                }
+                else if (k.equals(Key.getName(Key.HEADLINE))) {
+                    headline = s;
+                }
+                else if (k.equals(Key.getName(Key.DESCRIPTION))) {
+                    subTitle = s;
+                }
+                else if (k.equals(Key.getName(Key.RATING))) {
+                    if (s==null) rating=null;
+                    else  rating = Integer.parseInt(s);
+                }
+                else if (k.equals(Key.getName(Key.ORIENTATION))) {
+                    if (s==null) rating=null;
+                    else orientation = Orientation.value(s);
+                }
+                else if (k.equals(Key.getName(Key.SCENE))) {
+                    scene = s;
+                }
+                else if (k.equals(Key.getName(Key.COUNTRY))) {
+                    country = s;
+                }
+                else if (k.equals(Key.getName(Key.STATE))) {
+                    province = s;
+                }
+                else if (k.equals(Key.getName(Key.CITY))) {
+                    city = s;
+                }
+                else if (k.equals(Key.getName(Key.LOCATION))) {
+                    location = s;
+                }
+                else if (k.equals(Key.getName(Key.SUBJECT_CODE))) {
+                    subjectCode = s;
                 }
             } catch (Exception e) {}
         }
-        if (shootTime==null && createTime!=null && mimeType!=null && !mimeType.toLowerCase().startsWith("image")) shootTime = createTime;
-        if (shootTime==null) shootTime = DateUtil.getShootTimeFromFileName(fileName);
     }
 
     public void readProperties(String rootPath) {
         File f = new File(fullPath(rootPath));
         if (f.exists() && SupportFileType.isSupport(f.getName())) {
             try {
-                Map<String, Map<Key, Object>>  fileInfos = ExifTool.getInstance().query(f, ArchiveInfo.NEED_KEYS);
+                Map<String, Map<String, Object>>  fileInfos = ExifTool.getInstance().query(f, ArchiveUtils.NEED_KEYS);
                 if (fileInfos!=null) {
                     setPropertiesBy(fileInfos.get(f.getName()));
+                    if (getShootTime()==null && getCreateTime()!=null && getMimeType()!=null && !getMimeType().toLowerCase().startsWith("image"))
+                        setShootTime(getCreateTime());
+                    if (getShootTime()==null) setShootTime(DateUtil.getShootTimeFromFileName(getFileName()));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -486,10 +497,10 @@ public class PhotoInfo implements Serializable,Cloneable {
     public String fullThumbPath(String root) throws IOException {
         if (mimeType==null || (!mimeType.contains("image/") && !mimeType.contains("video/"))) throw new IOException("not supported type");
         String sub = getSubFolder();
-        if (sub == null || sub.isEmpty()) sub =".thumb";
+        if (sub == null || sub.isEmpty()) sub =ArchiveUtils.THUMB;
         else {
-            if (sub.startsWith(".delete"+File.separator)) sub=sub.substring(8);
-            sub = ".thumb"+File.separator + sub;
+            if (sub.startsWith(ArchiveUtils.DELETED+File.separator)) sub=sub.substring(8);
+            sub = ArchiveUtils.THUMB+File.separator + sub;
         }
         return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
     }
@@ -498,16 +509,16 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (mimeType==null || !mimeType.contains("image/")) return false;
         Integer newOrientation = null;
         if (operations!=null && operations.length>0) {
-            orientation = Orientation.getOrientation(new File(fullPath(root)));
-            int orientation1=0;
-            if (orientation==null || orientation==Orientation.NONE.getValue()) orientation1 = Orientation.by(operations);
+            Integer orientation0 = orientation;
+            Integer orientation1=null;
+            if (orientation0==null || orientation0==Orientation.NONE.getValue()) orientation1 = Orientation.by(operations);
             else {
                 Integer [] ops = new Integer[operations.length+1];
-                ops[0]=orientation;
+                ops[0]=orientation0;
                 for (int i=0;i<operations.length;i++) ops[i+1] = operations[i];
                 orientation1 = Orientation.by(ops);
             }
-            if ((orientation==null && orientation1!=Orientation.NONE.getValue()) || (orientation!=null && orientation1!=orientation)) {
+            if (!Orientation.equals(orientation0,orientation1)) {
                 newOrientation = orientation1;
             }
         }
@@ -527,15 +538,11 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         return false;
     }
-    public boolean delete(String rootPath,boolean needRecord) {
+    public boolean delete(String rootPath) {
         try {
             new File(fullThumbPath(rootPath)).delete();
         } catch (Exception e) {}
-        if (new File(fullPath(rootPath)).delete()) {
-            //if (needRecord) ArchiveUtils.appendToFile(new File(rootPath,ArchiveInfo.DELETED_FILES),
-            //        subFolder.isEmpty() ? fileName : subFolder + File.separator + fileName);
-            return true;
-        } else return false;
+        return (new File(fullPath(rootPath)).delete());
     }
     private static String nameWithoutExt(String name) {
         int p = name.lastIndexOf(".");
@@ -586,120 +593,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         return xmlString(Arrays.asList(keys));
     }
     public String xmlString(List<Key> keys) {
-        StringBuilder sb=new StringBuilder();
-        for (Key key : keys) {
-            String value = null;
-            switch (key) {
-                case DATETIMEORIGINAL:
-                    if (shootTime!=null) {
-                        value = DateUtil.date2String(shootTime,"yyyy:MM:dd HH:mm:ss");
-                        if (shootTime.getTime() % 1000 > 0) {
-                            sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
-                              .append(shootTime.getTime() % 1000)
-                              .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append( ">\n");
-                        }
-                    }
-                    break;
-                case CREATEDATE:
-                    if (createTime!=null) {
-                        value = DateUtil.date2String(createTime,"yyyy:MM:dd HH:mm:ss");
-                        if (createTime.getTime() % 1000 > 0) {
-                            sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
-                                    .append(shootTime.getTime() % 1000)
-                                    .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append( ">\n");
-                        }
-                    }
-                    break;
-                case DOCUMENT_ID:
-                    value = documentId;
-                    break;
-                case IPTCDigest:
-                    value = digest;
-                    break;
-                case MODEL:
-                    value = model;
-                    break;
-                case LENS_ID:
-                    value = lens;
-                    break;
-                case GPS_LONGITUDE:
-                    if (longitude!=null) {
-                        String SN = (longitude < 0 ? "S" : "N");
-                        double lon = Math.abs(longitude);
-                        int du = (int)lon;
-                        int fen = (int)((lon - du) * 60.0);
-                        double m = ((lon - du)*60.0 - fen)*60.0;
-                        value = String.format("%d,%d,%.6f%s",du, fen, m, SN);
-                    }
-                    break;
-                case GPS_LATITUDE:
-                    if (latitude!=null) {
-                        String EW = (latitude < 0 ? "W" : "E");
-                        double lat = Math.abs(latitude);
-                        int du = (int)lat;
-                        int fen = (int)((lat - du) * 60.0);
-                        double m = ((lat - du)*60.0 - fen)*60.0;
-                        value = String.format("%d,%d,%.6f%s",du, fen, m, EW);
-                    }
-                    break;
-                case GPS_ALTITUDE:
-                    if (altitude!=null) {
-                        sb.append("\t<exif:GPSAltitude>")
-                                .append(String.format("%.6f",Math.abs(altitude)))
-                                .append("</exif:GPSAltitude>\n");
-                        sb.append("\t<exif:GPSAltitudeRef>")
-                                .append(altitude>0.0 ? 1 : 0)
-                                .append("</exif:GPSAltitudeRef>\n");
-                    }
-                    break;
-                case ARTIST:
-                    if (artist!=null) {
-                        value = artist;
-                        sb.append("\t<IPTC:By-line>")
-                                .append(artist)
-                                .append("</IPTC:By-line>\n");
-                    }
-                    break;
-                case HEADLINE:
-                    value = headline;
-                    break;
-                case DESCRIPTION:
-                    value = subTitle;
-                    break;
-                case RATING:
-                    if (rating!=null) value = String.valueOf(rating);
-                    break;
-                case ORIENTATION:
-                    if (orientation!=null) value = Orientation.name(orientation);
-                case SCENE:
-                    value = scene;
-                    break;
-                case COUNTRY:
-                    value = country;
-                    break;
-                case STATE:
-                    value = province;
-                    break;
-                case CITY:
-                    value = city;
-                    break;
-                case LOCATION:
-                    value = location;
-                    break;
-                case SUBJECT_CODE:
-                    value = subjectCode;
-                    break;
-                default:
-            }
-            sb.append("\t<").append(Key.getName(key)).append(">").append(value==null?"":value).append("</").append(Key.getName(key)).append( ">\n");
-        }
-        String r = sb.toString();
-        String header = "<?xml version='1.0' encoding='UTF-8'?>\n" +
-                "<rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>\n" +
-                "<rdf:Description rdf:about=''>\n";
-        String tail = "</rdf:Description>\n</rdf:RDF>\n";
-        if (r.isEmpty()) return r;
-        else return header + r + tail;
+        return Modification.xmlString(Modification.exifMap(this,keys));
     }
     public void updateThumbFile(String rootPath,Integer ori) {
         try {
