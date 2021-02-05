@@ -664,7 +664,6 @@
             if (!clickTimer) {
                 clickTimer = setTimeout(function() {
                     if (isLooping()) pauseLoop()
-                    else if (loopTimer) resumeLoop(true)
                     clickTimer = null
                 },300)
             }
@@ -677,7 +676,6 @@
                 clearTimeout(clickTimer)
                 clickTimer = null
             }
-            if (window.loopTimer) stopLoop()
             if (!isReady) return
             if (isFixed()){
                 let page = {
@@ -768,8 +766,8 @@
                     && touchMinPos.x>minX-30 &&touchMaxPos.x < maxX+30 && touchMinPos.y>minY-30 && touchMaxPos.y<maxY+30
                     && Math.abs(touchPos0.x - touchPos1.x) >= Math.abs(touchPos0.y - touchPos1.y)
                     && Math.abs(touchPos0.x - touchPos1.x) > 30) {
-                    stopLoop()
                     loadImageBy(index + (touchPos0.x > touchPos1.x ? 1 : -1))
+                    if (touchPos0.x > touchPos1.x && !isLooping() && loopTimer) resumeLoop(false)
                 }
             }
             roundRotate()
