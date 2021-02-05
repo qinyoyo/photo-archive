@@ -95,7 +95,10 @@
     const isLooping = function() {
         return window.loopTimer && loopTimerId
     }
-
+    const setPlatButtonIcon = function() {
+        const icon = document.querySelector('.tran-img__float-button.play i')
+        if (icon) icon.className = isLooping() ? 'fa fa-pause-circle-o' : 'fa fa-play-circle-o'
+    }
     const startLoop = function(runAtOnce) {
         if (window.loopTimer) {
             if (loopTimerId) clearInterval(loopTimerId)
@@ -103,6 +106,7 @@
                 loopTimerId = setInterval(transformObject.loopAction, window.loopTimer)
                 if (runAtOnce) transformObject.loopAction()
             }
+            setPlatButtonIcon()
         }
     }
 
@@ -110,15 +114,18 @@
         if (loopTimerId) clearInterval(loopTimerId)
         loopTimerId = null
         window.loopTimer = 0
+        setPlatButtonIcon()
     }
     const pauseLoop = function() {
         if (isLooping()) {
             clearInterval(loopTimerId)
             loopTimerId = null
         }
+        setPlatButtonIcon()
     }
     const resumeLoop = function(runAtOnce) {
         if (window.loopTimer && !loopTimerId)  startLoop(runAtOnce)
+        setPlatButtonIcon()
     }
 
     /* Page :
@@ -163,14 +170,7 @@
         }
     }
 
-    function floatButtonClick(event, onclick) {
-        event.stopPropagation()
-        event.preventDefault()
-        const floatButtons = document.querySelector('.tran-img__fb-wrapper')
-        if (floatButtons.className.indexOf('show')>=0 && typeof onclick === 'function') {
-            onclick(event)
-        } else floatButtons.className = 'tran-img__fb-wrapper show'
-    }
+
     /**********  通用变换 ***********/
     const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV, orientation) {
         if (window.notSupportOrientation && orientation) {
@@ -1000,8 +1000,17 @@
         waitingIcon.appendChild(waitingI)
 
         let floatButtons = document.createElement("div")
-        floatButtons.className = 'tran-img__fb-wrapper'
+        floatButtons.className = 'tran-img__fb-wrapper'+(window.innerWidth<400?' small':'')
         floatButtons.style.zIndex = "6006"
+
+        function floatButtonClick(event, onclick) {
+            event.stopPropagation()
+            event.preventDefault()
+            const floatButtons = document.querySelector('.tran-img__fb-wrapper')
+            if (floatButtons.className.indexOf('show')>=0 && typeof onclick === 'function') {
+                onclick(event)
+            } else floatButtons.className = floatButtons.className + ' show'
+        }
 
         const createButton=function({className, iconClass, onclick}) {
             const button = document.createElement("button")
@@ -1089,6 +1098,19 @@
                 bkMusic.src = '/music?click='+new Date().getTime()
             }
         }
+
+        const playButton = createButton({
+            className:'play',
+            iconClass:'fa fa-play-circle-o',
+            onclick:function (){
+                if (isLooping()) pauseLoop()
+                else if (!window.loopTimer){
+                    window.loopTimer=loopTimerSaved
+                    startLoop(true)
+                } else resumeLoop(true)
+            }
+        })
+
         if (fullScreenElement() !==0 ) {
             const fullBtn = createButton({
                 className:'close',
@@ -1152,34 +1174,21 @@
                 }
             })
         }
-        let floatLastClick = 0
-        const dblStartLoop = function(event) {
-            if (isLooping()) pauseLoop()
-            else if (!window.loopTimer){
-                window.loopTimer=loopTimerSaved
-                startLoop(true)
-            } else resumeLoop(true)
-        }
+
         if (!isMobile()){
             floatButtons.onmouseenter=function (event){
                 floatButtonClick(event)
             }
             floatButtons.onmouseleave=function (event){
                 floatButtonClick(event,function (){
-                    floatButtons.className='tran-img__fb-wrapper'
+                    floatButtons.className='tran-img__fb-wrapper' + (window.innerWidth<400?' small':'')
                 })
             }
-            floatButtons.ondblclick = dblStartLoop
         } else{
             floatButtons.onclick=function (event){
                 floatButtonClick(event,function (){
-                    floatButtons.className='tran-img__fb-wrapper'
+                    floatButtons.className='tran-img__fb-wrapper' + (window.innerWidth<400?' small':'')
                 })
-                let now = new Date().getTime()
-                if (now - floatLastClick < 500) {
-                    dblStartLoop()
-                }
-                floatLastClick = now
             }
         }
 
@@ -1217,12 +1226,8 @@
             const title = img.getAttribute('title')
             img.onclick=function (event){
                 event.stopPropagation()
-                if (isMobile() && title && event.offsetX<36 && event.offsetY<36) {
-                    toast(title,2000)
-                } else {
-                    window.onresize = resizeEvent
-                    addImageDialog(index==NaN?0:index)
-                }
+                window.onresize = resizeEvent
+                addImageDialog(index==NaN?0:index)
             }
         });
     }

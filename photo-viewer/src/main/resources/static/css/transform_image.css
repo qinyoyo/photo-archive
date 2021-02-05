@@ -87,15 +87,17 @@
     outline: none;
     cursor: pointer;
 }
-@media screen and (max-aspect-ratio: 13/9) {
-    .tran-img__fb-wrapper {
-        height: 32px;
-    }
-    .tran-img__float-button {
-        width: 24px;
-        height: 24px;
-        font-size: 24px;
-    }
+
+.tran-img__fb-wrapper.small {
+    height: 32px;
+}
+.small .tran-img__float-button {
+    width: 24px;
+    height: 24px;
+    font-size: 20px;
+}
+.show .play {
+    color: #08e2f5;
 }
 .show .close {
     color: #fff;

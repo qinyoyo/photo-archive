@@ -23,6 +23,17 @@
         }
     }
     window.input = function(options) {
+       if (navigator.userAgent.toLowerCase().indexOf('mac os') >= 0) {
+            let value = prompt(options.title,options.defaultValue)
+            if (value) {
+                if (typeof options.callback === 'function') {
+                    options.callback(value)
+                }
+            } else if (typeof options.oncancel === 'function') {
+                options.oncancel()
+            }
+            return
+        }
         const body = document.querySelector('body')
         const dialog = document.createElement("dialog")
         dialog.className = 'common-dialog'
@@ -56,6 +67,7 @@
             })
         }
         if (options.inputType) input.type = options.inputType
+        input.value = options.defaultValue
         dialog.appendChild(input)
 
         const split =  document.createElement("div")
