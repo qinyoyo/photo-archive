@@ -1,4 +1,7 @@
 package tang.qinyoyo.archive;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import javafx.util.Pair;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.exiftool.CommandRunner;
@@ -6,6 +9,7 @@ import tang.qinyoyo.exiftool.ExifTool;
 import tang.qinyoyo.exiftool.Key;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -228,16 +232,20 @@ public class ArchiveInfo {
     public void readInfos() {
         File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
         System.out.println("从 "+af.getAbsolutePath()+" 读取数据");
-        Object obj = ArchiveUtils.readObj(af);
-        if (obj==null) seekPhotoInfo();
-        else {
-            try {
-                infos = (ArrayList<PhotoInfo>) obj;
+        String json = ArchiveUtils.getFromFile(af,"UTF-8");
+        try {
+            if (json != null) {
+                Gson gson = new GsonBuilder()
+                        .setLenient()
+                        .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+                        .create();
+                Type type = new TypeToken<ArrayList<PhotoInfo>>() {}.getType();
+                infos = gson.fromJson(json, type);
                 readFromFile = true;
-            } catch (Exception e) {
-                seekPhotoInfo();
+                return;
             }
-        }
+        } catch (Exception e) {}
+        seekPhotoInfo();
     }
 
     public void sortInfos() {
@@ -382,7 +390,13 @@ public class ArchiveInfo {
         File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
         af.renameTo(bak);
         System.out.println("向 "+af.getAbsolutePath()+" 写入数据");
-        ArchiveUtils.saveObj(af, infos);
+        // ArchiveUtils.saveObj(af, infos);
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+                .create();
+
+        ArchiveUtils.writeToFile(af,gson.toJson(infos),"UTF-8");
     }
     public long lastModified() {
         File af = new File(path, ArchiveUtils.ARCHIVE_FILE);

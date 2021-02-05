@@ -68,14 +68,17 @@
         ok.onclick = function() {
             if (typeof options.callback === 'function') {
                 options.callback(input.value)
-                dialog.close()
             }
+            dialog.close(input.value)
         }
         split.appendChild(ok)
         const cancel = document.createElement("button")
         cancel.innerText='取消'
         cancel.style.width = '80px'
         cancel.onclick = function() {
+            if (typeof options.oncancel === 'function') {
+                options.oncancel()
+            }
             dialog.close()
         }
         split.appendChild(cancel)

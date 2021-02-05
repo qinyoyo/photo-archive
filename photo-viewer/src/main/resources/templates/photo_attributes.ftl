@@ -24,6 +24,7 @@
             <#assign r = r + address + '\n' />
         </#if>
     </#if>
+    <#assign r = r + '&#xfeff;'>
     <#if p.model??>
         <#assign r = r + p.model />
         <#if p.lens??>

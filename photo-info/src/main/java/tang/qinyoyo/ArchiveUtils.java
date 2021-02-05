@@ -165,15 +165,27 @@ public class ArchiveUtils {
         }
     }
     public static void saveObj(File file, Object object) {
+        FileOutputStream outputStream = null;
+        ObjectOutputStream objectOutputStream = null;
         try {
-            FileOutputStream outputStream = new FileOutputStream(file);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+            outputStream = new FileOutputStream(file);
+            objectOutputStream = new ObjectOutputStream(outputStream);
             objectOutputStream.writeObject(object);
-
-            objectOutputStream.close();
-            outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (objectOutputStream!=null) {
+                try {
+                    objectOutputStream.close();
+                } catch (IOException e) {
+                }
+            }
+            if (outputStream!=null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
     public static Object readObj(File file) {

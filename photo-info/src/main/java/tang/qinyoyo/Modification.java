@@ -1,8 +1,10 @@
 package tang.qinyoyo;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
-import org.json.JSONObject;
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.DateUtil;
 import tang.qinyoyo.archive.Orientation;
@@ -17,7 +19,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -49,8 +50,7 @@ public class Modification {
     }
     @Override
     public String toString() {
-        JSONObject json = new JSONObject(this);
-        return json.toString();
+        return new GsonBuilder().create().toJson(this);
     }
     public static void save(Modification mod,String rootPath) {
         File bak = new File(rootPath,save_path+".bak");
@@ -69,16 +69,13 @@ public class Modification {
         List<Modification> list=new ArrayList<>();
         for (String s: aa) {
             s=s.trim();
-            if (s.startsWith("{") && s.endsWith("}")) {
-                try {
-                    JSONObject json = new JSONObject(s);
-                    int action = json.getInt("action");
-                    String path = json.has("path") ? json.getString("path") : null;
-                    Map<String,Object> params = json.has("params") ? json.getJSONObject("params").toMap() : null;
-                    Modification m = new Modification(action,path,params);
-                    list.add(m);
-                } catch (Exception e) {}
-            }
+            Gson gson=new GsonBuilder()
+                    .registerTypeAdapter(new TypeToken<Map<String, Object>>() {}.getType(), new MapTypeAdapter())
+                    .create();
+            try {
+                Modification m = gson.fromJson(s,Modification.class);
+                list.add(m);
+            } catch (Exception e) {}
         }
         return list;
     }
@@ -111,19 +108,13 @@ public class Modification {
                 case DATETIMEORIGINAL:
                     Date shootTime = pi.getShootTime();
                     if (shootTime!=null) {
-                        value = DateUtil.date2String(shootTime,"yyyy:MM:dd HH:mm:ss");
-                        if (shootTime.getTime() % 1000 > 0) {
-                            map.put(Key.getName(Key.SUB_SEC_TIME_ORIGINAL),shootTime.getTime() % 1000);
-                        }
+                        value = DateUtil.date2String(shootTime,"yyyy:MM:dd HH:mm:ss"+(shootTime.getTime() % 1000 > 0 ? ".SSS":""));
                     }
                     break;
                 case CREATEDATE:
                     Date createTime = pi.getCreateTime();
                     if (createTime!=null) {
-                        value = DateUtil.date2String(createTime,"yyyy:MM:dd HH:mm:ss");
-                        if (createTime.getTime() % 1000 > 0) {
-                            map.put(Key.getName(Key.SUB_SEC_TIME_ORIGINAL),createTime.getTime() % 1000);
-                        }
+                        value = DateUtil.date2String(createTime,"yyyy:MM:dd HH:mm:ss"+(createTime.getTime() % 1000 > 0 ? ".SSS":""));
                     }
                     break;
                 case DOCUMENT_ID:
@@ -141,38 +132,23 @@ public class Modification {
                 case GPS_LONGITUDE:
                     Double longitude = pi.getLongitude();
                     if (longitude!=null) {
-                        String SN = (longitude < 0 ? "S" : "N");
-                        double lon = Math.abs(longitude);
-                        int du = (int)lon;
-                        int fen = (int)((lon - du) * 60.0);
-                        double m = ((lon - du)*60.0 - fen)*60.0;
-                        value = String.format("%d,%d,%.6f%s",du, fen, m, SN);
+                        value = String.format("%.7f",longitude);
                     }
                     break;
                 case GPS_LATITUDE:
                     Double latitude = pi.getLatitude();
                     if (latitude!=null) {
-                        String EW = (latitude < 0 ? "W" : "E");
-                        double lat = Math.abs(latitude);
-                        int du = (int)lat;
-                        int fen = (int)((lat - du) * 60.0);
-                        double m = ((lat - du)*60.0 - fen)*60.0;
-                        value = String.format("%d,%d,%.6f%s",du, fen, m, EW);
+                        value = String.format("%.7f",latitude);
                     }
                     break;
                 case GPS_ALTITUDE:
                     Double altitude = pi.getAltitude();
                     if (altitude!=null) {
-                        map.put(Key.getName(Key.GPS_ALTITUDE_REF),altitude>0.0 ? 1 : 0);
-                        value = String.format("%.6f",Math.abs(altitude));
+                        value = String.format("%.6f",altitude);
                     }
                     break;
                 case ARTIST:
-                    String artist = pi.getArtist();
-                    if (artist!=null) {
-                        value = artist;
-                        map.put("<IPTC:By-line>",artist);
-                    }
+                    value = pi.getArtist();
                     break;
                 case HEADLINE:
                     value = pi.getHeadline();
@@ -209,6 +185,20 @@ public class Modification {
         }
         return map;
     }
+    public static void deleteSameProperties(PhotoInfo p, Map<String, Object> attrs) {
+        if (p==null || attrs==null) return;
+        List<Key> keys = new ArrayList<>();
+        for (String k : attrs.keySet()) {
+            Optional<Key> key = Key.findKeyWithName(k);
+            if (key.isPresent()) keys.add(key.get());
+        }
+        Map<String,Object> values = exifMap(p,keys);
+        for (String k : values.keySet()) {
+            Object v1 = attrs.get(k);
+            Object v2 = values.get(k);
+            if (ArchiveUtils.equals(v1,v2)) attrs.remove(k);
+        }
+    }
 
     public static String xmlString(Map<String,Object> map) {
         if (map==null || map.isEmpty()) return "";
@@ -216,7 +206,50 @@ public class Modification {
         for (String key : map.keySet()) {
             if (key.equals(start_time_key) || key.equals(end_time_key)) continue;
             Object value = map.get(key);
-            sb.append("\t<").append(key).append(">").append(value==null?"":value.toString()).append("</").append(key).append( ">\n");
+            if (value!=null || !value.toString().isEmpty()) {
+                if (key.equals(Key.getName((Key.DATETIMEORIGINAL))) && value.toString().indexOf(".")>0) {
+                    String dt = value.toString();
+                    int pos = dt.indexOf(".");
+                    value = dt.substring(0,pos);
+                    sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
+                            .append(dt.substring(pos+1))
+                            .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">\n");
+                } else if (key.equals(Key.getName((Key.CREATEDATE)))  && value.toString().indexOf(".")>0) {
+                    String dt = value.toString();
+                    int pos = dt.indexOf(".");
+                    value = dt.substring(0,pos);
+                    sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
+                            .append(dt.substring(pos+1))
+                            .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">\n");
+                } else if (key.equals(Key.getName((Key.GPS_LONGITUDE)))) {
+                    double longitude = Double.parseDouble(value.toString());
+                    String SN = (longitude < 0 ? "S" : "N");
+                    double lon = Math.abs(longitude);
+                    int du = (int)lon;
+                    int fen = (int)((lon - du) * 60.0);
+                    double m = ((lon - du)*60.0 - fen)*60.0;
+                    value = String.format("%d,%d,%.6f%s",du, fen, m, SN);
+                } else if (key.equals(Key.getName((Key.GPS_LATITUDE)))) {
+                    double latitude = Double.parseDouble(value.toString());
+                    String EW = (latitude < 0 ? "W" : "E");
+                    double lat = Math.abs(latitude);
+                    int du = (int)lat;
+                    int fen = (int)((lat - du) * 60.0);
+                    double m = ((lat - du)*60.0 - fen)*60.0;
+                    value = String.format("%d,%d,%.6f%s",du, fen, m, EW);
+                } else if (key.equals(Key.getName((Key.GPS_ALTITUDE)))) {
+                    double altitude = Double.parseDouble(value.toString());
+                    sb.append("\t<").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">")
+                            .append(altitude>0.0 ? 1 : 0)
+                            .append("</").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">\n");
+                    value = String.format("%.6f",Math.abs(altitude));
+                } else if (key.equals(Key.getName((Key.ARTIST)))) {
+                    sb.append("<IPTC:By-line>")
+                            .append(value.toString())
+                            .append("</IPTC:By-line>\n");
+                }
+            }
+            sb.append("\t<").append(key).append(">").append(value == null ? "" : value.toString()).append("</").append(key).append(">\n");
         }
         String r = sb.toString();
         if (r.isEmpty()) return r;
@@ -295,17 +328,35 @@ public class Modification {
     public static void execute(List<Modification> list, ArchiveInfo archiveInfo) {
         String rootPath = archiveInfo.getPath();
 
-        list.stream().filter(m->m.action==Scan).forEach(m->{
-            scanAction(m.path,archiveInfo);
-        });
+        list.stream().filter(m->m.action==Scan).reduce(new HashSet<String>(),(acc,m)-> {
+                if (!acc.contains(m.path)) acc.add(m.path);
+                return acc;
+            },(acc,m)->null).forEach(path->scanAction(path,archiveInfo));
 
-        List<Modification> removeds = list.stream().filter(m->m.action==Remove).collect(Collectors.toList());
-        Map<String,Object> removedPaths = new HashMap<>();
-        removeds.forEach(m->{
-            if (removeAction(m.path, archiveInfo)) removedPaths.put(m.path,null);
+        Set<String> removedPaths = new HashSet<>();
+        list.stream().filter(m->m.action==Remove).reduce(removedPaths,(acc,m)-> {
+            if (!acc.contains(m.path)) acc.add(m.path);
+            return acc;
+        },(acc,m)->null);
+        removedPaths.forEach(path->{
+            removeAction(path, archiveInfo);
         });
+        Map<String,Map<String,Object>> exifMap = new HashMap<>();
+        list.stream().filter(m->m.action==Exif && !removedPaths.contains(m.path))
+            .reduce(exifMap,(acc,m)->{
+                if (m.path==null || m.params==null || m.params.isEmpty()) return acc;
+                String key = m.path;
+                if (m.params.containsKey(start_time_key) && m.params.containsKey(end_time_key)) {
+                    key = key + "," + m.params.get(start_time_key).toString() + "," + m.params.get(end_time_key).toString();
+                    m.params.remove(start_time_key);
+                    m.params.remove(end_time_key);
+                }
+                if (acc.containsKey(key)) {
+                    acc.get(key).putAll(m.params);
+                } else acc.put(key,m.params);
+                return acc;
+            },(acc,m)->null);
 
-        List<Modification> exifList = list.stream().filter(m->m.action==Exif && !removedPaths.containsKey(m.path)).collect(Collectors.toList());
         File imgDir = new File(rootPath,temp_path);
         File xmpDir = new File(imgDir,XMP);
         xmpDir.mkdirs();
@@ -313,40 +364,46 @@ public class Modification {
         ArchiveUtils.removeFilesInDir(imgDir,false);
         int count = 0;
         Map<String,File> files = new HashMap<>();
-        for (Modification m : exifList) {
-            if (m.path!=null && m.path!=null && m.params!=null && !m.params.isEmpty()) {
-                String xml = xmlString(m.params);
-                List<String> pathList = new ArrayList<>();
-                if (m.params.containsKey(start_time_key) && m.params.containsKey(end_time_key)) {
+        for (String key : exifMap.keySet()) {
+            Map<String,Object> params = exifMap.get(key);
+            String [] keys = key.split(",");
+            String path = keys[0];
+            List<String> pathList = new ArrayList<>();
+            if (keys.length==3) {
+                try {
+                    long start = Long.parseLong(keys[1]),
+                         end = Long.parseLong(keys[2]);
+                    archiveInfo.getInfos().stream().filter(p ->
+                               p.getSubFolder().startsWith(path) && p.getShootTime() != null
+                            && p.getShootTime().getTime() >= start && p.getShootTime().getTime() <= end
+                    ).reduce(pathList,(acc,p)-> {
+                        acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
+                        return acc;
+                    },(acc,p)->null);
+                } catch (Exception e){}
+            } else {
+                pathList.add(path);
+            }
+            for (String filePath : pathList) {
+                File img = new File(rootPath, filePath);
+                if (img.exists() && img.isFile()) {
+                    PhotoInfo pi = archiveInfo.find(img);
+                    if (pi==null) continue;
+                    deleteSameProperties(pi,params);
+                    if (params.isEmpty()) continue;
+                    String xml = xmlString(params);
+                    String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                     try {
-                        long start = Long.parseLong(m.params.get(start_time_key).toString()),
-                             end = Long.parseLong(m.params.get(end_time_key).toString());
-                        archiveInfo.getInfos().stream().filter(p ->
-                                   p.getSubFolder().startsWith(m.path) && p.getShootTime() != null
-                                && p.getShootTime().getTime() >= start && p.getShootTime().getTime() <= end
-                        ).reduce(pathList,(acc,p)-> {
-                            acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
-                            return acc;
-                        },(acc,p)->null);
-                    } catch (Exception e){}
-                } else pathList.add(m.path);
-                for (String filePath : pathList) {
-                    File img = new File(rootPath, filePath);
-                    if (img.exists() && img.isFile()) {
-                        String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
-                        try {
-                            makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
-                            if (new File(imgDir, link).exists()) {
-                                File xmpFile = new File(xmpDir, count + ".xmp");
-                                ArchiveUtils.writeToFile(xmpFile, xml, "UTF-8");
-                                count++;
-                                files.put(link, img);
-                                PhotoInfo pi = archiveInfo.find(img);
-                                if (pi != null) pi.setPropertiesBy(m.params);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
+                        if (new File(imgDir, link).exists()) {
+                            File xmpFile = new File(xmpDir, count + ".xmp");
+                            ArchiveUtils.writeToFile(xmpFile, xml, "UTF-8");
+                            count++;
+                            files.put(link, img);
+                            pi.setPropertiesBy(params);
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -356,7 +413,7 @@ public class Modification {
                 count=0;
             }
         }
-        if (count>=0) {
+        if (count>0) {
             executeExiftool(xmpDir,imgDir,files);
         }
         ArchiveUtils.removeFilesInDir(xmpDir,true);

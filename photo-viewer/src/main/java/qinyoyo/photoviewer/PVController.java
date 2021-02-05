@@ -272,16 +272,21 @@ public class PVController implements ApplicationRunner {
     }
 
     @ResponseBody
-    @RequestMapping(value = "poi")
-    public String poi(String path, String value, String start,String end) {
+    @RequestMapping(value = "range")
+    public String range(String path, String value, String type, String start,String end) {
         final String subPath=ArchiveUtils.formatterSubFolder(path);
         Date date0 = DateUtil.string2Date(start), date1 = DateUtil.string2Date(end);
-        if (date0==null || date1==null) return "error";
+        if (type==null || date0==null || date1==null) return "error";
         new Thread() {
             @Override
             public void run() {
-                Map<String,Object> map = new HashMap<String,Object>(){{ put(Key.getName(Key.SUBJECT_CODE),value);}};
-                if (Modification.rangeExifAction(subPath,archiveInfo,date0,date1, map)) {
+                Map<String, Object> map = null;
+                if (type.equals("poi")) {
+                    map = new HashMap<String, Object>() {{
+                        put(Key.getName(Key.SUBJECT_CODE), value);
+                    }};
+                }
+                if (map!=null && Modification.rangeExifAction(subPath,archiveInfo,date0,date1, map)) {
                     afterChanged();
                     Modification.save(new Modification(Modification.Exif, subPath, map), rootPath);
                 }

@@ -1,7 +1,5 @@
 package qinyoyo.utils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import tang.qinyoyo.ArchiveUtils;
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.PhotoInfo;
@@ -14,17 +12,60 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class BaiduGeo {
+    public static class Address {
+        String country;
+        Integer country_code;
+        String country_code_iso;
+        String country_code_iso2;
+        String province;
+        String city;
+        Integer city_level;
+        String district;
+        String town;
+        String town_code;
+        String adcode;
+        String street;
+        String street_number;
+        String direction;
+        String distance;
+    }
+
+    public static class Poi {
+        String addr;
+        String cp;
+        String direction;
+        String distance;
+        String name;
+        String poiType;
+        String tag;
+        String uid;
+    }
+
+    public static class Result {
+        String formatted_address;
+        String business;
+        Address addressComponent;
+        List<Poi> pois;
+    }
+
+    public static class Info {
+        Integer status;
+        Result  result;
+        String  message;
+    }
+
     private static final String address = "http://api.map.baidu.com/reverse_geocoding/v3/?ak=%s&output=json&coordtype=wgs84ll&extensions_poi=1&poi_types=旅游景点&extensions_town=true&location=%.6f,%.6f";
     private static final String defaultAK = "0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o";
-    public static JSONObject getGeoInfo(double longitude, double latitude, String ak) throws IOException {
+
+    public static Info getGeoInfo(double longitude, double latitude, String ak) throws IOException {
         // http://lbsyun.baidu.com/index.php?title=webapi/guide/webservice-geocoding-abroad
-        String url = String.format(address, ak==null?defaultAK:ak, latitude, longitude);
+        String url = String.format(address, ak == null ? defaultAK : ak, latitude, longitude);
         //System.out.println(url);
-        return HttpUtils.doJsonGet(url,null);
+        return HttpUtils.doJsonGet(url, null,Info.class);
     }
 
     static int utf8Length(String s) {
-        if (s==null) return 0;
+        if (s == null) return 0;
         else {
             try {
                 return s.getBytes("utf-8").length;
@@ -33,25 +74,27 @@ public class BaiduGeo {
             }
         }
     }
-    static String trunc(String s,Key key) {
+
+    static String trunc(String s, Key key) {
         int maxLength = Key.getMaxLength(key);
-        if (maxLength==0) return s;
+        if (maxLength == 0) return s;
         int utf8size = utf8Length(s);
         while (utf8size > maxLength) {
-            s=s.substring(0,s.length()-1);
+            s = s.substring(0, s.length() - 1);
             utf8size = utf8Length(s);
         }
         return s;
     }
+
     public static void seekAddressInfo(ArchiveInfo archiveInfo) {
-        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->
-                p.getLatitude()!=null && p.getLongitude()!=null
-                && p.getProvince()==null && p.getCity()==null && p.getLocation()==null && p.getCountry()==null
+        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p ->
+                p.getLatitude() != null && p.getLongitude() != null
+                        && p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null
         ).collect(Collectors.toList());
-        if (list!=null && list.size()>0) {
-            list.sort((a,b)->{
+        if (list != null && list.size() > 0) {
+            list.sort((a, b) -> {
                 int r = a.getSubFolder().compareTo(b.getSubFolder());
-                return r==0 ? a.compareTo(b) : r;
+                return r == 0 ? a.compareTo(b) : r;
             });
             List<PhotoInfo> changedList = new ArrayList<>();
             new Thread() {
@@ -63,57 +106,57 @@ public class BaiduGeo {
                     PhotoInfo p0 = null;
                     for (PhotoInfo p : list) {
                         try {
-                            if (p0!=null && Math.abs(p.getLatitude()-p0.getLatitude())<delta && Math.abs(p.getLongitude()-p0.getLongitude())<delta) {
+                            if (p0 != null && Math.abs(p.getLatitude() - p0.getLatitude()) < delta && Math.abs(p.getLongitude() - p0.getLongitude()) < delta) {
                                 p.setCountry(p0.getCountry());
                                 p.setProvince(p0.getProvince());
                                 p.setCity(p0.getCity());
                                 p.setLocation(p0.getLocation());
                                 if (p.getSubjectCode() == null) p.setSubjectCode(p0.getSubjectCode());
-                                else if (p0.getSubjectCode()==null) p0.setSubjectCode(p.getSubjectCode());
-                                count ++;
+                                else if (p0.getSubjectCode() == null) p0.setSubjectCode(p.getSubjectCode());
+                                count++;
                                 changedList.add(p);
                             } else {
-                                JSONObject json = getGeoInfo(p.getLongitude(), p.getLatitude(), null);
-                                int status = json.getInt("status");
-                                if (status == 0) {
-                                    JSONObject result = json.getJSONObject("result");
-                                    JSONObject addressComponent = result.getJSONObject("addressComponent");
+                                Info info = getGeoInfo(p.getLongitude(), p.getLatitude(), null);
+                                if (info.status!=null && info.status == 0 && info.result!=null) {
+                                    Result result = info.result;
+                                    Address addressComponent = result.addressComponent;
+                                    if (addressComponent==null) continue;
+                                    p.setCountry(trunc(addressComponent.country, Key.COUNTRY));
+                                    p.setProvince(trunc(addressComponent.province, Key.STATE));
+                                    p.setCity(trunc(addressComponent.city, Key.CITY));
+                                    boolean cc = ArchiveUtils.hasChinese(p.getCountry()) || ArchiveUtils.hasChinese(p.getProvince()) || ArchiveUtils.hasChinese(p.getCity());
 
-                                    p.setCountry(trunc(addressComponent.getString("country"),Key.COUNTRY));
-                                    p.setProvince(trunc(addressComponent.getString("province"),Key.STATE));
-                                    p.setCity(trunc(addressComponent.getString("city"),Key.CITY));
-                                    boolean cc = ArchiveUtils.hasChinese(p.getCountry()) || ArchiveUtils.hasChinese(p.getProvince()) ||ArchiveUtils.hasChinese(p.getCity());
-
-                                    String town = addressComponent.getString("town"), district = addressComponent.getString("district"),
-                                           street = addressComponent.getString("street");
+                                    String town = addressComponent.town, district = addressComponent.district,
+                                            street = addressComponent.street;
                                     String loc = cc ? ArchiveUtils.join(null, district, town, street)
                                             : ArchiveUtils.join(",", street, town, district);
                                     int maxLocLen = Key.getMaxLength(Key.LOCATION);
                                     if (utf8Length(loc) > maxLocLen) {
                                         loc = cc ? ArchiveUtils.join(null, district, town)
                                                 : ArchiveUtils.join(",", town, district);
-                                        if (loc==null || loc.isEmpty()) loc = street;
+                                        if (loc == null || loc.isEmpty()) loc = street;
                                         if (utf8Length(loc) > maxLocLen) {
                                             loc = district;
-                                            if (loc==null || loc.isEmpty()) loc = town;
-                                            if (loc==null || loc.isEmpty()) loc = street;
+                                            if (loc == null || loc.isEmpty()) loc = town;
+                                            if (loc == null || loc.isEmpty()) loc = street;
                                         }
-                                        loc=trunc(loc,Key.LOCATION);
+                                        loc = trunc(loc, Key.LOCATION);
                                     }
                                     p.setLocation(loc);
 
-                                    if (p.getSubjectCode() == null || p.getSubjectCode().indexOf("行摄")>=0 || p.getSubjectCode().indexOf("人像")>=0 || p.getSubjectCode().equals("风景")) {
-                                        JSONArray pois = result.getJSONArray("pois");
-                                        if (!pois.isNull(0)) {
-                                            JSONObject poi = pois.getJSONObject(0);
-                                            if ("内".equals(poi.get("direction")) || "0".equals(poi.get("distance"))) p.setSubjectCode(trunc(poi.getString("name"),Key.SUBJECT_CODE));
+                                    if (p.getSubjectCode() == null || p.getSubjectCode().indexOf("行摄") >= 0 || p.getSubjectCode().indexOf("人像") >= 0 || p.getSubjectCode().equals("风景")) {
+                                        List<Poi> pois = result.pois;
+                                        if (pois!=null && pois.size()>0) {
+                                            Poi poi = pois.get(0);
+                                            if ("内".equals(poi.direction) || "0".equals(poi.distance))
+                                                p.setSubjectCode(trunc(poi.name, Key.SUBJECT_CODE));
                                         }
                                     }
                                     count++;
                                     p0 = p;
                                     changedList.add(p);
                                 } else {
-                                    System.out.println(json.getString("message"));
+                                    System.out.println(info.message);
                                 }
                             }
                         } catch (Exception e) {
@@ -122,12 +165,12 @@ public class BaiduGeo {
                     }
                     System.out.println(count + " geo points seeked");
                     archiveInfo.saveInfos();
-                    ArchiveUtils.writeAddress(changedList,archiveInfo);
+                    ArchiveUtils.writeAddress(changedList, archiveInfo);
                 }
             }.start();
         }
     }
-
+}
 /*
 http://api.map.baidu.com/reverse_geocoding/v3/?ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o&output=json&coordtype=wgs84ll&extensions_poi=1&poi_types=旅游景点&extensions_town=true&location=25.6083333,100.2405556
 {
@@ -716,4 +759,4 @@ http://api.map.baidu.com/reverse_geocoding/v3/?ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA
 	}
 }
      */
-}
+

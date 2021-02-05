@@ -1,5 +1,7 @@
 package qinyoyo.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -45,11 +47,11 @@ public class HttpUtils {
 	 * @return 转换结果
 	 * @throws IOException 异常
 	 */
-	public static JSONObject getHttpEntity(HttpResponse response) throws IOException {
+	public static <T> T getHttpEntity(HttpResponse response, Class<T> clazz) throws IOException {
 		if (response == null) return null;
 		HttpEntity entity = response.getEntity();
 		if (entity.getContentLength() == 0 || !entity.isStreaming()) {
-			return new JSONObject("{\"code\":" + response.getStatusLine().getStatusCode() + "}");
+			return null;
 		}
 		String line = null;
 		StringBuilder entityStringBuilder = new StringBuilder();
@@ -57,7 +59,9 @@ public class HttpUtils {
 		while ((line = b.readLine()) != null) {
 			entityStringBuilder.append(line + "\n");
 		}
-		return new JSONObject(entityStringBuilder.toString());
+		Gson gson = new GsonBuilder()
+				.create();
+		return gson.fromJson(entityStringBuilder.toString(),clazz);
 	}
 	/**
 	 * 将http返回转换为String
@@ -106,13 +110,13 @@ public class HttpUtils {
 	 * @throws IOException 异常
 	 */
 	@SuppressWarnings("serial")
-	public static JSONObject doJsonGet(String host, Map<String, Object> querys) throws IOException {
+	public static <T> T doJsonGet(String host, Map<String, Object> querys, Class<T> clazz) throws IOException {
 		Map<String, Object> headers=new HashMap<String, Object>() {{
 			put("content-type", "application/json; charset=UTF-8");
 			put("Accept-Charset", "UTF-8");
             put("Connection", "Keep-Alive");
 		}};
-		return getHttpEntity(doGet(host,headers,querys));
+		return getHttpEntity(doGet(host,headers,querys),clazz);
 	}
 	/*
 	 * post form
@@ -154,12 +158,12 @@ public class HttpUtils {
 	 * @throws IOException 异常
 	 */
 	@SuppressWarnings("serial")
-	public static JSONObject doJsonPost(String host, Map<String, Object> headers,Map<String, Object> querys,Map<String, Object> bodys)  throws IOException {
+	public static <T> T doJsonPost(String host, Map<String, Object> headers,Map<String, Object> querys,Map<String, Object> bodys, Class<T> clazz)  throws IOException {
 		if (headers == null) headers = new HashMap<String, Object>();
 		headers.put("content-type", "application/json; charset=UTF-8");
 		headers.put("Accept-Charset", "UTF-8");
 		headers.put("Connection", "Keep-Alive");
-		return getHttpEntity(doPost(host, headers, querys, bodys));
+		return getHttpEntity(doPost(host, headers, querys, bodys),clazz);
 	}
 	/*
 	 * Post String
@@ -195,13 +199,13 @@ public class HttpUtils {
 	 * @throws IOException 异常
 	 */
 	@SuppressWarnings("serial")
-	public static JSONObject doJsonPost(String host, Map<String, Object> querys,String body)  throws IOException {
+	public static <T> T doJsonPost(String host, Map<String, Object> querys,String body,Class<T> clazz)  throws IOException {
 		Map<String, Object> headers=new HashMap<String, Object>() {{
 			put("content-type", "application/json; charset=UTF-8");
 			put("Accept-Charset", "UTF-8");
             put("Connection", "Keep-Alive");
 		}};
-		return getHttpEntity(doPost(host,headers,querys,body));
+		return getHttpEntity(doPost(host,headers,querys,body),clazz);
 	}
 	/*
 	 * Post stream

@@ -88,7 +88,38 @@
     }
 
     const PI = 3.1415926
+    let transformObject = null
+    let loopTimerSaved = window.loopTimer
+    /*************   轮播  *************/
     let loopTimerId = null
+    const isLooping = function() {
+        return window.loopTimer && loopTimerId
+    }
+
+    const startLoop = function(runAtOnce) {
+        if (window.loopTimer) {
+            if (loopTimerId) clearInterval(loopTimerId)
+            if (transformObject) {
+                loopTimerId = setInterval(transformObject.loopAction, window.loopTimer)
+                if (runAtOnce) transformObject.loopAction()
+            }
+        }
+    }
+
+    const stopLoop = function() {
+        if (loopTimerId) clearInterval(loopTimerId)
+        loopTimerId = null
+        window.loopTimer = 0
+    }
+    const pauseLoop = function() {
+        if (isLooping()) {
+            clearInterval(loopTimerId)
+            loopTimerId = null
+        }
+    }
+    const resumeLoop = function(runAtOnce) {
+        if (window.loopTimer && !loopTimerId)  startLoop(runAtOnce)
+    }
 
     /* Page :
          可见的页面部分， 固定值, 大小 pageW = window.innerWidth, pageH = window.innerHeight
@@ -136,10 +167,9 @@
         event.stopPropagation()
         event.preventDefault()
         const floatButtons = document.querySelector('.tran-img__fb-wrapper')
-        if (floatButtons.className.indexOf('show')>=0) {
+        if (floatButtons.className.indexOf('show')>=0 && typeof onclick === 'function') {
             onclick(event)
         } else floatButtons.className = 'tran-img__fb-wrapper show'
-
     }
     /**********  通用变换 ***********/
     const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV, orientation) {
@@ -212,14 +242,15 @@
         let   realSizeScale = 1
         const container = img.parentNode
         const wrapper = document.querySelector('.tran-img__wrapper')
-        const waitingIcon = container.querySelector('.tran-img__waiting')
+        const waitingIcon = document.querySelector('.tran-img__waiting')
         let   scaleValue = 1
         let   isReady = false
         let   translateXChanged = false, translateYChanged = false
         let   imgOrientation = orientation
         let   imgRating = rating
         let   imgInfo = title
-        const loopTimerSaved = window.loopTimer
+
+        loopTimerSaved = window.loopTimer
         /********   image load, modify   **********/
 
         const saveOrientation = function () {
@@ -305,9 +336,10 @@
                 const step = pageW / 10
                 let newLeft = 0, left = (fromLeft ? -(pageW + 10) : pageW + 10)
 
-                let newWrapper = createWrapper()
-                newWrapper.innerHTML = wrapper.innerHTML
-                wrapper.parentElement.appendChild(newWrapper)
+                let newDialog = createWrapper()
+                newDialog.dialogBody.innerHTML = wrapper.querySelector('.tran-img__body').innerHTML
+                wrapper.parentElement.prepend(newDialog.wrapper)
+
                 wrapper.style.left = left + 'px'
 
                 const moveImage = function() {
@@ -319,14 +351,14 @@
                         left -= step
                     }
                     if ((!fromLeft && left<=0) || (fromLeft && left>=0)) {
-                        newWrapper.remove()
+                        newDialog.wrapper.remove()
                         document.querySelectorAll('.tran-img__wrapper').forEach(w=>{
                             if (w !== wrapper) w.remove()
                         })
                         wrapper.style.left = '0px'
                         isReady = true
                     } else {
-                        newWrapper.style.left = newLeft+'px'
+                        newDialog.wrapper.style.left = newLeft+'px'
                         wrapper.style.left = left + 'px'
                         setTimeout(moveImage, 50);
                     }
@@ -380,7 +412,15 @@
             document.querySelector('head title').innerText = (pathLength ? src.substring(pathLength+1) : src)
             isReady = false
             const totalImages = document.querySelector('.photo-list').getAttribute('data-size')
-            document.querySelector('.tran-img__title').innerHTML = title.replace(/\n/g,'<br>') + '<div>' + index + '/' + totalImages +'</div>'
+            let floatTitle = title
+            if (floatTitle) {
+                let pos = title.indexOf('\ufeff')
+                if (pos>=0) floatTitle = title.substring(0,pos).replace(/\n/g,'<br>')
+                else floatTitle = title.replace(/\n/g,'<br>')
+            }
+            document.querySelector('.tran-img__title').innerHTML =
+                '<b>' + index + '/' + totalImages +'&nbsp;&nbsp;</b>' + floatTitle
+
         }
         this.resize = function() {
             pageW = window.innerWidth
@@ -405,22 +445,7 @@
             else if (e)
                 e.className = 'fa fa-heart-o'
         }
-        this.indexImg = function() {
-            return document.querySelector('img.img-index-'+index)
-        }
-        this.toggleFavorite = function() {
-            favorite('toggle')
-        }
-        this.showInfo = function() {
-            let totalImages = document.querySelector('.photo-list').getAttribute('data-size')
-            pauseLoop()
-            toast(imgInfo.replace(/'|,|{|}/g,'') + '<div style="color: #1f63d2; text-align: center">' + index + '/' + totalImages +'</div>',2000, function () {
-               resumeLoop(true)
-            })
-            const div = document.querySelector('.tran-img__title')
-            if (div.style.display === 'none') div.style.display = 'block'
-            else div.style.display = 'none'
-        }
+
 
         /*******  坐标变换  *************/
         const pageFromClient = function(client) {
@@ -627,39 +652,9 @@
             transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV,imgOrientation)
         }
 
-        /*************   轮播  *************/
-        const startLoop = function(runAtOnce) {
-            if (window.loopTimer) {
-                if (loopTimerId) clearInterval(loopTimerId)
-                const loopView = function() {
-                    if (window.loopTimer) {
-                        if (!loadImageBy(index + 1)) {
-                            stopLoop()
-                        }
-                    }
-                }
-                loopTimerId = setInterval(loopView, window.loopTimer)
-                if (runAtOnce) loopView()
-            }
-        }
-        const isLooping = function() {
-            return window.loopTimer && loopTimerId
-        }
 
-        const stopLoop = function() {
-            if (loopTimerId) clearInterval(loopTimerId)
-            loopTimerId = null
-            window.loopTimer = 0
-        }
-        const pauseLoop = function() {
-            if (isLooping()) {
-                clearInterval(loopTimerId)
-                loopTimerId = null
-            }
-        }
-        const resumeLoop = function(runAtOnce) {
-            if (window.loopTimer && !loopTimerId)  startLoop(runAtOnce)
-        }
+
+
         /***********  事件处理  *************/
 
         let clickTimer = null
@@ -674,19 +669,7 @@
                 },300)
             }
         }
-        this.removeImage = function(event) {
-            if (confirm("确定要从磁盘删除该图像？")) {
-                const imgIndex = index
-                let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
-                Ajax.get(url, function (responseText) {
-                    if ("ok" == responseText) {
-                        removedIndexList.push(imgIndex)
-                        document.querySelector('.img-index-' + imgIndex).remove()
-                    }
-                })
-                loadImageBy(index + 1, true)
-            }
-        }
+
         const dblClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
@@ -865,20 +848,6 @@
                 loadImageBy(event.pageX < minPage.x ? index - 1 : index + 1)
             }
         }
-        const dblStartLoop = function(event) {
-            if (!window.loopTimer){
-                window.loopTimer=loopTimerSaved
-                startLoop(true)
-            }
-        }
-        if (isMobile()) {
-            new AlloyFinger(container, {
-                doubleTap : dblStartLoop
-            })
-        } else{
-            container.ondblclick=dblStartLoop
-        }
-
         const imageKeyEvent = function(event) {
             if (document.querySelector('.common-dialog')) return
             if (event.code=='ArrowLeft' || event.code=='Numpad4'){
@@ -912,7 +881,47 @@
         }
         document.querySelector('body').onkeydown = imageKeyEvent
         changeImage({ src, orientation, rating, title })
-        startLoop()
+
+        /*************暴露的函数 **********************/
+        this.indexImg = function() {
+            return document.querySelector('img.img-index-'+index)
+        }
+        this.toggleFavorite = function() {
+            favorite('toggle')
+        }
+        this.showInfo = function() {
+            let totalImages = document.querySelector('.photo-list').getAttribute('data-size')
+            pauseLoop()
+            toast(imgInfo.replace(/'|,|{|}/g,'') + '<div style="color: #1f63d2; text-align: center">' + index + '/' + totalImages +'</div>',2000, function () {
+                resumeLoop(true)
+            })
+            const div = document.querySelector('.tran-img__title')
+            if (div.style.display === 'none') div.style.display = 'block'
+            else div.style.display = 'none'
+        }
+        this.removeImage = function(event) {
+            let needResumeLoop = isLooping()
+            if (needResumeLoop) pauseLoop()
+            if (confirm("确定要从磁盘删除该图像？")) {
+                const imgIndex = index
+                let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
+                Ajax.get(url, function (responseText) {
+                    if ("ok" == responseText) {
+                        removedIndexList.push(imgIndex)
+                        document.querySelector('.img-index-' + imgIndex).remove()
+                    }
+                })
+                if (needResumeLoop) resumeLoop(true)
+                else loadImageBy(index + 1, true)
+            } else if (needResumeLoop) resumeLoop()
+        }
+        this.loopAction = function() {
+            if (window.loopTimer) {
+                if (!loadImageBy(index + 1)) {
+                    stopLoop()
+                }
+            }
+        }
     }
 
     /************  动态创建DOM元素  ***************/
@@ -936,12 +945,26 @@
     }
 
     const createWrapper = function() {
+        const pageW = window.innerWidth, pageH = window.innerHeight
         let wrapper = document.createElement("div")
         wrapper.className = 'tran-img__wrapper'
         wrapper.style.zIndex = "6001"
-        return wrapper
+        let content = document.createElement("div")
+        content.className = 'tran-img__content'
+        content.style.zIndex = "6002"
+        let dialogBody = document.createElement("div")
+        dialogBody.className = 'tran-img__body'
+        dialogBody.style.zIndex = "6003"
+        dialogBody.style.width = pageW+'px'
+        dialogBody.style.height = pageH+'px'
+        dialogBody.tabIndex = -1
+
+        content.appendChild(dialogBody)
+        wrapper.appendChild(content)
+
+        return {wrapper, content, dialogBody }
     }
-    let transformObject = null
+
     const resizeEvent = function() {
         const pageW = window.innerWidth, pageH = window.innerHeight
         const dialogBody = document.querySelector('.tran-img__body')
@@ -956,24 +979,12 @@
     const addImageDialog = function(index) {
         removeImageDialog()
         addModel()
-        const pageW = window.innerWidth, pageH = window.innerHeight
         const body = document.querySelector('body')
         body.style.overflow = 'hidden'
-        let wrapper = createWrapper()
-        let content = document.createElement("div")
-        content.className = 'tran-img__content'
-        content.style.zIndex = "6002"
+        let {wrapper, content, dialogBody } = createWrapper()
 
         const titleDiv = document.createElement("div")
         titleDiv.className = 'tran-img__title'
-        titleDiv.style.display = 'none'
-
-        let dialogBody = document.createElement("div")
-        dialogBody.className = 'tran-img__body'
-        dialogBody.style.zIndex = "6003"
-        dialogBody.style.width = pageW+'px'
-        dialogBody.style.height = pageH+'px'
-        dialogBody.tabIndex = -1
 
         const img = document.createElement("img")
         img.draggable = false
@@ -1003,10 +1014,7 @@
                 floatButtonClick(event,onclick)
             }
         }
-        let rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
-            {
-                exif: document.getElementById("app").getAttribute("data-rangeExif")
-            } : null
+
         if (rangeExif) {
             const rangeButton = createButton({
                 className: 'close',
@@ -1016,11 +1024,20 @@
                         const e = transformObject.indexImg()
                         if (e) rangeExif.start = e.getAttribute("data-createTime")
                         if (rangeExif.start) {
+                            let needResumeLoop = isLooping()
+                            if (needResumeLoop) {
+                                pauseLoop()
+                            }
                             window.input({
                                 title: '批量设置 ' + rangeExif.exif +' 起点',
                                 label: rangeExif.exif.toUpperCase(),
                                 callback: function(exif) {
                                     rangeExif.value = exif
+                                    if (needResumeLoop) resumeLoop(true)
+                                },
+                                oncancel: function() {
+                                    rangeExif.start = null
+                                    if (needResumeLoop) resumeLoop(true)
                                 }
                             })
                         }
@@ -1114,8 +1131,10 @@
                         if (rangeExif.end) {
                             let msg = (rangeExif.value ? '批量设置 '+ rangeExif.exif +'=' + rangeExif.value : '批量删除 '+ rangeExif.exif) + ' ?\n' +
                                 '['+ rangeExif.start + ' 至 ' + rangeExif.end + ']'
+                            let needResumeLoop = isLooping()
+                            if (needResumeLoop) pauseLoop()
                             if (confirm(msg)) {
-                                let url = '/' + rangeExif.exif +'?value=' + encodeURI(rangeExif.value)
+                                let url = '/range?type=' + rangeExif.exif +'&value=' + encodeURI(rangeExif.value)
                                      +'&start=' + encodeURI(rangeExif.start) +'&end=' + encodeURI(rangeExif.end)
                                      +'&path=' + encodeURI(document.getElementById('app').getAttribute('data-folder'))
                                 rangeExif.value = null
@@ -1127,37 +1146,49 @@
                                     } else toast(responseText)
                                 })
                             }
+                            if (needResumeLoop) resumeLoop(true)
                         }
                     }
                 }
             })
         }
+        let floatLastClick = 0
+        const dblStartLoop = function(event) {
+            if (isLooping()) pauseLoop()
+            else if (!window.loopTimer){
+                window.loopTimer=loopTimerSaved
+                startLoop(true)
+            } else resumeLoop(true)
+        }
         if (!isMobile()){
             floatButtons.onmouseenter=function (event){
-                floatButtonClick(event,function (){
-                })
+                floatButtonClick(event)
             }
             floatButtons.onmouseleave=function (event){
                 floatButtonClick(event,function (){
                     floatButtons.className='tran-img__fb-wrapper'
                 })
             }
+            floatButtons.ondblclick = dblStartLoop
         } else{
             floatButtons.onclick=function (event){
                 floatButtonClick(event,function (){
                     floatButtons.className='tran-img__fb-wrapper'
                 })
+                let now = new Date().getTime()
+                if (now - floatLastClick < 500) {
+                    dblStartLoop()
+                }
+                floatLastClick = now
             }
         }
 
         dialogBody.appendChild(img)
-        dialogBody.appendChild(waitingIcon)
-        dialogBody.appendChild(floatButtons)
-
 
         content.appendChild(titleDiv)
-        content.appendChild(dialogBody)
-        wrapper.appendChild(content)
+        content.appendChild(waitingIcon)
+        content.appendChild(floatButtons)
+
         body.appendChild(wrapper)
 
         if (window.enableDebug) {
@@ -1167,14 +1198,19 @@
         }
 
         transformObject = new initTransformImage(img, index)
+        startLoop()
     }
-
+    let rangeExif = null
     /*****************  入口函数  *********************
      *  selector : 一个缩略图 img 元素                *
      *      条件 ： src 以 .thumb/ 开头               *
      *             类 img-index-xx, xx为序号          *
      *************************************************/
     window.TransformImage =function(selector){
+        rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
+            {
+                exif: document.getElementById("app").getAttribute("data-rangeExif")
+            } : null
         document.querySelectorAll(selector).forEach(function (img){
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
@@ -1191,6 +1227,10 @@
         });
     }
     window.AutoLoopPlayImage =function(starterIndex){
+        rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
+            {
+                exif: document.getElementById("app").getAttribute("data-rangeExif")
+            } : null
         starterIndex = starterIndex ? starterIndex : 0
         let firstImg = document.querySelector('.img-index-'+starterIndex)
         if (firstImg) {
