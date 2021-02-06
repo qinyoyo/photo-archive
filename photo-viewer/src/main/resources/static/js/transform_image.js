@@ -195,7 +195,7 @@
     const initTransformImage = function (img, index) {
         let removedIndexList = []
         let loopDirection = 1
-        const totalImages = document.querySelector('.photo-list').getAttribute('data-size')
+        const totalImages = parseInt(document.querySelector('.photo-list').getAttribute('data-size'))
         const srcByIndex = function (imgIndex) {
             while (removedIndexList.indexOf(imgIndex)>=0) {
                 imgIndex = imgIndex + loopDirection

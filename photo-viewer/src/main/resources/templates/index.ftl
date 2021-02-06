@@ -49,7 +49,7 @@
 <div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}"</#if>>
     <#if loopPlay??>
     <#if photos??>
-    <div class="auto-play-loop-images photo-list" data-size="${photos?size}" style="display:none">
+    <div class="auto-play-loop-images photo-list" data-size="${photos?size?c}" style="display:none">
         <#list photos as p>
         <img class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
              <@photoAttributes p /> />
@@ -157,7 +157,7 @@
             <i class="folder-item__arrow fa fa-angle-right" ></i>
             <i class="folder-item__arrow fa fa-angle-down" ></i>
         </div>
-        <div class="collapse-content photo-list grid-box" data-size="${photos?size}">
+        <div class="collapse-content photo-list grid-box" data-size="${photos?size?c}">
             <#list photos as p>
                 <div class="photo-item grid-cell">
                     <img src="/.thumb${fileUrl(p)}" alt="${p.fileName}" onload="adjustSize(this)"
