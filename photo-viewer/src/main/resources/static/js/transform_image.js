@@ -89,43 +89,36 @@
 
     const PI = 3.1415926
     let transformObject = null
-    let loopTimerSaved = window.loopTimer
+
     /*************   轮播  *************/
     let loopTimerId = null
     const isLooping = function() {
-        return window.loopTimer && loopTimerId
+        return loopTimerId
     }
-    const setPlatButtonIcon = function() {
+    const setPlayButtonIcon = function() {
         const icon = document.querySelector('.tran-img__float-button.play i')
         if (icon) icon.className = isLooping() ? 'fa fa-pause-circle-o' : 'fa fa-play-circle-o'
     }
     const startLoop = function(runAtOnce) {
-        if (window.loopTimer) {
-            if (loopTimerId) clearInterval(loopTimerId)
-            if (transformObject) {
-                loopTimerId = setInterval(transformObject.loopAction, window.loopTimer)
-                if (runAtOnce) transformObject.loopAction()
-            }
-            setPlatButtonIcon()
+        if (loopTimerId) clearInterval(loopTimerId)
+        if (transformObject) {
+            loopTimerId = setInterval(transformObject.loopAction, window.loopTimer)
+            if (runAtOnce) transformObject.loopAction()
         }
+        setPlayButtonIcon()
     }
 
     const stopLoop = function() {
         if (loopTimerId) clearInterval(loopTimerId)
         loopTimerId = null
-        window.loopTimer = 0
-        setPlatButtonIcon()
+        setPlayButtonIcon()
     }
     const pauseLoop = function() {
-        if (isLooping()) {
-            clearInterval(loopTimerId)
-            loopTimerId = null
-        }
-        setPlatButtonIcon()
+        stopLoop()
     }
     const resumeLoop = function(runAtOnce) {
-        if (window.loopTimer && !loopTimerId)  startLoop(runAtOnce)
-        setPlatButtonIcon()
+        if (!loopTimerId)  startLoop(runAtOnce)
+        setPlayButtonIcon()
     }
 
     /* Page :
@@ -201,12 +194,13 @@
     /********* 初始化 图像变换 *************/
     const initTransformImage = function (img, index) {
         let removedIndexList = []
+        let loopDirection = 1
+        const totalImages = document.querySelector('.photo-list').getAttribute('data-size')
         const srcByIndex = function (imgIndex) {
             while (removedIndexList.indexOf(imgIndex)>=0) {
-                if (imgIndex<index) imgIndex--
-                else imgIndex++
+                imgIndex = imgIndex + loopDirection
             }
-            if (imgIndex>=0) {
+            if (imgIndex>=0 && imgIndex < totalImages) {
                 let thumb = document.querySelector('.img-index-' + imgIndex)
                 if (thumb) {
                     let title = thumb.getAttribute('title')
@@ -217,10 +211,13 @@
                     }
                     let orientation = thumb.getAttribute('data-orientation')
                     let rating = thumb.getAttribute('data-rating')
-                    return { src, orientation, rating, title }
+                    return { src, orientation, rating, title, imgIndex }
                 }
             }
-            return false
+            return {
+                src: null,
+                imgIndex
+            }
         }
         /**  变量  */
         let { src, orientation, rating, title } = srcByIndex(index)
@@ -250,7 +247,6 @@
         let   imgRating = rating
         let   imgInfo = title
 
-        loopTimerSaved = window.loopTimer
         /********   image load, modify   **********/
 
         const saveOrientation = function () {
@@ -302,19 +298,21 @@
                 }
             }
         }
-        const loadImageBy = function (imgIndex, skipSave) {
+        const loadImageBy = function (imgIndex0, skipSave) {
             if (!skipSave) saveOrientation()
-            let { src, orientation, rating, title } = srcByIndex(imgIndex)
+            let { src, orientation, rating, title, imgIndex } = srcByIndex(imgIndex0)
             if (src) {
-                let fromLeft = (imgIndex ===0 && index > 1 ? false : imgIndex < index)
+                let fromLeft = (loopDirection<0)
                 changeImage({src, fromLeft, orientation, rating, title})
                 index = imgIndex
                 return true
             } else {
                 const autoLoop = document.querySelector('.auto-play-loop-images')
-                if (imgIndex > 0 && autoLoop ) {
-                    toast('重新开始')
-                    return loadImageBy(0,skipSave)
+                if (autoLoop ) {
+                    toast('循环开始')
+                    if (imgIndex<0) imgIndex = totalImages - 1
+                    else imgIndex = 0
+                    return loadImageBy(imgIndex,skipSave)
                 }
                 toast('没有更多了')
                 return false
@@ -336,7 +334,7 @@
                 const step = pageW / 10
                 let newLeft = 0, left = (fromLeft ? -(pageW + 10) : pageW + 10)
 
-                let newDialog = createWrapper()
+                let newDialog = createImagePlayerDialog()
                 newDialog.dialogBody.innerHTML = wrapper.querySelector('.tran-img__body').innerHTML
                 wrapper.parentElement.prepend(newDialog.wrapper)
 
@@ -411,7 +409,6 @@
             let pathLength = document.getElementById('app').getAttribute('data-folder').length
             document.querySelector('head title').innerText = (pathLength ? src.substring(pathLength+1) : src)
             isReady = false
-            const totalImages = document.querySelector('.photo-list').getAttribute('data-size')
             let floatTitle = title
             if (floatTitle) {
                 let pos = title.indexOf('\ufeff')
@@ -422,16 +419,7 @@
                 '<b>' + index + '/' + totalImages +'&nbsp;&nbsp;</b>' + floatTitle
 
         }
-        this.resize = function() {
-            pageW = window.innerWidth
-            pageH = window.innerHeight
-            realSizeScale = Math.max(imageW / pageW, imageH / pageH)
-            if (realSizeScale<1) realSizeScale = 1
-            let ms = minScale()
-            if (scaleValue < ms) scaleValue = ms
-            calcSize()
-            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
-        }
+
         const favorite = function(f) {
             if (f=='toggle') {
                 if (imgRating && imgRating.indexOf('+')==0)
@@ -657,25 +645,15 @@
 
         /***********  事件处理  *************/
 
-        let clickTimer = null
         const imgClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            if (!clickTimer) {
-                clickTimer = setTimeout(function() {
-                    if (isLooping()) pauseLoop()
-                    clickTimer = null
-                },300)
-            }
+            if (isLooping()) pauseLoop()
         }
 
         const dblClick = function(event) {
             event.stopPropagation()
             event.preventDefault()
-            if (clickTimer) {
-                clearTimeout(clickTimer)
-                clickTimer = null
-            }
             if (!isReady) return
             if (isFixed()){
                 let page = {
@@ -696,6 +674,7 @@
         const touchStart = function(event) {
             event.stopPropagation()
             event.preventDefault()
+            if (isLooping()) pauseLoop()
             if (!isReady) return
             if ((event.touches && event.touches.length == 1) || (event.button == 0 && event.buttons == 1)) {
                 translateXChanged = false
@@ -766,8 +745,8 @@
                     && touchMinPos.x>minX-30 &&touchMaxPos.x < maxX+30 && touchMinPos.y>minY-30 && touchMaxPos.y<maxY+30
                     && Math.abs(touchPos0.x - touchPos1.x) >= Math.abs(touchPos0.y - touchPos1.y)
                     && Math.abs(touchPos0.x - touchPos1.x) > 30) {
-                    loadImageBy(index + (touchPos0.x > touchPos1.x ? 1 : -1))
-                    if (touchPos0.x > touchPos1.x && !isLooping() && loopTimer) resumeLoop(false)
+                    loopDirection = (touchPos0.x > touchPos1.x ? 1 : -1)
+                    startLoop(true)
                 }
             }
             roundRotate()
@@ -842,12 +821,13 @@
             let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
             let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
             if (event.pageX > maxPage.x || event.pageX < minPage.x) {
-                stopLoop()
-                loadImageBy(event.pageX < minPage.x ? index - 1 : index + 1)
+                loopDirection = event.pageX < minPage.x ?  - 1 : 1
+                startLoop(true)
             }
         }
         const imageKeyEvent = function(event) {
             if (document.querySelector('.common-dialog')) return
+            if (isLooping()) pauseLoop()
             if (event.code=='ArrowLeft' || event.code=='Numpad4'){
                 move({x: -10, y: 0})
             } else if (event.code=='ArrowRight' || event.code=='Numpad6'){
@@ -866,9 +846,11 @@
                 scale(scaleValue-1)
                 calcSize()
             } else if (event.code=='PageUp'||event.code=='Comma' || event.code=='Numpad9'){
-                loadImageBy(index-1)
+                loopDirection = -1
+                startLoop(true)
             } else if (event.code=='PageDown'||event.code=='Period' || event.code=='Numpad3'){
-                loadImageBy(index+1)
+                loopDirection = 1
+                startLoop(true)
             } else if (event.code=='Home'|| event.code=='Numpad7') {
                 translateHome()
             } else if (event.code=='KeyH') {
@@ -881,6 +863,17 @@
         changeImage({ src, orientation, rating, title })
 
         /*************暴露的函数 **********************/
+        this.resize = function() {
+            pageW = window.innerWidth
+            pageH = window.innerHeight
+            realSizeScale = Math.max(imageW / pageW, imageH / pageH)
+            if (realSizeScale<1) realSizeScale = 1
+            let ms = minScale()
+            if (scaleValue < ms) scaleValue = ms
+            calcSize()
+            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
+        }
+
         this.indexImg = function() {
             return document.querySelector('img.img-index-'+index)
         }
@@ -888,7 +881,6 @@
             favorite('toggle')
         }
         this.showInfo = function() {
-            let totalImages = document.querySelector('.photo-list').getAttribute('data-size')
             pauseLoop()
             toast(imgInfo.replace(/'|,|{|}/g,'') + '<div style="color: #1f63d2; text-align: center">' + index + '/' + totalImages +'</div>',2000, function () {
                 resumeLoop(true)
@@ -910,14 +902,13 @@
                     }
                 })
                 if (needResumeLoop) resumeLoop(true)
-                else loadImageBy(index + 1, true)
+                else startLoop(true)
             } else if (needResumeLoop) resumeLoop()
         }
+
         this.loopAction = function() {
-            if (window.loopTimer) {
-                if (!loadImageBy(index + 1)) {
-                    stopLoop()
-                }
+            if (!loadImageBy(index + loopDirection)) {
+                stopLoop()
             }
         }
     }
@@ -942,7 +933,7 @@
         document.querySelector('body').style.overflow = 'auto'
     }
 
-    const createWrapper = function() {
+    const createImagePlayerDialog = function() {
         const pageW = window.innerWidth, pageH = window.innerHeight
         let wrapper = document.createElement("div")
         wrapper.className = 'tran-img__wrapper'
@@ -979,7 +970,7 @@
         addModel()
         const body = document.querySelector('body')
         body.style.overflow = 'hidden'
-        let {wrapper, content, dialogBody } = createWrapper()
+        let {wrapper, content, dialogBody } = createImagePlayerDialog()
 
         const titleDiv = document.createElement("div")
         titleDiv.className = 'tran-img__title'
@@ -1010,9 +1001,10 @@
             } else floatButtons.className = floatButtons.className + ' show'
         }
 
-        const createButton=function({className, iconClass, onclick}) {
+        const createButton=function({className, iconClass, onclick, title}) {
             const button = document.createElement("button")
             button.className = 'tran-img__float-button ' + className
+            if (title) button.title = title
             const icon = document.createElement("i")
             icon.className = iconClass
             button.appendChild(icon)
@@ -1025,6 +1017,7 @@
         if (rangeExif) {
             const rangeButton = createButton({
                 className: 'close',
+                title: '范围开始',
                 iconClass: 'fa fa-angle-left',
                 onclick: function (){
                     if (transformObject) {
@@ -1055,6 +1048,7 @@
 
         const closeButton = createButton({
             className:'close',
+            title: '关闭',
             iconClass:'fa fa-power-off',
             onclick:function (){
                 document.querySelector('body').onkeydown = null
@@ -1069,6 +1063,7 @@
 
         const favoriteButton = createButton({
             className:'favorite',
+            title: '收藏',
             iconClass:'fa fa-heart-o',
             onclick:function (){
                 if (transformObject) transformObject.toggleFavorite()
@@ -1077,6 +1072,7 @@
 
         const infoButton = createButton({
             className:'close',
+            title: '图像信息',
             iconClass:'fa fa-info-circle',
             onclick:function (){
                 if (transformObject) transformObject.showInfo()
@@ -1087,6 +1083,7 @@
         if (bkMusic) {
             const musicBtn = createButton({
                 className:'music',
+                title: '切换背景音乐',
                 iconClass:'fa fa-music',
                 onclick:function (){
                     bkMusic.src = '/music?click='+new Date().getTime()
@@ -1099,19 +1096,18 @@
 
         const playButton = createButton({
             className:'play',
+            title: '自动播放/暂停',
             iconClass:'fa fa-play-circle-o',
             onclick:function (){
                 if (isLooping()) pauseLoop()
-                else if (!window.loopTimer){
-                    window.loopTimer=loopTimerSaved
-                    startLoop(true)
-                } else resumeLoop(true)
+                else startLoop(true)
             }
         })
 
         if (fullScreenElement() !==0 ) {
             const fullBtn = createButton({
                 className:'close',
+                title: '全屏/取消',
                 iconClass:'fa fa-arrows-alt',
                 onclick:function (){
                     handleFullScreen()
@@ -1121,6 +1117,7 @@
         if (window.enableRemove) {
             const removeBtn = createButton({
                 className:'remove',
+                title: '删除图像',
                 iconClass:'fa fa-trash-o',
                 onclick:function (event){
                     if (transformObject) transformObject.removeImage(event)
@@ -1130,6 +1127,7 @@
 
         const shareButton = createButton({
             className:'close',
+            title: '拷贝到分享目录',
             iconClass:'fa fa-telegram',
             onclick:function (){
                 const src = img.getAttribute('src')
@@ -1143,6 +1141,7 @@
         if (rangeExif) {
             const rangeButton = createButton({
                 className: 'close',
+                title: '范围结束',
                 iconClass: 'fa fa-angle-right',
                 onclick: function (){
                     if (rangeExif.start && transformObject) {

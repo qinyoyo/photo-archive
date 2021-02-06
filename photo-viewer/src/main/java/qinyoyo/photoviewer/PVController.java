@@ -516,7 +516,8 @@ public class PVController implements ApplicationRunner {
 
         new ArchiveInfo();
 
-        loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),0);
+        loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),4000);
+        if (loopTimer<=0) loopTimer = 4000;
         isDebug = Util.boolValue(env.getProperty("photo.debug"));
         canRemove = Util.boolValue(env.getProperty("photo.removable"));
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
