@@ -530,15 +530,53 @@ public class PVController implements ApplicationRunner {
             public void run() {
                 rootPath = env.getProperty("photo.root-path");
                 if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
-                archiveInfo = new ArchiveInfo(rootPath);
-                if (!archiveInfo.isReadFromFile()) {
-                    archiveInfo.sortInfos();
-                    archiveInfo.scanSameFiles(false);
-                    ArchiveUtils.removeEmptyFolder(new File(rootPath));
-                    archiveInfo.saveInfos();
-                    //new File(rootPath, ArchiveInfo.ARCHIVE_FILE+".sync").delete();
+                boolean empty = false, clear = false, removeSame = false, moveOther= false;
+                List<String> mergeList = new ArrayList<>();
+                if (PhotoViewerApplication.args!=null) {
+                    int total = PhotoViewerApplication.args.length;
+                    for (int i=0;i<total;i++) {
+                        String param = PhotoViewerApplication.args[i].trim();
+                        switch (param) {
+                            case "-m":
+                            case "--merge":
+                                if (i<total-1) {
+                                    i++;
+                                    mergeList.add(PhotoViewerApplication.args[i].trim());
+                                    break;
+                                }
+                                break;
+                            case "-s":
+                            case "--same":
+                                removeSame = true;
+                                break;
+                            case "-o":
+                            case "--other":
+                                moveOther = true;
+                                break;
+                            case "-c":
+                            case "--clear":
+                                clear = true;
+                                break;
+                            case "-e":
+                            case "--empty":
+                                empty=true;
+                                break;
+                        }
+                    }
                 }
+                if (empty) ArchiveUtils.removeEmptyFolder(new File(rootPath));
+                archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clear,removeSame,moveOther);
                 rootPath = archiveInfo.getPath();  // 标准化
+
+                for (String path:mergeList) {
+                    ArchiveInfo camera = new ArchiveInfo(path);
+                    if (archiveInfo!=null && camera!=null) {
+                        System.out.println("Now :"+ tang.qinyoyo.archive.DateUtil.date2String(new Date()));
+                        System.out.println("删除归档文件夹已经存在的待归档文件...");
+                        camera.scanSameFilesWith(archiveInfo);
+                        ArchiveUtils.executeArchive(camera,archiveInfo);
+                    }
+                }
 
                 new Thread() {
                     @Override

@@ -103,7 +103,7 @@
     <#if htmls??>
         <div class = "collapse-item<#if !photos?? && !videos?? && !audios??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-text-o collapse__icon"></i>
-            <span>足迹</span>
+            <span>游记(共 ${htmls?size?c}篇)</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>
             <i class="folder-item__arrow fa fa-angle-down" ></i>
         </div>
@@ -121,7 +121,7 @@
     <#if audios??>
         <div class = "collapse-item<#if !photos?? && !videos??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-audio-o collapse__icon"></i>
-            <span>录音</span>
+            <span>录音(共 ${audios?size?c}节)</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>
             <i class="folder-item__arrow fa fa-angle-down" ></i>
         </div>
@@ -137,7 +137,7 @@
     <#if videos??>
         <div class = "collapse-item<#if !photos??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-video-o collapse__icon"></i>
-            <span>视频</span>
+            <span>视频(共 ${videos?size?c}片段)</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>
             <i class="folder-item__arrow fa fa-angle-down" ></i>
         </div>
@@ -153,7 +153,7 @@
     <#if photos??>
         <div class = "collapse-item-expanded folder-list__item">
             <i class = "fa fa-file-image-o collapse__icon"></i>
-            <span>照片</span>
+            <span>照片(共 ${photos?size?c}张)</span>
             <i class="folder-item__arrow fa fa-angle-right" ></i>
             <i class="folder-item__arrow fa fa-angle-down" ></i>
         </div>

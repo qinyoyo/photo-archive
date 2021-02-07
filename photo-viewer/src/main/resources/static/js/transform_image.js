@@ -926,7 +926,7 @@
                     }
                 })
                 if (needResumeLoop) resumeLoop(true)
-                else startLoop(true)
+                else loadImageBy(index + loopDirection)
             } else if (needResumeLoop) resumeLoop()
         }
 

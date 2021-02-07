@@ -1,6 +1,8 @@
 package tang.qinyoyo;
 
 import tang.qinyoyo.archive.ArchiveInfo;
+import tang.qinyoyo.archive.DateUtil;
+import tang.qinyoyo.archive.FolderInfo;
 import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.Key;
 
@@ -641,5 +643,93 @@ public class ArchiveUtils {
             if (!d.isEmpty()) return d;
         }
         return null;
+    }
+
+    public static ArchiveInfo getArchiveInfo(String path, boolean clearInfo, boolean removeSameFile, boolean moveOtherFile) {
+        if (path==null || path.isEmpty() || "-".equals(path)) return null;
+        if (clearInfo) {
+            new File(path,ArchiveUtils.ARCHIVE_FILE).delete();
+            new File(path,ArchiveUtils.ARCHIVE_FILE+ ".sorted.dat").delete();
+            new File(path,ArchiveUtils.same_photo_log).delete();
+            new File(path,ArchiveUtils.manual_other_bat).delete();
+            new File(path,ArchiveUtils.manual_rm_bat).delete();
+            new File(path,ArchiveUtils.manual_archive_bat).delete();
+            new File(path,ArchiveUtils.no_shottime_log).delete();
+            new File(path,ArchiveUtils.folder_info_dat).delete();
+        }
+        ArchiveInfo	a = new ArchiveInfo(path);
+        if (!a.isReadFromFile()) ArchiveUtils.processDir(a, removeSameFile, moveOtherFile);
+        return a;
+    }
+
+    public static void copyToFolder(ArchiveInfo camera, ArchiveInfo archived, List<FolderInfo> folderInfos) {
+        for (FolderInfo fi: folderInfos) {
+            new File(fi.getPath(),fi.getCamera()).mkdirs();
+        }
+        String sameLog = ArchiveUtils.getFromFile(new File(camera.getPath(),ArchiveUtils.same_photo_log));
+        if (sameLog==null) sameLog="";
+        StringBuilder mvfailed=new StringBuilder();
+        StringBuilder notarchived = new StringBuilder();
+        String root = camera.getPath();
+        for (PhotoInfo pi : camera.getInfos()) {
+            Date dt = pi.getShootTime();
+            if (dt==null) notarchived.append(pi.fullPath(root)).append("\r\n");
+            else {
+                FolderInfo fi = FolderInfo.findFolder(dt,folderInfos);
+                File source = new File(pi.fullPath(root));
+                File targetDir = null;
+                if (fi==null) { // 没有发现目录，新建目录
+                    if (pi.getSubFolder().isEmpty()) {
+                        targetDir = new File(archived.getPath() + File.separator + DateUtil.date2String(dt, "yyyy")
+                                + File.separator + DateUtil.date2String(dt, "yyyyMM") + File.separator + FolderInfo.DEFPATH);
+                        targetDir.mkdirs();
+                    } else {  // 使用原有的目录，合并文件夹
+                        targetDir = new File(archived.getPath() + File.separator + pi.getSubFolder());
+                        targetDir.mkdirs();
+                    }
+                }
+                else targetDir = new File(fi.getPath()+File.separator+fi.getCamera());
+                try {
+                    archived.moveFile(pi, camera.getPath(), new File(targetDir,source.getName()));
+                    sameLog.replace(source.getCanonicalPath(),new File(targetDir,source.getName()).getCanonicalPath());
+                } catch (Exception e) {
+                    mvfailed.append("move \"").append(pi.fullPath(root)).append("\" ").append("\"")
+                            .append(fi.getPath()).append("\\").append(fi.getCamera()).append("\"\r\n");
+                }
+            }
+        }
+        processDir(archived,false,false);
+        if (!sameLog.isEmpty()) ArchiveUtils.writeToFile(new File(camera.getPath(),ArchiveUtils.same_photo_log),sameLog.trim());
+        ArchiveUtils.writeToFile(new File(root,ArchiveUtils.no_shottime_log),notarchived.toString());
+        ArchiveUtils.writeToFile(new File(root,ArchiveUtils.manual_archive_bat),mvfailed.toString());
+    }
+
+    public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
+        System.out.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
+        a.sortInfos();
+
+        System.out.println(removeSameFile?"删除重复文件..." : "扫描重复文件...");
+        a.scanSameFiles(removeSameFile);
+
+        if (moveOtherFiles) {
+            System.out.println("移动无拍摄日期文件...");
+            a.moveNoShootTimeFiles();
+        }
+        System.out.println("保存处理后文件...");
+        a.saveInfos();
+    }
+    public static void executeArchive(ArchiveInfo camera, ArchiveInfo archived) {
+        List<FolderInfo> folderInfos = FolderInfo.scanFolderInfo(archived);
+        if (folderInfos!=null) {
+            System.out.println("Now :"+DateUtil.date2String(new Date()));
+            System.out.println("将文件归档...");
+            ArchiveUtils.copyToFolder(camera, archived, folderInfos);
+            System.out.println("Now :"+DateUtil.date2String(new Date()));
+            System.out.println("删除空目录");
+            ArchiveUtils.removeEmptyFolder(new File(archived.getPath()));
+            ArchiveUtils.removeEmptyFolder(new File(camera.getPath()));
+            System.out.println("Now :"+DateUtil.date2String(new Date()));
+            System.out.println("归档完成");
+        }
     }
 }

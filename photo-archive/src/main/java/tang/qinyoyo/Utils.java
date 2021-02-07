@@ -7,192 +7,9 @@ import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.CommandRunner;
 import tang.qinyoyo.exiftool.ExifTool;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Utils {
-	public static void saveFolderInfos(List<FolderInfo> infos, ArchiveInfo archived) {
-		File f=new File(archived.getPath(),ArchiveUtils.folder_info_dat);
-		String rootPath = archived.getPath();
-		StringBuilder sb=new StringBuilder();
-		for (FolderInfo fi : infos) {
-			sb.append("info:\r\n").append(fi.writeToString(rootPath));
-		}
-		ArchiveUtils.writeToFile(f,sb.toString());
-	}
-	public static List<FolderInfo> getFolderInfos(ArchiveInfo archived) {
-		File f=new File(archived.getPath(),ArchiveUtils.folder_info_dat);
-		String rootPath = archived.getPath();
-		List<FolderInfo> list = new ArrayList<>();
-		if (f.exists()) {
-			String content = ArchiveUtils.getFromFile(f);
-			if (content!=null) {
-				String[] segs = content.split("info:");
-				if (segs.length > 0) {
-					for (String seg : segs) {
-						seg=seg.trim();
-						if (seg.isEmpty()) continue;
-						FolderInfo fi = new FolderInfo(seg, rootPath);
-						list.add(fi);
-					}
-					return list;
-				}
-			}
-		}
-		List<PhotoInfo> infos = archived.getInfos();
-		infos.sort((a,b)->{
-			return a.fullPath("").compareTo(b.fullPath(""));
-		});
-		FolderInfo fi = null;
-		String fiPath="", pathYear=null;
-		for (int i=0;i<infos.size();i++) {
-			PhotoInfo pi = infos.get(i);
-			String path = pi.getSubFolder();
-			if (path.indexOf("扫描")>=0) continue;
-			if (path.startsWith("\\")) path=path.substring(1);
-			if (path.endsWith("\\")) path=path.substring(0,path.length()-1);
-			String [] ff = path.split("\\\\");
-			if (pathYear==null || !pathYear.equals(ff[0])) {
-				pathYear=ff[0];
-				Date dt0=null,dt1=null;
-				try {
-					if (ff[0].length() == 4) {
-						dt0 = new SimpleDateFormat("yyyy-MM-dd").parse(ff[0] + "-01-01");
-						dt1 = new SimpleDateFormat("yyyy-MM-dd").parse(ff[0] + "-12-31");
-					} else {
-						String [] yy = ff[0].split("-");
-						if (yy.length==2) {
-							dt0 = new SimpleDateFormat("yyyy-MM-dd").parse(yy[0].trim() + "-01-01");
-							dt1 = new SimpleDateFormat("yyyy-MM-dd").parse(yy[1].trim() + "-12-31");
-						}
-					}
-					if (dt0!=null && dt1!=null) {
-						FolderInfo yfi = new FolderInfo(rootPath+"\\"+pathYear);
-						yfi.setDate0(dt0);
-						yfi.setDate1(dt1);
-						yfi.setPriority(2000);
-						list.add(yfi);
-					}
-				} catch (Exception e) {
-				}
-			}
-			if (ff.length<2) continue;
-			if (fi==null || !fiPath.toLowerCase().equals((ff[0]+"\\"+ff[1]).toLowerCase())) {
-				fiPath = ff[0]+"\\"+ff[1];
-				fi = new FolderInfo(rootPath+"\\"+fiPath);
-				if (ff[1].endsWith(" 生活") || ff[1].toLowerCase().endsWith(" life") || ff[1].endsWith(" 重庆")) {
-					if (ff[1].length()==7) {
-						fi.setDate0(DateUtil.string2Date(ff[1].substring(0,4)+"-01-01","yyyy-MM-dd"));
-						fi.setDate1(DateUtil.string2Date(ff[1].substring(0,4)+"-12-31","yyyy-MM-dd"));
-						fi.setPriority(1000);
-					}
-					if (ff[1].length()==9) {
-						int m=Integer.parseInt(ff[1].substring(4,6));
-						String md = (m==2 ? "28" : (m==4 || m==6 || m==9 || m==11 ? "30" : "31"));
-						fi.setDate0(DateUtil.string2Date(ff[1].substring(0,6)+"-01","yyyyMM-dd"));
-						fi.setDate1(DateUtil.string2Date(ff[1].substring(0,6)+"-"+md,"yyyyMM-dd"));
-						fi.setPriority(500);
-					}
-				}
-				list.add(fi);
-			}
-			Date sdt = pi.getShootTime();
-			if (sdt!=null) {
-				if (fi.getDate0() == null || fi.getDate0().getTime()>sdt.getTime()) fi.setDate0(DateUtil.dayOf(sdt));
-				if (fi.getDate1() == null || fi.getDate1().getTime()<sdt.getTime()) fi.setDate1(DateUtil.nextDayOf(sdt));
-			}
-			Double lat = pi.getLatitude();
-			if (lat!=null) {
-				if (fi.getLatitude0() == null || fi.getLatitude0()>lat) fi.setLatitude0(lat);
-				if (fi.getLatitude1() == null || fi.getLatitude1()<lat) fi.setLatitude1(lat);
-			}
-			Double lon = pi.getLongitude();
-			if (lon!=null) {
-				if (fi.getLongitude0() == null || fi.getLongitude0()>lon) fi.setLongitude0(lon);
-				if (fi.getLongitude1() == null || fi.getLongitude1()<lon) fi.setLongitude1(lon);
-			}
-		}
-		return list;
-	}
-	public static FolderInfo findFolder(Date dt, List<FolderInfo> folderInfos) {
-		for (FolderInfo fi: folderInfos) {
-			if (fi.getDate0().getTime()<=dt.getTime() && fi.getDate1().getTime()>=dt.getTime()) return fi;
-		}
-		return null;
-	}
-	public static void copyToFolder(ArchiveInfo camera, ArchiveInfo archived, List<FolderInfo> folderInfos) {
-		for (FolderInfo fi: folderInfos) {
-			new File(fi.getPath(),fi.getCamera()).mkdirs();
-		}
-		String sameLog = ArchiveUtils.getFromFile(new File(camera.getPath(),ArchiveUtils.same_photo_log));
-		if (sameLog==null) sameLog="";
-		StringBuilder mvfailed=new StringBuilder();
-		StringBuilder notarchived = new StringBuilder();
-		String root = camera.getPath();
-		List<PhotoInfo> archivedInfos = archived.getInfos();
-		for (PhotoInfo pi : camera.getInfos()) {
-			Date dt = pi.getShootTime();
-			if (dt==null) notarchived.append(pi.fullPath(root)).append("\r\n");
-			else {
-				FolderInfo fi = findFolder(dt,folderInfos);
-				File source = new File(pi.fullPath(root));
-				File targetDir = null;
-				if (fi==null) { // 没有发现目录，新建目录
-					if (pi.getSubFolder().isEmpty()) {
-						targetDir = new File(archived.getPath() + File.separator + DateUtil.date2String(dt, "yyyy")
-								+ File.separator + DateUtil.date2String(dt, "yyyyMM") + File.separator + FolderInfo.DEFPATH);
-						targetDir.mkdirs();
-					} else {  // 使用原有的目录，合并文件夹
-						targetDir = new File(archived.getPath() + File.separator + pi.getSubFolder());
-						targetDir.mkdirs();
-					}
-				}
-				else targetDir = new File(fi.getPath()+File.separator+fi.getCamera());
-				try {
-					archived.moveFile(pi, camera.getPath(), new File(targetDir,source.getName()));
-					sameLog.replace(source.getCanonicalPath(),new File(targetDir,source.getName()).getCanonicalPath());
-				} catch (Exception e) {
-					mvfailed.append("move \"").append(pi.fullPath(root)).append("\" ").append("\"")
-							.append(fi.getPath()).append("\\").append(fi.getCamera()).append("\"\r\n");
-				}
-			}
-		}
-		processDir(archived,false,false);
-		if (!sameLog.isEmpty()) ArchiveUtils.writeToFile(new File(camera.getPath(),ArchiveUtils.same_photo_log),sameLog.trim());
-		ArchiveUtils.writeToFile(new File(root,ArchiveUtils.no_shottime_log),notarchived.toString());
-		ArchiveUtils.writeToFile(new File(root,ArchiveUtils.manual_archive_bat),mvfailed.toString());
-	}
-
-	public static void processDir(ArchiveInfo a, boolean removeSameFile, boolean moveOtherFiles) {
-		System.out.println("排序 " + a.getPath() + " 文件，共有 : " + a.getInfos().size() + " ...");
-		a.sortInfos();
-
-		System.out.println(removeSameFile?"删除重复文件..." : "扫描重复文件...");
-		a.scanSameFiles(removeSameFile);
-
-		if (moveOtherFiles) {
-			System.out.println("移动无拍摄日期文件...");
-			a.moveNoShootTimeFiles();
-		}
-		System.out.println("保存处理后文件...");
-		a.saveInfos();
-	}
-	private static ArchiveInfo getArchiveInfo(String path, boolean clearInfo, boolean removeSameFile, boolean moveOtherFile) {
-		if (path==null || path.isEmpty() || "-".equals(path)) return null;
-		if (clearInfo) {
-			new File(path,ArchiveUtils.ARCHIVE_FILE).delete();
-			new File(path,ArchiveUtils.ARCHIVE_FILE+ ".sorted.dat").delete();
-			new File(path,ArchiveUtils.same_photo_log).delete();
-			new File(path,ArchiveUtils.manual_other_bat).delete();
-			new File(path,ArchiveUtils.manual_rm_bat).delete();
-			new File(path,ArchiveUtils.manual_archive_bat).delete();
-			new File(path,ArchiveUtils.no_shottime_log).delete();
-			new File(path,ArchiveUtils.folder_info_dat).delete();
-		}
-		ArchiveInfo	a = new ArchiveInfo(path);
-		if (!a.isReadFromFile()) processDir(a, removeSameFile, moveOtherFile);
-		return a;
-	}
 
 	public static void checkDeletedFile(String logFile) {
 		List<String> list1 = new ArrayList<>(), list2 = new ArrayList<>();
@@ -367,48 +184,8 @@ public class Utils {
 		return input;
 	}
 
-	public static List<FolderInfo> scanFolderInfo(ArchiveInfo archived) {
-		System.out.println("扫描目录信息: "+archived.getPath());
-		List<FolderInfo> folderInfos = getFolderInfos(archived);
-		StringBuilder sb=new StringBuilder();
-		
-		Iterator<FolderInfo> iter = folderInfos.iterator();
-		while (iter.hasNext()) {
-			FolderInfo fi = iter.next();
-			if (fi.getDate0()==null) {
-				System.out.println(fi.getPath() + " 缺少开始日期");
-				sb.append(fi.getPath()).append("\r\n");
-				iter.remove();
-			} else if (fi.getDate1()==null) {
-				System.out.println(fi.getPath() + " 缺少结束日期");
-				sb.append(fi.getPath()).append("\r\n");
-				iter.remove();
-			}
-		}
-		String logmsg=sb.toString();
-		if (!logmsg.isEmpty()) {
-			ArchiveUtils.writeToFile(new File(archived.getPath(),ArchiveUtils.folder_info_lost_log),logmsg);
-		}
-		if (folderInfos.size()>0) {
-			folderInfos.sort((a, b) -> a.compareTo(b));
-			saveFolderInfos(folderInfos, archived);
-		}
-		return folderInfos;
-	}
-	static void executeArchive(ArchiveInfo camera, ArchiveInfo archived) {
-		List<FolderInfo> folderInfos = scanFolderInfo(archived);
-		if (folderInfos!=null) {
-			System.out.println("Now :"+DateUtil.date2String(new Date()));
-			System.out.println("将文件归档...");
-			copyToFolder(camera, archived, folderInfos);
-			System.out.println("Now :"+DateUtil.date2String(new Date()));
-			System.out.println("删除空目录");
-			ArchiveUtils.removeEmptyFolder(new File(archived.getPath()));
-			ArchiveUtils.removeEmptyFolder(new File(camera.getPath()));
-			System.out.println("Now :"+DateUtil.date2String(new Date()));
-			System.out.println("归档完成");
-		}
-	}
+
+
 
 	public static void main1() {
 		System.out.println("Usage1: java -jar pa.jar <options>");
@@ -436,7 +213,7 @@ public class Utils {
 				boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
 				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
 				boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
-				camera=getArchiveInfo(input, clear, same,other);
+				camera=ArchiveUtils.getArchiveInfo(input, clear, same,other);
 			}
 		}
 		dir=null;
@@ -448,7 +225,7 @@ public class Utils {
 				boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
 				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
 				boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
-				archived=getArchiveInfo(input, clear, same,other);
+				archived=ArchiveUtils.getArchiveInfo(input, clear, same,other);
 			}
 		}
 		if (camera!=null && archived!=null) {
@@ -456,7 +233,7 @@ public class Utils {
 			System.out.println("删除归档文件夹已经存在的待归档文件...");
 			camera.scanSameFilesWith(archived);
 			boolean op = boolValue(getInputString("是否执行归档操作", "no"));
-			if (op) executeArchive(camera,archived);
+			if (op) ArchiveUtils.executeArchive(camera,archived);
 		}
 	}
 
@@ -575,7 +352,7 @@ public class Utils {
 			boolean same = boolValue(params.get(PARAM_DELETE_SAME1));
 			boolean other = boolValue(params.get(PARAM_MOVE_OTHER1));
 			boolean clear = boolValue(params.get(PARAM_CLEAR1));
-			camera=getArchiveInfo(path, clear, same,other);
+			camera=ArchiveUtils.getArchiveInfo(path, clear, same,other);
 			if (camera!=null && boolValue(params.get(PARAM_THUMB1))) {
 				System.out.println("Now :"+DateUtil.date2String(new Date()));
 				System.out.println("建立缩略图文件<"+camera.getPath()+">...");
@@ -588,14 +365,14 @@ public class Utils {
 			boolean same = boolValue(params.get(PARAM_DELETE_SAME2));
 			boolean other = boolValue(params.get(PARAM_MOVE_OTHER2));
 			boolean clear = boolValue(params.get(PARAM_CLEAR2));
-			archived = getArchiveInfo(path, clear, same,other);
+			archived = ArchiveUtils.getArchiveInfo(path, clear, same,other);
 			if (archived!=null && camera!=null) {
 				System.out.println("Now :"+DateUtil.date2String(new Date()));
 				System.out.println("删除归档文件夹已经存在的待归档文件...");
 				camera.scanSameFilesWith(archived);
 			}
 			if (archived!=null && camera!=null && boolValue(params.get(PARAM_EXECUTE))) {
-				executeArchive(camera,archived);
+				ArchiveUtils.executeArchive(camera,archived);
 			}
 			if (archived!=null && boolValue(params.get(PARAM_THUMB2))) {
 				System.out.println("Now :"+DateUtil.date2String(new Date()));
