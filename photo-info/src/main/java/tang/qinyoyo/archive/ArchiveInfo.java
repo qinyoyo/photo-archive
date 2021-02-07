@@ -106,7 +106,7 @@ public class ArchiveInfo {
         if (infos==null)  infos = new ArrayList<>();
     }
 
-    public void addFile(File f) {
+    public void addFile(File f, boolean removeExisted) {
         try {
             if (!f.exists()) return;
             String p = f.getCanonicalPath();
@@ -123,38 +123,58 @@ public class ArchiveInfo {
                 }
                 pi.readProperties(path);
                 File thumb = new File(pi.fullThumbPath(path));
-                if (thumb.exists()) {
-                    Integer ori = pi.getOrientation();
-                    if (ori==null) ori = Orientation.NONE.getValue();
-                    if (!ori.equals(orientation)) Orientation.setOrientationAndRating(thumb,ori,null);
-                    //else thumb.setLastModified(new Date().getTime());
-                }
                 sortInfos();
+                if (!thumb.exists()) createThumbFiles(pi);
             } else {
                 List<PhotoInfo> list = new ArrayList<>();
                 seekPhotoInfosInFolder(f,list);
                 if (list!=null && list.size()>1) {
-                    list.sort((a, b) -> a.compareTo(b));
-                    int count = 0;
-                    for (int i=0;i<list.size();i++) {
-                        PhotoInfo pi = find(new File(list.get(i).fullPath(path)));
-                        Integer orientation = null;
-                        if (pi!=null) {
-                            orientation = pi.getOrientation();
-                            if (orientation==null) orientation = Orientation.NONE.getValue();
-                            infos.remove(pi);
+                    if (removeExisted) {
+                        final String seekPath = f.getCanonicalPath().length() == path.length() ? "" : f.getCanonicalPath().substring(path.length()+1);
+                        final String subSeekPath = seekPath.isEmpty() ? "" : seekPath + File.separator;
+                        List<PhotoInfo> existedList = infos.stream().filter(
+                                pi->seekPath.isEmpty() || pi.getSubFolder().equals(seekPath) || pi.getSubFolder().startsWith(subSeekPath)).collect(Collectors.toList());
+                        infos.removeAll(existedList);
+                        infos.addAll(list);
+                        sortInfos();
+                        Set<String> addFilesPath = new HashSet<>();
+                        for (int i = 0; i < list.size(); i++) {
+                            File thumb = new File(list.get(i).fullThumbPath(path));
+                            addFilesPath.add(list.get(i).fullThumbPath(path));
+                            if (!thumb.exists()) createThumbFiles(list.get(i));
                         }
-                        infos.add(list.get(i));
-                        File thumb = new File(list.get(i).fullThumbPath(path));
-                        if (thumb.exists()) {
-                            Integer ori = list.get(i).getOrientation();
-                            if (ori==null) ori = Orientation.NONE.getValue();
-                            if (!ori.equals(orientation)) Orientation.setOrientationAndRating(thumb,ori,null);
-                            //else thumb.setLastModified(new Date().getTime());
+                        existedList.stream().filter(pi->{
+                            try {
+                                return !addFilesPath.contains(pi.fullThumbPath(path));
+                            } catch (IOException e) {
+                                return false;
+                            }
+                        }).forEach(pi->{
+                            try {
+                                new File(pi.fullThumbPath(path)).delete();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    } else {
+                        int count = 0;
+                        list.sort((a, b) -> a.compareTo(b));
+                        for (int i = 0; i < list.size(); i++) {
+                            PhotoInfo pi = find(new File(list.get(i).fullPath(path)));
+                            Integer orientation = null;
+                            if (pi != null) {
+                                orientation = pi.getOrientation();
+                                if (orientation == null) orientation = Orientation.NONE.getValue();
+                                infos.remove(pi);
+                            }
+                            infos.add(list.get(i));
+                            File thumb = new File(list.get(i).fullThumbPath(path));
+                            if (!thumb.exists()) if (!thumb.exists()) createThumbFiles(list.get(i));
+                            count++;
                         }
-                        count++;
+                        if (count>0) sortInfos();
                     }
-                    if (count>0) sortInfos();
+
                 }
             }
         } catch (Exception e) {}
