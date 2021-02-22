@@ -234,8 +234,10 @@ public class PVController implements ApplicationRunner {
     void syncFromModification() {
         List<Modification> list = Modification.read(rootPath);
         if (list!=null) {
+            System.out.println("同步修改...");
             Modification.execute(list,archiveInfo);
             Modification.resetSyncAction(rootPath);
+            System.out.println("同步修改完成.");
             afterChanged();
         }
     }
@@ -259,7 +261,7 @@ public class PVController implements ApplicationRunner {
 
     @ResponseBody
     @RequestMapping(value = "scan")
-    public String scan(HttpServletRequest request, HttpServletResponse response, String path) {
+    public String scan(String path) {
         if (path==null || path.isEmpty()) return "error";
         new Thread() {
             @Override
@@ -505,7 +507,18 @@ public class PVController implements ApplicationRunner {
             }
         }.start();
     }
-
+    private static void printUsage() {
+        System.out.println("Usage:  java -jar pv.jar <options>");
+        System.out.println("options:");
+        System.out.println("  -m dir_name	: 将dir_name指定的绝对目录归档到归档目录中，dir_name支持逗号分隔的多个目录, 同 --merge");
+        System.out.println("                  如 -m \"C:\\1,D:\\A\\2\" -m E:\\3 表示将三个目录合并归档到归档目录");
+        System.out.println("  -s dir_name	: 重新扫描目录,dir_name支持逗号分隔的多个目录，目录为归档目录下的相对目录，同 --scan");
+        System.out.println("  -a ：归档时将相同文件移到.delete目录, 同  --same");
+        System.out.println("  -c : 重新完全扫描归档目录, 同  --clear");
+        System.out.println("  -o : 归档时将无法确定拍摄日期的文件移动到.other目录, 同  --other");
+        System.out.println("  -e : 归档时删除空目录, 同  --empty");
+        System.out.println("  -h : 显示本帮助, 同  --help");
+    }
     @Override
     public void run(ApplicationArguments args) throws Exception {
         ArchiveUtils.setOutput(this.getClass(),STDOUT);
@@ -525,69 +538,88 @@ public class PVController implements ApplicationRunner {
         rangeExif = env.getProperty("photo.range-exif");
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
+
+        // 处理命令行参数
+        boolean emptyArg = false, clearArg = false, removeSameArg = false, moveOtherArg= false;
+        List<String> mergeList = new ArrayList<>();
+        List<String> scanList = new ArrayList<>();
+        if (PhotoViewerApplication.args!=null) {
+            int total = PhotoViewerApplication.args.length;
+            for (int i=0;i<total;i++) {
+                String param = PhotoViewerApplication.args[i].trim();
+                switch (param) {
+                    case "-h":
+                    case "--help":
+                        printUsage();
+                        throw new Exception("显示帮助后退出");
+                    case "-m":
+                    case "--merge":
+                        if (i<total-1) {
+                            i++;
+                            String [] ms = PhotoViewerApplication.args[i].trim().split(",");
+                            for (String s: ms) mergeList.add(s);
+                            break;
+                        }
+                        break;
+                    case "-s":
+                    case "--scan":
+                        if (i<total-1) {
+                            i++;
+                            String [] ss = PhotoViewerApplication.args[i].trim().split(",");
+                            for (String s: ss) scanList.add(s);
+                            break;
+                        }
+                        break;
+                    case "-a":
+                    case "--same":
+                        removeSameArg = true;
+                        break;
+                    case "-o":
+                    case "--other":
+                        moveOtherArg = true;
+                        break;
+                    case "-c":
+                    case "--clear":
+                        clearArg = true;
+                        break;
+                    case "-e":
+                    case "--empty":
+                        emptyArg = true;
+                        break;
+                }
+            }
+        }
+
+        rootPath = env.getProperty("photo.root-path");
+        if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
+
+        if (emptyArg) ArchiveUtils.removeEmptyFolder(new File(rootPath));
+        archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clearArg,removeSameArg,moveOtherArg);
+        rootPath = archiveInfo.getPath();  // 标准化
+        System.out.println("归档主目录为 : "+rootPath);
+        if (mergeList.size()>0) for (String path:mergeList) {
+            System.out.println("合并目录 : "+path);
+            ArchiveInfo camera = new ArchiveInfo(path);
+            if (archiveInfo!=null && camera!=null) {
+                System.out.println("删除归档文件夹已经存在的待归档文件...");
+                if (removeSameArg) camera.scanSameFilesWith(archiveInfo);
+                ArchiveUtils.executeArchive(camera,archiveInfo);
+            }
+            System.out.println("完成合并 : "+path);
+        }
+        if (scanList.size()>0) for (String path:scanList) {
+            System.out.println("重新扫描目录 : "+path);
+            scan(path);
+            System.out.println("完成扫描 : "+path);
+        }
+        isReady = true;
         new Thread() {
             @Override
             public void run() {
-                rootPath = env.getProperty("photo.root-path");
-                if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
-                boolean empty = false, clear = false, removeSame = false, moveOther= false;
-                List<String> mergeList = new ArrayList<>();
-                if (PhotoViewerApplication.args!=null) {
-                    int total = PhotoViewerApplication.args.length;
-                    for (int i=0;i<total;i++) {
-                        String param = PhotoViewerApplication.args[i].trim();
-                        switch (param) {
-                            case "-m":
-                            case "--merge":
-                                if (i<total-1) {
-                                    i++;
-                                    mergeList.add(PhotoViewerApplication.args[i].trim());
-                                    break;
-                                }
-                                break;
-                            case "-s":
-                            case "--same":
-                                removeSame = true;
-                                break;
-                            case "-o":
-                            case "--other":
-                                moveOther = true;
-                                break;
-                            case "-c":
-                            case "--clear":
-                                clear = true;
-                                break;
-                            case "-e":
-                            case "--empty":
-                                empty=true;
-                                break;
-                        }
-                    }
-                }
-                if (empty) ArchiveUtils.removeEmptyFolder(new File(rootPath));
-                archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clear,removeSame,moveOther);
-                rootPath = archiveInfo.getPath();  // 标准化
-
-                for (String path:mergeList) {
-                    ArchiveInfo camera = new ArchiveInfo(path);
-                    if (archiveInfo!=null && camera!=null) {
-                        System.out.println("Now :"+ tang.qinyoyo.archive.DateUtil.date2String(new Date()));
-                        System.out.println("删除归档文件夹已经存在的待归档文件...");
-                        camera.scanSameFilesWith(archiveInfo);
-                        ArchiveUtils.executeArchive(camera,archiveInfo);
-                    }
-                }
-
-                new Thread() {
-                    @Override
-                    public void run() {
-                        syncFromModification();
-                        BaiduGeo.seekAddressInfo(archiveInfo);
-                        archiveInfo.createThumbFiles();
-                    }
-                }.start();
+                syncFromModification();
+                BaiduGeo.seekAddressInfo(archiveInfo);
+                archiveInfo.createThumbFiles();
                 System.out.println("Photo viewer started.");
-                isReady = true;
             }
         }.start();
     }

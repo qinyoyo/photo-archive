@@ -174,7 +174,6 @@ public class ArchiveInfo {
                         }
                         if (count>0) sortInfos();
                     }
-
                 }
             }
         } catch (Exception e) {}
@@ -348,7 +347,7 @@ public class ArchiveInfo {
     }
     public boolean moveFile(File source,File target) {
         try {
-            Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
             int index1 = indexOf(source);
             int index2 = indexOf(target);
@@ -379,13 +378,13 @@ public class ArchiveInfo {
     public boolean moveFile(PhotoInfo pi,String sourceRootPath, File target) {
         try {
             target.getParentFile().mkdirs();
-            Files.move(new File(pi.fullPath(sourceRootPath)).toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(new File(pi.fullPath(sourceRootPath)).toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             File sourceThumb = new File(pi.fullThumbPath(sourceRootPath));
             if (sourceThumb.exists()) {
                 try {
                     String fullP = path + File.separator + ArchiveUtils.THUMB + target.getCanonicalPath().substring(path.length());
                     File targetThumb = new File(fullP);
-                    Files.move(sourceThumb.toPath(), targetThumb.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(sourceThumb.toPath(), targetThumb.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 } catch (Exception e) {}
             }
             int index1 = path.equals(sourceRootPath) ? infos.indexOf(pi) : -1;
@@ -445,7 +444,7 @@ public class ArchiveInfo {
                 for (PhotoInfo p : other) {
                     File source = new File(p.fullPath(rootName));
                     try {
-                        Files.move(source.toPath(), new File(rmf, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                        Files.move(source.toPath(), new File(rmf, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
                     } catch (Exception e) {
                         sb.append("move \"").append(p.fullPath(rootName)).append("\" \"").append(ArchiveUtils.newFile(sub, p))
                                 .append("\"\r\n");

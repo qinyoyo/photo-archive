@@ -26,7 +26,7 @@ public class Modification {
     public static final int Exif        = 1;
     public static final int Remove      = 2;
     public static final int Scan        = 3;
-    public static final String save_path = ".modification.dat";
+    public static final String modification_dat = ".modification.dat";
     public static final String temp_path = "._g_s_t_";
     public static final String XMP = "xmp";
     public static final String start_time_key = "--start-time-long--";
@@ -53,8 +53,8 @@ public class Modification {
         return new GsonBuilder().create().toJson(this);
     }
     public static void save(Modification mod,String rootPath) {
-        File bak = new File(rootPath,save_path+".bak");
-        File src = new File(rootPath,save_path);
+        File bak = new File(rootPath, modification_dat +".bak");
+        File src = new File(rootPath, modification_dat);
         try {
             Files.copy(src.toPath(),bak.toPath(),StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
@@ -63,7 +63,7 @@ public class Modification {
         ArchiveUtils.appendToFile(src, mod.toString());
     }
     public static List<Modification> read(String rootPath) {
-        String actions = ArchiveUtils.getFromFile(new File(rootPath,save_path+".sync"));
+        String actions = ArchiveUtils.getFromFile(new File(rootPath, modification_dat +".sync"));
         if (actions==null) return null;
         String [] aa = actions.split("\n");
         List<Modification> list=new ArrayList<>();
@@ -420,6 +420,6 @@ public class Modification {
         ArchiveUtils.removeFilesInDir(imgDir,true);
     }
     public static void resetSyncAction(String rootPath) {
-        new File(rootPath,save_path+".sync").delete();
+        new File(rootPath, modification_dat +".sync").delete();
     }
 }

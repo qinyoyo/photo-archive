@@ -429,13 +429,13 @@ public class ArchiveUtils {
             File target = new File(targetDir, pi.getFileName());
             File source = new File(pi.fullPath(rootPath));
             if (source.exists())
-                Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             File sourceThumb = new File(pi.fullThumbPath(rootPath));
             if (sourceThumb.exists()) {
                 targetDir = new File(rootPath + File.separator + DELETED + File.separator + THUMB, pi.getSubFolder());
                 targetDir.mkdirs();
                 target = new File(targetDir, pi.getFileName());
-                Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (Exception e) {}
 
@@ -589,6 +589,7 @@ public class ArchiveUtils {
         return count;
     }
     public static void setOutput(Class clazz,String stdoutFilePath) {
+        new File(stdoutFilePath).delete();
         if (System.console()==null && !("file".equals(clazz.getResource("").getProtocol()))) {
             try {
                 System.setOut(new PrintStream(new File(stdoutFilePath)));

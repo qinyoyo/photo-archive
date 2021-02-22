@@ -130,7 +130,7 @@ public class SamePhotoController {
             for (String fn : ll) {
                 if (fn.startsWith(ArchiveUtils.DELETED+File.separator)) {
                     try {
-                        Files.move(new File(rootPath, fn).toPath(),new File(rootPath, fn.substring(8)).toPath(), StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+                        Files.move(new File(rootPath, fn).toPath(),new File(rootPath, fn.substring(8)).toPath(), StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException e) {
                     }
                 }
