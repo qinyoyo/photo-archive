@@ -106,7 +106,11 @@ public class ArchiveInfo {
         if (infos==null)  infos = new ArrayList<>();
     }
 
-    public void addFile(File f, boolean removeExisted) {
+    /**
+     * 插入文件或目录。插入目录将删除原来包含的该目录下的文件
+     * @param f 文件或目录
+     */
+    public void addFile(File f) {
         try {
             if (!f.exists()) return;
             String p = f.getCanonicalPath();
@@ -128,53 +132,34 @@ public class ArchiveInfo {
             } else {
                 List<PhotoInfo> list = new ArrayList<>();
                 seekPhotoInfosInFolder(f,list);
-                if (list!=null && list.size()>1) {
-                    if (removeExisted) {
-                        final String seekPath = f.getCanonicalPath().length() == path.length() ? "" : f.getCanonicalPath().substring(path.length()+1);
-                        final String subSeekPath = seekPath.isEmpty() ? "" : seekPath + File.separator;
-                        List<PhotoInfo> existedList = infos.stream().filter(
-                                pi->seekPath.isEmpty() || pi.getSubFolder().equals(seekPath) || pi.getSubFolder().startsWith(subSeekPath)).collect(Collectors.toList());
-                        infos.removeAll(existedList);
-                        infos.addAll(list);
-                        sortInfos();
-                        Set<String> addFilesPath = new HashSet<>();
-                        for (int i = 0; i < list.size(); i++) {
-                            File thumb = new File(list.get(i).fullThumbPath(path));
-                            addFilesPath.add(list.get(i).fullThumbPath(path));
-                            if (!thumb.exists()) createThumbFiles(list.get(i));
-                        }
-                        existedList.stream().filter(pi->{
-                            try {
-                                return !addFilesPath.contains(pi.fullThumbPath(path));
-                            } catch (IOException e) {
-                                return false;
-                            }
-                        }).forEach(pi->{
-                            try {
-                                new File(pi.fullThumbPath(path)).delete();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                    } else {
-                        int count = 0;
-                        list.sort((a, b) -> a.compareTo(b));
-                        for (int i = 0; i < list.size(); i++) {
-                            PhotoInfo pi = find(new File(list.get(i).fullPath(path)));
-                            Integer orientation = null;
-                            if (pi != null) {
-                                orientation = pi.getOrientation();
-                                if (orientation == null) orientation = Orientation.NONE.getValue();
-                                infos.remove(pi);
-                            }
-                            infos.add(list.get(i));
-                            File thumb = new File(list.get(i).fullThumbPath(path));
-                            if (!thumb.exists()) if (!thumb.exists()) createThumbFiles(list.get(i));
-                            count++;
-                        }
-                        if (count>0) sortInfos();
+                final String seekPath = f.getCanonicalPath().length() == path.length() ? "" : f.getCanonicalPath().substring(path.length()+1);
+                final String subSeekPath = seekPath.isEmpty() ? "" : seekPath + File.separator;
+                List<PhotoInfo> existedList = infos.stream().filter(
+                        pi->seekPath.isEmpty() || pi.getSubFolder().equals(seekPath) || pi.getSubFolder().startsWith(subSeekPath)).collect(Collectors.toList());
+                infos.removeAll(existedList);
+                Set<String> addFilesPath = new HashSet<>();
+                if (list!=null && list.size()>0) {
+                    infos.addAll(list);
+                    for (int i = 0; i < list.size(); i++) {
+                        File thumb = new File(list.get(i).fullThumbPath(path));
+                        addFilesPath.add(list.get(i).fullThumbPath(path));
+                        if (!thumb.exists()) createThumbFiles(list.get(i));
                     }
                 }
+                sortInfos();
+                existedList.stream().filter(pi->{
+                    try {
+                        return !addFilesPath.contains(pi.fullThumbPath(path));
+                    } catch (IOException e) {
+                        return false;
+                    }
+                }).forEach(pi->{
+                    try {
+                        new File(pi.fullThumbPath(path)).delete();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         } catch (Exception e) {}
     }
