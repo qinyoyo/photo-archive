@@ -39,13 +39,13 @@ public class EditorController implements ApplicationRunner {
     public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean scanResource) {
         if (path==null || path.isEmpty()) {
             model.addAttribute("message","请指定一个文件");
-            return "error";
+            return "message";
         }
         String rootPath = pvController.getRootPath();
         String html = ArchiveUtils.getFromFile(new File(rootPath,path),"UTF8");
         if (html==null) {
             model.addAttribute("message",path + " 打开失败");
-            return "error";
+            return "message";
         }
         if (scanResource!=null && scanResource) {
             scanImageForHtml(path);
@@ -68,7 +68,7 @@ public class EditorController implements ApplicationRunner {
             return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
         } catch (Exception e) {
             model.addAttribute("message",e.getMessage());
-            return "error";
+            return "message";
         }
     }
 

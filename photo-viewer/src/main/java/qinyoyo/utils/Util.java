@@ -136,7 +136,16 @@ public class Util {
     }
 
 
-
+    static public String printStackTrace(Exception e) {
+        if (e==null) return null;
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String msg = e.getMessage();
+        if (msg==null) msg="";
+        else msg = msg + "\n";
+        return msg + sw.toString();
+    }
 
 
     /**

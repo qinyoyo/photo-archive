@@ -28,7 +28,7 @@ public class SamePhotoController {
     public String sameView(Model model) {
         if (!pvController.isDataReady()) {
             model.addAttribute("message","Not ready!!!");
-            return "error";
+            return "message";
         }
         model.addAttribute("separator", File.separator);
         List<Map<String,Object>> list = new ArrayList<>();

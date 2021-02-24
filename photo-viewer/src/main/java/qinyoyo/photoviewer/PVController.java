@@ -7,9 +7,11 @@ import freemarker.template.Version;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.utils.BaiduGeo;
@@ -35,7 +37,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Controller
-public class PVController implements ApplicationRunner {
+public class PVController implements ApplicationRunner , ErrorController {
     @Autowired
     private Environment env;
     private String rootPath;
@@ -111,7 +113,7 @@ public class PVController implements ApplicationRunner {
     public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, String newStep) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
-            return "error";
+            return "message";
         }
         if (newStep!=null && !newStep.isEmpty()) {
             EditorController editorController = SpringContextHolder.getBean(EditorController.class);
@@ -136,7 +138,7 @@ public class PVController implements ApplicationRunner {
     public String playFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, Integer index) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
-            return "error";
+            return "message";
         }
         commonAttribute(model,request);
         model.addAttribute("debug",false);
@@ -154,7 +156,7 @@ public class PVController implements ApplicationRunner {
     public String doSearch(Model model, HttpServletRequest request, HttpServletResponse response, String text) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
-            return "error";
+            return "message";
         }
         commonAttribute(model,request);
         if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "", null);
@@ -201,7 +203,7 @@ public class PVController implements ApplicationRunner {
     @ResponseBody
     @RequestMapping(value = "remove")
     public String remove(String path) {
-        if (!isReady) return "error";
+        if (!isReady) return "message";
         if (Modification.removeAction(path,archiveInfo)) {
             Modification.save(new Modification(Modification.Remove,path,null),rootPath);
             return "ok";
@@ -303,15 +305,56 @@ public class PVController implements ApplicationRunner {
         if (request.getQueryString()!=null && request.getQueryString().toLowerCase().contains("truncate")) {
             ArchiveUtils.writeToFile(file,"");
             return "ok";
-        } else return ArchiveUtils.getFromFile(file).replace("\n","<br>").replaceAll("\\u001B[^m]*m","");
+        } else {
+            String s = ArchiveUtils.getFromFile(file);
+            if (s!=null) return s.replace("\n","<br>").replaceAll("\\u001B[^m]*m","");
+            else return "Not message in stdout.";
+        }
     }
 
-    @ResponseBody
     @RequestMapping(value = "shutdown")
-    public String shutdown(HttpServletRequest request, HttpServletResponse response, Integer delay) {
-        CommandRunner.shutdown(delay==null?10:delay);
-        return "ok";
+    public String shutdown(Model model, Boolean confirm, Integer delay) {
+        if (confirm!=null && confirm) {
+            model.addAttribute("message","将在 "+ (delay==null?10:delay) +"s 后立即关闭服务器");
+            CommandRunner.shutdown(delay==null?10:delay);
+        }
+        else {
+            model.addAttribute("action","shutdown");
+            model.addAttribute("confirm","确定是否远程关闭服务器？");
+            model.addAttribute("message","远程关闭服务器");
+        }
+        return "message";
     }
+    @Override
+    public String getErrorPath() {
+        return "/error";
+    }
+
+    @ExceptionHandler(Exception.class)
+    @RequestMapping("error")
+    public String handleError(HttpServletRequest request, Model model, Exception e){
+        Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
+        String msg = "error";
+        if (statusCode!=null) {
+            if (statusCode == 401) {
+                msg = "401 Error";
+            } else if (statusCode == 404) {
+                msg = "页面不存在";
+            } else if (statusCode == 403) {
+                msg = "403 Error";
+            } else {
+                if (e != null) {
+                    msg = Util.printStackTrace(e);
+                }
+                else msg = "内部异常";
+            }
+        } else if (e!=null) {
+            msg=Util.printStackTrace(e);
+        }
+        model.addAttribute("message",msg);
+        return "message";
+    }
+
 
     private boolean photoInfoContains(PhotoInfo p,String text) {
         String s = p.getFileName();
@@ -539,83 +582,86 @@ public class PVController implements ApplicationRunner {
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
 
-        // 处理命令行参数
-        boolean emptyArg = false, clearArg = false, removeSameArg = false, moveOtherArg= false;
-        List<String> mergeList = new ArrayList<>();
-        List<String> scanList = new ArrayList<>();
-        if (PhotoViewerApplication.args!=null) {
-            int total = PhotoViewerApplication.args.length;
-            for (int i=0;i<total;i++) {
-                String param = PhotoViewerApplication.args[i].trim();
-                switch (param) {
-                    case "-h":
-                    case "--help":
-                        printUsage();
-                        throw new Exception("显示帮助后退出");
-                    case "-m":
-                    case "--merge":
-                        if (i<total-1) {
-                            i++;
-                            String [] ms = PhotoViewerApplication.args[i].trim().split(",");
-                            for (String s: ms) mergeList.add(s);
-                            break;
-                        }
-                        break;
-                    case "-s":
-                    case "--scan":
-                        if (i<total-1) {
-                            i++;
-                            String [] ss = PhotoViewerApplication.args[i].trim().split(",");
-                            for (String s: ss) scanList.add(s);
-                            break;
-                        }
-                        break;
-                    case "-a":
-                    case "--same":
-                        removeSameArg = true;
-                        break;
-                    case "-o":
-                    case "--other":
-                        moveOtherArg = true;
-                        break;
-                    case "-c":
-                    case "--clear":
-                        clearArg = true;
-                        break;
-                    case "-e":
-                    case "--empty":
-                        emptyArg = true;
-                        break;
-                }
-            }
-        }
-
         rootPath = env.getProperty("photo.root-path");
         if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
 
-        if (emptyArg) ArchiveUtils.removeEmptyFolder(new File(rootPath));
-        archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clearArg,removeSameArg,moveOtherArg);
-        rootPath = archiveInfo.getPath();  // 标准化
-        System.out.println("归档主目录为 : "+rootPath);
-        if (mergeList.size()>0) for (String path:mergeList) {
-            System.out.println("合并目录 : "+path);
-            ArchiveInfo camera = new ArchiveInfo(path);
-            if (archiveInfo!=null && camera!=null) {
-                System.out.println("删除归档文件夹已经存在的待归档文件...");
-                if (removeSameArg) camera.scanSameFilesWith(archiveInfo);
-                ArchiveUtils.executeArchive(camera,archiveInfo);
-            }
-            System.out.println("完成合并 : "+path);
-        }
-        if (scanList.size()>0) for (String path:scanList) {
-            System.out.println("重新扫描目录 : "+path);
-            scan(path);
-            System.out.println("完成扫描 : "+path);
-        }
-        isReady = true;
         new Thread() {
             @Override
             public void run() {
+
+                // 处理命令行参数
+                boolean emptyArg = false, clearArg = false, removeSameArg = false, moveOtherArg= false;
+                List<String> mergeList = new ArrayList<>();
+                List<String> scanList = new ArrayList<>();
+                if (PhotoViewerApplication.args!=null) {
+                    int total = PhotoViewerApplication.args.length;
+                    for (int i=0;i<total;i++) {
+                        String param = PhotoViewerApplication.args[i].trim();
+                        switch (param) {
+                            case "-h":
+                            case "--help":
+                                printUsage();
+                                System.exit(0);
+                            case "-m":
+                            case "--merge":
+                                if (i<total-1) {
+                                    i++;
+                                    String [] ms = PhotoViewerApplication.args[i].trim().split(",");
+                                    for (String s: ms) mergeList.add(s);
+                                    break;
+                                }
+                                break;
+                            case "-s":
+                            case "--scan":
+                                if (i<total-1) {
+                                    i++;
+                                    String [] ss = PhotoViewerApplication.args[i].trim().split(",");
+                                    for (String s: ss) scanList.add(s);
+                                    break;
+                                }
+                                break;
+                            case "-a":
+                            case "--same":
+                                removeSameArg = true;
+                                break;
+                            case "-o":
+                            case "--other":
+                                moveOtherArg = true;
+                                break;
+                            case "-c":
+                            case "--clear":
+                                clearArg = true;
+                                break;
+                            case "-e":
+                            case "--empty":
+                                emptyArg = true;
+                                break;
+                        }
+                    }
+                }
+
+                if (emptyArg) ArchiveUtils.removeEmptyFolder(new File(rootPath));
+                archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clearArg,removeSameArg,moveOtherArg);
+                rootPath = archiveInfo.getPath();  // 标准化
+                System.out.println("归档主目录为 : "+rootPath);
+                if (mergeList.size()>0) for (String path:mergeList) {
+                    System.out.println("合并目录 : "+path);
+                    ArchiveInfo camera = new ArchiveInfo(path);
+                    if (archiveInfo!=null && camera!=null) {
+                        System.out.println("删除归档文件夹已经存在的待归档文件...");
+                        if (removeSameArg) camera.scanSameFilesWith(archiveInfo);
+                        ArchiveUtils.executeArchive(camera,archiveInfo);
+                    }
+                    System.out.println("完成合并 : "+path);
+                }
+                if (scanList.size()>0) for (String path:scanList) {
+                    System.out.println("重新扫描目录 : "+path);
+                    scan(path);
+                    System.out.println("完成扫描 : "+path);
+                }
+
+                isReady = true;
+
                 syncFromModification();
                 BaiduGeo.seekAddressInfo(archiveInfo);
                 archiveInfo.createThumbFiles();
