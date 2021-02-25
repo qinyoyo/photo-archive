@@ -162,8 +162,7 @@
         <div class="collapse-content photo-list grid-box" data-size="${photos?size?c}">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img src="/.thumb${fileUrl(p)}" alt="${p.fileName}" onload="adjustSize(this)"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+                    <img<#if !notLoadImage??> src="/.thumb${fileUrl(p)}" alt="${p.fileName}" onload="adjustSize(this)"</#if> class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
                          <@photoAttributes p /> />
                     <#if !favoriteFilter?? || !favoriteFilter>
                     <i class="fa fa-heart img-favorite-state"></i>

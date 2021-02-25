@@ -721,7 +721,7 @@ public class ArchiveUtils {
 
         if (moveOtherFiles) {
             System.out.println("移动无拍摄日期文件...");
-            a.moveNoShootTimeFiles();
+            a.moveNoShootTimeFiles(false);
         }
         System.out.println("保存处理后文件...");
         a.saveInfos();

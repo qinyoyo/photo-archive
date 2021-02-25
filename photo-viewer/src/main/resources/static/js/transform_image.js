@@ -30,6 +30,7 @@
     }
     window.downloadImg = function(img){
         let url = img.src
+        if (!url) url=img.getAttribute("data-src")
         if (url){
             url = decodeURI(url)
             if (url.indexOf('.thumb/')==0) url = url.substring(7)
@@ -321,10 +322,11 @@
                             if (orientations){
                                 thumb.setAttribute('data-orientation',pp[1])
                                 let tp=thumb.getAttribute('src')
-                                if (tp==null) tp=''
-                                let pos=tp.indexOf('?')
-                                if (pos>=0) tp=tp.substring(0,pos)
-                                thumb.setAttribute('src',tp+'?click='+(new Date().getTime()))
+                                if (tp) {
+                                    let pos = tp.indexOf('?')
+                                    if (pos >= 0) tp = tp.substring(0, pos)
+                                    thumb.setAttribute('src', tp + '?click=' + (new Date().getTime()))
+                                }
                                 preLoadImageBy(imgIndex)  // 预加载文件
                             }
                         }

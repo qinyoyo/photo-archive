@@ -198,6 +198,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         model.addAttribute("debug",false);
         model.addAttribute("canRemove",false);
         model.addAttribute("htmlEditable",false);
+        model.addAttribute("notLoadImage",true);  // 不加载图像
         if (loopTimer==0) model.addAttribute("loopTimer",4000);
         model.addAttribute("loopPlay",true);
         model.addAttribute("startFrom",index);
@@ -709,6 +710,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 if (emptyArg) ArchiveUtils.removeEmptyFolder(new File(rootPath));
                 archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clearArg,removeSameArg,moveOtherArg);
                 rootPath = archiveInfo.getPath();  // 标准化
+                archiveInfo.moveNoShootTimeFiles(true);
                 System.out.println("归档主目录为 : "+rootPath);
                 if (mergeList.size()>0) for (String path:mergeList) {
                     System.out.println("合并目录 : "+path);

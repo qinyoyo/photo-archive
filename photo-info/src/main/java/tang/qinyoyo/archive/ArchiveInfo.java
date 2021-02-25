@@ -408,7 +408,7 @@ public class ArchiveInfo {
         else return new Date().getTime();
     }
 
-    public void moveNoShootTimeFiles() {
+    public void moveNoShootTimeFiles(boolean copyTo) {
         try {
             List<PhotoInfo> all = getInfos();
             System.out.println("照片数量 : " + all.size());
@@ -422,16 +422,19 @@ public class ArchiveInfo {
                 rma.setExifTool(getExifTool());
                 rma.setInfos(new ArrayList<>(other));
                 rma.saveInfos();
-                ArchiveUtils.removeAll(all, other);
+                if(!copyTo) ArchiveUtils.removeAll(all, other);
                 StringBuilder sb = new StringBuilder();
                 String rootName = getPath();
                 String sub = rmf.getCanonicalPath();
                 for (PhotoInfo p : other) {
                     File source = new File(p.fullPath(rootName));
+                    File target = new File(p.fullPath(rootName+File.separator+".other"));
+                    target.getParentFile().mkdirs();
                     try {
-                        Files.move(source.toPath(), new File(rmf, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        if (copyTo) Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        else Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     } catch (Exception e) {
-                        sb.append("move \"").append(p.fullPath(rootName)).append("\" \"").append(ArchiveUtils.newFile(sub, p))
+                        sb.append(copyTo ? "copy \"":"move \"").append(p.fullPath(rootName)).append("\" \"").append(ArchiveUtils.newFile(sub, p))
                                 .append("\"\r\n");
                     }
                 }
