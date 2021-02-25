@@ -24,7 +24,7 @@
     }
     window.input = function(options) {
        if (navigator.userAgent.toLowerCase().indexOf('mac os') >= 0) {
-            let value = prompt(options.title,options.defaultValue)
+            let value = prompt(options.title,options.defaultValue ? options.defaultValue : '')
             if (value) {
                 if (typeof options.callback === 'function') {
                     options.callback(value)

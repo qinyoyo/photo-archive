@@ -24,8 +24,10 @@
     <#if debug?? && debug>
     window.enableDebug = true
     </#if>
-    <#if canRemove?? && canRemove>
-    window.enableRemove = true
+    <#if readOnly?? && readOnly>
+    window.readOnly = true
+    <#else>
+    window.readOnly = false
     </#if>
     <#if orientation?? && orientation>
     window.notSupportOrientation = true
@@ -46,7 +48,7 @@
 <#if backgroundMusic??>
     <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
 </#if>
-<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}"</#if>>
+<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}" data-rangeExifNote="${rangeExifNote}"</#if>>
     <#if loopPlay??>
     <#if photos??>
     <div class="auto-play-loop-images photo-list" data-size="${photos?size?c}" style="display:none">
@@ -163,7 +165,9 @@
                     <img src="/.thumb${fileUrl(p)}" alt="${p.fileName}" onload="adjustSize(this)"
                          class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
                          <@photoAttributes p /> />
+                    <#if !favoriteFilter?? || !favoriteFilter>
                     <i class="fa fa-heart img-favorite-state"></i>
+                    </#if>
                 </div>
             </#list>
         </div>

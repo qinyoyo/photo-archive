@@ -21,6 +21,13 @@ public class ArchiveUtils {
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
             Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
             Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
+    public static final Key[] MODIFIABLE_KEYS = new Key[]{
+            Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,
+            Key.MODEL, Key.LENS_ID,
+            Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.SCENE,
+            Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE,
+            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+    };
     public static final String no_shottime_log = ".no_shottime.log";
     public static final String manual_other_bat = ".manual_other.bat";
     public static final String same_photo_log = ".same_photo.log";

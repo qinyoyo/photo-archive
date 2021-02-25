@@ -433,7 +433,7 @@ function resourceSelected(ok) {
                                 if (imgs.length>0) {
                                     imgs.forEach(img=>{
                                         let html = '<div class="gps-block">'
-                                        let v = img.getAttribute('data-createTime')
+                                        let v = img.getAttribute('data-datetimeoriginal')
                                         if (v) html += '<span style="color: rgb(0, 255, 255);">' + v + '</span>'
                                         let poi = ''
                                         v = img.getAttribute('data-province')

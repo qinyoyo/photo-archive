@@ -56,15 +56,16 @@
         data-height="${p.height?c}"
     </#if>
     <#if p.shootTime??>
-        data-createTime="${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss')}"
-    <#elseif p.createTime??>
-        data-createTime="${statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss')}"
+        data-datetimeoriginal="${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss')}"
+    </#if>
+    <#if p.createTime??>
+        data-createdate="${statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss')}"
     </#if>
     <#if p.headline??>
-        data-title="${p.headline}"
+        data-headline="${p.headline}"
     </#if>
     <#if p.subTitle??>
-        data-subTitle="${p.subTitle}"
+        data-caption-abstract="${p.subTitle}"
     </#if>
     <#if p.artist??>
         data-artist="${p.artist}"
@@ -73,31 +74,31 @@
         data-model="${p.model}"
     </#if>
     <#if p.lens??>
-        data-lens="${p.lens}"
+        data-Lensid="${p.lens}"
     </#if>
     <#if p.subjectCode??>
         data-subjectCode="${p.subjectCode}"
     </#if>
     <#if p.country??>
-        data-country="${p.country}"
+        data-country-primarylocationname="${p.country}"
     </#if>
     <#if p.province??>
-        data-province="${p.province}"
+        data-province-state="${p.province}"
     </#if>
     <#if p.city??>
         data-city="${p.city}"
     </#if>
     <#if p.location??>
-        data-location="${p.location}"
+        data-sub-location="${p.location}"
     </#if>
     <#if p.longitude??>
-        data-longitude="${statics['java.lang.String'].format('%.6f',p.longitude)}"
+        data-gpslongitude="${statics['java.lang.String'].format('%.6f',p.longitude)}"
     </#if>
     <#if p.latitude??>
-        data-latitude="${statics['java.lang.String'].format('%.6f',p.latitude)}"
+        data-gpslatitude="${statics['java.lang.String'].format('%.6f',p.latitude)}"
     </#if>
     <#if p.altitude??>
-        data-altitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"
+        data-gpsaltitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"
     </#if>
     title="${photoTitle(p)}"
 </#macro>

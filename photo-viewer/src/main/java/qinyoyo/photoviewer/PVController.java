@@ -29,6 +29,7 @@ import tang.qinyoyo.exiftool.Key;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.file.Files;
@@ -44,11 +45,11 @@ public class PVController implements ApplicationRunner , ErrorController {
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
     private boolean isDebug = false;
-    private boolean canRemove = false;
+    private String password = "19960802";
     private boolean noVideoThumb = false;
     private boolean htmlEditable = false;
     private boolean favoriteFilter = false;
-    private String  rangeExif = null;
+    private Key  rangeExif = Key.SUBJECT_CODE;
     private int loopTimer = 4000;
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
@@ -63,6 +64,59 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     public boolean isDataReady() {
         return isReady;
+    }
+
+
+    private HashSet<String> unlockSessions = new HashSet<>();
+    boolean isUnlocked(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (session!=null) {
+            String id = session.getId();
+            return unlockSessions.contains(id);
+        }
+        return false;
+    }
+    void unlockSession(HttpServletRequest request, boolean unlock) {
+        HttpSession session = request.getSession();
+        if (session!=null) {
+            String id = session.getId();
+            if (unlock && !unlockSessions.contains(id)) unlockSessions.add(id);
+            else if (!unlock && unlockSessions.contains(id)) unlockSessions.remove(id);
+        }
+    }
+
+    @RequestMapping(value = "login")
+    public String login(Model model,HttpServletRequest request, String pass, String exif) {
+        if (pass!=null && pass.equals(password)) {
+            unlockSession(request,true);
+            if (exif==null || exif.isEmpty()) rangeExif = Key.SUBJECT_CODE;
+            else if (exif.equals("time")) rangeExif = Key.DATETIMEORIGINAL;
+            else if (exif.equals("rating")) rangeExif = Key.RATING;
+            else if (exif.equals("title")) rangeExif = Key.HEADLINE;
+            else if (exif.equals("subtitle")) rangeExif = Key.DESCRIPTION;
+            else if (exif.equals("country")) rangeExif = Key.COUNTRY;
+            else if (exif.equals("province")) rangeExif = Key.STATE;
+            else if (exif.equals("state")) rangeExif = Key.STATE;
+            else if (exif.equals("city")) rangeExif = Key.CITY;
+            else if (exif.equals("location")) rangeExif = Key.LOCATION;
+            else if (exif.equals("address")) rangeExif = Key.LOCATION;
+            else if (exif.equals("city")) rangeExif = Key.CITY;
+            else {
+                Optional<Key> ok = Key.findKeyWithName(exif);
+                if (ok.isPresent()) rangeExif = ok.get();
+                else rangeExif = null;
+            }
+            return "redirect:/";
+        } else {
+            model.addAttribute("message", "解锁失败");
+            return "message";
+        }
+    }
+
+    @RequestMapping(value = "logout")
+    public String logout(Model model,HttpServletRequest request) {
+        unlockSession(request,false);
+        return "redirect:/";
     }
 
     @ResponseBody
@@ -110,7 +164,7 @@ public class PVController implements ApplicationRunner , ErrorController {
 
 
     @RequestMapping(value = "/")
-    public String getFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, String newStep) {
+    public String getFolder(Model model, HttpServletRequest request, String path, String newStep) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "message";
@@ -135,7 +189,7 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
     @RequestMapping(value = "play")
-    public String playFolder(Model model, HttpServletRequest request, HttpServletResponse response, String path, Integer index) {
+    public String playFolder(Model model, HttpServletRequest request, String path, Integer index) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "message";
@@ -159,7 +213,7 @@ public class PVController implements ApplicationRunner , ErrorController {
             return "message";
         }
         commonAttribute(model,request);
-        if (text == null || text.trim().isEmpty()) return getFolder(model, request, response, "", null);
+        if (text == null || text.trim().isEmpty()) return getFolder(model, request, "", null);
         text = text.trim().toLowerCase();
         List<String> dirs = new ArrayList<>();
         List<PhotoInfo> htmls = new ArrayList<>();
@@ -277,26 +331,32 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @ResponseBody
     @RequestMapping(value = "range")
-    public String range(String path, String value, String type, String start,String end) {
+    public String range(String path, String value, String type, String start,String end, Boolean includeSubFolder) {
         final String subPath=ArchiveUtils.formatterSubFolder(path);
         Date date0 = DateUtil.string2Date(start), date1 = DateUtil.string2Date(end);
         if (type==null || date0==null || date1==null) return "error";
-        new Thread() {
-            @Override
-            public void run() {
-                Map<String, Object> map = null;
-                if (type.equals("poi")) {
-                    map = new HashMap<String, Object>() {{
-                        put(Key.getName(Key.SUBJECT_CODE), value);
+        Optional<Key> k = Key.findKeyWithName(type);
+        if (k.isPresent()) {
+            final Key key = k.get();
+            new Thread() {
+                @Override
+                public void run() {
+                    Map<String, Object> map = new HashMap<String, Object>() {{
+                            put(Key.getName(key), value);
+                            put(Modification.start_time_key,date0.getTime());
+                            put(Modification.end_time_key,date1.getTime());
+                            put(Modification.include_sub_folder, includeSubFolder!=null && includeSubFolder);
                     }};
-                }
-                if (map!=null && Modification.rangeExifAction(subPath,archiveInfo,date0,date1, map)) {
+                    Modification.execute(new ArrayList<Modification>(){{
+                        add(new Modification(Modification.Exif,path,map));
+                    }},archiveInfo);
                     afterChanged();
                     Modification.save(new Modification(Modification.Exif, subPath, map), rootPath);
                 }
-            }
-        }.start();
-        return "ok";
+            }.start();
+            return "ok";
+        }
+        return "error";
     }
     @ResponseBody
     @RequestMapping(value = "stdout")
@@ -439,9 +499,14 @@ public class PVController implements ApplicationRunner , ErrorController {
                 model.addAttribute("orientation", true);
             }
         }
-        if (rangeExif!=null) model.addAttribute("rangeExif",rangeExif);
+        if (isUnlocked(request)) {
+            model.addAttribute("readOnly",false);
+            if (rangeExif!=null) {
+                model.addAttribute("rangeExif", Key.getShortName(rangeExif));
+                model.addAttribute("rangeExifNote", Key.getNotes(rangeExif));
+            }
+        } else model.addAttribute("readOnly",true);
         if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
-        if (canRemove) model.addAttribute("canRemove",true);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
         if (favoriteFilter) model.addAttribute("favoriteFilter",true);
         if (htmlEditable && !isMobile(request)) model.addAttribute("htmlEditable",true);
@@ -575,10 +640,11 @@ public class PVController implements ApplicationRunner , ErrorController {
         loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),4000);
         if (loopTimer<=0) loopTimer = 4000;
         isDebug = Util.boolValue(env.getProperty("photo.debug"));
-        canRemove = Util.boolValue(env.getProperty("photo.removable"));
+        password = env.getProperty("photo.password");
+        if (password==null) password = "19960802";
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
         htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
-        rangeExif = env.getProperty("photo.range-exif");
+
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
 

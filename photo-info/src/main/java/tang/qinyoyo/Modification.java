@@ -31,6 +31,7 @@ public class Modification {
     public static final String XMP = "xmp";
     public static final String start_time_key = "--start-time-long--";
     public static final String end_time_key = "--end-time-long--";
+    public static final String include_sub_folder = "--include-sub-folder--";
     int action;
     String path;
     Map<String,Object> params;
@@ -311,15 +312,7 @@ public class Modification {
         }
         return false;
     }
-    public static boolean rangeExifAction(String path, ArchiveInfo archiveInfo, Date start, Date end, Map<String,Object> params) {
-        if (start==null || end==null) return false;
-        params.put(start_time_key,start.getTime());
-        params.put(end_time_key,end.getTime());
-        execute(new ArrayList<Modification>(){{
-            add(new Modification(Exif,path,params));
-        }},archiveInfo);
-        return true;
-    }
+
     public static void makeLink(String source,String targetLink) throws IOException {
         Path srcPath = Paths.get(source);
         Path linkPath = Paths.get(targetLink);
@@ -348,12 +341,16 @@ public class Modification {
                 String key = m.path;
                 if (m.params.containsKey(start_time_key) && m.params.containsKey(end_time_key)) {
                     key = key + "," + m.params.get(start_time_key).toString() + "," + m.params.get(end_time_key).toString();
-                    m.params.remove(start_time_key);
-                    m.params.remove(end_time_key);
                 }
                 if (acc.containsKey(key)) {
                     acc.get(key).putAll(m.params);
-                } else acc.put(key,m.params);
+                } else {
+                    Map<String,Object> nm = new HashMap<>();
+                    nm.putAll(m.params);
+                    acc.put(key,nm);
+                }
+                acc.get(key).remove(start_time_key);
+                acc.get(key).remove(end_time_key);
                 return acc;
             },(acc,m)->null);
 
@@ -371,10 +368,12 @@ public class Modification {
             List<String> pathList = new ArrayList<>();
             if (keys.length==3) {
                 try {
+                    final boolean includeSubFolder = params.containsKey(include_sub_folder) && (Boolean)(params.get(include_sub_folder));
                     long start = Long.parseLong(keys[1]),
                          end = Long.parseLong(keys[2]);
                     archiveInfo.getInfos().stream().filter(p ->
-                               p.getSubFolder().startsWith(path) && p.getShootTime() != null
+                            (p.getSubFolder().equals(path) || (includeSubFolder && p.getSubFolder().startsWith(path)))
+                            && p.getShootTime() != null
                             && p.getShootTime().getTime() >= start && p.getShootTime().getTime() <= end
                     ).reduce(pathList,(acc,p)-> {
                         acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
@@ -384,14 +383,26 @@ public class Modification {
             } else {
                 pathList.add(path);
             }
+            params.remove(include_sub_folder);
             for (String filePath : pathList) {
                 File img = new File(rootPath, filePath);
                 if (img.exists() && img.isFile()) {
                     PhotoInfo pi = archiveInfo.find(img);
                     if (pi==null) continue;
-                    deleteSameProperties(pi,params);
-                    if (params.isEmpty()) continue;
-                    String xml = xmlString(params);
+                    Map<String,Object> nm = new HashMap<>();
+                    nm.putAll(params);
+                    if (count>0 && keys.length==3 && nm.containsKey(Key.getName(Key.DATETIMEORIGINAL))) {  // 批量修改时间，加1秒
+                        Object v = nm.get(Key.getName(Key.DATETIMEORIGINAL));
+                        if (v!=null) {
+                            Date dt = DateUtil.string2Date(v.toString());
+                            if (dt==null) continue;
+                            dt = new Date(dt.getTime() + count*1000);
+                            nm.put(Key.getName(Key.DATETIMEORIGINAL), DateUtil.date2String(dt));
+                        }
+                    }
+                    deleteSameProperties(pi,nm);
+                    if (nm.isEmpty()) continue;
+                    String xml = xmlString(nm);
                     String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                     try {
                         makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
@@ -400,7 +411,7 @@ public class Modification {
                             ArchiveUtils.writeToFile(xmpFile, xml, "UTF-8");
                             count++;
                             files.put(link, img);
-                            pi.setPropertiesBy(params);
+                            pi.setPropertiesBy(nm);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

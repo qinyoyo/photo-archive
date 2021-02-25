@@ -4,7 +4,7 @@
 
 ;(function () {
     window.loopTimer = 4000
-    window.enableRemove = false
+    window.readOnly = false
     window.notSupportOrientation = false
     window.enableDebug = false
 
@@ -26,6 +26,20 @@
                 window.debugElement.innerHTML =
                     (options.append ? window.debugElement.innerHTML + ' | ' + options.text : options.text)
             }
+        }
+    }
+    window.downloadImg = function(img){
+        let url = img.src
+        if (url){
+            url = decodeURI(url)
+            if (url.indexOf('.thumb/')==0) url = url.substring(7)
+            const a=document.createElement('a')
+            const event=new MouseEvent('click')
+            if (url.lastIndexOf('/')>=0) a.download = url.substring(url.lastIndexOf('/')+1)
+            else a.download = url
+            a.href = encodeURI(url)
+            a.dispatchEvent(event)
+            a.remove()
         }
     }
     window.getBrowserType = function() {
@@ -131,7 +145,10 @@
         setPlayButtonIcon()
     }
     const pauseLoop = function() {
-        stopLoop()
+        if (isLooping()) {
+            stopLoop()
+            return true
+        } else return false
     }
     const resumeLoop = function(runAtOnce) {
         if (!isLooping())  startLoop(runAtOnce)
@@ -320,7 +337,7 @@
                 clearTimeout(loopTimerId)
                 loopTimerId = null
             }
-            if (!skipSave) saveOrientation()
+            if (!skipSave && !window.readOnly) saveOrientation()
             let { src, orientation, rating, title, imgIndex } = srcByIndex(imgIndex0)
             if (src) {
                 let fromLeft = (loopDirection<0)
@@ -905,13 +922,10 @@
             favorite('toggle')
         }
         this.showInfo = function() {
-            pauseLoop()
+            const state = pauseLoop()
             toast(imgInfo.replace(/'|,|{|}/g,'') + '<div style="color: #1f63d2; text-align: center">' + (index+1) + '/' + totalImages +'</div>',2000, function () {
-                resumeLoop(true)
+                if (state) resumeLoop(true)
             })
-            const div = document.querySelector('.tran-img__title')
-            if (div.style.display === 'none') div.style.display = 'block'
-            else div.style.display = 'none'
         }
         this.removeImage = function(event) {
             let needResumeLoop = isLooping()
@@ -1013,16 +1027,25 @@
         waitingIcon.appendChild(waitingI)
 
         let floatButtons = document.createElement("div")
-        floatButtons.className = 'tran-img__fb-wrapper'+(window.innerWidth<400?' small':'')
         floatButtons.style.zIndex = "6006"
 
+        function toggleFloatButtons(show) {
+            if (show) {
+                floatButtons.className = floatButtons.className + ' show'
+                if (titleDiv.style.display === 'none') titleDiv.style.display = 'block'
+            } else {
+                floatButtons.className='tran-img__fb-wrapper' + (window.innerWidth<400?' small':'')
+                titleDiv.style.display = 'none'
+            }
+        }
+        toggleFloatButtons(false)
         function floatButtonClick(event, onclick) {
             event.stopPropagation()
             event.preventDefault()
             const floatButtons = document.querySelector('.tran-img__fb-wrapper')
             if (floatButtons.className.indexOf('show')>=0 && typeof onclick === 'function') {
                 onclick(event)
-            } else floatButtons.className = floatButtons.className + ' show'
+            } else toggleFloatButtons(true)
         }
 
         const createButton=function({className, iconClass, onclick, title}) {
@@ -1039,22 +1062,23 @@
         }
 
         if (rangeExif) {
-            const rangeButton = createButton({
+            createButton({
                 className: 'close',
                 title: '范围开始',
                 iconClass: 'fa fa-angle-left',
                 onclick: function (){
                     if (transformObject) {
                         const e = transformObject.indexImg()
-                        if (e) rangeExif.start = e.getAttribute("data-createTime")
+                        if (e) rangeExif.start = e.getAttribute("data-datetimeoriginal")
                         if (rangeExif.start) {
                             let needResumeLoop = isLooping()
                             if (needResumeLoop) {
                                 pauseLoop()
                             }
                             window.input({
-                                title: '批量设置 ' + rangeExif.exif +' 起点',
-                                label: rangeExif.exif.toUpperCase(),
+                                title: '批量设置 ' + rangeExif.note +' 起点',
+                                label: rangeExif.note,
+                                defaultValue: e.getAttribute('data-'+rangeExif.exif),
                                 callback: function(exif) {
                                     rangeExif.value = exif
                                     if (needResumeLoop) resumeLoop(true)
@@ -1070,7 +1094,7 @@
             })
         }
 
-        const closeButton = createButton({
+        createButton({
             className:'close',
             title: '关闭',
             iconClass:'fa fa-power-off',
@@ -1085,7 +1109,7 @@
             }
         })
 
-        const favoriteButton = createButton({
+        if (!window.readOnly) createButton({
             className:'favorite',
             title: '收藏',
             iconClass:'fa fa-heart-o',
@@ -1094,7 +1118,7 @@
             }
         })
 
-        const infoButton = createButton({
+        createButton({
             className:'close',
             title: '图像信息',
             iconClass:'fa fa-info-circle',
@@ -1105,7 +1129,7 @@
 
         const bkMusic = document.querySelector('.background-music')
         if (bkMusic) {
-            const musicBtn = createButton({
+            createButton({
                 className:'music',
                 title: '切换背景音乐',
                 iconClass:'fa fa-music',
@@ -1118,7 +1142,7 @@
             }
         }
 
-        const playButton = createButton({
+        createButton({
             className:'play',
             title: '自动播放/暂停',
             iconClass:'fa fa-pause-circle-o',
@@ -1129,7 +1153,7 @@
         })
 
         if (fullScreenElement() !==0 ) {
-            const fullBtn = createButton({
+            createButton({
                 className:'close',
                 title: '全屏/取消',
                 iconClass:'fa fa-arrows-alt',
@@ -1138,8 +1162,8 @@
                 }
             })
         }
-        if (window.enableRemove) {
-            const removeBtn = createButton({
+        if (!window.readOnly) {
+            createButton({
                 className:'remove',
                 title: '删除图像',
                 iconClass:'fa fa-trash-o',
@@ -1149,36 +1173,40 @@
             })
         }
 
-        const shareButton = createButton({
+        createButton({
             className:'close',
-            title: '拷贝到分享目录',
-            iconClass:'fa fa-telegram',
+            title: '下载图片',
+            iconClass:'fa fa-arrow-circle-down',
             onclick:function (){
+                downloadImg(img)
+                /*
                 const src = img.getAttribute('src')
                 if (src) {
                     Ajax.get('/share?path='+encodeURI(src),function(reposeText) {
                         if (reposeText=='ok') toast('成功分享到指定目录')
                     })
                 }
+                 */
             }
         })
         if (rangeExif) {
-            const rangeButton = createButton({
+            createButton({
                 className: 'close',
                 title: '范围结束',
                 iconClass: 'fa fa-angle-right',
                 onclick: function (){
                     if (rangeExif.start && transformObject) {
                         const e = transformObject.indexImg()
-                        if (e) rangeExif.end = e.getAttribute("data-createTime")
+                        if (e) rangeExif.end = e.getAttribute("data-datetimeoriginal")
                         if (rangeExif.end) {
-                            let msg = (rangeExif.value ? '批量设置 '+ rangeExif.exif +'=' + rangeExif.value : '批量删除 '+ rangeExif.exif) + ' ?\n' +
+                            let msg = (rangeExif.value ? '批量设置 '+ rangeExif.note +'=' + rangeExif.value : '批量删除 '+ rangeExif.note) + ' ?\n' +
                                 '['+ rangeExif.start + ' 至 ' + rangeExif.end + ']'
                             let needResumeLoop = isLooping()
                             if (needResumeLoop) pauseLoop()
                             if (confirm(msg)) {
-                                let url = '/range?type=' + rangeExif.exif +'&value=' + encodeURI(rangeExif.value)
+                                let url = '/range?type=' + encodeURI(rangeExif.exif) +'&value=' + encodeURI(rangeExif.value)
                                      +'&start=' + encodeURI(rangeExif.start) +'&end=' + encodeURI(rangeExif.end)
+                                     +'&includeSubFolder=' + rangeExif.includeSubFolder
                                      +'&path=' + encodeURI(document.getElementById('app').getAttribute('data-folder'))
                                 rangeExif.value = null
                                 rangeExif.start = null
@@ -1202,13 +1230,13 @@
             }
             floatButtons.onmouseleave=function (event){
                 floatButtonClick(event,function (){
-                    floatButtons.className='tran-img__fb-wrapper' + (window.innerWidth<400?' small':'')
+                    toggleFloatButtons(false)
                 })
             }
         } else{
             floatButtons.onclick=function (event){
                 floatButtonClick(event,function (){
-                    floatButtons.className='tran-img__fb-wrapper' + (window.innerWidth<400?' small':'')
+                    toggleFloatButtons(false)
                 })
             }
         }
@@ -1236,14 +1264,15 @@
      *             类 img-index-xx, xx为序号          *
      *************************************************/
     window.TransformImage =function(selector){
-        rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
+        rangeExif = !window.readOnly && document.getElementById("app").getAttribute("data-rangeExif") ?
             {
-                exif: document.getElementById("app").getAttribute("data-rangeExif")
+                exif: document.getElementById("app").getAttribute("data-rangeExif"),
+                note: document.getElementById("app").getAttribute("data-rangeExifNote"),
+                includeSubFolder: false
             } : null
         document.querySelectorAll(selector).forEach(function (img){
             let pos=img.className.indexOf('img-index-')
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
-            const title = img.getAttribute('title')
             img.onclick=function (event){
                 event.stopPropagation()
                 window.onresize = resizeEvent
@@ -1254,7 +1283,9 @@
     window.AutoLoopPlayImage =function(starterIndex){
         rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
             {
-                exif: document.getElementById("app").getAttribute("data-rangeExif")
+                exif: document.getElementById("app").getAttribute("data-rangeExif"),
+                note: document.getElementById("app").getAttribute("data-rangeExifNote"),
+                includeSubFolder: true
             } : null
         starterIndex = starterIndex ? starterIndex : 0
         let firstImg = document.querySelector('.img-index-'+starterIndex)
