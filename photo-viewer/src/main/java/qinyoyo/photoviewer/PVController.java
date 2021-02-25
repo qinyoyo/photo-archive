@@ -45,7 +45,7 @@ public class PVController implements ApplicationRunner , ErrorController {
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
     private boolean isDebug = false;
-    private String password = "19960802";
+    private String unlockPassword = "19960802";
     private boolean noVideoThumb = false;
     private boolean htmlEditable = false;
     private boolean favoriteFilter = false;
@@ -86,8 +86,8 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
     @RequestMapping(value = "login")
-    public String login(Model model,HttpServletRequest request, String pass, String exif) {
-        if (pass!=null && pass.equals(password)) {
+    public String login(Model model,HttpServletRequest request, String password, String exif) {
+        if (password!=null && password.equals(unlockPassword)) {
             unlockSession(request,true);
             if (exif==null || exif.isEmpty()) rangeExif = Key.SUBJECT_CODE;
             else if (exif.equals("time")) rangeExif = Key.DATETIMEORIGINAL;
@@ -333,8 +333,7 @@ public class PVController implements ApplicationRunner , ErrorController {
     @RequestMapping(value = "range")
     public String range(String path, String value, String type, String start,String end, Boolean includeSubFolder) {
         final String subPath=ArchiveUtils.formatterSubFolder(path);
-        Date date0 = DateUtil.string2Date(start), date1 = DateUtil.string2Date(end);
-        if (type==null || date0==null || date1==null) return "error";
+        if (type==null) return "error";
         Optional<Key> k = Key.findKeyWithName(type);
         if (k.isPresent()) {
             final Key key = k.get();
@@ -343,12 +342,12 @@ public class PVController implements ApplicationRunner , ErrorController {
                 public void run() {
                     Map<String, Object> map = new HashMap<String, Object>() {{
                             put(Key.getName(key), value);
-                            put(Modification.start_time_key,date0.getTime());
-                            put(Modification.end_time_key,date1.getTime());
+                            put(Modification.start_photo,start);
+                            put(Modification.end_photo,end);
                             put(Modification.include_sub_folder, includeSubFolder!=null && includeSubFolder);
                     }};
                     Modification.execute(new ArrayList<Modification>(){{
-                        add(new Modification(Modification.Exif,path,map));
+                        add(new Modification(Modification.Exif,subPath,map));
                     }},archiveInfo);
                     afterChanged();
                     Modification.save(new Modification(Modification.Exif, subPath, map), rootPath);
@@ -611,6 +610,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         new Thread() {
             @Override
             public void run() {
+                archiveInfo.sortInfos();
                 archiveInfo.saveInfos();
             }
         }.start();
@@ -640,8 +640,8 @@ public class PVController implements ApplicationRunner , ErrorController {
         loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),4000);
         if (loopTimer<=0) loopTimer = 4000;
         isDebug = Util.boolValue(env.getProperty("photo.debug"));
-        password = env.getProperty("photo.password");
-        if (password==null) password = "19960802";
+        unlockPassword = env.getProperty("photo.password");
+        if (unlockPassword ==null) unlockPassword = "19960802";
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
         htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
 

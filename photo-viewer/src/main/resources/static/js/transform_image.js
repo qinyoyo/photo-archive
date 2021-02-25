@@ -1069,7 +1069,7 @@
                 onclick: function (){
                     if (transformObject) {
                         const e = transformObject.indexImg()
-                        if (e) rangeExif.start = e.getAttribute("data-datetimeoriginal")
+                        if (e) rangeExif.start = decodeURI(img.getAttribute('src'))
                         if (rangeExif.start) {
                             let needResumeLoop = isLooping()
                             if (needResumeLoop) {
@@ -1196,8 +1196,7 @@
                 iconClass: 'fa fa-angle-right',
                 onclick: function (){
                     if (rangeExif.start && transformObject) {
-                        const e = transformObject.indexImg()
-                        if (e) rangeExif.end = e.getAttribute("data-datetimeoriginal")
+                        rangeExif.end = decodeURI(img.getAttribute('src'))
                         if (rangeExif.end) {
                             let msg = (rangeExif.value ? '批量设置 '+ rangeExif.note +'=' + rangeExif.value : '批量删除 '+ rangeExif.note) + ' ?\n' +
                                 '['+ rangeExif.start + ' 至 ' + rangeExif.end + ']'

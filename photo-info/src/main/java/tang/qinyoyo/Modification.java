@@ -29,8 +29,8 @@ public class Modification {
     public static final String modification_dat = ".modification.dat";
     public static final String temp_path = "._g_s_t_";
     public static final String XMP = "xmp";
-    public static final String start_time_key = "--start-time-long--";
-    public static final String end_time_key = "--end-time-long--";
+    public static final String start_photo = "--start-photo-name--";
+    public static final String end_photo = "--end-photo-name--";
     public static final String include_sub_folder = "--include-sub-folder--";
     int action;
     String path;
@@ -205,7 +205,7 @@ public class Modification {
         if (map==null || map.isEmpty()) return "";
         StringBuilder sb=new StringBuilder();
         for (String key : map.keySet()) {
-            if (key.equals(start_time_key) || key.equals(end_time_key)) continue;
+            if (key.equals(start_photo) || key.equals(end_photo)) continue;
             Object value = map.get(key);
             if (value!=null || !value.toString().isEmpty()) {
                 if (key.equals(Key.getName((Key.DATETIMEORIGINAL))) && value.toString().indexOf(".")>0) {
@@ -339,8 +339,8 @@ public class Modification {
             .reduce(exifMap,(acc,m)->{
                 if (m.path==null || m.params==null || m.params.isEmpty()) return acc;
                 String key = m.path;
-                if (m.params.containsKey(start_time_key) && m.params.containsKey(end_time_key)) {
-                    key = key + "," + m.params.get(start_time_key).toString() + "," + m.params.get(end_time_key).toString();
+                if (m.params.containsKey(start_photo) && m.params.containsKey(end_photo)) {
+                    key = key + "|" + m.params.get(start_photo).toString() + "|" + m.params.get(end_photo).toString();
                 }
                 if (acc.containsKey(key)) {
                     acc.get(key).putAll(m.params);
@@ -349,8 +349,8 @@ public class Modification {
                     nm.putAll(m.params);
                     acc.put(key,nm);
                 }
-                acc.get(key).remove(start_time_key);
-                acc.get(key).remove(end_time_key);
+                acc.get(key).remove(start_photo);
+                acc.get(key).remove(end_photo);
                 return acc;
             },(acc,m)->null);
 
@@ -363,18 +363,17 @@ public class Modification {
         Map<String,File> files = new HashMap<>();
         for (String key : exifMap.keySet()) {
             Map<String,Object> params = exifMap.get(key);
-            String [] keys = key.split(",");
+            String [] keys = key.split("\\|");
             String path = keys[0];
             List<String> pathList = new ArrayList<>();
             if (keys.length==3) {
                 try {
                     final boolean includeSubFolder = params.containsKey(include_sub_folder) && (Boolean)(params.get(include_sub_folder));
-                    long start = Long.parseLong(keys[1]),
-                         end = Long.parseLong(keys[2]);
+                    PhotoInfo start = archiveInfo.find(new File(rootPath,keys[1])), end = archiveInfo.find(new File(rootPath,keys[2]));
+                    if (start==null || end==null) continue;
                     archiveInfo.getInfos().stream().filter(p ->
                             (p.getSubFolder().equals(path) || (includeSubFolder && p.getSubFolder().startsWith(path)))
-                            && p.getShootTime() != null
-                            && p.getShootTime().getTime() >= start && p.getShootTime().getTime() <= end
+                            && p.compareTo(start)>=0 && p.compareTo(end)<=0
                     ).reduce(pathList,(acc,p)-> {
                         acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
                         return acc;

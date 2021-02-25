@@ -529,19 +529,14 @@ public class PhotoInfo implements Serializable,Cloneable {
             return name;
     }
     private int nameCompare(PhotoInfo p) {
-        String na = (getSubFolder() + "\\" + nameWithoutExt(getFileName())).toLowerCase();
-        String nb = (p.getSubFolder() + "\\" + nameWithoutExt(p.getFileName())).toLowerCase();
-
-        if (na.length()>nb.length() && na.startsWith(nb)) return -1;
-        else if (nb.length()>na.length() && nb.startsWith(na)) return 1;
-        else {
-            na = (getSubFolder() + "\\" + getFileName()).toLowerCase();
-            nb = (p.getSubFolder() + "\\" + p.getFileName()).toLowerCase();
-            return na.compareTo(nb);
-        }
+        int cp = getSubFolder().compareTo(p.getSubFolder());
+        if (cp==0) return getFileName().compareTo(p.getFileName());
+        else return cp;
     }
     public int compareTo(PhotoInfo p) {
         Date d1 = getShootTime(), d2 = p.getShootTime();
+        if (d1==null) d1=getCreateTime();
+        if (d2==null) d2=p.getCreateTime();
         if (d1==null && d2==null) return nameCompare(p);
         else if (d1==null)
             return -1;
