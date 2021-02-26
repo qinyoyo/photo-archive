@@ -529,6 +529,37 @@ public class ArchiveUtils {
             }
         }
     }
+
+    public static void syncExifAttributesByTime(ArchiveInfo source, ArchiveInfo target) {
+        List<PhotoInfo> sourceList = source.getInfos(), targetList = target.getInfos();
+        Iterator<PhotoInfo> iter = sourceList.iterator();
+        int index = 0;
+        List<Modification> modificationList = new ArrayList<>();
+        while (iter.hasNext()) {
+            PhotoInfo srcPi = iter.next();
+            if (srcPi.getShootTime()==null) continue;
+            for (int i=index;i<targetList.size();i++) {
+                PhotoInfo tarPi = targetList.get(i);
+                index = i;
+                if (tarPi.getShootTime()==null) continue;
+                long pc = tarPi.getShootTime().getTime() - srcPi.getShootTime().getTime();
+                if ( pc < 0) continue;
+                else if (pc > 0) break;
+                else {
+                    index++;
+                    Map<String, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS), true);
+                    Modification.deleteSameProperties(tarPi,params);
+                    if (!params.isEmpty()) {
+                        modificationList.add(new Modification(Modification.Exif,
+                                tarPi.getSubFolder() + (tarPi.getSubFolder().isEmpty()?"":File.separator) + tarPi.getFileName(),
+                                params));
+                    }
+                }
+            }
+        }
+        if (!modificationList.isEmpty()) Modification.execute(modificationList,target);
+    }
+
     public static boolean deletePhoto(ArchiveInfo archiveInfo,String path) {
         if (path==null) return false;
         PhotoInfo pi = archiveInfo.find(new File(archiveInfo.getPath() , path));

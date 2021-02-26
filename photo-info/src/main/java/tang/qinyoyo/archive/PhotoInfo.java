@@ -573,7 +573,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         return xmlString(Arrays.asList(keys));
     }
     public String xmlString(List<Key> keys) {
-        return Modification.xmlString(Modification.exifMap(this,keys));
+        return Modification.xmlString(Modification.exifMap(this,keys,false));
     }
     public void updateThumbFile(String rootPath,Integer ori) {
         try {

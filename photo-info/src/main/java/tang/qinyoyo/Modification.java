@@ -47,7 +47,7 @@ public class Modification {
     public Modification(PhotoInfo pi,List<Key> keys) {
         this.action = Exif;
         this.path = pi.getSubFolder().isEmpty() ? pi.getFileName() : (pi.getSubFolder() + File.separator + pi.getFileName());
-        this.params = exifMap(pi,keys);
+        this.params = exifMap(pi,keys,false);
     }
     @Override
     public String toString() {
@@ -100,7 +100,7 @@ public class Modification {
             return null;
         }
     }
-    public static Map<String,Object> exifMap(PhotoInfo pi, List<Key> keys) {
+    public static Map<String,Object> exifMap(PhotoInfo pi, List<Key> keys, boolean skipNull) {
         Map<String,Object> map = new HashMap<>();
         if (pi==null || keys==null || keys.size()==0) return map;
         for (Key key : keys) {
@@ -182,7 +182,7 @@ public class Modification {
                     break;
                 default:
             }
-            map.put(Key.getName(key),value);
+            if (!skipNull || value!=null)  map.put(Key.getName(key),value);
         }
         return map;
     }
@@ -193,7 +193,7 @@ public class Modification {
             Optional<Key> key = Key.findKeyWithName(k);
             if (key.isPresent()) keys.add(key.get());
         }
-        Map<String,Object> values = exifMap(p,keys);
+        Map<String,Object> values = exifMap(p,keys,false);
         for (String k : values.keySet()) {
             Object v1 = attrs.get(k);
             Object v2 = values.get(k);

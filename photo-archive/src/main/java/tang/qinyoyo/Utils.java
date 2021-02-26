@@ -2,10 +2,10 @@ package tang.qinyoyo;
 
 import tang.qinyoyo.archive.ArchiveInfo;
 import tang.qinyoyo.archive.DateUtil;
-import tang.qinyoyo.archive.FolderInfo;
 import tang.qinyoyo.archive.PhotoInfo;
 import tang.qinyoyo.exiftool.CommandRunner;
 import tang.qinyoyo.exiftool.ExifTool;
+
 import java.io.*;
 import java.util.*;
 
@@ -63,6 +63,7 @@ public class Utils {
 	static final String PARAM_HELP = "help";
 	static final String PARAM_EMPTY = "empty";
 	static final String PARAM_RENAME = "rename";
+	static final String PARAM_RAW = "raw";
 	public static String RENAME_PATTERN = PhotoInfo.RENAME_PATTERN;
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
@@ -71,6 +72,12 @@ public class Utils {
 		for (int i=0;i<total;i++) {
 			String param = argv[i].trim();
 			switch (param) {
+				case "-w":
+				case "--raw":
+					if (i<total-1) {
+						result.put(PARAM_RAW,argv[i+1]);
+						break;
+					} else throw new Exception("-w 参数必须后跟一个目录，指定同步的RAW文件目录");
 				case "-n":
 				case "--rename":
 					if (i<total-1) {
@@ -183,9 +190,6 @@ public class Utils {
 		}
 		return input;
 	}
-
-
-
 
 	public static void main1() {
 		System.out.println("Usage1: java -jar pa.jar <options>");
@@ -380,6 +384,16 @@ public class Utils {
 				archived.createThumbFiles();
 			}
 		}
+		v = params.get(PARAM_RAW);
+		if (v!=null && archived!=null) {
+			String path = v.toString();
+			ArchiveInfo raw = new ArchiveInfo(path);
+			raw.sortInfos();
+			raw.saveInfos();
+			ArchiveUtils.syncExifAttributesByTime(archived, raw);
+			raw.saveInfos();
+		}
+
 		v = params.get(PARAM_VIEW_DIR);
 		if (v!=null) {
 			try {
