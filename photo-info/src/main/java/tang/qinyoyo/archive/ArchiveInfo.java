@@ -267,6 +267,13 @@ public class ArchiveInfo {
     public void sortInfos() {
     	ArchiveUtils.defaultSort(infos);
     }
+    public List<PhotoInfo> subFolderInfos(String subFolder) {
+        if (subFolder==null || subFolder.isEmpty()) return infos;
+        return infos.stream().filter(p->{
+            String sub = p.getSubFolder();
+            return subFolder.equals(sub) || sub.startsWith(subFolder+File.separator);
+        }).collect(Collectors.toList());
+    }
     public void createThumbFiles(PhotoInfo p) {
         try {
             String thumbPath = p.fullThumbPath(getPath());
@@ -289,13 +296,16 @@ public class ArchiveInfo {
         } catch (IOException e) {
         }
     }
-    public void createThumbFiles() {
-        String subFolder = "";
-        if (infos!=null && infos.size()>0) {
-            for (PhotoInfo p : infos) {
+    public void createThumbFiles(String subFolder) {
+        List<PhotoInfo> list = subFolderInfos(subFolder);
+        if (list!=null && list.size()>0) {
+            for (PhotoInfo p : list) {
                 createThumbFiles(p);
             }
         }
+    }
+    public void createThumbFiles() {
+        createThumbFiles("");
     }
     public int indexOf(File file) {
         try {

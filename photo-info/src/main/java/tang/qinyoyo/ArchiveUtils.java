@@ -560,23 +560,21 @@ public class ArchiveUtils {
         System.out.println("Sync: "+modified+"; same: "+same+"; miss: "+(targetList.size()-modified-same));
     }
     public static void syncThumbOrientation(ArchiveInfo archiveInfo, String subFolder) {
-        List<PhotoInfo> infos = archiveInfo.getInfos();
+        List<PhotoInfo> infos = archiveInfo.subFolderInfos(subFolder);
         String root = archiveInfo.getPath();
         List<Modification> modificationList = new ArrayList<>();
         for (PhotoInfo pi : infos) {
             if (pi.getMimeType()==null || !pi.getMimeType().contains("image")) continue;
-            String sub = pi.getSubFolder();
-            if (subFolder==null || subFolder.isEmpty() || subFolder.equals(sub) || sub.startsWith(subFolder+File.separator)) {
-                try {
-                    String thumbPath = pi.fullThumbPath(root);
-                    if (new File(thumbPath).exists()) {
-                        Map<String, Object> params = new HashMap<>();
-                        params.put(Key.getName(Key.ORIENTATION), Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
-                        modificationList.add(new Modification(Modification.Exif,
-                                thumbPath.substring(root.length() + 1), params));
-                    }
-                } catch (Exception e){}
-            }
+            try {
+                String thumbPath = pi.fullThumbPath(root);
+                if (new File(thumbPath).exists()) {
+                    Map<String, Object> params = new HashMap<>();
+                    params.put(Key.getName(Key.ORIENTATION), Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
+                    modificationList.add(new Modification(Modification.Exif,
+                            thumbPath.substring(root.length() + 1), params));
+                }
+            } catch (Exception e){}
+
         }
         if (!modificationList.isEmpty()) Modification.execute(modificationList,archiveInfo);
     }

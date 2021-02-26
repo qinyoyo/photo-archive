@@ -201,10 +201,11 @@ public class Utils {
 	}
 
 	public static void main1() {
+		/*
 		System.out.println("Usage1: java -jar pa.jar <options>");
 		System.out.println("");
 		while (true) {
-			String input = getInputString("1 执行归档\n2 查看相同图像文件\n", "");
+			String input = getInputString("1 归档维护操作\n2 查看相同图像文件\n", "");
 			if (input.startsWith("1")) break;
 			else if (input.startsWith("2")) {
 				input = getInputString("输入待查看的目录路径", "E:\\Camera");
@@ -216,104 +217,84 @@ public class Utils {
 				return;
 			}
 		}
-		ArchiveInfo camera = null, archived=null;
+
+		 */
+		ArchiveInfo archived=null;
 		File dir=null;
-		while(dir==null || !dir.exists() || !dir.isDirectory()) {
-			String input = getInputString("输入待归档的目录路径(输入-表示忽略)", "E:\\Camera");
-			if (input.isEmpty() || input.equals("-")) break;
-			dir = new File(input);
-			if (dir!=null && dir.exists() && dir.isDirectory()) {
-				boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
-				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
-				boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
-				camera=ArchiveUtils.getArchiveInfo(input, clear, same,other);
-			}
-		}
-		dir=null;
 		while(dir==null || !dir.exists() || !dir.isDirectory()) {
 			String input = getInputString("输入已经归档的目录路径(输入-表示忽略)", "E:\\Archived");
 			if (input.isEmpty() || input.equals("-")) break;
 			dir = new File(input);
 			if (dir!=null && dir.exists() && dir.isDirectory()) {
 				boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
-				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
+				boolean same = boolValue(getInputString("将相同文件移到.delete目录", "no"));
 				boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
 				archived=ArchiveUtils.getArchiveInfo(input, clear, same,other);
 			}
 		}
-		if (camera!=null && archived!=null) {
-			System.out.println("Now :"+DateUtil.date2String(new Date()));
-			System.out.println("删除归档文件夹已经存在的待归档文件...");
-			camera.scanSameFilesWith(archived);
-			boolean op = boolValue(getInputString("是否执行归档操作", "no"));
-			if (op) ArchiveUtils.executeArchive(camera,archived);
+		if (archived==null) return;
+		boolean shutdown = false;
+		String root = archived.getPath()+File.separator;
+		int len = root.length();
+		while (true) {
+			boolean done = false;
+			String input = getInputString("1 重建缩略图文件\n2 同步缩略图方向属性\n3 将属性写入到RAW文件"
+					+"\n4 重新扫描子目录\n5 将一个目录合并入归档"
+					+"\n0 下一个操作之后关机\nq 退出", "");
+			if (input.equals("q")) return;
+			else if (input.equals("0")) shutdown = true;
+			else if (input.equals("1")) {
+				String path = getInputString("输入重建的子目录(空表示全部)：", "");
+				if (path.startsWith(root)) path=path.substring(len);
+				archived.createThumbFiles(path);
+				done = true;
+			} else if (input.equals("2")) {
+				String path = getInputString("输入重建的子目录(空表示全部)：", "");
+				if (path.startsWith(root)) path=path.substring(len);
+				ArchiveUtils.syncThumbOrientation(archived,path);
+				done = true;
+			} else if (input.equals("3")) {
+				String path = getInputString("输入需要同步的RAW目录绝对路径：", "");
+				List<String> args = new ArrayList<String>(){{
+					add("--ext");
+					add("xmp");
+				}};
+				ArchiveInfo raw = new ArchiveInfo(path, args);
+				raw.sortInfos();
+				raw.saveInfos();
+				ArchiveUtils.syncExifAttributesByTime(archived, raw);
+				raw.saveInfos();
+				done = true;
+			} else if (input.equals("4")) {
+				String path = getInputString("输入需要重新扫描的子目录：", "");
+				if (path.startsWith(root)) path=path.substring(len);
+				if (path!=null && !path.isEmpty()) {
+					if (Modification.scanAction(path,archived))
+						Modification.save(new Modification(Modification.Scan,path,null),archived.getPath());
+					done = true;
+				}
+			} else if (input.equals("5")) {
+					String path = getInputString("输入待归档的绝对目录路径", "");
+					if (!input.isEmpty()) {
+						dir = new File(input);
+						if (dir != null && dir.exists() && dir.isDirectory()) {
+							boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
+							boolean same = boolValue(getInputString("将相同文件移到.delete目录", "yes"));
+							boolean other = boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
+							ArchiveInfo camera = ArchiveUtils.getArchiveInfo(path, clear, same, other);
+							System.out.println("Now :"+DateUtil.date2String(new Date()));
+							System.out.println("删除归档文件夹已经存在的待归档文件...");
+							camera.scanSameFilesWith(archived);
+							ArchiveUtils.executeArchive(camera,archived);
+							done = true;
+						}
+					}
+			}
+			if (shutdown && done) {
+				CommandRunner.shutdown(10);
+				return;
+			}
 		}
-	}
-
-	public static void pathScene(File dir) {
-		List<String> args = new ArrayList<>();
-		args.add("-Scene=Landscape");
-		args.add("-overwrite_original");
-		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
-			@Override
-			public boolean accept(File dir) {
-				return (dir.getName().toLowerCase().equals("l")) || dir.getName().contains("风景");
-			}
-
-			@Override
-			public void before(File dir) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void after(File dir) {
-				dir.renameTo(new File(dir.getParentFile(),"Landscape"));
-				
-			}
-		});
-		args.clear();
-		args.add("-Scene=Portrait");
-		args.add("-overwrite_original");
-		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
-			@Override
-			public boolean accept(File dir) {
-				return (dir.getName().toLowerCase().equals("p")) || dir.getName().contains("人物") || dir.getName().contains("人像");
-			}
-
-			@Override
-			public void before(File dir) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void after(File dir) {
-				dir.renameTo(new File(dir.getParentFile(),"Portrait"));
-				
-			}
-		});
-		args.clear();
-		args.add("-Scene=Group");
-		args.add("-overwrite_original");
-		ExifTool.dirAction(dir, args, true, new ExifTool.FileActionListener() {
-			@Override
-			public boolean accept(File dir) {
-				return dir.getName().toLowerCase().contains("group") || dir.getName().toLowerCase().contains("合影");
-			}
-
-			@Override
-			public void before(File dir) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void after(File dir) {
-				// TODO Auto-generated method stub
-				dir.renameTo(new File(dir.getParentFile(),"Group"));
-			}
-		});
 	}
 	public static void main(String[] argv) {
 		ArchiveUtils.setOutput(Utils.class,"stdout.log");
