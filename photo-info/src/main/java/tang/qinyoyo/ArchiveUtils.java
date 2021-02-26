@@ -1,9 +1,6 @@
 package tang.qinyoyo;
 
-import tang.qinyoyo.archive.ArchiveInfo;
-import tang.qinyoyo.archive.DateUtil;
-import tang.qinyoyo.archive.FolderInfo;
-import tang.qinyoyo.archive.PhotoInfo;
+import tang.qinyoyo.archive.*;
 import tang.qinyoyo.exiftool.Key;
 
 import java.io.*;
@@ -535,13 +532,14 @@ public class ArchiveUtils {
         Iterator<PhotoInfo> iter = sourceList.iterator();
         int index = 0;
         List<Modification> modificationList = new ArrayList<>();
+        int modified = 0, same = 0;
         while (iter.hasNext()) {
             PhotoInfo srcPi = iter.next();
             if (srcPi.getShootTime()==null) continue;
             for (int i=index;i<targetList.size();i++) {
                 PhotoInfo tarPi = targetList.get(i);
                 index = i;
-                if (tarPi.getShootTime()==null) continue;
+                if (tarPi.getShootTime()==null || tarPi.getFileName().endsWith(".xmp")) continue;
                 long pc = tarPi.getShootTime().getTime() - srcPi.getShootTime().getTime();
                 if ( pc < 0) continue;
                 else if (pc > 0) break;
@@ -550,16 +548,38 @@ public class ArchiveUtils {
                     Map<String, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS), true);
                     Modification.deleteSameProperties(tarPi,params);
                     if (!params.isEmpty()) {
+                        modified ++;
                         modificationList.add(new Modification(Modification.Exif,
                                 tarPi.getSubFolder() + (tarPi.getSubFolder().isEmpty()?"":File.separator) + tarPi.getFileName(),
                                 params));
-                    }
+                    } else same ++;
                 }
             }
         }
         if (!modificationList.isEmpty()) Modification.execute(modificationList,target);
+        System.out.println("Sync: "+modified+"; same: "+same+"; miss: "+(targetList.size()-modified-same));
     }
-
+    public static void syncThumbOrientation(ArchiveInfo archiveInfo, String subFolder) {
+        List<PhotoInfo> infos = archiveInfo.getInfos();
+        String root = archiveInfo.getPath();
+        List<Modification> modificationList = new ArrayList<>();
+        for (PhotoInfo pi : infos) {
+            if (pi.getMimeType()==null || !pi.getMimeType().contains("image")) continue;
+            String sub = pi.getSubFolder();
+            if (subFolder==null || subFolder.isEmpty() || subFolder.equals(sub) || sub.startsWith(subFolder+File.separator)) {
+                try {
+                    String thumbPath = pi.fullThumbPath(root);
+                    if (new File(thumbPath).exists()) {
+                        Map<String, Object> params = new HashMap<>();
+                        params.put(Key.getName(Key.ORIENTATION), Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
+                        modificationList.add(new Modification(Modification.Exif,
+                                thumbPath.substring(root.length() + 1), params));
+                    }
+                } catch (Exception e){}
+            }
+        }
+        if (!modificationList.isEmpty()) Modification.execute(modificationList,archiveInfo);
+    }
     public static boolean deletePhoto(ArchiveInfo archiveInfo,String path) {
         if (path==null) return false;
         PhotoInfo pi = archiveInfo.find(new File(archiveInfo.getPath() , path));

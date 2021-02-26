@@ -207,7 +207,7 @@ public class Modification {
         for (String key : map.keySet()) {
             if (key.equals(start_photo) || key.equals(end_photo)) continue;
             Object value = map.get(key);
-            if (value!=null || !value.toString().isEmpty()) {
+            if (value!=null && !value.toString().isEmpty()) {
                 if (key.equals(Key.getName((Key.DATETIMEORIGINAL))) && value.toString().indexOf(".")>0) {
                     String dt = value.toString();
                     int pos = dt.indexOf(".");
@@ -275,12 +275,12 @@ public class Modification {
             for (String link : files.keySet()) {
                 File modified = new File(imgDir, link);
                 File f = files.get(link);
-                if (modified.exists() && modified.length()>0) {
-                    try {
+                try {
+                    if (modified.exists() && !Files.isSymbolicLink(modified.toPath())) {
                         Files.move(modified.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
             ArchiveUtils.removeFilesInDir(xmpDir, false);
@@ -386,8 +386,7 @@ public class Modification {
             for (String filePath : pathList) {
                 File img = new File(rootPath, filePath);
                 if (img.exists() && img.isFile()) {
-                    PhotoInfo pi = archiveInfo.find(img);
-                    if (pi==null) continue;
+                    PhotoInfo info = archiveInfo.find(img);
                     Map<String,Object> nm = new HashMap<>();
                     nm.putAll(params);
                     if (count>0 && keys.length==3 && nm.containsKey(Key.getName(Key.DATETIMEORIGINAL))) {  // 批量修改时间，加1秒
@@ -399,8 +398,10 @@ public class Modification {
                             nm.put(Key.getName(Key.DATETIMEORIGINAL), DateUtil.date2String(dt));
                         }
                     }
-                    deleteSameProperties(pi,nm);
-                    if (nm.isEmpty()) continue;
+                    if (info!=null) {
+                        deleteSameProperties(info, nm);
+                        if (nm.isEmpty()) continue;
+                    }
                     String xml = xmlString(nm);
                     String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                     try {
@@ -410,7 +411,7 @@ public class Modification {
                             ArchiveUtils.writeToFile(xmpFile, xml, "UTF-8");
                             count++;
                             files.put(link, img);
-                            pi.setPropertiesBy(nm);
+                            if (info!=null) info.setPropertiesBy(nm);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

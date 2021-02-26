@@ -64,6 +64,7 @@ public class Utils {
 	static final String PARAM_EMPTY = "empty";
 	static final String PARAM_RENAME = "rename";
 	static final String PARAM_RAW = "raw";
+	static final String PARAM_THUMB = "thumb";
 	public static String RENAME_PATTERN = PhotoInfo.RENAME_PATTERN;
 	public static Map<String,Object> parseArgv(String [] argv) throws Exception {
 		Map<String,Object> result = new HashMap<>();
@@ -72,8 +73,8 @@ public class Utils {
 		for (int i=0;i<total;i++) {
 			String param = argv[i].trim();
 			switch (param) {
-				case "-w":
-				case "--raw":
+				case "-p3":
+				case "--path3":
 					if (i<total-1) {
 						result.put(PARAM_RAW,argv[i+1]);
 						break;
@@ -109,6 +110,12 @@ public class Utils {
 				case "--help":
 					result.put(PARAM_HELP,true);
 					break;
+				case "-t":
+				case "--thumb":
+					if (i<total-1) {
+						result.put(PARAM_THUMB,argv[i+1]);
+						break;
+					} else throw new Exception("-t 参数必须后跟一个目录，指定同步缩略图的子目录");
 				case "-s1":
 				case "--same1":
 				case "-s2":
@@ -156,9 +163,11 @@ public class Utils {
 		System.out.println("options:");
 		System.out.println("  -p1 dir_name	: 指定需要归档的图像文件目录, 同 --path1");
 		System.out.println("  -p2 dir_name	: 指定归档图像文件最终保存目录,同 --path2");
+		System.out.println("  -p3 dir_name	: 指定需要同步的RAW目录,同 --path3");
 		System.out.println("  -v  dir_name	:  对比浏览相同图像文件的目录, 同 --view");
 		System.out.println("  -n  dir_name	<name_pattern>:  修改文件名，忽略其他选项, 同  --rename");
 		System.out.println("  -m : 删除空目录, 同  --empty");
+		System.out.println("  -t dir_name	: 同步thumb目录, 同  --thumb");
 		System.out.println("  -s1 : 将相同文件移到.delete目录, 同  --same1");
 		System.out.println("  -o1 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other1");
 		System.out.println("  -c1 : 需要归档的目录重新分析, 同  --clear1");
@@ -383,11 +392,17 @@ public class Utils {
 				System.out.println("建立缩略图文件<"+archived.getPath()+">...");
 				archived.createThumbFiles();
 			}
+			v = params.get(PARAM_THUMB);
+			if(v!=null) ArchiveUtils.syncThumbOrientation(archived,v.toString());
 		}
 		v = params.get(PARAM_RAW);
 		if (v!=null && archived!=null) {
+			List<String> args = new ArrayList<String>(){{
+				add("--ext");
+				add("xmp");
+			}};
 			String path = v.toString();
-			ArchiveInfo raw = new ArchiveInfo(path);
+			ArchiveInfo raw = new ArchiveInfo(path, args);
 			raw.sortInfos();
 			raw.saveInfos();
 			ArchiveUtils.syncExifAttributesByTime(archived, raw);

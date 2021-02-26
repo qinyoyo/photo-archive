@@ -22,6 +22,7 @@ public class ArchiveInfo {
     private List<PhotoInfo> infos;
     private ExifTool exifTool;
     private boolean readFromFile = false;
+    private List<String> exifToolArgs = null;
 
     public boolean isReadFromFile() {
         return readFromFile;
@@ -83,11 +84,16 @@ public class ArchiveInfo {
         }
     }
     public ArchiveInfo() {
+        exifToolArgs = null;
         exifTool = ExifTool.getInstance();
         checkFfmpeg();
         infos = new ArrayList<>();
     }
-	public ArchiveInfo(String dir) {
+    public ArchiveInfo(String dir) {
+        this(dir,null);
+    }
+    public ArchiveInfo(String dir, List<String> args) {
+        exifToolArgs = args;
         exifTool = ExifTool.getInstance();
         checkFfmpeg();
         File d = new File(dir);
@@ -180,7 +186,7 @@ public class ArchiveInfo {
 
         int count = 0; 
         try {
-            fileInfos = exifTool.query(dir, ArchiveUtils.NEED_KEYS);
+            fileInfos = exifTool.query(dir, exifToolArgs, ArchiveUtils.NEED_KEYS);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -363,7 +363,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         File f = new File(fullPath(rootPath));
         if (f.exists() && SupportFileType.isSupport(f.getName())) {
             try {
-                Map<String, Map<String, Object>>  fileInfos = ExifTool.getInstance().query(f, ArchiveUtils.NEED_KEYS);
+                Map<String, Map<String, Object>>  fileInfos = ExifTool.getInstance().query(f, null, ArchiveUtils.NEED_KEYS);
                 if (fileInfos!=null) {
                     setPropertiesBy(fileInfos.get(f.getName()));
                     if (getShootTime()==null && getCreateTime()!=null && getMimeType()!=null && !getMimeType().toLowerCase().startsWith("image"))

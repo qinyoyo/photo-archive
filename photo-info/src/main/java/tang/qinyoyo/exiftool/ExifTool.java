@@ -53,7 +53,7 @@ public class ExifTool {
      * @return 标签值，key为文件名，值为标签及值的map
      * @throws IOException io异常
      */
-    public Map<String,Map<String, Object>> query(File dir, Key ... keys) throws IOException {
+    public Map<String,Map<String, Object>> query(File dir, List<String> args, Key ... keys) throws IOException {
         // exiftool.exe -T -charset filename="" -c "%+.7f" -filename -SubSecDateTimeOriginal -DateTimeOriginal -Make -Model -LensID -GPSLongitude -GPSLatitude -GPSAltitude
 
         List<String> argsList = new ArrayList<>();
@@ -75,6 +75,9 @@ public class ExifTool {
 	        argsList.add("filename=\"\"");
             argsList.add("-filename");
         }
+
+        if (args!=null && args.size()>0) argsList.addAll(args);
+
         for (Key key : keys) {
             argsList.add(String.format("-%s", Key.getName(key)));
         }
