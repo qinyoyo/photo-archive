@@ -59,10 +59,14 @@ public class DateUtil {
     public static Date getShootTimeFromFileName(String fileName) {
         if (fileName==null || fileName.isEmpty()) return null;
         try {
-            Pattern p = Pattern.compile("(\\d{15})");
+            Pattern p = Pattern.compile("(\\d{13}(\\d*))");
             Matcher m = p.matcher(fileName);
             if (m.find()) {
-                return null;
+                if (m.group(2).length()>=2) return null;
+                else if (m.group(2).isEmpty()) {
+                    long v = Long.parseLong(m.group(1));
+                    return new Date(v);
+                }
             }
             p = Pattern.compile("(\\d{4})[^0-9]?(\\d{2})[^0-9]?(\\d{2})[^0-9]{0,2}(\\d{2})[^0-9]?(\\d{2})[^0-9]?(\\d{2})");
             m = p.matcher(fileName);

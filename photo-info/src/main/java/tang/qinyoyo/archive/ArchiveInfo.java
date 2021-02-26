@@ -195,7 +195,13 @@ public class ArchiveInfo {
 	                        photoInfo.setPropertiesBy(fileInfos.get(file));
                             if (photoInfo.getShootTime()==null && photoInfo.getCreateTime()!=null && photoInfo.getMimeType()!=null && !photoInfo.getMimeType().toLowerCase().startsWith("image"))
                                 photoInfo.setShootTime(photoInfo.getCreateTime());
-                            if (photoInfo.getShootTime()==null) photoInfo.setShootTime(DateUtil.getShootTimeFromFileName(photoInfo.getFileName()));
+                            if (photoInfo.getShootTime()==null) {
+                                photoInfo.setShootTime(DateUtil.getShootTimeFromFileName(photoInfo.getFileName()));
+                                if (photoInfo.getShootTime()!=null) {
+                                    ExifTool.getInstance().execute(new File(photoInfo.fullPath(path)), "-overwrite_original",
+                                            "-DateTimeOriginal="+DateUtil.date2String(photoInfo.getShootTime()));
+                                }
+                            }
 	                        if (dir.getName().endsWith(".web") && photoInfo.getMimeType()!=null && photoInfo.getMimeType().contains("html") && !photoInfo.getFileName().equals("index.html")) {
                                 System.out.println("    忽略文件 " + file);
                             } else {

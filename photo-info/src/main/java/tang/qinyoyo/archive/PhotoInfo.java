@@ -368,7 +368,13 @@ public class PhotoInfo implements Serializable,Cloneable {
                     setPropertiesBy(fileInfos.get(f.getName()));
                     if (getShootTime()==null && getCreateTime()!=null && getMimeType()!=null && !getMimeType().toLowerCase().startsWith("image"))
                         setShootTime(getCreateTime());
-                    if (getShootTime()==null) setShootTime(DateUtil.getShootTimeFromFileName(getFileName()));
+                    if (getShootTime()==null) {
+                        setShootTime(DateUtil.getShootTimeFromFileName(getFileName()));
+                        if (getShootTime()!=null) {
+                            ExifTool.getInstance().execute(f, "-overwrite_original",
+                                    "-DateTimeOriginal="+DateUtil.date2String(getShootTime()));
+                        }
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -710,7 +710,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 if (emptyArg) ArchiveUtils.removeEmptyFolder(new File(rootPath));
                 archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clearArg,removeSameArg,moveOtherArg);
                 rootPath = archiveInfo.getPath();  // 标准化
-                archiveInfo.moveNoShootTimeFiles(true);
+                // archiveInfo.moveNoShootTimeFiles(true);
                 System.out.println("归档主目录为 : "+rootPath);
                 if (mergeList.size()>0) for (String path:mergeList) {
                     System.out.println("合并目录 : "+path);
