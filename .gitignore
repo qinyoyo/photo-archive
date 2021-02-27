@@ -18,6 +18,8 @@ target/
 *.xls
 *.pptx
 *.ppt
+*.exe
+
 
 
 

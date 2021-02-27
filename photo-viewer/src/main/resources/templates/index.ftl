@@ -21,6 +21,16 @@
 </head>
 <#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
 <script>
+    function onavplay(e) {
+      document.querySelectorAll('audio,video').forEach(r=>{
+          if (r!==e) r.pause()
+      })
+    }
+    function toggleBackMusic() {
+        const e = document.querySelector('audio.background-music')
+        if (e && e.paused) e.play()
+        else if (e) e.pause()
+    }
     <#if debug?? && debug>
     window.enableDebug = true
     </#if>
@@ -46,7 +56,7 @@
 <#assign path = '' />
 <body>
 <#if backgroundMusic??>
-    <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay></audio>
+    <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay onplay="onavplay(this)"></audio>
 </#if>
 <div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}" data-rangeExifNote="${rangeExifNote}"</#if>>
     <#if loopPlay??>
@@ -61,7 +71,7 @@
         没有可循环播放的图像
     </#if>
     <#else>
-    <div class="folder-head" >
+    <div class="folder-head"  ondblclick="toggleBackMusic()">
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
@@ -130,7 +140,7 @@
         <div class="collapse-content audio-list grid-box">
         <#list audios as a>
             <div class="audio-item grid-cell">
-                <audio src = "${fileUrl(a)}" class="audio-index-${a?index?c}" controls></audio>
+                <audio src = "${fileUrl(a)}" class="audio-index-${a?index?c}" controls onplay="onavplay(this)"></audio>
                 <span>${a.fileName}</span>
             </div>
         </#list>
@@ -146,7 +156,7 @@
         <div class="collapse-content video-list grid-box">
         <#list videos as v>
             <div class="video-item grid-cell">
-                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}"></video>
+                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}" onplay="onavplay(this)"></video>
                 <span>${v.fileName}</span>
             </div>
         </#list>
