@@ -44,13 +44,8 @@ public class PVController implements ApplicationRunner , ErrorController {
     private String rootPath;
     private ArchiveInfo archiveInfo;
     private boolean isReady = false;
-    private boolean isDebug = false;
-    private String unlockPassword = "19960802";
     private boolean noVideoThumb = false;
-    private boolean htmlEditable = false;
-    private boolean favoriteFilter = false;
-    private Key  rangeExif = Key.SUBJECT_CODE;
-    private int loopTimer = 4000;
+    private String unlockPassword = "19960802";
     public static final String STDOUT = "stdout.log";
     private static  Logger logger = Logger.getLogger("PVController");
 
@@ -66,45 +61,35 @@ public class PVController implements ApplicationRunner , ErrorController {
         return isReady;
     }
 
-
-    private HashSet<String> unlockSessions = new HashSet<>();
-    boolean isUnlocked(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        if (session!=null) {
-            String id = session.getId();
-            return unlockSessions.contains(id);
-        }
-        return false;
-    }
-    void unlockSession(HttpServletRequest request, boolean unlock) {
-        HttpSession session = request.getSession();
-        if (session!=null) {
-            String id = session.getId();
-            if (unlock && !unlockSessions.contains(id)) unlockSessions.add(id);
-            else if (!unlock && unlockSessions.contains(id)) unlockSessions.remove(id);
-        }
-    }
-
     @RequestMapping(value = "login")
-    public String login(Model model,HttpServletRequest request, String password, String exif) {
+    public String login(Model model,HttpServletRequest request, String password, String exif,
+                   Integer loopTimer, Boolean debug, Boolean htmlEditable ) {
         if (password!=null && password.equals(unlockPassword)) {
-            unlockSession(request,true);
-            if (exif==null || exif.isEmpty()) rangeExif = Key.SUBJECT_CODE;
-            else if (exif.equals("time")) rangeExif = Key.DATETIMEORIGINAL;
-            else if (exif.equals("rating")) rangeExif = Key.RATING;
-            else if (exif.equals("title")) rangeExif = Key.HEADLINE;
-            else if (exif.equals("subtitle")) rangeExif = Key.DESCRIPTION;
-            else if (exif.equals("country")) rangeExif = Key.COUNTRY;
-            else if (exif.equals("province")) rangeExif = Key.STATE;
-            else if (exif.equals("state")) rangeExif = Key.STATE;
-            else if (exif.equals("city")) rangeExif = Key.CITY;
-            else if (exif.equals("location")) rangeExif = Key.LOCATION;
-            else if (exif.equals("address")) rangeExif = Key.LOCATION;
-            else if (exif.equals("city")) rangeExif = Key.CITY;
+            SessionOptions options = SessionOptions.getSessionOptions(request);
+            options.setUnlocked(true);
+            if (loopTimer!=null) {
+                if (loopTimer<=0) loopTimer = 4000;
+                options.setLoopTimer(loopTimer);
+            }
+            if (debug!=null) options.setDebug(debug);
+            if (htmlEditable!=null) options.setHtmlEditable(htmlEditable);
+
+            if (exif==null || exif.isEmpty()) options.setRangeExif(Key.SUBJECT_CODE);
+            else if (exif.equals("time")) options.setRangeExif( Key.DATETIMEORIGINAL);
+            else if (exif.equals("rating")) options.setRangeExif( Key.RATING);
+            else if (exif.equals("title")) options.setRangeExif( Key.HEADLINE);
+            else if (exif.equals("subtitle")) options.setRangeExif( Key.DESCRIPTION);
+            else if (exif.equals("country")) options.setRangeExif( Key.COUNTRY);
+            else if (exif.equals("province")) options.setRangeExif( Key.STATE);
+            else if (exif.equals("state")) options.setRangeExif( Key.STATE);
+            else if (exif.equals("city")) options.setRangeExif( Key.CITY);
+            else if (exif.equals("location")) options.setRangeExif( Key.LOCATION);
+            else if (exif.equals("address")) options.setRangeExif( Key.LOCATION);
+            else if (exif.equals("city")) options.setRangeExif( Key.CITY);
             else {
                 Optional<Key> ok = Key.findKeyWithName(exif);
-                if (ok.isPresent()) rangeExif = ok.get();
-                else rangeExif = null;
+                if (ok.isPresent()) options.setRangeExif( ok.get());
+                else options.setRangeExif(null);
             }
             return "redirect:/";
         } else {
@@ -115,15 +100,17 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @RequestMapping(value = "logout")
     public String logout(Model model,HttpServletRequest request) {
-        unlockSession(request,false);
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        options.setUnlocked(false);
         return "redirect:/";
     }
 
     @ResponseBody
     @RequestMapping(value = "favorite")
-    public String setFavorite(HttpServletRequest request, HttpServletResponse response, Boolean filter) {
+    public String setFavorite(HttpServletRequest request, Boolean filter) {
         if (filter!=null) {
-            favoriteFilter = filter;
+            SessionOptions options = SessionOptions.getSessionOptions(request);
+            options.setFavoriteFilter(filter);
             return "ok";
         } else return "error";
     }
@@ -134,30 +121,30 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
     String [] randomMusic = null;
-    int randomIndex = 0;
     @RequestMapping(value = "music")
-    String switchMusic() {
-        if (randomIndex>=0) {
-            if (randomMusic==null) {
-                File [] mp3s = new File(rootPath,".music").listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File file) {
-                        return file.getName().endsWith(".mp3");
-                    }
-                });
-                if (mp3s==null || mp3s.length==0) {
-                    randomIndex = -1;
-                    return null;
-                } else {
-                    randomMusic=new String[mp3s.length];
-                    for (int i=0;i<mp3s.length;i++) {
-                        randomMusic[i]="/.music/"+mp3s[i].getName();
-                    }
+    String switchMusic(HttpServletRequest request) {
+        if (randomMusic==null) {
+            File [] mp3s = new File(rootPath,".music").listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.getName().endsWith(".mp3");
                 }
-                randomIndex=-1;
+            });
+            if (mp3s==null || mp3s.length==0) {
+                randomMusic = new String[]{};
+                return null;
+            } else {
+                randomMusic=new String[mp3s.length];
+                for (int i=0;i<mp3s.length;i++) {
+                    randomMusic[i]="/.music/"+mp3s[i].getName();
+                }
             }
-            randomIndex++;
-            if (randomIndex>=randomMusic.length) randomIndex=0;
+        }
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        int randomIndex = options.getMusicIndex();
+        if (randomIndex>=randomMusic.length) randomIndex=0;
+        if (randomIndex<randomMusic.length) {
+            options.setMusicIndex(randomIndex+1);
             return randomMusic[randomIndex];
         }  else return null;
     }
@@ -174,7 +161,8 @@ public class PVController implements ApplicationRunner , ErrorController {
             editorController.createHtmlFile(rootPath,path,newStep,archiveInfo);
         }
         commonAttribute(model,request);
-        Map<String, Object> res = getPathAttributes(path, false);
+        Map<String, Object> res = getPathAttributes(path, false,
+                SessionOptions.getSessionOptions(request).isFavoriteFilter());
         model.addAllAttributes(res);
         if (path!=null && !path.isEmpty() &&
                  (new File(rootPath+File.separator+path+File.separator+".need-scan").exists() ||
@@ -184,7 +172,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                     )
                  )
            ) model.addAttribute("needScan",true);
-        setBackgroundMusic(model,path);
+        setBackgroundMusic(request,model,path);
         return "index";
     }
 
@@ -194,16 +182,17 @@ public class PVController implements ApplicationRunner , ErrorController {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         commonAttribute(model,request);
         model.addAttribute("debug",false);
-        model.addAttribute("canRemove",false);
+        model.addAttribute("canRemove",options.isUnlocked());
         model.addAttribute("htmlEditable",false);
         model.addAttribute("notLoadImage",true);  // 不加载图像
-        if (loopTimer==0) model.addAttribute("loopTimer",4000);
+        model.addAttribute("loopTimer",options.getLoopTimer());
         model.addAttribute("loopPlay",true);
         model.addAttribute("startFrom",index);
-        model.addAllAttributes(getPathLoopImages(path));
-        setBackgroundMusic(model,path);
+        model.addAllAttributes(getPathLoopImages(path, options.isFavoriteFilter()));
+        setBackgroundMusic(request,model,path);
         return "index";
     }
 
@@ -221,6 +210,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         List<PhotoInfo> videos = new ArrayList<>();
         List<PhotoInfo> audios = new ArrayList<>();
         List<PhotoInfo> photos = new ArrayList<>();
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         for (PhotoInfo p : archiveInfo.getInfos()) {
             if (p.getSubFolder().toLowerCase().contains(text) && !p.getSubFolder().toLowerCase().endsWith(".web") && !dirs.contains(p.getSubFolder()))
                 dirs.add(p.getSubFolder());
@@ -230,7 +220,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 if (mime.contains("html")) htmls.add(p);
                 else if (mime.contains("audio")) audios.add(p);
                 else if (mime.contains("video")) videos.add(p);
-                else if (mime.contains("image") && (!favoriteFilter || (p.getRating()!=null && p.getRating()==5))) photos.add(p);
+                else if (mime.contains("image") && (!options.isFavoriteFilter() || (p.getRating()!=null && p.getRating()==5))) photos.add(p);
             }
         }
         if (dirs.size() > 0) {
@@ -250,7 +240,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (photos!=null && photos.size()>0) {
             model.addAttribute("photos",photos);
         }
-        setBackgroundMusic(model,null);
+        setBackgroundMusic(request, model,null);
         return "index";
     }
 
@@ -424,7 +414,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (s!=null && s.toLowerCase().contains(text)) return true;
         return false;
     }
-    List<PhotoInfo> mimeListInPath(String mime, String folder) {
+    List<PhotoInfo> mimeListInPath(String mime, String folder, boolean favoriteFilter) {
         if (!isReady) return null;
         List<PhotoInfo> list = archiveInfo.getInfos().stream()
                 .filter(p->
@@ -482,6 +472,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         initStatics(model);
         String params = request.getQueryString();
         String userAgent = request.getHeader("USER-AGENT");
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (isMobile(request)) {
             model.addAttribute("isMobile",true);
             String browsers = env.getProperty("photo.support-orientation");
@@ -499,21 +490,22 @@ public class PVController implements ApplicationRunner , ErrorController {
                 model.addAttribute("orientation", true);
             }
         }
-        if (isUnlocked(request)) {
+        if (options.isUnlocked()) {
             model.addAttribute("readOnly",false);
+            Key rangeExif = options.getRangeExif();
             if (rangeExif!=null) {
                 model.addAttribute("rangeExif", Key.getShortName(rangeExif));
                 model.addAttribute("rangeExifNote", Key.getNotes(rangeExif));
             }
         } else model.addAttribute("readOnly",true);
-        if (isDebug || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
+        if (options.isDebug() || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
-        if (favoriteFilter) model.addAttribute("favoriteFilter",true);
-        if (htmlEditable && !isMobile(request)) model.addAttribute("htmlEditable",true);
-        model.addAttribute("loopTimer",loopTimer);
+        if (options.isFavoriteFilter()) model.addAttribute("favoriteFilter",true);
+        if (options.isHtmlEditable() && !isMobile(request)) model.addAttribute("htmlEditable",true);
+        model.addAttribute("loopTimer",options.getLoopTimer());
     }
 
-    public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList) {
+    public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
         Map<String,Object> model = new HashMap<>();
         model.put("separator",File.separator);
         if (path!=null && !path.isEmpty()) {
@@ -556,19 +548,19 @@ public class PVController implements ApplicationRunner , ErrorController {
             }
             if (!just4ResourceList) {
                 // html文件
-                List<PhotoInfo> htmls = mimeListInPath("html", path);
+                List<PhotoInfo> htmls = mimeListInPath("html", path, favoriteFilter);
                 if (htmls != null && htmls.size() > 0) model.put("htmls", htmls);
             }
             // video文件
-            List<PhotoInfo> videos = mimeListInPath("video",path);
+            List<PhotoInfo> videos = mimeListInPath("video",path, favoriteFilter);
             if (videos!=null && videos.size()>0)  model.put("videos",videos);
 
             // audio文件
-            List<PhotoInfo> audios = mimeListInPath("audio",path);
+            List<PhotoInfo> audios = mimeListInPath("audio",path, favoriteFilter);
             if (audios!=null && audios.size()>0)  model.put("audios",audios);
 
             //Photo Info
-            List<PhotoInfo> photos = mimeListInPath("image",path);
+            List<PhotoInfo> photos = mimeListInPath("image",path, favoriteFilter);
             if (photos!=null && photos.size()>0) {
                 model.put("photos",photos);
             }
@@ -576,31 +568,31 @@ public class PVController implements ApplicationRunner , ErrorController {
         return model;
     }
 
-    private boolean loopFilter(PhotoInfo p) {
+    private boolean loopFilter(PhotoInfo p, boolean favoriteFilter) {
         return (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
                 p.getMimeType()!=null && p.getMimeType().contains("image/") &&
                 !p.getSubFolder().endsWith(".web") && p.getSubFolder().indexOf(".web"+File.separator)<0;
     }
-    private Map<String,Object> getPathLoopImages(final String path) {
+    private Map<String,Object> getPathLoopImages(final String path, boolean favoriteFilter) {
         Map<String,Object> model = new HashMap<>();
         model.put("separator",File.separator);
         List<PhotoInfo> photos;
         if (path!=null && !path.isEmpty()) {
             model.put("pathNames",path.split("\\\\|/"));
             photos = archiveInfo.getInfos().stream().filter(p ->
-                    loopFilter(p) && p.getSubFolder().indexOf(path) == 0
+                    loopFilter(p,favoriteFilter) && p.getSubFolder().indexOf(path) == 0
             ).collect(Collectors.toList());
-        } else photos = archiveInfo.getInfos().stream().filter(p -> loopFilter(p)
+        } else photos = archiveInfo.getInfos().stream().filter(p -> loopFilter(p,favoriteFilter)
         ).collect(Collectors.toList());
         // photos.sort((a,b)->a.compareTo(b));
         if (photos!=null && photos.size()>0) model.put("photos",photos);
         return model;
     }
-    private void setBackgroundMusic(Model model,String path) {
+    private void setBackgroundMusic(HttpServletRequest request, Model model,String path) {
         String bkm = (path==null || path.isEmpty() ? "" : "/"+path)+ "/.music.mp3";
         if (new File(rootPath,bkm).exists()) model.addAttribute("backgroundMusic",bkm.replaceAll("\\\\","/"));
         else {
-            String url = switchMusic();
+            String url = switchMusic(request);
             if (url!=null) {
                 model.addAttribute("backgroundMusic",url);
             }
@@ -638,13 +630,9 @@ public class PVController implements ApplicationRunner , ErrorController {
 
         new ArchiveInfo();
 
-        loopTimer = Util.null2Default(Util.toInt(env.getProperty("photo.loop-timer")),4000);
-        if (loopTimer<=0) loopTimer = 4000;
-        isDebug = Util.boolValue(env.getProperty("photo.debug"));
         unlockPassword = env.getProperty("photo.password");
         if (unlockPassword ==null) unlockPassword = "19960802";
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
-        htmlEditable = Util.boolValue(env.getProperty("photo.html-editable"));
 
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;

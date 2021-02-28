@@ -37,6 +37,7 @@ public class EditorController implements ApplicationRunner {
     private static final Configuration CONFIGURATION = new Configuration(Configuration.VERSION_2_3_22);
     @RequestMapping(value = "editor")
     public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean scanResource) {
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (path==null || path.isEmpty()) {
             model.addAttribute("message","请指定一个文件");
             return "message";
@@ -58,7 +59,7 @@ public class EditorController implements ApplicationRunner {
         m = p.matcher(html);
         if (m.find()) attributes.put("body",m.group(2));
         try {
-            Map<String, Object> pa = pvController.getPathAttributes(new File(path).getParent(), true);
+            Map<String, Object> pa = pvController.getPathAttributes(new File(path).getParent(), true, options.isFavoriteFilter());
             pa.put("currentPath",new File(path).getParent().replaceAll("\\\\","/"));
             String resourceHtml = freeMarkerWriter("resource.ftl",pa);
             String reUrl = path + "_ed.html";
@@ -77,7 +78,7 @@ public class EditorController implements ApplicationRunner {
     public String resource(HttpServletRequest request, HttpServletResponse response, String path, String current) {
         if (path==null || path.isEmpty()) return "error";
         try {
-            Map<String, Object> pa = pvController.getPathAttributes(path, true);
+            Map<String, Object> pa = pvController.getPathAttributes(path, true, SessionOptions.getSessionOptions(request).isFavoriteFilter());
             pa.put("currentPath",current);
             String resourceHtml = freeMarkerWriter("resource.ftl", pa);
             return resourceHtml;

@@ -24,11 +24,8 @@ logging:
       org.springframework: info
       qinyoyo: debug
 photo:
-#   debug: true
    password: 8705087
-   loop-timer: 2000
 #   no-video-thumb: true
-   html-editable: true
    support-orientation: HeyTapBrowser,Firefox,Mac OS X,HuaweiBrowser,UCBrowser/13
    root-path: G:\Photo\Archived
    ffmpeg: G:\Photo\ffmpeg.exe
