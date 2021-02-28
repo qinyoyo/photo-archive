@@ -19,14 +19,16 @@ public class SessionOptions {
     private int loopTimer;
     private int musicIndex;
     private boolean unlocked;
+    private boolean playBackMusic;
     public SessionOptions() {
         isDebug = false;
         htmlEditable = false;
         favoriteFilter = false;
         rangeExif = Key.SUBJECT_CODE;
-        loopTimer = 3688;
+        loopTimer = 5000;
         musicIndex = 0;
         unlocked = false;
+        playBackMusic = true;
     }
     private static Map<String,SessionOptions> allSessions = new HashMap<>();
     public static SessionOptions getSessionOptions(HttpServletRequest request) {

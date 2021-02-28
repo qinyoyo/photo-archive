@@ -3,7 +3,6 @@
  */
 
 ;(function () {
-    window.loopTimer = 4000
     window.readOnly = false
     window.notSupportOrientation = false
     window.enableDebug = false

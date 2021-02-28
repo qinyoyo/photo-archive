@@ -26,10 +26,87 @@
           if (r!==e) r.pause()
       })
     }
+    function openSetting() {
+        const f = document.getElementById('favorite')
+        if (f) f.checked = <#if favoriteFilter?? && favoriteFilter>true<#else>false</#if>
+        const l = document.getElementById('loopTimerValue')
+        if (l) l.value = window.loopTimer + ''
+        const b = document.getElementById('backMusic')
+        if (b) {
+            const e = document.querySelector('audio.background-music')
+            if (e) b.checked = !e.paused
+            else b.disabled = true
+        }
+        document.getElementById('settings').style.display = 'block'
+    }
+    function closeSettingDialog() {
+        document.getElementById('settings').style.display = 'none'
+    }
+    function radioClick(e) {
+        if (e.id==='login') document.getElementById('loginOptions').style.display='block'
+        else document.getElementById('loginOptions').style.display='none'
+    }
+    function doSetting() {
+        closeSettingDialog()
+        let e = document.getElementById('favorite')
+        if (e && e.checked) {
+            Ajax.get('/favorite?filter=<#if favoriteFilter?? && favoriteFilter>false<#else>true</#if>', function(txt) {
+                if (txt=='ok') {
+                    window.location.reload()
+                }
+            })
+            return
+        }
+        e = document.getElementById('stdout')
+        if (e && e.checked) {
+            window.location.href = '/stdout'
+            return
+        }
+        e = document.getElementById('shutdown')
+        if (e && e.checked) {
+            window.location.href = '/shutdown'
+            return
+        }
+        e = document.getElementById('logout')
+        if (e && e.checked) {
+            window.location.href = '/logout'
+            return
+        }
+        e = document.getElementById('loopTimer')
+        if (e && e.checked) {
+            let l = parseInt(document.getElementById('loopTimerValue').value)
+            if (l<0) l=1000
+            Ajax.get('/loopTimer?value='+l, function(txt) {
+                if (txt=='ok') {
+                    window.loopTimer = l
+                }
+            })
+            return
+        }
+        e = document.getElementById('login')
+        if (e && e.checked) {
+            const password=document.getElementById('password').value
+            if (!password) {
+                alert('必须输入解锁码')
+                return
+            }
+            window.location.href = '/login?password='+password
+                +'&debug=' + (document.getElementById('debug').checked ? 'true' : 'false')
+                +'&htmlEditable=' + (document.getElementById('htmlEditable').checked ? 'true' : 'false')
+                +'&exifTag=' + encodeURI(document.getElementById('exifTag').value)
+            return
+        }
+    }
     function toggleBackMusic() {
         const e = document.querySelector('audio.background-music')
-        if (e && e.paused) e.play()
-        else if (e) e.pause()
+        if (e) {
+            Ajax.get('/playBackMusic?value='+(e.paused ? 'true' : 'false'), function(txt) {
+                if (txt=='ok') {
+                    if (e.paused) e.play()
+                    else if (e) e.pause()
+                }
+            })
+        }
     }
     <#if debug?? && debug>
     window.enableDebug = true
@@ -56,7 +133,7 @@
 <#assign path = '' />
 <body>
 <#if backgroundMusic??>
-    <audio class="background-music" src="${backgroundMusic}" style="display:none" autoplay onplay="onavplay(this)"></audio>
+    <audio class="background-music" src="${backgroundMusic}" style="display:none"<#if playBackMusic> autoplay</#if> onplay="onavplay(this)"></audio>
 </#if>
 <div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}" data-rangeExifNote="${rangeExifNote}"</#if>>
     <#if loopPlay??>
@@ -71,7 +148,7 @@
         没有可循环播放的图像
     </#if>
     <#else>
-    <div class="folder-head"  ondblclick="toggleBackMusic()">
+    <div class="folder-head">
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
@@ -96,8 +173,8 @@
             <#if !isMobile?? && !htmls?? && htmlEditable?? && htmlEditable>
             <i class="fa fa-edit add-new-step folder-head__item" title="新建游记" data-folder="${path}"></i>
             </#if>
-            <i class="fa <#if favoriteFilter?? && favoriteFilter>fa-heart<#else>fa-heart-o</#if> favorite-item folder-head__item" title="只显示收藏图片"></i>
-            <i class="fa fa-play folder-head__item" data-folder="${path}" title="循环播放该目录下图片"></i>
+            <i class="fa fa-cog folder-head__item" title="参数设置" onclick="openSetting()"></i>
+            <i <#if favoriteFilter?? && favoriteFilter>style="color:red" </#if>class="fa fa-play folder-head__item" data-folder="${path}" title="循环播放该目录下图片"></i>
         </div>
     </div>
     <#if subDirectories??>
@@ -188,6 +265,59 @@
         </div>
     </#if>
     </#if>
+</div>
+<div id="settings" class="dialog__wrapper" style="display: none">
+    <div class="dialog__content">
+        <div class="dialog__title">
+            <span>浏览参数设置</span>
+            <i class="dialog__close-icon fa fa-close" onclick="closeSettingDialog()"></i>
+        </div>
+        <div class="dialog__body">
+            <div>
+                <input type="checkbox" id="backMusic" onclick="toggleBackMusic()"><label for="backMusic">播放背景音乐</label>
+            </div>
+            <div>
+                <input type="radio" name="action" id="stdout" onclick="radioClick(this)"><label for="stdout">查看后台输出</label>
+            </div>
+            <div>
+                <input type="radio" name="action" id="favorite" checked onclick="radioClick(this)"><label for="favorite"><#if favoriteFilter?? && favoriteFilter>浏览所有照片<#else>只浏览收藏的照片</#if></label>
+            </div>
+            <div>
+                <input type="radio" name="action" id="loopTimer" onclick="radioClick(this)"><label for="loopTimer">循环时长设置为</label>
+                <input type="number" min="1000" max="20000" step="250" style="width:80px" id="loopTimerValue"><label for="loopTimerValue">毫秒</label>
+            </div>
+            <#if canRemove?? && canRemove>
+                <div>
+                    <input type="radio" name="action" id="logout" onclick="radioClick(this)"><label for="logout">退出编辑状态</label>
+                </div>
+                <div>
+                    <input type="radio" name="action" id="shutdown" onclick="radioClick(this)"><label for="shutdown">关闭后台服务器</label>
+                </div>
+            <#else>
+                <div>
+                    <input type="radio" name="action" id="login" onclick="radioClick(this)"><label for="login">解锁，支持编辑</label>
+                </div>
+                <div id="loginOptions" style="padding-left:20px;display:none">
+                    <div><label for="password">解锁密码</label><input type="text" style="width:160px" id="password"></div>
+                    <div><input type="checkbox" id="debug"><label for="debug">打开调试</label></div>
+                    <div><input type="checkbox" id="htmlEditable"><label for="htmlEditable">允许编辑游记</label></div>
+                    <div>
+                        <label for="exifTag">批量编辑标签</label>
+                        <select id="exifTag" value="${editableExifTag[0].name}">
+                            <#list editableExifTag as tag>
+                                <option value="${tag.name}">${tag.note}</option>
+                            </#list>
+                        </select>
+                    </div>
+                </div>
+            </#if>
+            <div style="text-align: center">
+                <button class="dialog__button" onclick="doSetting()">确定</button>
+                <button class="dialog__button" onclick="closeSettingDialog()">取消</button>
+            </div>
+        </div>
+
+    </div>
 </div>
 </body>
 </html>

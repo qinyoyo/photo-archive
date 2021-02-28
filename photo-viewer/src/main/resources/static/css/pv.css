@@ -212,3 +212,45 @@ img[data-rating="5"] + .img-favorite-state {
         grid-template-columns: repeat(5, 1fr);
     }
 }
+
+.dialog__wrapper {
+    position: fixed;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: #808080c0;
+    z-index: 9000;
+    overflow: hidden;
+    margin: 0;
+    border: none;
+    outline: none;
+}
+
+.dialog__content {
+    margin-top:100px;
+    display: inline-block;
+    min-width: 300px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #a0a0a0;
+}
+.dialog__title {
+    height:16px;
+    padding-top: 5px;
+    text-align: center;
+}
+.dialog__close-icon {
+    float: right;
+    font-size: 16px;
+    margin-right:5px;
+    cursor: pointer;
+}
+.dialog__button {
+    margin: 10px 10px 0 10px;
+    cursor: pointer;
+}
+.dialog__body {
+    padding: 10px;
+}

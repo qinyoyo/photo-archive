@@ -62,32 +62,16 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
     @RequestMapping(value = "login")
-    public String login(Model model,HttpServletRequest request, String password, String exif,
-                   Integer loopTimer, Boolean debug, Boolean htmlEditable ) {
+    public String login(Model model,HttpServletRequest request, String password, String exifTag,
+                   Boolean debug, Boolean htmlEditable ) {
         if (password!=null && password.equals(unlockPassword)) {
             SessionOptions options = SessionOptions.getSessionOptions(request);
             options.setUnlocked(true);
-            if (loopTimer!=null) {
-                if (loopTimer<=0) loopTimer = 4000;
-                options.setLoopTimer(loopTimer);
-            }
             if (debug!=null) options.setDebug(debug);
             if (htmlEditable!=null) options.setHtmlEditable(htmlEditable);
-
-            if (exif==null || exif.isEmpty()) options.setRangeExif(Key.SUBJECT_CODE);
-            else if (exif.equals("time")) options.setRangeExif( Key.DATETIMEORIGINAL);
-            else if (exif.equals("rating")) options.setRangeExif( Key.RATING);
-            else if (exif.equals("title")) options.setRangeExif( Key.HEADLINE);
-            else if (exif.equals("subtitle")) options.setRangeExif( Key.DESCRIPTION);
-            else if (exif.equals("country")) options.setRangeExif( Key.COUNTRY);
-            else if (exif.equals("province")) options.setRangeExif( Key.STATE);
-            else if (exif.equals("state")) options.setRangeExif( Key.STATE);
-            else if (exif.equals("city")) options.setRangeExif( Key.CITY);
-            else if (exif.equals("location")) options.setRangeExif( Key.LOCATION);
-            else if (exif.equals("address")) options.setRangeExif( Key.LOCATION);
-            else if (exif.equals("city")) options.setRangeExif( Key.CITY);
+            if (exifTag==null || exifTag.isEmpty()) options.setRangeExif(Key.SUBJECT_CODE);
             else {
-                Optional<Key> ok = Key.findKeyWithName(exif);
+                Optional<Key> ok = Key.findKeyWithName(exifTag);
                 if (ok.isPresent()) options.setRangeExif( ok.get());
                 else options.setRangeExif(null);
             }
@@ -114,7 +98,24 @@ public class PVController implements ApplicationRunner , ErrorController {
             return "ok";
         } else return "error";
     }
-
+    @ResponseBody
+    @RequestMapping(value = "playBackMusic")
+    public String playBackMusic(HttpServletRequest request, Boolean value) {
+        if (value!=null) {
+            SessionOptions options = SessionOptions.getSessionOptions(request);
+            options.setPlayBackMusic(value);
+            return "ok";
+        } else return "error";
+    }
+    @ResponseBody
+    @RequestMapping(value = "loopTimer")
+    public String setLoopTimer(HttpServletRequest request, Integer value) {
+        if (value!=null) {
+            SessionOptions options = SessionOptions.getSessionOptions(request);
+            options.setLoopTimer(value);
+            return "ok";
+        } else return "error";
+    }
     @RequestMapping(value = "favicon.ico")
     String favicon() {
         return "/static/image/favicon.ico";
@@ -185,7 +186,6 @@ public class PVController implements ApplicationRunner , ErrorController {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         commonAttribute(model,request);
         model.addAttribute("debug",false);
-        model.addAttribute("canRemove",options.isUnlocked());
         model.addAttribute("htmlEditable",false);
         model.addAttribute("notLoadImage",true);  // 不加载图像
         model.addAttribute("loopTimer",options.getLoopTimer());
@@ -363,15 +363,13 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
     @RequestMapping(value = "shutdown")
-    public String shutdown(Model model, Boolean confirm, Integer delay) {
-        if (confirm!=null && confirm) {
+    public String shutdown(HttpServletRequest request, Model model, Integer delay) {
+        if (SessionOptions.getSessionOptions(request).isUnlocked()) {
             model.addAttribute("message","将在 "+ (delay==null?10:delay) +"s 后立即关闭服务器");
             CommandRunner.shutdown(delay==null?10:delay);
         }
         else {
-            model.addAttribute("action","shutdown");
-            model.addAttribute("confirm","确定是否远程关闭服务器？");
-            model.addAttribute("message","远程关闭服务器");
+            model.addAttribute("message","不允许远程关闭服务器");
         }
         return "message";
     }
@@ -503,6 +501,16 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (options.isFavoriteFilter()) model.addAttribute("favoriteFilter",true);
         if (options.isHtmlEditable() && !isMobile(request)) model.addAttribute("htmlEditable",true);
         model.addAttribute("loopTimer",options.getLoopTimer());
+        model.addAttribute("canRemove",options.isUnlocked());
+        List<Map<String,Object>> editableExifTag = new ArrayList<>();
+        for (Key k : ArchiveUtils.MODIFIABLE_KEYS) {
+            Map<String,Object> map = new HashMap<>();
+            map.put("name",Key.getName(k));
+            map.put("note",Key.getNotes(k));
+            editableExifTag.add(map);
+        }
+        model.addAttribute("editableExifTag",editableExifTag);
+        model.addAttribute("playBackMusic",options.isPlayBackMusic());
     }
 
     public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
