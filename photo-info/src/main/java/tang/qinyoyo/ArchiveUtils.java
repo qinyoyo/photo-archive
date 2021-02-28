@@ -558,7 +558,7 @@ public class ArchiveUtils {
             }
         }
         if (!modificationList.isEmpty()) Modification.execute(modificationList,target);
-        System.out.println("Sync: "+modified+"; same: "+same+"; miss: "+(targetList.size()-modified-same));
+        System.out.println("同步RAW文件数量: "+modified+"; 忽略相同文件数: "+same+"; 匹配失败文件数: "+(targetList.size()-modified-same));
     }
     public static void syncThumbOrientation(ArchiveInfo archiveInfo, String subFolder) {
         List<PhotoInfo> infos = archiveInfo.subFolderInfos(subFolder);
@@ -577,7 +577,10 @@ public class ArchiveUtils {
             } catch (Exception e){}
 
         }
-        if (!modificationList.isEmpty()) Modification.execute(modificationList,archiveInfo);
+        if (!modificationList.isEmpty()) {
+            Modification.execute(modificationList,archiveInfo);
+            System.out.println("同步修改缩略图数量: "+modificationList.size());
+        } else System.out.println("没有需要同步修改缩略图");
     }
     public static boolean deletePhoto(ArchiveInfo archiveInfo,String path) {
         if (path==null) return false;

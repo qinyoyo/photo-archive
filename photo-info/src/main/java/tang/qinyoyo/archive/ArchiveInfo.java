@@ -302,6 +302,7 @@ public class ArchiveInfo {
             for (PhotoInfo p : list) {
                 createThumbFiles(p);
             }
+            System.out.println("重建缩略图数量 :"+list.size());
         }
     }
     public void createThumbFiles() {

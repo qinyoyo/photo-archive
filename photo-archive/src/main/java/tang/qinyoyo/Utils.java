@@ -271,6 +271,7 @@ public class Utils {
 				if (path!=null && !path.isEmpty()) {
 					if (Modification.scanAction(path,archived))
 						Modification.save(new Modification(Modification.Scan,path,null),archived.getPath());
+					System.out.println("完成目录重新扫描 "+path);
 					done = true;
 				}
 			} else if (input.equals("5")) {
