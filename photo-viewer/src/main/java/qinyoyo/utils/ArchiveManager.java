@@ -6,7 +6,7 @@ import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.photoinfo.exiftool.CommandRunner;
 
-import java.io.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -40,7 +40,7 @@ public class ArchiveManager {
         archiveInfo.sortInfos();
         archiveInfo.saveInfos();
     }
-    public static void archive() {
+    public static boolean archive() {
         new ArchiveInfo();
         ArchiveInfo archived=null;
         File dir=null;
@@ -55,7 +55,8 @@ public class ArchiveManager {
                 archived=ArchiveUtils.getArchiveInfo(input, clear, same,other);
             }
         }
-        if (archived==null) return;
+
+        if (archived==null) return false;
         boolean shutdown = false;
         String rootEndWithSeparator = archived.getPath()+File.separator;
         while (true) {
@@ -69,10 +70,12 @@ public class ArchiveManager {
                             "5 将一个目录合并入归档\n" +
                             "6 重新命名目录文件\n" +
                             "7 删除空目录\n" +
+                            "s 启动浏览服务\n" +
                             "0 下一个操作之后关机\n" +
                             "q 退出\n请选择一个操作", "");
             switch (input) {
-                case "q": return;
+                case "s": return true;
+                case "q": return false;
                 case "0":
                     shutdown = true;
                     break;
@@ -111,12 +114,12 @@ public class ArchiveManager {
                     break;
                 case "5":
                     path = getInputString("输入待归档的绝对目录路径", "");
-                    if (!input.isEmpty()) {
-                        dir = new File(input);
+                    if (!path.isEmpty()) {
+                        dir = new File(path);
                         if (dir != null && dir.exists() && dir.isDirectory()) {
-                            boolean isOk = boolValue(getInputString("文件已经处理好目录分类，直接添加", "no"));
+                            boolean isOk = boolValue(getInputString("文件已经处理好目录分类，直接添加", "yes"));
                             if (isOk) {
-                                archived.addFile(new File(path));
+                                archived.addDirectory(new File(path));
                                 done = true;
                             } else {
                                 boolean clear = boolValue(getInputString("是否重新完全扫描", "no"));
@@ -192,7 +195,7 @@ public class ArchiveManager {
             }
             if (shutdown && done) {
                 CommandRunner.shutdown(10);
-                return;
+                return false;
             }
         }
     }

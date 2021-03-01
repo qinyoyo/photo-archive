@@ -37,6 +37,12 @@
             if (e) b.checked = !e.paused
             else b.disabled = true
         }
+        const g=document.getElementById('login')
+        if (g && g.checked) document.getElementById('loginOptions').style.display='block'
+        else {
+            const o = document.getElementById('loginOptions')
+            if (o) o.style.display='none'
+        }
         document.getElementById('settings').style.display = 'block'
     }
     function closeSettingDialog() {
@@ -82,6 +88,15 @@
                 }
             })
             return
+        }
+        e = document.getElementById('rescan')
+        if (e && e.checked) {
+            const path = e.getAttribute('data-folder')
+            Ajax.get('/scan?path=' + (path ? encodeURI(path) : ''), function(res) {
+                if (res=='ok') {
+                    toast('已提交后台执行')
+                }
+            })
         }
         e = document.getElementById('login')
         if (e && e.checked) {
@@ -135,6 +150,7 @@
 <#if backgroundMusic??>
     <audio class="background-music" src="${backgroundMusic}" style="display:none"<#if playBackMusic> autoplay</#if> onplay="onavplay(this)"></audio>
 </#if>
+<#assign path = '' />
 <div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}" data-rangeExifNote="${rangeExifNote}"</#if>>
     <#if loopPlay??>
     <#if photos??>
@@ -152,7 +168,6 @@
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
-                <#assign path = '' />
                 <#list pathNames as name>
                     <i class="fa fa-angle-right"></i>
                     <#if path==''>
@@ -266,7 +281,7 @@
     </#if>
     </#if>
 </div>
-<div id="settings" class="dialog__wrapper" style="display: none">
+<div id="settings" class="dialog__wrapper" data-folder="${path}" style="display: none">
     <div class="dialog__content">
         <div class="dialog__title">
             <span>浏览参数设置</span>
@@ -288,7 +303,7 @@
             </div>
             <#if canRemove?? && canRemove>
                 <div>
-                    <input type="radio" name="action" id="rescan" onclick="radioClick(this)"><label for="rescan">重新扫描当前目录</label>
+                    <input type="radio" name="action" id="rescan" data-folder="${path}" onclick="radioClick(this)"><label for="rescan">重新扫描 ${path}</label>
                 </div>
                 <div>
                     <input type="radio" name="action" id="logout" onclick="radioClick(this)"><label for="logout">退出编辑状态</label>

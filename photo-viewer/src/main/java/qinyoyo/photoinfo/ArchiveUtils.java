@@ -4,8 +4,8 @@ import qinyoyo.photoinfo.archive.*;
 import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -791,6 +791,40 @@ public class ArchiveUtils {
             ArchiveUtils.removeEmptyFolder(new File(camera.getPath()));
             System.out.println("Now :"+DateUtil.date2String(new Date()));
             System.out.println("归档完成");
+        }
+    }
+    public static void moveDirectory(Path source, Path target, CopyOption... options) throws IOException {
+        source = source.toAbsolutePath();
+        final Path targetPath = target.toAbsolutePath();
+        final String src = source.toString(),tar = targetPath.toString();
+        try {
+            Files.walkFileTree(source,new SimpleFileVisitor<Path>() {
+                String move2;
+                String getTargetPath(Path dir) {
+                    String dirPath = dir.toAbsolutePath().toString();
+                    if (dirPath.length()>src.length()) {
+                        return tar + File.separator + dirPath.substring(src.length() + 1);
+                    } else return tar;
+                }
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
+                {
+                    move2 = getTargetPath(dir);
+                    Files.createDirectories(Paths.get(move2));
+                    System.out.println("移动文件 "+dir.toString() + " 到 "+ move2);
+                    return super.preVisitDirectory(dir,attrs);
+                }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.move(file,Paths.get(move2,file.getFileName().toString()),options);
+                    return super.visitFile(file,attrs);
+                }
+            });
+            System.out.println("删除空目录");
+            ArchiveUtils.removeEmptyFolder(source.toFile());
+            ArchiveUtils.removeEmptyFolder(target.toFile());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

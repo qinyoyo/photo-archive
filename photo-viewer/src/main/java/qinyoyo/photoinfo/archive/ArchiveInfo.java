@@ -1,4 +1,5 @@
 package qinyoyo.photoinfo.archive;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -8,9 +9,12 @@ import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -113,14 +117,17 @@ public class ArchiveInfo {
     }
 
     /**
-     * 插入文件或目录。插入目录将删除原来包含的该目录下的文件
+     * 重新扫描文件或目录。文件或目录在归档目录之下
      * @param f 文件或目录
      */
-    public void addFile(File f) {
+    public void rescanFile(File f) {
         try {
             if (!f.exists()) return;
             String p = f.getCanonicalPath();
-            if (!p.startsWith(path)) return;
+            if (!p.startsWith(path+File.separator) && !p.equals(path)) {
+                System.out.println("文件或目录必须在归档目录之下");
+                return;
+            }
             if (f.isFile()) {
                 PhotoInfo pi = find(f);
                 Integer orientation = null;
@@ -135,7 +142,7 @@ public class ArchiveInfo {
                 File thumb = new File(pi.fullThumbPath(path));
                 sortInfos();
                 if (!thumb.exists()) createThumbFiles(pi);
-                System.out.println("成功添加文件 "+p);
+                System.out.println("成功扫描文件 "+p);
             } else {
                 List<PhotoInfo> list = new ArrayList<>();
                 seekPhotoInfosInFolder(f,list);
@@ -167,10 +174,43 @@ public class ArchiveInfo {
                         e.printStackTrace();
                     }
                 });
-                System.out.println("成功添加文件数: "+list.size());
+                System.out.println("成功扫描文件数: "+list.size());
             }
         } catch (Exception e) {}
     }
+
+    /**
+     * 添加目录。
+     * @param dir 文件或目录
+     */
+    public void addDirectory(File dir) {
+        try {
+            if (!dir.exists() || dir.isFile()) {
+                System.out.println("必须指定一个存在的目录");
+                return;
+            }
+            String p = dir.getCanonicalPath();
+            if (p.startsWith(path+File.separator) || p.equals(path)) {
+                rescanFile(dir);
+            }
+            ArchiveInfo archiveInfo = new ArchiveInfo(p);
+            if (archiveInfo.getInfos().size()>0) {
+                for (PhotoInfo pi : archiveInfo.getInfos()) {
+                    File f = new File(pi.fullPath(path));
+                    PhotoInfo pe = this.find(f);
+                    if (pe != null) infos.remove(pe);
+                }
+                infos.addAll(archiveInfo.getInfos());
+                ArchiveUtils.moveDirectory(dir.toPath(),Paths.get(path),StandardCopyOption.REPLACE_EXISTING);
+                sortInfos();
+                saveInfos();
+                System.out.println("成功添加文件数: "+archiveInfo.getInfos().size());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void seekPhotoInfosInFolder(File dir, List<PhotoInfo> infoList) {
         if (!dir.isDirectory() || !dir.exists()) return;
         File [] files = dir.listFiles(new FileFilter() {

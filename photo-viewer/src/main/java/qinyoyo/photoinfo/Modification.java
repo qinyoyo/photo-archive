@@ -303,7 +303,7 @@ public class Modification {
             ArchiveUtils.removeEmptyFolder(dir);
             if (dir.exists()) {
                 new File(rootPath+File.separator+path+File.separator+".need-scan").delete();
-                archiveInfo.addFile(dir);
+                archiveInfo.rescanFile(dir);
                 archiveInfo.getInfos().stream().filter(p->p.getSubFolder().startsWith(path)).forEach(p->archiveInfo.createThumbFiles(p));
                 archiveInfo.sortInfos();
                 archiveInfo.saveInfos();

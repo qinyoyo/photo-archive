@@ -178,7 +178,7 @@ public class EditorController implements ApplicationRunner {
                     put("title",newStep);
                 }};
                 freeMarkerWriter("newStep.ftl",dir.getAbsolutePath()+File.separator+"index.html",attr);
-                archiveInfo.addFile(new File(dir,"index.html"));
+                archiveInfo.rescanFile(new File(dir,"index.html"));
             }
         } catch (Exception e) {}
     }
