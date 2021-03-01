@@ -1,4 +1,4 @@
-package tang.qinyoyo;
+package qinyoyo.photoinfo;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.internal.LinkedTreeMap;

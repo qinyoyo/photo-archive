@@ -18,18 +18,17 @@ import qinyoyo.utils.BaiduGeo;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.SpringContextUtil;
 import qinyoyo.utils.Util;
-import tang.qinyoyo.ArchiveUtils;
-import tang.qinyoyo.Modification;
-import tang.qinyoyo.archive.ArchiveInfo;
-import tang.qinyoyo.archive.Orientation;
-import tang.qinyoyo.archive.PhotoInfo;
-import tang.qinyoyo.exiftool.CommandRunner;
-import tang.qinyoyo.exiftool.ExifTool;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.ArchiveUtils;
+import qinyoyo.photoinfo.Modification;
+import qinyoyo.photoinfo.archive.ArchiveInfo;
+import qinyoyo.photoinfo.archive.Orientation;
+import qinyoyo.photoinfo.archive.PhotoInfo;
+import qinyoyo.photoinfo.exiftool.CommandRunner;
+import qinyoyo.photoinfo.exiftool.ExifTool;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.file.Files;
@@ -616,18 +615,7 @@ public class PVController implements ApplicationRunner , ErrorController {
             }
         }.start();
     }
-    private static void printUsage() {
-        System.out.println("Usage:  java -jar pv.jar <options>");
-        System.out.println("options:");
-        System.out.println("  -m dir_name	: 将dir_name指定的绝对目录归档到归档目录中，dir_name支持逗号分隔的多个目录, 同 --merge");
-        System.out.println("                  如 -m \"C:\\1,D:\\A\\2\" -m E:\\3 表示将三个目录合并归档到归档目录");
-        System.out.println("  -s dir_name	: 重新扫描目录,dir_name支持逗号分隔的多个目录，目录为归档目录下的相对目录，同 --scan");
-        System.out.println("  -a ：归档时将相同文件移到.delete目录, 同  --same");
-        System.out.println("  -c : 重新完全扫描归档目录, 同  --clear");
-        System.out.println("  -o : 归档时将无法确定拍摄日期的文件移动到.other目录, 同  --other");
-        System.out.println("  -e : 归档时删除空目录, 同  --empty");
-        System.out.println("  -h : 显示本帮助, 同  --help");
-    }
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         ArchiveUtils.setOutput(this.getClass(),STDOUT);
@@ -652,77 +640,9 @@ public class PVController implements ApplicationRunner , ErrorController {
             @Override
             public void run() {
 
-                // 处理命令行参数
-                boolean emptyArg = false, clearArg = false, removeSameArg = false, moveOtherArg= false;
-                List<String> mergeList = new ArrayList<>();
-                List<String> scanList = new ArrayList<>();
-                if (PhotoViewerApplication.args!=null) {
-                    int total = PhotoViewerApplication.args.length;
-                    for (int i=0;i<total;i++) {
-                        String param = PhotoViewerApplication.args[i].trim();
-                        switch (param) {
-                            case "-h":
-                            case "--help":
-                                printUsage();
-                                System.exit(0);
-                            case "-m":
-                            case "--merge":
-                                if (i<total-1) {
-                                    i++;
-                                    String [] ms = PhotoViewerApplication.args[i].trim().split(",");
-                                    for (String s: ms) mergeList.add(s);
-                                    break;
-                                }
-                                break;
-                            case "-s":
-                            case "--scan":
-                                if (i<total-1) {
-                                    i++;
-                                    String [] ss = PhotoViewerApplication.args[i].trim().split(",");
-                                    for (String s: ss) scanList.add(s);
-                                    break;
-                                }
-                                break;
-                            case "-a":
-                            case "--same":
-                                removeSameArg = true;
-                                break;
-                            case "-o":
-                            case "--other":
-                                moveOtherArg = true;
-                                break;
-                            case "-c":
-                            case "--clear":
-                                clearArg = true;
-                                break;
-                            case "-e":
-                            case "--empty":
-                                emptyArg = true;
-                                break;
-                        }
-                    }
-                }
-
-                if (emptyArg) ArchiveUtils.removeEmptyFolder(new File(rootPath));
-                archiveInfo = ArchiveUtils.getArchiveInfo(rootPath,clearArg,removeSameArg,moveOtherArg);
+                archiveInfo = new ArchiveInfo(rootPath);
                 rootPath = archiveInfo.getPath();  // 标准化
-                // archiveInfo.moveNoShootTimeFiles(true);
                 System.out.println("归档主目录为 : "+rootPath);
-                if (mergeList.size()>0) for (String path:mergeList) {
-                    System.out.println("合并目录 : "+path);
-                    ArchiveInfo camera = new ArchiveInfo(path);
-                    if (archiveInfo!=null && camera!=null) {
-                        System.out.println("删除归档文件夹已经存在的待归档文件...");
-                        if (removeSameArg) camera.scanSameFilesWith(archiveInfo);
-                        ArchiveUtils.executeArchive(camera,archiveInfo);
-                    }
-                    System.out.println("完成合并 : "+path);
-                }
-                if (scanList.size()>0) for (String path:scanList) {
-                    System.out.println("重新扫描目录 : "+path);
-                    scan(path);
-                    System.out.println("完成扫描 : "+path);
-                }
 
                 isReady = true;
 

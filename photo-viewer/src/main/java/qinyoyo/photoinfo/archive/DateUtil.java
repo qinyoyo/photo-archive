@@ -1,4 +1,4 @@
-package tang.qinyoyo.archive;
+package qinyoyo.photoinfo.archive;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

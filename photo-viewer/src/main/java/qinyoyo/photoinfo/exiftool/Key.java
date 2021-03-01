@@ -1,4 +1,4 @@
-package tang.qinyoyo.exiftool;
+package qinyoyo.photoinfo.exiftool;
 
 import java.util.Arrays;
 import java.util.Map;

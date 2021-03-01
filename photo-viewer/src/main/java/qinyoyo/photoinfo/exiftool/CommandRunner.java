@@ -1,4 +1,4 @@
-package tang.qinyoyo.exiftool;
+package qinyoyo.photoinfo.exiftool;
 
 import javafx.util.Pair;
 import java.io.*;

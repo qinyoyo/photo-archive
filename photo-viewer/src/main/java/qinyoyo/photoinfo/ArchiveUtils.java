@@ -1,7 +1,7 @@
-package tang.qinyoyo;
+package qinyoyo.photoinfo;
 
-import tang.qinyoyo.archive.*;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.archive.*;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.*;
 import java.nio.file.Files;

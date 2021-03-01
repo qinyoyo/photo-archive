@@ -1,13 +1,20 @@
 package qinyoyo.photoviewer;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import qinyoyo.utils.ArchiveManager;
 import qinyoyo.utils.Util;
 
 @SpringBootApplication
 public class PhotoViewerApplication {
-    public static String[] args = null;
     public static void main(String[] args) {
-        PhotoViewerApplication.args = args;
-        Util.commonApplicationRun(PhotoViewerApplication.class,"application.yml","pv",args);
+        if (args!=null && args.length>0) {
+            if (args[0].equals("-a") || args.equals("--archive")) {
+                ArchiveManager.archive();
+                return;
+            } else {
+                System.out.println("options:\n   -a, --archive: 执行归档维护");
+                return;
+            }
+        } else Util.commonApplicationRun(PhotoViewerApplication.class,"application.yml","pv",args);
     }
 }

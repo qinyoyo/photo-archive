@@ -1,9 +1,9 @@
 package qinyoyo.utils;
 
-import tang.qinyoyo.ArchiveUtils;
-import tang.qinyoyo.archive.ArchiveInfo;
-import tang.qinyoyo.archive.PhotoInfo;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.ArchiveUtils;
+import qinyoyo.photoinfo.archive.ArchiveInfo;
+import qinyoyo.photoinfo.archive.PhotoInfo;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

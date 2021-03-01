@@ -6,8 +6,6 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
-        <option value="$PROJECT_DIR$/photo-archive/pom.xml" />
-        <option value="$PROJECT_DIR$/photo-info/pom.xml" />
         <option value="$PROJECT_DIR$/photo-viewer/pom.xml" />
       </list>
     </option>

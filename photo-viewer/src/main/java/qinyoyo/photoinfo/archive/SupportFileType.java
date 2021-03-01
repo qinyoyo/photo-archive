@@ -1,4 +1,4 @@
-package tang.qinyoyo.archive;
+package qinyoyo.photoinfo.archive;
 
 import java.util.HashSet;
 import java.util.Set;

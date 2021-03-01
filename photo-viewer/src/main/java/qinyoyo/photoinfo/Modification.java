@@ -1,16 +1,16 @@
-package tang.qinyoyo;
+package qinyoyo.photoinfo;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
-import tang.qinyoyo.archive.ArchiveInfo;
-import tang.qinyoyo.archive.DateUtil;
-import tang.qinyoyo.archive.Orientation;
-import tang.qinyoyo.archive.PhotoInfo;
-import tang.qinyoyo.exiftool.ExifTool;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.archive.ArchiveInfo;
+import qinyoyo.photoinfo.archive.DateUtil;
+import qinyoyo.photoinfo.archive.Orientation;
+import qinyoyo.photoinfo.archive.PhotoInfo;
+import qinyoyo.photoinfo.exiftool.ExifTool;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.File;
 import java.io.IOException;

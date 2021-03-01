@@ -1,11 +1,11 @@
-package tang.qinyoyo.archive;
+package qinyoyo.photoinfo.archive;
 
 import lombok.Getter;
 import lombok.Setter;
-import tang.qinyoyo.ArchiveUtils;
-import tang.qinyoyo.Modification;
-import tang.qinyoyo.exiftool.ExifTool;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.ArchiveUtils;
+import qinyoyo.photoinfo.Modification;
+import qinyoyo.photoinfo.exiftool.ExifTool;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.File;
 import java.io.IOException;

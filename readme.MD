@@ -8,6 +8,7 @@
 
 ```
 exiftool
+ffmpeg
 ```
 
 参见 https://exiftool.org/
@@ -31,31 +32,13 @@ exiftool
 ##### 用法 ：
 
 ```
-java -jar pa.jar <options>
+java -jar pv.jar <options>
 ```
 
 options参数：
 
 ```
--p1 dir_name	: 指定需要归档的图像文件目录, 同 --path1
--s1 : 将相同文件移到.delete目录, 同  --same1
--o1 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other1
--c1 : 需要归档的目录重新分析, 同  --clear1
-
--p2 dir_name	: 指定归档图像文件最终保存目录,同 --path2
--s2 : 将相同文件移到.delete目录, 同  --same2
--o2 : 将无法确定拍摄日期的文件移动到.other目录, 同  --other2
--c2 : 归档目标目录重新分析, 同  --clear2
-
--v  dir_name	: 对比浏览相同图像文件的目录, 同 --view
-
--m :  删除空目录, 同 --empty
--e :  扫描完成后立即执行归档操作, 同  --execute
--f :  完成后自动关机, 同  --shutdown
-
--n dir_name	<pattern> : 指定目录下文件重命名, 同 --rename
-
--h :  显示帮助, 同  --help
+-a, --archive	: 执行归档维护
 ```
 
 ##### 重命名模板
@@ -98,9 +81,3 @@ options参数：
 pv.yml配置浏览目录和端口。
 
 / ：主目录浏览接口，可查询
-
-/same: 相同文件比较浏览
-
-/auto-delete-same: 自动删除两个相同文件中的一个
-
-/shutdown：关机

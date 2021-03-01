@@ -13,9 +13,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.RedirectView;
-import tang.qinyoyo.ArchiveUtils;
-import tang.qinyoyo.archive.ArchiveInfo;
-import tang.qinyoyo.archive.PhotoInfo;
+import qinyoyo.photoinfo.ArchiveUtils;
+import qinyoyo.photoinfo.archive.ArchiveInfo;
+import qinyoyo.photoinfo.archive.PhotoInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

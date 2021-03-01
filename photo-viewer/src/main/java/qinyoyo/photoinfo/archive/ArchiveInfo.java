@@ -1,12 +1,12 @@
-package tang.qinyoyo.archive;
+package qinyoyo.photoinfo.archive;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import javafx.util.Pair;
-import tang.qinyoyo.ArchiveUtils;
-import tang.qinyoyo.exiftool.CommandRunner;
-import tang.qinyoyo.exiftool.ExifTool;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.ArchiveUtils;
+import qinyoyo.photoinfo.exiftool.CommandRunner;
+import qinyoyo.photoinfo.exiftool.ExifTool;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -135,6 +135,7 @@ public class ArchiveInfo {
                 File thumb = new File(pi.fullThumbPath(path));
                 sortInfos();
                 if (!thumb.exists()) createThumbFiles(pi);
+                System.out.println("成功添加文件 "+p);
             } else {
                 List<PhotoInfo> list = new ArrayList<>();
                 seekPhotoInfosInFolder(f,list);
@@ -166,6 +167,7 @@ public class ArchiveInfo {
                         e.printStackTrace();
                     }
                 });
+                System.out.println("成功添加文件数: "+list.size());
             }
         } catch (Exception e) {}
     }

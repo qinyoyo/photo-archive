@@ -288,6 +288,9 @@
             </div>
             <#if canRemove?? && canRemove>
                 <div>
+                    <input type="radio" name="action" id="rescan" onclick="radioClick(this)"><label for="rescan">重新扫描当前目录</label>
+                </div>
+                <div>
                     <input type="radio" name="action" id="logout" onclick="radioClick(this)"><label for="logout">退出编辑状态</label>
                 </div>
                 <div>

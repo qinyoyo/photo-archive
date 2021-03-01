@@ -7,10 +7,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="archive-photo" />
-        <module name="photo-info" />
         <module name="photo-viewer" />
-        <module name="photo-archive" />
+        <module name="archive-photo" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

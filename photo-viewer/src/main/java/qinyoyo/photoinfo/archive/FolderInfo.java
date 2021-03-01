@@ -1,9 +1,9 @@
-package tang.qinyoyo.archive;
+package qinyoyo.photoinfo.archive;
 
 
 import lombok.Getter;
 import lombok.Setter;
-import tang.qinyoyo.ArchiveUtils;
+import qinyoyo.photoinfo.ArchiveUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

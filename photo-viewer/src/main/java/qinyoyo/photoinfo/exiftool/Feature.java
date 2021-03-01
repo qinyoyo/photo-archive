@@ -1,4 +1,4 @@
-package tang.qinyoyo.exiftool;
+package qinyoyo.photoinfo.exiftool;
 
 public enum Feature {
 

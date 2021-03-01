@@ -1,4 +1,4 @@
-package tang.qinyoyo.archive;
+package qinyoyo.photoinfo.archive;
 
 import java.awt.Graphics2D;
 import java.awt.Image;

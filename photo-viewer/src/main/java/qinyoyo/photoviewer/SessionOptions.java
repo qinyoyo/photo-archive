@@ -2,7 +2,7 @@ package qinyoyo.photoviewer;
 
 import lombok.Getter;
 import lombok.Setter;
-import tang.qinyoyo.exiftool.Key;
+import qinyoyo.photoinfo.exiftool.Key;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
