@@ -24,7 +24,7 @@ logging:
       org.springframework: info
       qinyoyo: debug
 photo:
-   password: 8705087
+   password: 123456
 #   no-video-thumb: true
    support-orientation: HeyTapBrowser,Firefox,Mac OS X,HuaweiBrowser,UCBrowser/13
    root-path: E:\Photo\Archived

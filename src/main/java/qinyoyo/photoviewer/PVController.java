@@ -82,6 +82,8 @@ public class PVController implements ApplicationRunner , ErrorController {
     public String logout(Model model,HttpServletRequest request) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         options.setUnlocked(false);
+        options.setHtmlEditable(false);
+        options.setDebug(false);
         return "redirect:/";
     }
 
@@ -269,7 +271,8 @@ public class PVController implements ApplicationRunner , ErrorController {
             afterChanged();
             return "ok,"+
                     (pi.getOrientation()==null?"":pi.getOrientation())+
-                    ","+(pi.getRating()==null?"0":pi.getRating());
+                    ","+(pi.getRating()==null?"0":pi.getRating()) +
+                    ","+pi.getLastModified();
         }
         else return "fail";
     }

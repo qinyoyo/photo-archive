@@ -2,6 +2,37 @@
 function searchText(text) {
     if (text) window.location.href = '/search?text=' + encodeURI(text)
 }
+function videoOverlay(v) {
+    const wrapper = document.createElement('div')
+    wrapper.className = 'dialog__wrapper'
+    wrapper.style.background = '#808080'
+    const video = document.createElement('video')
+    const w = parseInt(v.getAttribute('data-width')), h = parseInt(v.getAttribute('data-height'))
+    video.style.position = 'fixed'
+    video.style.left = (window.innerWidth - w)/2  + 'px'
+    video.style.top = (window.innerHeight - h)/2  + 'px'
+    video.style.width =  w +'px'
+    video.style.height = h +'px'
+    video.style.maxHeight = window.innerHeight +'px'
+    video.setAttribute('src',v.getAttribute('src'))
+    video.setAttribute('controls','true')
+    video.currentTime = v.currentTime
+    video.onclick = function() {
+        if (video.paused) video.play()
+        else video.pause()
+    }
+    wrapper.ondblclick=function() {
+        video.pause()
+        wrapper.remove()
+    }
+    document.querySelectorAll('audio,video').forEach(r=>{
+        r.pause()
+    })
+    wrapper.appendChild(video)
+    document.querySelector('body').appendChild(wrapper)
+    video.play()
+}
+
 function adjustSize(img) {
     let w = img.parentNode.clientWidth
     let iw = img.naturalWidth, ih = img.naturalHeight
@@ -72,8 +103,22 @@ window.onload=function(){
         }
     }
     document.querySelectorAll('video').forEach(function(v) {
+        const w=window.innerWidth, h=window.innerHeight
         v.onclick = function() {
             this.controls = !this.controls
+        }
+        const vw = v.getAttribute('data-width'), vh = v.getAttribute('data-height')
+        if (vw && vh && parseInt(vw)<w && parseInt(vh)<h) {
+            v.ondblclick = function() {
+                videoOverlay(v)
+            }
+            const span = v.nextElementSibling
+            if (span && span.tagName.toUpperCase()==='SPAN') {
+                span.style.cursor = 'pointer'
+                span.onclick = function() {
+                    videoOverlay(v)
+                }
+            }
         }
     })
     document.querySelectorAll('.collapse .collapse-item, .collapse .collapse-item-expanded').forEach(function(v) {

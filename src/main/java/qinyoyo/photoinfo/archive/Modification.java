@@ -383,6 +383,7 @@ public class Modification {
                 pathList.add(path);
             }
             params.remove(include_sub_folder);
+            long now = new Date().getTime();
             for (String filePath : pathList) {
                 File img = new File(rootPath, filePath);
                 if (img.exists() && img.isFile()) {
@@ -411,7 +412,10 @@ public class Modification {
                             FileUtil.writeToFile(xmpFile, xml, "UTF-8");
                             count++;
                             files.put(link, img);
-                            if (info!=null) info.setPropertiesBy(nm);
+                            if (info!=null) {
+                                info.setPropertiesBy(nm);
+                                info.setLastModified(now);
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

@@ -248,7 +248,7 @@
         <div class="collapse-content video-list grid-box">
         <#list videos as v>
             <div class="video-item grid-cell">
-                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}" onplay="onavplay(this)"></video>
+                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}"<#if v.width?? && v.height??> data-width="${v.width?c}" data-height="${v.height?c}"</#if> onplay="onavplay(this)"></video>
                 <span>${v.fileName}</span>
             </div>
         </#list>
@@ -264,7 +264,7 @@
         <div class="collapse-content photo-list grid-box" data-size="${photos?size?c}">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img<#if !notLoadImage??> src="/.thumb${fileUrl(p)}" alt="${p.fileName}" onload="adjustSize(this)"</#if> class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+                    <img<#if !notLoadImage??> src="/.thumb${fileUrl(p)}?click=${p.lastModified?c}" alt="${p.fileName}" onload="adjustSize(this)"</#if> class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
                          <@photoAttributes p /> />
                     <#if !favoriteFilter?? || !favoriteFilter>
                     <i class="fa fa-heart img-favorite-state"></i>

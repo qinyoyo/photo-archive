@@ -239,9 +239,9 @@
                 if (thumb) {
                     let title = thumb.getAttribute('title')
                     let src = thumb.getAttribute('data-src')
-                    let click = thumb.getAttribute('src')
-                    if (click && click.indexOf('?click=')>=0) {
-                        src = src + click.substring(click.indexOf('?click='))
+                    let click = thumb.getAttribute('data-lastModified')
+                    if (click) {
+                        src = src + '?click='+click
                     }
                     let orientation = thumb.getAttribute('data-orientation')
                     let rating = thumb.getAttribute('data-rating')
@@ -324,7 +324,9 @@
                                 if (tp) {
                                     let pos = tp.indexOf('?')
                                     if (pos >= 0) tp = tp.substring(0, pos)
-                                    thumb.setAttribute('src', tp + '?click=' + (new Date().getTime()))
+                                    const lastModified = (pp.length>3?pp[3]:(new Date().getTime()))
+                                    thumb.setAttribute('src', tp + '?click=' + lastModified)
+                                    thumb.setAttribute('data-lastModified',lastModified)
                                 }
                                 preLoadImageBy(imgIndex)  // 预加载文件
                             }

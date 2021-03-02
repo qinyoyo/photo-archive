@@ -302,6 +302,13 @@ public class ArchiveInfo {
                         .create();
                 Type type = new TypeToken<ArrayList<PhotoInfo>>() {}.getType();
                 infos = gson.fromJson(json, type);
+                if (infos!=null) {
+                    Iterator<PhotoInfo> iterator = infos.iterator();
+                    while (iterator.hasNext()) {
+                        PhotoInfo p = iterator.next();
+                        if (!new File(p.fullPath(path)).exists()) iterator.remove();
+                    }
+                }
                 readFromFile = true;
                 return;
             }
@@ -469,11 +476,6 @@ public class ArchiveInfo {
                 .create();
 
         FileUtil.writeToFile(af,gson.toJson(infos),"UTF-8");
-    }
-    public long lastModified() {
-        File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
-        if (af.exists()) return af.lastModified();
-        else return new Date().getTime();
     }
 
     public void moveNoShootTimeFiles(boolean copyTo) {

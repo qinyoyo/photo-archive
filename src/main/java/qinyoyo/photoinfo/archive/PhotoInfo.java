@@ -21,6 +21,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private String subFolder; 
     private String fileName;
     private long   fileSize;
+    private long   lastModified;
 
     private String mimeType;
 
@@ -70,7 +71,21 @@ public class PhotoInfo implements Serializable,Cloneable {
             return (v>=0.0?"N":"S")+r;
         }  return (v>=0.0?"E":"W")+r;
     }
-
+    public String formattedAddress(boolean useCountryName) {
+        String poi = subjectCode;
+        if (poi==null || poi.isEmpty()) poi=ArchiveUtils.poiFromPath(subFolder);
+        if (allNull(country,province,city,location)) return poi==null ? "" : poi;
+        boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
+        if (cc) {
+            String address = ArchiveUtils.join(null,useCountryName ? country : "", province, ArchiveUtils.equals(province,city)?"":city, location);
+            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : address + "," + poi;
+            else return address;
+        } else {
+            String address = ArchiveUtils.join(",",location, city, ArchiveUtils.equals(province,city)?"":province, useCountryName ? country : "");
+            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : poi + "," + address;
+            else return address;
+        }
+    }
     @Override
     public String toString() {
         Map<String,Object> attributes = new LinkedHashMap<>();
@@ -227,13 +242,23 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         
     }
+    public void getFileProperties(String root) {
+        getFileProperties(new File(fullPath(root)));
+    }
+    public void getFileProperties(File file) {
+        if (file!=null && file.exists()) {
+            fileName = file.getName();
+            fileSize = file.length();
+            lastModified = file.lastModified();
+        }
+    }
     public void setFile(String rootPath, File file) throws Exception {
         String dir = file.getParentFile().getCanonicalPath();
         if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
         subFolder = dir.substring(rootPath.length());
         if (subFolder.startsWith("/") || subFolder.startsWith("\\")) subFolder = subFolder.substring(1);
-        fileName = file.getName();
-        fileSize = file.length();
+        getFileProperties(file);
+
         if (ArchiveUtils.isInWebFolder(subFolder) && fileName.equals("index.html")) {
             setMimeType("text/html");
             String subTitle = subFolder.substring(0,subFolder.length()-4);
@@ -364,6 +389,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         File f = new File(fullPath(rootPath));
         if (f.exists() && SupportFileType.isSupport(f.getName())) {
             try {
+                setFile(rootPath,f);
                 Map<String, Map<String, Object>>  fileInfos = ExifTool.getInstance().query(f, null, ArchiveUtils.NEED_KEYS);
                 if (fileInfos!=null) {
                     setPropertiesBy(fileInfos.get(f.getName()));
@@ -457,27 +483,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             throw new RuntimeException(e.getMessage());
         }
     }
-    public String urlPath(String currentPath) {
-        String sub = getSubFolder();
-        if (sub == null || sub.isEmpty()) {
-            return '/'+getFileName();
-        } else {
-            int uplevel = 0;
-            String url='/'+sub.replaceAll("\\\\","/") + '/' + getFileName();
-            currentPath = currentPath.replaceAll("\\\\","/");
-            if (currentPath.isEmpty() || currentPath.equals('/')) return url;
-            if (!currentPath.startsWith("/")) currentPath = "/" + currentPath;
-            if (!currentPath.endsWith("/")) currentPath = currentPath + '/';
-            while (!url.startsWith(currentPath)) {
-                uplevel ++;
-                int pos = currentPath.substring(0,currentPath.length()-1).lastIndexOf("/");
-                currentPath = currentPath.substring(0,pos+1);
-            }
-            url = url.substring(currentPath.length());
-            while (uplevel-- > 0) url = "../"+url;
-            return url;
-        }
-    }
+
     public String fullThumbPath(String root) throws IOException {
         if (mimeType==null || (!mimeType.contains("image/") && !mimeType.contains("video/"))) throw new IOException("not supported type");
         String sub = getSubFolder();
@@ -516,9 +522,10 @@ public class PhotoInfo implements Serializable,Cloneable {
                 if (!Orientation.setOrientationAndRating(new File(thumbPath), newOrientation, newRating)) {
                     System.out.println("Orientation and rating of thumbnail error: "+thumbPath);
                 }
+                getFileProperties(new File(imgPath));
                 return true;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
         }
         return false;
     }
@@ -528,13 +535,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         } catch (Exception e) {}
         return (new File(fullPath(rootPath)).delete());
     }
-    private static String nameWithoutExt(String name) {
-        int p = name.lastIndexOf(".");
-        if (p >= 0)
-            return name.substring(0, p);
-        else
-            return name;
-    }
+
     private int nameCompare(PhotoInfo p) {
         int cp = getSubFolder().compareTo(p.getSubFolder());
         if (cp==0) return getFileName().compareTo(p.getFileName());
@@ -554,60 +555,5 @@ public class PhotoInfo implements Serializable,Cloneable {
         else if (d1.getTime() < d2.getTime())
             return -1;
         else return nameCompare(p);
-    }
-    public String formattedAddress(boolean useCountryName) {
-        String poi = subjectCode;
-        if (poi==null || poi.isEmpty()) poi=ArchiveUtils.poiFromPath(subFolder);
-        if (allNull(country,province,city,location)) return poi==null ? "" : poi;
-        boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
-        if (cc) {
-            String address = ArchiveUtils.join(null,useCountryName ? country : "", province, ArchiveUtils.equals(province,city)?"":city, location);
-            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : address + "," + poi;
-            else return address;
-        } else {
-            String address = ArchiveUtils.join(",",location, city, ArchiveUtils.equals(province,city)?"":province, useCountryName ? country : "");
-            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : poi + "," + address;
-            else return address;
-        }
-    }
-    public String xmlString(Key ... keys) {
-        return xmlString(Arrays.asList(keys));
-    }
-    public String xmlString(List<Key> keys) {
-        return Modification.xmlString(Modification.exifMap(this,keys,false));
-    }
-    public void updateThumbFile(String rootPath,Integer ori) {
-        try {
-            File thumb = new File(fullThumbPath(rootPath));
-            if (thumb.exists()) {
-                if (ori != null) Orientation.setOrientationAndRating(thumb, ori, null);
-                // else thumb.setLastModified(new Date().getTime());
-            }
-        } catch (Exception e) {}
-    }
-    public boolean updateExifInfo(String rootPath, List<Key> keys) {
-        boolean r = true;
-        File file = new File(fullPath(rootPath));
-        File xmpFile = new File(file.getParentFile(), "_g_s_t_" + FileUtil.nameUseExt(".xmp", fileName));
-        String xmlContent = xmlString(keys);
-        if (xmlContent != null && !xmlContent.isEmpty()) {
-            FileUtil.writeToFile(xmpFile, xmlContent, "UTF-8");
-            try {
-                Map<String, List<String>> result = ExifTool.getInstance().execute(file, "-overwrite_original",
-                        "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
-                        "-tagsfromfile", xmpFile.getName());
-                List<String> error = result.get(ExifTool.ERROR);
-                if (error != null && error.size() > 0) {
-                    for (String err : error) if (err.indexOf("Error opening file") < 0) System.out.println(err);
-                    r = false;
-                }
-                xmpFile.delete();
-                updateThumbFile(rootPath,keys.contains(Key.ORIENTATION)?(orientation==null?1:orientation):null);
-            } catch (IOException e) {
-                r = false;
-                e.printStackTrace();
-            }
-        }
-        return r;
     }
 }

@@ -42,7 +42,7 @@
     <#return r />
 </#function>
 <#macro photoAttributes p>
-    data-src="${fileUrl(p)?substring(1)}" date-size="${p.fileSize?c}"
+    data-src="${fileUrl(p)?substring(1)}" date-size="${p.fileSize?c}" data-lastModified="${p.lastModified?c}"
     <#if p.orientation??>
         data-orientation="${p.orientation}"
     </#if>
