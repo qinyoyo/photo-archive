@@ -231,15 +231,15 @@ img[data-rating="5"] + .img-favorite-state {
 .dialog__content {
     margin-top:100px;
     display: inline-block;
-    min-width: 300px;
     text-align: left;
     background: #fff;
     border: 1px solid #a0a0a0;
 }
 .dialog__title {
-    height:16px;
+    height: 24px;
     padding-top: 5px;
     text-align: center;
+    background: teal;
 }
 .dialog__close-icon {
     float: right;
@@ -250,6 +250,7 @@ img[data-rating="5"] + .img-favorite-state {
 .dialog__button {
     margin: 10px 10px 0 10px;
     cursor: pointer;
+    min-width: 100px;
 }
 .dialog__body {
     padding: 10px;

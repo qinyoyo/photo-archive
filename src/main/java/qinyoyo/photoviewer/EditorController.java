@@ -61,7 +61,11 @@ public class EditorController implements ApplicationRunner {
         if (m.find()) attributes.put("body",m.group(2));
         try {
             Map<String, Object> pa = pvController.getPathAttributes(new File(path).getParent(), true, options.isFavoriteFilter());
-            pa.put("currentPath",new File(path).getParent().replaceAll("\\\\","/"));
+            String current = new File(path).getParent().replaceAll("\\\\","/");
+            if (current.startsWith("/")) current = current.substring(1);
+            if (current.endsWith("/") ) current = current.substring(0,current.length()-1);
+            pa.put("currentPath",current);
+
             String resourceHtml = freeMarkerWriter("resource.ftl",pa);
             String reUrl = path + "_ed.html";
             attributes.put("resource",resourceHtml);
@@ -77,9 +81,12 @@ public class EditorController implements ApplicationRunner {
     @ResponseBody
     @RequestMapping(value = "resource")
     public String resource(HttpServletRequest request, HttpServletResponse response, String path, String current) {
-        if (path==null || path.isEmpty()) return "error";
+        if (path==null) path="";
+        if (current==null) current="";
         try {
             Map<String, Object> pa = pvController.getPathAttributes(path, true, SessionOptions.getSessionOptions(request).isFavoriteFilter());
+            if (current.startsWith("/") || current.startsWith("\\")) current = current.substring(1);
+            if (current.endsWith("/") || current.endsWith("\\")) current = current.substring(0,current.length()-1);
             pa.put("currentPath",current);
             String resourceHtml = freeMarkerWriter("resource.ftl", pa);
             return resourceHtml;

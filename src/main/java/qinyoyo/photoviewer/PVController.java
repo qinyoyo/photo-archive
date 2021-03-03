@@ -57,6 +57,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         return isReady;
     }
 
+    @ResponseBody
     @RequestMapping(value = "login")
     public String login(Model model,HttpServletRequest request, String password, String exifTag,
                    Boolean debug, Boolean htmlEditable ) {
@@ -71,20 +72,20 @@ public class PVController implements ApplicationRunner , ErrorController {
                 if (ok.isPresent()) options.setRangeExif( ok.get());
                 else options.setRangeExif(null);
             }
-            return "redirect:/";
+            return "ok";
         } else {
-            model.addAttribute("message", "解锁失败");
-            return "message";
+            return "error";
         }
     }
 
+    @ResponseBody
     @RequestMapping(value = "logout")
     public String logout(Model model,HttpServletRequest request) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         options.setUnlocked(false);
         options.setHtmlEditable(false);
         options.setDebug(false);
-        return "redirect:/";
+        return "ok";
     }
 
     @ResponseBody
@@ -288,6 +289,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         }
     }
 
+    /*
     @ResponseBody
     @RequestMapping(value = "share")
     public String share(HttpServletRequest request, HttpServletResponse response, String path) {
@@ -304,7 +306,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         }
         return "error";
     }
-
+     */
     @ResponseBody
     @RequestMapping(value = "scan")
     public String scan(String path) {
@@ -514,6 +516,7 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
         Map<String,Object> model = new HashMap<>();
+        path=ArchiveUtils.formatterSubFolder(path);
         model.put("separator",File.separator);
         if (path!=null && !path.isEmpty()) {
             model.put("pathNames",path.split("\\\\|/"));

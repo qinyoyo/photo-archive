@@ -1,4 +1,41 @@
 ;(function () {
+    function setFullscreen(element) {
+        const el = element instanceof HTMLElement ? element : document.documentElement;
+        const rfs = el.requestFullscreen       ||
+            el.webkitRequestFullscreen ||
+            el.mozRequestFullScreen    ||
+            el.msRequestFullscreen;
+        if (rfs) {
+            rfs.call(el);
+        }
+    }
+    function exitFullscreen(){
+        const efs = document.exitFullscreen ||
+            document.webkitExitFullscreen ||
+            document.mozCancelFullScreen  ||
+            document.msExitFullscreen;
+        if (efs) {
+            efs.call(document);
+        }
+    }
+    window.fullScreenElement = function() {
+        const fullscreenEnabled = document.fullscreenEnabled       ||
+            document.mozFullScreenEnabled    ||
+            document.webkitFullscreenEnabled ||
+            document.msFullscreenEnabled;
+        if (fullscreenEnabled) {
+            const fullscreenElement = document.fullscreenElement    ||
+                document.mozFullScreenElement ||
+                document.webkitFullscreenElement;
+            return  fullscreenElement
+        } else return 0
+    }
+    window.handleFullScreen = function (element){
+        const e = fullScreenElement()
+        if (e) exitFullscreen()
+        else if (e===0) console.log('浏览器当前不能全屏');
+        else setFullscreen(element);
+    }
     window.Ajax = {
         get: function (url, callback) {
             const xhr = new XMLHttpRequest();
@@ -22,42 +59,90 @@
             xhr.send(data);
         }
     }
-    window.input = function(options) {
-       if (navigator.userAgent.toLowerCase().indexOf('mac os') >= 0) {
-            let value = prompt(options.title,options.defaultValue ? options.defaultValue : '')
-            if (value) {
-                if (typeof options.callback === 'function') {
-                    options.callback(value)
-                }
-            } else if (typeof options.oncancel === 'function') {
-                options.oncancel()
-            }
-            return
+    window.openDialog = function(options) {
+        const dlgWrapper = document.createElement('div')
+        dlgWrapper.className='dialog__wrapper'
+
+        const closeFunction = function() {
+            if (typeof options.oncancel === 'function') options.oncancel()
+            dlgWrapper.remove()
         }
-        const body = document.querySelector('body')
-        const dialog = document.createElement("dialog")
-        dialog.className = 'common-dialog'
+
+        const dlgContent = document.createElement('div')
+        dlgContent.className='dialog__content'
+        dlgWrapper.appendChild(dlgContent)
+
+
+        const dlgTitleWrapper = document.createElement('div')
+        dlgTitleWrapper.className='dialog__title'
+        dlgContent.appendChild(dlgTitleWrapper)
+        if (options.title) {
+            const title = document.createElement('span')
+            title.innerText = options.title
+            dlgTitleWrapper.appendChild(title)
+        }
+        const closeIcon = document.createElement('i')
+        closeIcon.className = 'dialog__close-icon fa fa-close'
+        closeIcon.onclick = closeFunction
+        dlgTitleWrapper.appendChild(closeIcon)
+
+        const dlgBody = document.createElement('div')
+        dlgBody.className='dialog__body'
         if (options.dialogStyle) {
             if (options.dialogStyle) {
                 Object.keys(options.dialogStyle).forEach(key=>{
-                    dialog.style[key] = options.dialogStyle[key]
+                    dlgBody.style[key] = options.dialogStyle[key]
                 })
             }
         }
-        if (options.title) {
-            const t = document.createElement("div")
-            t.style.textAlign='center'
-            t.style.fontWeight='bold'
-            t.style.color='blue'
-            t.style.marginBottom='10px'
-            t.innerText = options.title
-            dialog.appendChild(t)
+
+        dlgContent.appendChild(dlgBody)
+
+        if (typeof options.body === 'string') dlgBody.innerHTML = options.body
+        else if (options.body) dlgBody.appendChild(options.body)
+
+        if (typeof options.callback==='function' || typeof options.oncancel === 'function') {
+            const btns = document.createElement('div')
+            btns.style.textAlign = 'center'
+            dlgBody.appendChild(btns)
+            if (typeof options.callback==='function'){
+                const okbtn=document.createElement('button')
+                okbtn.className='dialog__button'
+                okbtn.innerText=(options.okText ? options.okText : '确定')
+                okbtn.onclick=function (){
+                    options.callback(dlgBody)
+                    dlgWrapper.remove()
+                }
+                btns.appendChild(okbtn)
+            }
+            if (typeof options.oncancel==='function'){
+                const cancelbtn=document.createElement('button')
+                cancelbtn.className='dialog__button'
+                cancelbtn.innerText=(options.cancelText ? options.cancelText : '取消')
+                cancelbtn.onclick=closeFunction
+                btns.appendChild(cancelbtn)
+            }
         }
+        document.querySelector('body').appendChild(dlgWrapper)
+    }
+
+    window.message = function (msg) {
+        openDialog({
+            title: '提示',
+            body: msg,
+            okText: '知道了',
+            callback: function() {}
+        })
+    }
+    window.input = function(options) {
+        let dlgOptions = {}
+        const dlgBody = document.createElement('div')
+        if (options.title) dlgOptions.title = options.title
         if (options.label) {
             const t = document.createElement("span")
             t.style.paddingRight = '5px'
             t.innerText = options.label
-            dialog.appendChild(t)
+            dlgBody.appendChild(t)
         }
         const input = document.createElement("input")
         input.id = 'dyna-dialog-input-element'
@@ -67,40 +152,13 @@
             })
         }
         if (options.inputType) input.type = options.inputType
-        input.value = options.defaultValue
-        dialog.appendChild(input)
+        input.value = (options.defaultValue ? options.defaultValue : '')
+        dlgBody.appendChild(input)
 
-        const split =  document.createElement("div")
-        split.style.paddingTop = '20px'
-        split.style.textAlign = 'center'
-        const ok = document.createElement("button")
-        ok.style.marginRight = '20px'
-        ok.style.width = '80px'
-        ok.innerText='确定'
-        ok.onclick = function() {
-            if (typeof options.callback === 'function') {
-                options.callback(input.value)
-            }
-            dialog.close(input.value)
+        dlgOptions.body = dlgBody
+        if (typeof options.callback==='function') dlgOptions.callback = function() {
+            options.callback(input.value)
         }
-        split.appendChild(ok)
-        const cancel = document.createElement("button")
-        cancel.innerText='取消'
-        cancel.style.width = '80px'
-        cancel.onclick = function() {
-            if (typeof options.oncancel === 'function') {
-                options.oncancel()
-            }
-            dialog.close()
-        }
-        split.appendChild(cancel)
-
-        dialog.appendChild(split)
-        body.appendChild(dialog)
-
-        dialog.showModal()
-        dialog.onclose = function(){
-            dialog.remove()
-        }
+        openDialog(dlgOptions)
     }
 })();

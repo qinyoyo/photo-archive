@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="/static/css/pv.css">
     <link rel="stylesheet" href="/static/css/transform_image.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
-    <script type="text/javascript" src="/static/js/full_screen.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <#if !loopPlay??>
@@ -49,8 +48,11 @@
         document.getElementById('settings').style.display = 'none'
     }
     function radioClick(e) {
-        if (e.id==='login') document.getElementById('loginOptions').style.display='block'
-        else document.getElementById('loginOptions').style.display='none'
+        const o = document.getElementById('loginOptions')
+        if (o) {
+            if (e.id==='login') o.style.display='block'
+            else o.style.display='none'
+        }
     }
     function doSetting() {
         closeSettingDialog()
@@ -75,7 +77,11 @@
         }
         e = document.getElementById('logout')
         if (e && e.checked) {
-            window.location.href = '/logout'
+            Ajax.get('/logout', function(txt) {
+                if (txt=='ok') {
+                    window.location.reload()
+                }
+            })
             return
         }
         e = document.getElementById('loopTimer')
@@ -102,13 +108,20 @@
         if (e && e.checked) {
             const password=document.getElementById('password').value
             if (!password) {
-                alert('必须输入解锁码')
+                message('必须输入解锁码')
                 return
             }
-            window.location.href = '/login?password='+password
-                +'&debug=' + (document.getElementById('debug').checked ? 'true' : 'false')
-                +'&htmlEditable=' + (document.getElementById('htmlEditable').checked ? 'true' : 'false')
-                +'&exifTag=' + encodeURI(document.getElementById('exifTag').value)
+            const url = '/login?password='+password
+                        +'&debug=' + (document.getElementById('debug').checked ? 'true' : 'false')
+                        +'&htmlEditable=' + (document.getElementById('htmlEditable').checked ? 'true' : 'false')
+                        +'&exifTag=' + encodeURI(document.getElementById('exifTag').value)
+            Ajax.get(url, function(txt) {
+                    if (txt=='ok') {
+                        window.location.reload()
+                    } else {
+                        message('解锁失败')
+                    }
+                })
             return
         }
     }

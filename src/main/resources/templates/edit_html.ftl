@@ -47,15 +47,27 @@
 <div id="editor" contenteditable="true" data-file="${sourceFile}">
 ${body?replace('contenteditable="false"','contenteditable="true"')}
 </div>
-<dialog id="select-resource" style="width:600px; top:10px">
-    <div id="select-resource-content">
-        ${resource}
+
+<div id="select-resource" style="display:none" class="dialog__wrapper">
+    <div class="dialog__content" style="margin-top: 20px;">
+        <div class="dialog__title">
+            <span>选择媒体资源</span>
+            <i class="dialog__close-icon fa fa-close" onclick="document.getElementById('select-resource').style.display='none'"></i>
+        </div>
+        <div class="dialog__body" style="width:600px; top:10px">
+            <div id="select-resource-content">
+                ${resource}
+            </div>
+            <div style="text-align: center">
+                <button class="dialog__button resource-selected">确定</button>
+                <button class="dialog__button" onclick="document.getElementById('select-resource').style.display='none'">取消</button>
+            </div>
+        </div>
+
     </div>
-    <div style="padding-top: 10px;">
-        <button onclick="resourceSelected(true)">确定</button>
-        <button onclick="this.parentElement.parentElement.close()">取消</button>
-    </div>
-</dialog>
+</div>
+
+
 </body>
 </html>
 

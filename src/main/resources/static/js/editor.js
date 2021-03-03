@@ -11,23 +11,7 @@ function adjustSize(img) {
         img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)+26) + 'px'
     }
 }
-function resourceSelected(ok) {
-    const dialog = document.getElementById('select-resource')
-    if (ok) {
-        const type = document.getElementById('select-resource-content').className
-        if (type)  {
-            const form = document.getElementById(type+'-form')
-            if (form) {
-                let formData = new FormData(form)
-                let value = formData.getAll(type)
-                if (value instanceof Array) value = value.join(",")
-                dialog.close(value)
-                return
-            }
-        }
-    }
-    dialog.close()
-}
+
 ;(function () {
 
     const RE = {};
@@ -319,13 +303,7 @@ function resourceSelected(ok) {
     const getColor = function(msg, callback) {
         window.input({
             title: msg,
-            dialogStyle: {
-                width: '300px'
-            },
-            inputStyle: {
-                width: '100%',
-                height: '40px'
-            },
+            label: '选择颜色',
             inputType: 'color',
             callback: function(v) {
                 if (v) setTimeout(function() { callback(v) },100)
@@ -338,9 +316,6 @@ function resourceSelected(ok) {
             dialogStyle: {
                 width: '300px'
             },
-            inputStyle: {
-                width: '100%',
-            },
             inputType: 'url',
             callback: function(v) {
                 if (v) setTimeout(function() { callback(v) },100)
@@ -352,12 +327,19 @@ function resourceSelected(ok) {
         const dialog = document.getElementById('select-resource')
         document.getElementById('select-resource-content').className=type
         dialog.querySelectorAll('input').forEach(function(e){ e.checked = false })
-        dialog.showModal()
-        dialog.onclose = function(){
-            if (dialog.returnValue) {
-                setTimeout(function() { callback(dialog.returnValue) },100)
+        dialog.querySelector('button.resource-selected').onclick = function() {
+            if (type)  {
+                const form = document.getElementById(type+'-form')
+                if (form) {
+                    let formData = new FormData(form)
+                    let value = formData.getAll(type)
+                    if (value instanceof Array) value = value.join(",")
+                    callback(value)
+                }
             }
-        };
+            dialog.style.display='none'
+        }
+        dialog.style.display='block'
     }
 
     const initResource = function() {
@@ -412,9 +394,9 @@ function resourceSelected(ok) {
                             data.append("body",html)
                             Ajax.post("/save",data,function (msg){
                                 if (msg=='ok') htmlSaved = html
-                                alert(msg)
+                                else message(msg)
                             })
-                        } else alert('没有改变')
+                        } else message('没有改变')
                         break;
                     case 'insert_image':
                         if (RE.prepareInsert()){
@@ -433,29 +415,30 @@ function resourceSelected(ok) {
                                 if (imgs.length>0) {
                                     imgs.forEach(img=>{
                                         let html = '<div class="gps-block">'
-                                        let v = img.getAttribute('data-datetimeoriginal')
-                                        if (v) html += '<span style="color: rgb(0, 255, 255);">' + v + '</span>'
-                                        let poi = ''
-                                        v = img.getAttribute('data-province')
-                                        if (v) poi += v + ' '
-                                        v = img.getAttribute('data-city')
-                                        if (v) poi += v + ' '
-                                        v = img.getAttribute('data-location')
-                                        if (v) poi += v + ' '
-                                        v = img.getAttribute('data-subjectCode')
-                                        if (v) poi += v
-                                        if (!poi) poi = 'poi'
+                                        let dt = img.getAttribute('data-datetimeoriginal')
+                                        let poi = img.getAttribute('title')
+                                        if (poi) {
+                                            let pos = poi.indexOf('\ufeff')
+                                            if (pos>=0) poi = poi.substring(0,pos)
+                                        }
                                         let longitude = img.getAttribute('data-longitude')
                                         let latitude = img.getAttribute('data-latitude')
                                         if (longitude && latitude) {
-                                            html += '<a href="' +
-                                                "https://uri.amap.com/marker?src=mySteps" + "&name=" + poi
+                                            if (!poi) poi='poi'
+                                            else if (dt && poi.indexOf(dt)==0) poi=poi.substring(dt.length)
+                                            html += (dt?'<span>' + dt + '</span>' : '') +'<a href="'
+                                                + "https://uri.amap.com/marker?src=mySteps" + "&name=" + poi
                                                 + "&position=" + longitude +"," + latitude
                                                 + "&coordinate=wgs84"
                                                 + '">' + poi + '</a><br>'
+                                        } else if (poi) {
+                                            html += '<span>' + poi + '</span>'
+                                        } else if (dt) {
+                                            html += '<span>' + dt + '</span>'
                                         }
-                                        html += '</div>'
+                                        html += '</div><br>'
                                         if (RE.prepareInsert()) {
+                                            RE.setJustifyLeft()
                                             RE.insertHTML(html)
                                         }
                                     })

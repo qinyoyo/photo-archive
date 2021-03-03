@@ -226,19 +226,23 @@
 
 
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function (img, index) {
+    const initTransformImage = function (img, index, initialThumb) {
         let removedIndexList = []
         let loopDirection = 1
-        const totalImages = parseInt(document.querySelector('.photo-list').getAttribute('data-size'))
+        const totalImages = document.querySelectorAll('.img-index-') ?
+            parseInt(document.querySelector('.photo-list').getAttribute('data-size')) : 1
+        if (totalImages==1) window.loopTimer = 0
         const srcByIndex = function (imgIndex) {
             while (removedIndexList.indexOf(imgIndex)>=0) {
                 imgIndex = imgIndex + loopDirection
             }
             if (imgIndex>=0 && imgIndex < totalImages) {
                 let thumb = document.querySelector('.img-index-' + imgIndex)
+                if (!thumb && totalImages==1) thumb = initialThumb
                 if (thumb) {
                     let title = thumb.getAttribute('title')
                     let src = thumb.getAttribute('data-src')
+                    if (!src) src = thumb.getAttribute('src')
                     let click = thumb.getAttribute('data-lastModified')
                     if (click) {
                         src = src + '?click='+click
@@ -355,15 +359,17 @@
                     else imgIndex = 0
                     return loadImageBy(imgIndex,skipSave)
                 }
-                toast('没有更多了')
+                if (window.loopTimer) toast('没有更多了')
                 return false
             }
         }
         const preLoadImageBy = function(imgIndex) {
-            let {src} = srcByIndex(imgIndex)
-            if (src) {
-                const image = new Image()
-                image.setAttribute('src',src)
+            if (window.loopTimer){
+                let {src}=srcByIndex(imgIndex)
+                if (src){
+                    const image=new Image()
+                    image.setAttribute('src',src)
+                }
             }
         }
         const changeImage = function({src, fromLeft, orientation, rating, title }) {
@@ -451,17 +457,18 @@
                 loopWaiting(true)
             }
             loadImg.setAttribute('src', src)
-            let pathLength = document.getElementById('app').getAttribute('data-folder').length
-            document.querySelector('head title').innerText = (pathLength ? src.substring(pathLength+1) : src)
+            if (document.getElementById('app')){
+                let pathLength=document.getElementById('app').getAttribute('data-folder').length
+                document.querySelector('head title').innerText=(pathLength?src.substring(pathLength+1):src)
+            }
             let floatTitle = title
             if (floatTitle) {
                 let pos = title.indexOf('\ufeff')
                 if (pos>=0) floatTitle = title.substring(0,pos).replace(/\n/g,'<br>')
                 else floatTitle = title.replace(/\n/g,'<br>')
+                document.querySelector('.tran-img__title').innerHTML =
+                    '<b>' + (index+1) + '/' + totalImages +'&nbsp;&nbsp;</b>' + floatTitle
             }
-            document.querySelector('.tran-img__title').innerHTML =
-                '<b>' + (index+1) + '/' + totalImages +'&nbsp;&nbsp;</b>' + floatTitle
-
         }
 
         const favorite = function(f) {
@@ -1006,9 +1013,13 @@
             transformObject.resize()
         }
     }
-    const addImageDialog = function(index) {
+    const addImageDialog = function(index, initialThumb) {
         removeImageDialog()
         addModel()
+
+        const photoList = document.querySelector('div.photo-list')
+        if (!photoList) rangeExif = null
+
         const body = document.querySelector('body')
         body.style.overflow = 'hidden'
         let {wrapper, content, dialogBody } = createImagePlayerDialog()
@@ -1112,7 +1123,7 @@
             }
         })
 
-        if (!window.readOnly) createButton({
+        if (photoList && !window.readOnly) createButton({
             className:'favorite',
             title: '收藏',
             iconClass:'fa fa-heart-o',
@@ -1121,7 +1132,7 @@
             }
         })
 
-        createButton({
+        if (photoList) createButton({
             className:'close',
             title: '图像信息',
             iconClass:'fa fa-info-circle',
@@ -1131,7 +1142,7 @@
         })
 
         const bkMusic = document.querySelector('.background-music')
-        if (bkMusic) {
+        if (photoList && bkMusic) {
             createButton({
                 className:'music',
                 title: '切换背景音乐',
@@ -1165,7 +1176,7 @@
                 }
             })
         }
-        if (!window.readOnly) {
+        if (photoList && !window.readOnly) {
             createButton({
                 className:'remove',
                 title: '删除图像',
@@ -1257,7 +1268,7 @@
             body.appendChild(window.debugElement)
         }
 
-        transformObject = new initTransformImage(img, index)
+        transformObject = new initTransformImage(img, index, initialThumb)
     }
     let rangeExif = null
     /*****************  入口函数  *********************
@@ -1266,21 +1277,30 @@
      *             类 img-index-xx, xx为序号          *
      *************************************************/
     window.TransformImage =function(selector){
-        rangeExif = !window.readOnly && document.getElementById("app").getAttribute("data-rangeExif") ?
+        rangeExif = !window.readOnly && document.getElementById("app") && document.getElementById("app").getAttribute("data-rangeExif") ?
             {
                 exif: document.getElementById("app").getAttribute("data-rangeExif"),
                 note: document.getElementById("app").getAttribute("data-rangeExifNote"),
                 includeSubFolder: false
             } : null
+        let imgIndex = 0
         document.querySelectorAll(selector).forEach(function (img){
             let pos=img.className.indexOf('img-index-')
-            const index=(pos>=0?parseInt(img.className.substring(pos+10)):0)
+            if (pos<0) img.className = img.className + ' img-index-'+imgIndex
+            const index=(pos>=0?parseInt(img.className.substring(pos+10)):imgIndex)
+            imgIndex ++;
             img.onclick=function (event){
                 event.stopPropagation()
                 window.onresize = resizeEvent
-                addImageDialog(index==NaN?0:index)
+                addImageDialog(index==NaN?0:index, img)
             }
         });
+        if (!document.querySelector('.photo-list')) {
+            const body = document.querySelector('body')
+            body.className = body.className + ' photo-list'
+            body.setAttribute('data-size',imgIndex+'')
+            if (imgIndex>1 && !window.loopTimer) window.loopTimer = 5000
+        }
     }
     window.AutoLoopPlayImage =function(starterIndex){
         rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
@@ -1293,12 +1313,12 @@
         let firstImg = document.querySelector('.img-index-'+starterIndex)
         if (firstImg) {
             window.onresize = resizeEvent
-            addImageDialog(starterIndex)
+            addImageDialog(starterIndex, firstImg)
         } else if (starterIndex) {
             firstImg = document.querySelector('.img-index-0')
             if (firstImg) {
                 window.onresize = resizeEvent
-                addImageDialog(0)
+                addImageDialog(0, firstImg)
             }
         }
     }

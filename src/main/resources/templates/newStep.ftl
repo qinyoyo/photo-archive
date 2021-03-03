@@ -237,6 +237,7 @@
 <body onload="TransformImage('img')">
     <div>
         <h2 style="text-align: center;"> <u>${title}</u> </h2>
+        <div>输入游记内容</div>
     </div>
 </body>
 </html>

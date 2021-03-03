@@ -60,6 +60,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
         return r;
     }
+    /* some functions used in ftl resource file */
     public String gpsString(double v, boolean isLatitude) {
         double d=Math.abs(v);
         String r="";
@@ -70,6 +71,27 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (isLatitude) {
             return (v>=0.0?"N":"S")+r;
         }  return (v>=0.0?"E":"W")+r;
+    }
+    public String urlPath(String currentPath) {
+        String sub = getSubFolder();
+        if (sub == null || sub.isEmpty()) {
+            return '/'+getFileName();
+        } else {
+            int uplevel = 0;
+            String url='/'+sub.replaceAll("\\\\","/") + '/' + getFileName();
+            currentPath = currentPath.replaceAll("\\\\","/");
+            if (currentPath.isEmpty() || currentPath.equals('/')) return url;
+            if (!currentPath.startsWith("/")) currentPath = "/" + currentPath;
+            if (!currentPath.endsWith("/")) currentPath = currentPath + '/';
+            while (!url.startsWith(currentPath)) {
+                uplevel ++;
+                int pos = currentPath.substring(0,currentPath.length()-1).lastIndexOf("/");
+                currentPath = currentPath.substring(0,pos+1);
+            }
+            url = url.substring(currentPath.length());
+            while (uplevel-- > 0) url = "../"+url;
+            return url;
+        }
     }
     public String formattedAddress(boolean useCountryName) {
         String poi = subjectCode;

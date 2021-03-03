@@ -65,11 +65,9 @@ window.onload=function(){
         window.input({
             title: '当前目录下新建一个游记',
             label: '游记名称：',
+
             dialogStyle: {
                 width: '300px'
-            },
-            inputStyle: {
-                width: '100%'
             },
             inputType: 'text',
             callback: function(v) {
