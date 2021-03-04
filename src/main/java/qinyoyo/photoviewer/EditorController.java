@@ -68,9 +68,11 @@ public class EditorController implements ApplicationRunner {
             pa.put("sessionOptions",options);
             String resourceHtml = freeMarkerWriter("resource.ftl",pa);
             String reUrl = path + "_ed.html";
+            File editFile = new File(rootPath,reUrl);
+            editFile.delete();
             attributes.put("resource",resourceHtml);
             attributes.put("sourceFile",new File(rootPath,path).getCanonicalPath());
-            freeMarkerWriter("edit_html.ftl", new File(rootPath,reUrl).getCanonicalPath(), attributes);
+            freeMarkerWriter("edit_html.ftl", editFile.getCanonicalPath(), attributes);
             return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
         } catch (Exception e) {
             model.addAttribute("message",e.getMessage());

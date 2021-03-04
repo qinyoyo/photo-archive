@@ -379,7 +379,7 @@ function adjustSize(img) {
         };
         const sw =window.innerWidth,
               bw = document.querySelector('body').clientWidth
-        document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
+        if ((sw - bw)/2 > 32) document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
         RE.editor = document.getElementById('editor');
         RE.setBaseFontSize('14px');
         initResource()
