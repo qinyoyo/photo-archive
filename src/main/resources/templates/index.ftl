@@ -94,6 +94,21 @@
             })
             return
         }
+        e = document.getElementById('newStep')
+        if (e && e.checked) {
+            const path = e.getAttribute('data-folder')
+            window.input({
+                title: '当前目录下新建一个游记',
+                label: '游记名称：',
+                dialogStyle: {
+                    width: '300px'
+                },
+                inputType: 'text',
+                callback: function(v) {
+                    window.location.href = '/?path=' + (path ? encodeURI(path) : '') + '&newStep=' + encodeURI(v)
+                }
+            })
+        }
         e = document.getElementById('rescan')
         if (e && e.checked) {
             const path = e.getAttribute('data-folder')
@@ -183,9 +198,6 @@
             <input type="text" autocomplete="off" placeholder="搜索关键词" class="search-input">
             <i  class="fa fa-times-circle-o search-clear-icon"></i>
             </span>
-            <#if !sessionOptions.mobile?? && !htmls?? && sessionOptions.htmlEditable>
-            <i class="fa fa-edit add-new-step folder-head__item" title="新建游记" data-folder="${path}"></i>
-            </#if>
             <i class="fa fa-cog folder-head__item" title="参数设置" onclick="openSetting()"></i>
             <i <#if sessionOptions.favoriteFilter>style="color:red" </#if>class="fa fa-play folder-head__item" data-folder="${path}" title="循环播放该目录下图片"></i>
         </div>
@@ -300,6 +312,11 @@
                 <input type="number" min="1000" max="20000" step="250" style="width:80px" id="loopTimerValue"><label for="loopTimerValue">毫秒</label>
             </div>
             <#if sessionOptions.unlocked>
+                <#if !htmls?? && sessionOptions.htmlEditable>
+                <div>
+                    <input type="radio" name="action" id="newStep" data-folder="${path}" onclick="radioClick(this)"><label for="newStep">新建游记</label>
+                </div>
+                </#if>
                 <div>
                     <input type="radio" name="action" id="rescan" data-folder="${path}" onclick="radioClick(this)"><label for="rescan">重新扫描 ${path}</label>
                 </div>
