@@ -18,7 +18,6 @@
     </#if>
     <title>Photo Viewer</title>
 </head>
-<#if (debug?? && debug) || (canRemove?? && canRemove) || (orientation?? && orientation) || (loopTimer??)>
 <script>
     function onavplay(e) {
       document.querySelectorAll('audio,video').forEach(r=>{
@@ -27,9 +26,9 @@
     }
     function openSetting() {
         const f = document.getElementById('favorite')
-        if (f) f.checked = <#if favoriteFilter?? && favoriteFilter>true<#else>false</#if>
+        if (f) f.checked = <#if sessionOptions.favoriteFilter>true<#else>false</#if>
         const l = document.getElementById('loopTimerValue')
-        if (l) l.value = window.loopTimer + ''
+        if (l) l.value = window.sessionOptions.loopTimer + ''
         const b = document.getElementById('backMusic')
         if (b) {
             const e = document.querySelector('audio.background-music')
@@ -58,7 +57,7 @@
         closeSettingDialog()
         let e = document.getElementById('favorite')
         if (e && e.checked) {
-            Ajax.get('/favorite?filter=<#if favoriteFilter?? && favoriteFilter>false<#else>true</#if>', function(txt) {
+            Ajax.get('/favorite?filter=<#if sessionOptions.favoriteFilter>false<#else>true</#if>', function(txt) {
                 if (txt=='ok') {
                     window.location.reload()
                 }
@@ -90,7 +89,7 @@
             if (l<0) l=1000
             Ajax.get('/loopTimer?value='+l, function(txt) {
                 if (txt=='ok') {
-                    window.loopTimer = l
+                    window.sessionOptions.loopTimer = l
                 }
             })
             return
@@ -136,40 +135,26 @@
             })
         }
     }
-    <#if debug?? && debug>
-    window.enableDebug = true
-    </#if>
-    <#if readOnly?? && readOnly>
-    window.readOnly = true
-    <#else>
-    window.readOnly = false
-    </#if>
-    <#if orientation?? && orientation>
-    window.notSupportOrientation = true
-    </#if>
-    <#if loopTimer??>
-    window.loopTimer = ${loopTimer?c}
-    </#if>
     <#if loopPlay?? && photos??>
     window.onload=function(){
         macPlayOSBackMusic()
         window.AutoLoopPlayImage(<#if startFrom??>${startFrom?c}<#else>0</#if>)
     }
     </#if>
+    <#include "./session-options.ftl" />
 </script>
-</#if>
 <#assign path = '' />
-<body>
+<body class="image-editable">
 <#if backgroundMusic??>
-    <audio class="background-music" src="${backgroundMusic}" style="display:none"<#if playBackMusic> autoplay</#if> onplay="onavplay(this)"></audio>
+    <audio class="background-music" src="${backgroundMusic}" style="display:none"<#if sessionOptions.playBackMusic> autoplay</#if> onplay="onavplay(this)"></audio>
 </#if>
 <#assign path = '' />
-<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>"<#if rangeExif??> data-rangeExif="${rangeExif}" data-rangeExifNote="${rangeExifNote}"</#if>>
+<div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>">
     <#if loopPlay??>
     <#if photos??>
     <div class="auto-play-loop-images photo-list" data-size="${photos?size?c}" style="display:none">
         <#list photos as p>
-        <img class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+        <img class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
              <@photoAttributes p /> />
         </#list>
     </div>
@@ -198,11 +183,11 @@
             <input type="text" autocomplete="off" placeholder="搜索关键词" class="search-input">
             <i  class="fa fa-times-circle-o search-clear-icon"></i>
             </span>
-            <#if !isMobile?? && !htmls?? && htmlEditable?? && htmlEditable>
+            <#if !sessionOptions.mobile?? && !htmls?? && sessionOptions.htmlEditable>
             <i class="fa fa-edit add-new-step folder-head__item" title="新建游记" data-folder="${path}"></i>
             </#if>
             <i class="fa fa-cog folder-head__item" title="参数设置" onclick="openSetting()"></i>
-            <i <#if favoriteFilter?? && favoriteFilter>style="color:red" </#if>class="fa fa-play folder-head__item" data-folder="${path}" title="循环播放该目录下图片"></i>
+            <i <#if sessionOptions.favoriteFilter>style="color:red" </#if>class="fa fa-play folder-head__item" data-folder="${path}" title="循环播放该目录下图片"></i>
         </div>
     </div>
     <#if subDirectories??>
@@ -227,7 +212,7 @@
         <div class="collapse-content html-list">
         <#list htmls as h>
             <div class="folder-list__item">
-                <#if htmlEditable?? && htmlEditable>
+                <#if sessionOptions.htmlEditable>
                 <a href = "/editor?path=${fileUrl(h)}" style="padding-right: 8px;" ><i class="fa fa-edit" title="编辑游记"></i></a>
                 </#if>
                 <a href = "${fileUrl(h)}" class="html-index-${h?index?c}" title="阅读游记"><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
@@ -277,9 +262,9 @@
         <div class="collapse-content photo-list grid-box" data-size="${photos?size?c}">
             <#list photos as p>
                 <div class="photo-item grid-cell">
-                    <img<#if !notLoadImage??> src="/.thumb${fileUrl(p)}?click=${p.lastModified?c}" alt="${p.fileName}" onload="adjustSize(this)"</#if> class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+                    <img<#if !notLoadImage??> src="/.thumb${fileUrl(p)}?click=${p.lastModified?c}" alt="${p.fileName}" onload="adjustSize(this)"</#if> class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
                          <@photoAttributes p /> />
-                    <#if !favoriteFilter?? || !favoriteFilter>
+                    <#if !sessionOptions.favoriteFilter>
                     <i class="fa fa-heart img-favorite-state"></i>
                     </#if>
                 </div>
@@ -308,13 +293,13 @@
                 <input type="radio" name="action" id="stdout" onclick="radioClick(this)"><label for="stdout">查看后台输出</label>
             </div>
             <div>
-                <input type="radio" name="action" id="favorite" checked onclick="radioClick(this)"><label for="favorite"><#if favoriteFilter?? && favoriteFilter>浏览所有照片<#else>只浏览收藏的照片</#if></label>
+                <input type="radio" name="action" id="favorite" checked onclick="radioClick(this)"><label for="favorite"><#if sessionOptions.favoriteFilter>浏览所有照片<#else>只浏览收藏的照片</#if></label>
             </div>
             <div>
                 <input type="radio" name="action" id="loopTimer" onclick="radioClick(this)"><label for="loopTimer">循环时长设置为</label>
                 <input type="number" min="1000" max="20000" step="250" style="width:80px" id="loopTimerValue"><label for="loopTimerValue">毫秒</label>
             </div>
-            <#if canRemove?? && canRemove>
+            <#if sessionOptions.unlocked>
                 <div>
                     <input type="radio" name="action" id="rescan" data-folder="${path}" onclick="radioClick(this)"><label for="rescan">重新扫描 ${path}</label>
                 </div>

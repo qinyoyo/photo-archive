@@ -176,7 +176,7 @@ function adjustSize(img) {
         document.execCommand('formatBlock', false, '<blockquote>');
     }
 
-    RE.insertImageW = function(url, alt, width) {
+    RE.insertImageW = function(url, alt, width, justGetHtml) {
         if (!url || url.length==0) return
         const getAlt = function(i) {
             if (!alt) return 'photo'
@@ -195,7 +195,8 @@ function adjustSize(img) {
             }
             html += '</div>';
         }
-        RE.insertHTML(html);
+        if (justGetHtml) return html
+        else RE.insertHTML(html);
     }
 
     RE.insertVideoW = function(url, width) {
@@ -274,12 +275,16 @@ function adjustSize(img) {
     }
 
     RE.restorerange = function(){
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        const range = document.createRange();
-        range.setStart(RE.currentSelection.startContainer, RE.currentSelection.startOffset);
-        range.setEnd(RE.currentSelection.endContainer, RE.currentSelection.endOffset);
-        selection.addRange(range);
+        try{
+            const selection=window.getSelection();
+            selection.removeAllRanges();
+            const range=document.createRange();
+            range.setStart(RE.currentSelection.startContainer,RE.currentSelection.startOffset);
+            range.setEnd(RE.currentSelection.endContainer,RE.currentSelection.endOffset);
+            selection.addRange(range);
+        } catch (e){
+            console.log(e)
+        }
     }
 
     RE.focus = function() {
@@ -325,6 +330,13 @@ function adjustSize(img) {
 
     const getResource = function(type,callback) {
         const dialog = document.getElementById('select-resource')
+        const dialogTitle = document.querySelector('.select-resource-title')
+        if (dialogTitle) {
+            if (type=='video') dialogTitle.innerText = '选择视频资源文件'
+            else if (type=='audio') dialogTitle.innerText = '选择语音资源文件'
+            else if (type=='photo') dialogTitle.innerText = '选择图像资源文件'
+            else dialogTitle.innerText = '选择资源文件'
+        }
         document.getElementById('select-resource-content').className=type
         dialog.querySelectorAll('input').forEach(function(e){ e.checked = false })
         dialog.querySelector('button.resource-selected').onclick = function() {
@@ -411,7 +423,7 @@ function adjustSize(img) {
                                     alt.push(img.getAttribute("alt"))
                                     imgs.push(img)
                                 })
-                                RE.insertImageW(url,alt,720)
+                                let fullHtml = RE.insertImageW(url,alt,720, true)
                                 if (imgs.length>0) {
                                     imgs.forEach(img=>{
                                         let html = '<div class="gps-block">'
@@ -421,8 +433,8 @@ function adjustSize(img) {
                                             let pos = poi.indexOf('\ufeff')
                                             if (pos>=0) poi = poi.substring(0,pos)
                                         }
-                                        let longitude = img.getAttribute('data-longitude')
-                                        let latitude = img.getAttribute('data-latitude')
+                                        let longitude = img.getAttribute('data-gpslongitude')
+                                        let latitude = img.getAttribute('data-gpslatitude')
                                         if (longitude && latitude) {
                                             if (!poi) poi='poi'
                                             else if (dt && poi.indexOf(dt)==0) poi=poi.substring(dt.length)
@@ -436,12 +448,13 @@ function adjustSize(img) {
                                         } else if (dt) {
                                             html += '<span>' + dt + '</span>'
                                         }
-                                        html += '</div><br>'
-                                        if (RE.prepareInsert()) {
-                                            RE.setJustifyLeft()
-                                            RE.insertHTML(html)
-                                        }
+                                        html += '</div>'
+                                        fullHtml += html
                                     })
+                                }
+                                if (fullHtml) {
+                                    RE.setJustifyLeft()
+                                    RE.insertHTML(fullHtml)
                                 }
                             })
                         }

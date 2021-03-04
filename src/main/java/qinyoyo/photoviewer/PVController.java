@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileFilter;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -58,6 +57,12 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
     @ResponseBody
+    @RequestMapping(value = "options")
+    public String getOptions(HttpServletRequest request) {
+        return SessionOptions.getSessionOptions(request).toString();
+    }
+
+    @ResponseBody
     @RequestMapping(value = "login")
     public String login(Model model,HttpServletRequest request, String password, String exifTag,
                    Boolean debug, Boolean htmlEditable ) {
@@ -66,10 +71,12 @@ public class PVController implements ApplicationRunner , ErrorController {
             options.setUnlocked(true);
             if (debug!=null) options.setDebug(debug);
             if (htmlEditable!=null) options.setHtmlEditable(htmlEditable);
-            if (exifTag==null || exifTag.isEmpty()) options.setRangeExif(Key.SUBJECT_CODE);
+            if (exifTag==null || exifTag.isEmpty()) {
+                options.setRangeTag(Key.SUBJECT_CODE);
+            }
             else {
                 Optional<Key> ok = Key.findKeyWithName(exifTag);
-                if (ok.isPresent()) options.setRangeExif( ok.get());
+                if (ok.isPresent()) options.setRangeTag( ok.get());
                 else options.setRangeExif(null);
             }
             return "ok";
@@ -182,14 +189,11 @@ public class PVController implements ApplicationRunner , ErrorController {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
-        SessionOptions options = SessionOptions.getSessionOptions(request);
         commonAttribute(model,request);
-        model.addAttribute("debug",false);
-        model.addAttribute("htmlEditable",false);
         model.addAttribute("notLoadImage",true);  // 不加载图像
-        model.addAttribute("loopTimer",options.getLoopTimer());
         model.addAttribute("loopPlay",true);
         model.addAttribute("startFrom",index);
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         model.addAllAttributes(getPathLoopImages(path, options.isFavoriteFilter()));
         setBackgroundMusic(request,model,path);
         return "index";
@@ -289,24 +293,6 @@ public class PVController implements ApplicationRunner , ErrorController {
         }
     }
 
-    /*
-    @ResponseBody
-    @RequestMapping(value = "share")
-    public String share(HttpServletRequest request, HttpServletResponse response, String path) {
-        if (!isReady) return "error";
-        if (path==null) return "error";
-        File src = new File(rootPath , path);
-        if (src.exists()) {
-            File target = new File(rootPath+File.separator+".share",src.getName());
-            target.getParentFile().mkdirs();
-            try {
-                Files.copy(src.toPath(), target.toPath());
-                return "ok";
-            } catch (Exception e) {}
-        }
-        return "error";
-    }
-     */
     @ResponseBody
     @RequestMapping(value = "scan")
     public String scan(String path) {
@@ -463,46 +449,12 @@ public class PVController implements ApplicationRunner , ErrorController {
         else if (model instanceof Map) ((Map)model).put("statics", statics);
     }
 
-    private boolean isMobile(HttpServletRequest request) {
-        String userAgent = request.getHeader("USER-AGENT");
-        return userAgent.contains("Mobile") || userAgent.contains("Phone");
-    }
+
     private void commonAttribute(Model model, HttpServletRequest request) {
         initStatics(model);
-        String params = request.getQueryString();
-        String userAgent = request.getHeader("USER-AGENT");
         SessionOptions options = SessionOptions.getSessionOptions(request);
-        if (isMobile(request)) {
-            model.addAttribute("isMobile",true);
-            String browsers = env.getProperty("photo.support-orientation");
-            boolean supportOrientation = false;
-            if (browsers!=null) {
-                String [] bs = browsers.split(",");
-                for (String b:bs) {
-                    if (userAgent.contains(b)) {
-                        supportOrientation = true;
-                        break;
-                    }
-                }
-            }
-            if (!supportOrientation || (params != null && params.contains("orientation"))) {
-                model.addAttribute("orientation", true);
-            }
-        }
-        if (options.isUnlocked()) {
-            model.addAttribute("readOnly",false);
-            Key rangeExif = options.getRangeExif();
-            if (rangeExif!=null) {
-                model.addAttribute("rangeExif", Key.getShortName(rangeExif));
-                model.addAttribute("rangeExifNote", Key.getNotes(rangeExif));
-            }
-        } else model.addAttribute("readOnly",true);
-        if (options.isDebug() || (params!=null && params.contains("debug"))) model.addAttribute("debug",true);
+        model.addAttribute("sessionOptions",options);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
-        if (options.isFavoriteFilter()) model.addAttribute("favoriteFilter",true);
-        if (options.isHtmlEditable() && !isMobile(request)) model.addAttribute("htmlEditable",true);
-        model.addAttribute("loopTimer",options.getLoopTimer());
-        model.addAttribute("canRemove",options.isUnlocked());
         List<Map<String,Object>> editableExifTag = new ArrayList<>();
         for (Key k : ArchiveUtils.MODIFIABLE_KEYS) {
             Map<String,Object> map = new HashMap<>();
@@ -511,7 +463,6 @@ public class PVController implements ApplicationRunner , ErrorController {
             editableExifTag.add(map);
         }
         model.addAttribute("editableExifTag",editableExifTag);
-        model.addAttribute("playBackMusic",options.isPlayBackMusic());
     }
 
     public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
@@ -638,6 +589,7 @@ public class PVController implements ApplicationRunner , ErrorController {
 
         rootPath = env.getProperty("photo.root-path");
         if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
+
 
         new Thread() {
             @Override

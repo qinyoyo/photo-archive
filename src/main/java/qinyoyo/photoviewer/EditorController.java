@@ -65,7 +65,7 @@ public class EditorController implements ApplicationRunner {
             if (current.startsWith("/")) current = current.substring(1);
             if (current.endsWith("/") ) current = current.substring(0,current.length()-1);
             pa.put("currentPath",current);
-
+            pa.put("sessionOptions",options);
             String resourceHtml = freeMarkerWriter("resource.ftl",pa);
             String reUrl = path + "_ed.html";
             attributes.put("resource",resourceHtml);
@@ -84,10 +84,12 @@ public class EditorController implements ApplicationRunner {
         if (path==null) path="";
         if (current==null) current="";
         try {
-            Map<String, Object> pa = pvController.getPathAttributes(path, true, SessionOptions.getSessionOptions(request).isFavoriteFilter());
+            SessionOptions options = SessionOptions.getSessionOptions(request);
+            Map<String, Object> pa = pvController.getPathAttributes(path, true, options.isFavoriteFilter());
             if (current.startsWith("/") || current.startsWith("\\")) current = current.substring(1);
             if (current.endsWith("/") || current.endsWith("\\")) current = current.substring(0,current.length()-1);
             pa.put("currentPath",current);
+            pa.put("sessionOptions",options);
             String resourceHtml = freeMarkerWriter("resource.ftl", pa);
             return resourceHtml;
         } catch (Exception e) {

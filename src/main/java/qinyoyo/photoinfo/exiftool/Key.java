@@ -98,10 +98,10 @@ public enum Key {
 
     private static final Map<String, Key> ENTRY_MAP = Arrays.stream(Key.values()).collect(Collectors.toMap(Key::getName, k -> k));
 
-    private final String notes;
-    private final Class<?> clazz;
-    private final String name;
-    private final int maxLength;
+    public final String notes;
+    public final Class<?> clazz;
+    public final String name;
+    public final int maxLength;
 
     Key(String name, Class<?> clazz) {
         this(name, clazz, "",0);

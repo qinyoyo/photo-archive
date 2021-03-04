@@ -3,9 +3,19 @@
  */
 
 ;(function () {
-    window.readOnly = false
-    window.notSupportOrientation = false
-    window.enableDebug = false
+    window.sessionOptions = {
+        debug: false,
+        htmlEditable: false,
+        favoriteFilter: false,
+        rangeExif : null,
+        rangeExifNote: null,
+        loopTimer:  3456,
+        musicIndex: 0,
+        unlocked: false,
+        playBackMusic: true,
+        mobile: false,
+        supportOrientation: false
+    }
 
     window.debug = function(options) {
         if (window.debugElement) {
@@ -50,14 +60,6 @@
         else if (ua.indexOf("firefox") > -1) return 'firefox'
         else if (ua.indexOf("safari") > -1 && ua.indexOf("chrome") == -1) return 'safari'
         else if (ua.indexOf("chrome") > -1 && ua.indexOf("safari") > -1) return 'chrome'
-    }
-    window.isMobile = function() {
-        const ua = navigator.userAgent.toLowerCase()
-        const agents = ["android", "iphone", "symbianos", "phone", "mobile"]
-        if (agents.some(a => {
-            if (ua.indexOf(a) >= 0) return true
-        })) return true
-        else return false
     }
 
     window.toast  = function(msg,delay,onclose) {  // 显示提示信息，自动关闭
@@ -116,7 +118,7 @@
                 loopTimerId = null
                 transformObject.loopAction()
                 setPlayButtonIcon()
-            }, error ? 500 : window.loopTimer)
+            }, error ? 500 : window.sessionOptions.loopTimer)
     }
 
     const setPlayButtonIcon = function() {
@@ -131,7 +133,7 @@
         if (transformObject) {
             looperState = 1
             if (runAtOnce) transformObject.loopAction()
-            else loopTimerId=setTimeout(transformObject.loopAction, window.loopTimer)
+            else loopTimerId=setTimeout(transformObject.loopAction, window.sessionOptions.loopTimer)
         } else looperState = 0
         setPlayButtonIcon()
     }
@@ -200,7 +202,7 @@
 
     /**********  通用变换 ***********/
     const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV, orientation) {
-        if (window.notSupportOrientation && orientation) {
+        if (!window.sessionOptions.supportOrientation && orientation) {
             if (orientation=='2' || orientation=='5' || orientation=='7') mirrorH = !mirrorH
             else if (orientation=='4') mirrorV = !mirrorH
             if (orientation=='6'|| orientation=='7') rotateZ += 90
@@ -229,9 +231,8 @@
     const initTransformImage = function (img, index, initialThumb) {
         let removedIndexList = []
         let loopDirection = 1
-        const totalImages = document.querySelectorAll('.img-index-') ?
-            parseInt(document.querySelector('.photo-list').getAttribute('data-size')) : 1
-        if (totalImages==1) window.loopTimer = 0
+        const totalImages = document.querySelectorAll('img[class*="img-index-"]').length
+        if (totalImages<=1) window.sessionOptions.loopTimer = 0
         const srcByIndex = function (imgIndex) {
             while (removedIndexList.indexOf(imgIndex)>=0) {
                 imgIndex = imgIndex + loopDirection
@@ -344,7 +345,7 @@
                 clearTimeout(loopTimerId)
                 loopTimerId = null
             }
-            if (!skipSave && !window.readOnly) saveOrientation()
+            if (!skipSave && window.sessionOptions.unlocked) saveOrientation()
             let { src, orientation, rating, title, imgIndex } = srcByIndex(imgIndex0)
             if (src) {
                 let fromLeft = (loopDirection<0)
@@ -359,12 +360,12 @@
                     else imgIndex = 0
                     return loadImageBy(imgIndex,skipSave)
                 }
-                if (window.loopTimer) toast('没有更多了')
+                if (window.sessionOptions.loopTimer) toast('没有更多了')
                 return false
             }
         }
         const preLoadImageBy = function(imgIndex) {
-            if (window.loopTimer){
+            if (window.sessionOptions.loopTimer){
                 let {src}=srcByIndex(imgIndex)
                 if (src){
                     const image=new Image()
@@ -806,7 +807,7 @@
             else translate({x: translateX, y: translateY})
             dragStart = false
         }
-        if (isMobile()) {
+        if (window.sessionOptions.mobile) {
             let initScale = 1
             new AlloyFinger(img, {
                 multipointStart: function (event) {
@@ -1017,8 +1018,8 @@
         removeImageDialog()
         addModel()
 
-        const photoList = document.querySelector('div.photo-list')
-        if (!photoList) rangeExif = null
+        const imageEditable = document.querySelector('body.image-editable')
+        if (!imageEditable) rangeExif = null
 
         const body = document.querySelector('body')
         body.style.overflow = 'hidden'
@@ -1123,7 +1124,7 @@
             }
         })
 
-        if (photoList && !window.readOnly) createButton({
+        if (imageEditable && window.sessionOptions.unlocked) createButton({
             className:'favorite',
             title: '收藏',
             iconClass:'fa fa-heart-o',
@@ -1132,7 +1133,7 @@
             }
         })
 
-        if (photoList) createButton({
+        if (imageEditable) createButton({
             className:'close',
             title: '图像信息',
             iconClass:'fa fa-info-circle',
@@ -1142,7 +1143,7 @@
         })
 
         const bkMusic = document.querySelector('.background-music')
-        if (photoList && bkMusic) {
+        if (imageEditable && bkMusic) {
             createButton({
                 className:'music',
                 title: '切换背景音乐',
@@ -1176,7 +1177,7 @@
                 }
             })
         }
-        if (photoList && !window.readOnly) {
+        if (imageEditable && window.sessionOptions.unlocked) {
             createButton({
                 className:'remove',
                 title: '删除图像',
@@ -1193,14 +1194,6 @@
             iconClass:'fa fa-arrow-circle-down',
             onclick:function (){
                 downloadImg(img)
-                /*
-                const src = img.getAttribute('src')
-                if (src) {
-                    Ajax.get('/share?path='+encodeURI(src),function(reposeText) {
-                        if (reposeText=='ok') toast('成功分享到指定目录')
-                    })
-                }
-                 */
             }
         })
         if (rangeExif) {
@@ -1237,7 +1230,7 @@
             })
         }
 
-        if (!isMobile()){
+        if (!window.sessionOptions.mobile){
             floatButtons.onmouseenter=function (event){
                 floatButtonClick(event)
             }
@@ -1262,7 +1255,7 @@
 
         body.appendChild(wrapper)
 
-        if (window.enableDebug) {
+        if (window.sessionOptions.debug) {
             window.debugElement = document.createElement("div")
             window.debugElement.className = 'tran-img__debug'
             body.appendChild(window.debugElement)
@@ -1277,10 +1270,10 @@
      *             类 img-index-xx, xx为序号          *
      *************************************************/
     window.TransformImage =function(selector){
-        rangeExif = !window.readOnly && document.getElementById("app") && document.getElementById("app").getAttribute("data-rangeExif") ?
+        rangeExif = window.sessionOptions.unlocked && window.sessionOptions.rangeExif ?
             {
-                exif: document.getElementById("app").getAttribute("data-rangeExif"),
-                note: document.getElementById("app").getAttribute("data-rangeExifNote"),
+                exif: window.sessionOptions.rangeExif,
+                note: window.sessionOptions.rangeExifNote,
                 includeSubFolder: false
             } : null
         let imgIndex = 0
@@ -1295,18 +1288,24 @@
                 addImageDialog(index==NaN?0:index, img)
             }
         });
-        if (!document.querySelector('.photo-list')) {
-            const body = document.querySelector('body')
-            body.className = body.className + ' photo-list'
-            body.setAttribute('data-size',imgIndex+'')
-            if (imgIndex>1 && !window.loopTimer) window.loopTimer = 5000
+        if (imgIndex>1 && window.sessionOptions.loopTimer===3456) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/options', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
+                    const options = JSON.parse(xhr.responseText)
+                    if (options && options.loopTimer) window.sessionOptions.loopTimer = options.loopTimer
+                }
+            };
+            xhr.send();
         }
+        else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
     }
     window.AutoLoopPlayImage =function(starterIndex){
-        rangeExif = document.getElementById("app").getAttribute("data-rangeExif") ?
+        rangeExif = window.sessionOptions.rangeExif ?
             {
-                exif: document.getElementById("app").getAttribute("data-rangeExif"),
-                note: document.getElementById("app").getAttribute("data-rangeExifNote"),
+                exif: window.sessionOptions.rangeExif,
+                note: window.sessionOptions.rangeExifNote,
                 includeSubFolder: true
             } : null
         starterIndex = starterIndex ? starterIndex : 0

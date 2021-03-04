@@ -64,7 +64,7 @@
             <#list photos as p>
                 <div class="photo-item grid-cell">
                     <img src = "/.thumb${fileUrl(p)}?click=${p.lastModified?c}" data-value="${p.urlPath(currentPath)}" alt="${p.fileName}" onload="adjustSize(this)"
-                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && orientation?? && orientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
+                         class="gird-cell-img<#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation> orientation-${p.orientation}</#if> img-index-${p?index?c}"
                          <@photoAttributes p /> />
                     <div>
                         <input type="checkbox" name="photo" id="img-index-${p?index?c}" value="${p?index?c}"/>
