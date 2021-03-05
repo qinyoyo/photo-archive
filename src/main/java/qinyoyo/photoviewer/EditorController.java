@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.RedirectView;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
+import qinyoyo.photoinfo.archive.Modification;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
@@ -116,6 +117,10 @@ public class EditorController implements ApplicationRunner {
                 html = html.substring(0,m.start())+m.group(1) +"\n" + body + "\n</body>" + html.substring(m.end());
                 FileUtil.writeToFile(new File(source),html,"UTF8");
                 new File(source+"_ed.html").delete();
+                String target = pvController.getRootPath() + File.separator + ".modified_steps"
+                        + new File(source).getCanonicalPath().substring(pvController.getRootPath().length());
+                new File(target).getParentFile().mkdirs();
+                Modification.makeLink(source,target);
                 return "ok";
             } else return "not found body";
 

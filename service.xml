@@ -1,0 +1,13 @@
+<service>
+
+      <id>PhotoViewer</id>
+
+      <name>PhotoViewer</name>
+
+      <description>Photo archive and view</description>
+
+      <executable>javaw</executable>
+
+      <arguments>-jar pv.jar</arguments>
+
+</service>
