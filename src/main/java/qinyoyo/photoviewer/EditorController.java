@@ -16,15 +16,14 @@ import org.springframework.web.servlet.view.RedirectView;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
+import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -60,7 +59,11 @@ public class EditorController implements ApplicationRunner {
         m = p.matcher(html);
         if (m.find()) attributes.put("body",m.group(2));
         try {
-            Map<String, Object> pa = pvController.getPathAttributes(new File(path).getParent(), true, options.isFavoriteFilter());
+            String folder = new File(path).getParent();
+            if (folder.endsWith(".web")) folder = new File(folder).getParent();
+            Optional<PhotoInfo> photoInfo = pvController.getArchiveInfo().subFolderInfos(folder).stream().filter(pi ->
+                    pi.getMimeType() != null && pi.getMimeType().contains("image") && pi.getShootTime() != null).findFirst();
+            Map<String, Object> pa = pvController.getPathAttributesByDate(DateUtil.date2String(photoInfo.isPresent() ? photoInfo.get().getShootTime() : new Date(),"yyyy-MM-dd"), options.isFavoriteFilter());
             String current = new File(path).getParent().replaceAll("\\\\","/");
             if (current.startsWith("/")) current = current.substring(1);
             if (current.endsWith("/") ) current = current.substring(0,current.length()-1);
@@ -82,12 +85,13 @@ public class EditorController implements ApplicationRunner {
 
     @ResponseBody
     @RequestMapping(value = "resource")
-    public String resource(HttpServletRequest request, HttpServletResponse response, String path, String current) {
+    public String resource(HttpServletRequest request, HttpServletResponse response, String path, String date, String current) {
         if (path==null) path="";
         if (current==null) current="";
         try {
             SessionOptions options = SessionOptions.getSessionOptions(request);
-            Map<String, Object> pa = pvController.getPathAttributes(path, true, options.isFavoriteFilter());
+            Map<String, Object> pa = date==null ? pvController.getPathAttributes(path, true, options.isFavoriteFilter())
+                    : pvController.getPathAttributesByDate(date, options.isFavoriteFilter());
             if (current.startsWith("/") || current.startsWith("\\")) current = current.substring(1);
             if (current.endsWith("/") || current.endsWith("\\")) current = current.substring(0,current.length()-1);
             pa.put("currentPath",current);

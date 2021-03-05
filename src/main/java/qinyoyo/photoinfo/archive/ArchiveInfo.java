@@ -321,9 +321,10 @@ public class ArchiveInfo {
     }
     public List<PhotoInfo> subFolderInfos(String subFolder) {
         if (subFolder==null || subFolder.isEmpty()) return infos;
+        final String standardFubFolder = ArchiveUtils.formatterSubFolder(subFolder);
         return infos.stream().filter(p->{
             String sub = p.getSubFolder();
-            return subFolder.equals(sub) || sub.startsWith(subFolder+File.separator);
+            return standardFubFolder.equals(sub) || sub.startsWith(standardFubFolder+File.separator);
         }).collect(Collectors.toList());
     }
     public void createThumbFiles(PhotoInfo p) {

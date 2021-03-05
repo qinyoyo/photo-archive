@@ -54,8 +54,8 @@ ${body?replace('contenteditable="false"','contenteditable="true"')}
             <span class="select-resource-title">选择媒体资源</span>
             <i class="dialog__close-icon fa fa-close" onclick="document.getElementById('select-resource').style.display='none'"></i>
         </div>
-        <div class="dialog__body" style="width:600px; top:10px">
-            <div id="select-resource-content">
+        <div class="dialog__body" style="top:10px">
+            <div id="select-resource-content" >
                 ${resource}
             </div>
             <div style="text-align: center">

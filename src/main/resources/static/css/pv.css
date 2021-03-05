@@ -137,7 +137,12 @@ audio, video {
     justify-content: center;
     width: 100%;
 }
-
+.grid-cell-label {
+    overflow:hidden;
+    height:24px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .photo-item {
     position: relative;
 }
@@ -221,7 +226,7 @@ img[data-rating="5"] + .img-favorite-state {
     left: 0;
     top: 0;
     background: #808080c0;
-    z-index: 9000;
+    z-index: 10000;
     overflow: hidden;
     margin: 0;
     border: none;
@@ -229,11 +234,13 @@ img[data-rating="5"] + .img-favorite-state {
 }
 
 .dialog__content {
-    margin-top:100px;
+    margin-top:20px;
     display: inline-block;
     text-align: left;
     background: #fff;
     border: 1px solid #a0a0a0;
+    max-width: 100%;
+    max-height: calc(100% - 40px);
 }
 .dialog__title {
     height: 24px;
@@ -254,4 +261,8 @@ img[data-rating="5"] + .img-favorite-state {
 }
 .dialog__body {
     padding: 10px;
+    max-height: calc(100% - 60px);
+}
+.dialog__body .folder-item__arrow {
+    margin: 0 18px 0 auto;
 }

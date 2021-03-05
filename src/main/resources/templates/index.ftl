@@ -20,9 +20,23 @@
 </head>
 <script>
     function onavplay(e) {
-      document.querySelectorAll('audio,video').forEach(r=>{
+      document.querySelectorAll('audio,video').forEach(function(r){
           if (r!==e) r.pause()
       })
+    }
+    function radioClick() {
+        let o = document.getElementById('loginOptions')
+        if (o) {
+            const g=document.getElementById('login')
+            if (g && g.checked) o.style.display='block'
+            else o.style.display='none'
+        }
+        o = document.getElementById('stepOptions')
+        if (o) {
+            const g=document.getElementById('newStep')
+            if (g && g.checked) o.style.display='block'
+            else o.style.display='none'
+        }
     }
     function openSetting() {
         const f = document.getElementById('favorite')
@@ -35,24 +49,13 @@
             if (e) b.checked = !e.paused
             else b.disabled = true
         }
-        const g=document.getElementById('login')
-        if (g && g.checked) document.getElementById('loginOptions').style.display='block'
-        else {
-            const o = document.getElementById('loginOptions')
-            if (o) o.style.display='none'
-        }
+        radioClick()
         document.getElementById('settings').style.display = 'block'
     }
     function closeSettingDialog() {
         document.getElementById('settings').style.display = 'none'
     }
-    function radioClick(e) {
-        const o = document.getElementById('loginOptions')
-        if (o) {
-            if (e.id==='login') o.style.display='block'
-            else o.style.display='none'
-        }
-    }
+
     function doSetting() {
         closeSettingDialog()
         let e = document.getElementById('favorite')
@@ -97,17 +100,12 @@
         e = document.getElementById('newStep')
         if (e && e.checked) {
             const path = e.getAttribute('data-folder')
-            window.input({
-                title: '当前目录下新建一个游记',
-                label: '游记名称：',
-                dialogStyle: {
-                    width: '300px'
-                },
-                inputType: 'text',
-                callback: function(v) {
-                    window.location.href = '/?path=' + (path ? encodeURI(path) : '') + '&newStep=' + encodeURI(v)
-                }
-            })
+            const name=document.getElementById('stepName').value
+            if (!name) {
+                message('必须输入游记名')
+                return
+            }
+            window.location.href = '/?path=' + (path ? encodeURI(path) : '') + '&newStep=' + encodeURI(name)
         }
         e = document.getElementById('rescan')
         if (e && e.checked) {
@@ -297,7 +295,7 @@
             <span>浏览参数设置</span>
             <i class="dialog__close-icon fa fa-close" onclick="closeSettingDialog()"></i>
         </div>
-        <div class="dialog__body">
+        <div class="dialog__body" style="min-width:300px">
             <div>
                 <input type="checkbox" id="backMusic" onclick="toggleBackMusic()"><label for="backMusic">播放背景音乐</label>
             </div>
@@ -315,6 +313,9 @@
                 <#if !htmls?? && sessionOptions.htmlEditable>
                 <div>
                     <input type="radio" name="action" id="newStep" data-folder="${path}" onclick="radioClick(this)"><label for="newStep">新建游记</label>
+                </div>
+                <div id="stepOptions" style="padding-left:20px;display:none">
+                    <div><label for="stepName">游记名</label><input type="text" style="width:200px;" id="stepName"></div>
                 </div>
                 </#if>
                 <div>

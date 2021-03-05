@@ -90,7 +90,7 @@
         dlgBody.className='dialog__body'
         if (options.dialogStyle) {
             if (options.dialogStyle) {
-                Object.keys(options.dialogStyle).forEach(key=>{
+                Object.keys(options.dialogStyle).forEach(function(key){
                     dlgBody.style[key] = options.dialogStyle[key]
                 })
             }
@@ -147,7 +147,7 @@
         const input = document.createElement("input")
         input.id = 'dyna-dialog-input-element'
         if (options.inputStyle) {
-            Object.keys(options.inputStyle).forEach(key=>{
+            Object.keys(options.inputStyle).forEach(function(key){
                 input.style[key] = options.inputStyle[key]
             })
         }

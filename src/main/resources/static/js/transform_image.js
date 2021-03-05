@@ -64,7 +64,7 @@
 
     window.toast  = function(msg,delay,onclose) {  // 显示提示信息，自动关闭
         if (typeof msg != 'string') return
-        document.querySelectorAll('.tran-img__toast').forEach(e=>e.remove())
+        document.querySelectorAll('.tran-img__toast').forEach(function(e) { e.remove(); })
         let toast = document.createElement("div")
         toast.className = 'tran-img__toast'
         toast.style.zIndex = "9999"
@@ -250,16 +250,17 @@
                     }
                     let orientation = thumb.getAttribute('data-orientation')
                     let rating = thumb.getAttribute('data-rating')
-                    return { src, orientation, rating, title, imgIndex }
+                    return { src: src, orientation:orientation, rating:rating, title:title, imgIndex:imgIndex }
                 }
             }
             return {
                 src: null,
-                imgIndex
+                imgIndex:imgIndex
             }
         }
         /**  变量  */
         let { src, orientation, rating, title } = srcByIndex(index)
+
         let translateX = 0, translateY = 0
         let rotateZ = 0, mirrorH = false, mirrorV = false
         let translateLimit = {
@@ -349,7 +350,7 @@
             let { src, orientation, rating, title, imgIndex } = srcByIndex(imgIndex0)
             if (src) {
                 let fromLeft = (loopDirection<0)
-                changeImage({src, fromLeft, orientation, rating, title})
+                changeImage({src:src, fromLeft:fromLeft, orientation:orientation, rating:rating, title:title})
                 index = imgIndex
                 return true
             } else {
@@ -400,7 +401,7 @@
                     }
                     if ((!fromLeft && left<=0) || (fromLeft && left>=0)) {
                         newDialog.wrapper.remove()
-                        document.querySelectorAll('.tran-img__wrapper').forEach(w=>{
+                        document.querySelectorAll('.tran-img__wrapper').forEach(function(w){
                             if (w !== wrapper) w.remove()
                         })
                         wrapper.style.left = '0px'
@@ -912,7 +913,7 @@
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
-        changeImage({ src, orientation, rating, title })
+        changeImage({ src:src, orientation:orientation, rating:rating, title:title })
 
         /*************暴露的函数 **********************/
         this.resize = function() {
@@ -1000,7 +1001,7 @@
         content.appendChild(dialogBody)
         wrapper.appendChild(content)
 
-        return {wrapper, content, dialogBody }
+        return {wrapper:wrapper, content:content, dialogBody:dialogBody }
     }
 
     const resizeEvent = function() {

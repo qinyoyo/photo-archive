@@ -25,7 +25,7 @@ function videoOverlay(v) {
         video.pause()
         wrapper.remove()
     }
-    document.querySelectorAll('audio,video').forEach(r=>{
+    document.querySelectorAll('audio,video').forEach(function(r){
         r.pause()
     })
     wrapper.appendChild(video)

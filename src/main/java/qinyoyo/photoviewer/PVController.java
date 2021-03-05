@@ -529,6 +529,37 @@ public class PVController implements ApplicationRunner , ErrorController {
         return model;
     }
 
+    public Map<String,Object> getPathAttributesByDate(String date, boolean favoriteFilter) {
+        Map<String,Object> model = new HashMap<>();
+        model.put("resourceByDate", date);
+        // video文件
+        List<PhotoInfo> videos = archiveInfo.getInfos().stream().filter(p->
+                    p.getMimeType()!=null && p.getMimeType().contains("video") &&
+                    (p.getCreateTime()!=null && DateUtil.date2String(p.getCreateTime()).startsWith(date))
+                ).collect(Collectors.toList());
+        if (videos!=null && videos.size()>0)  model.put("videos",videos);
+
+        // audio文件
+        List<PhotoInfo> audios = archiveInfo.getInfos().stream().filter(p->
+                    p.getMimeType()!=null && p.getMimeType().contains("audio") &&
+                            (p.getCreateTime()!=null && DateUtil.date2String(p.getCreateTime()).startsWith(date))
+            ).collect(Collectors.toList());
+        if (audios!=null && audios.size()>0)  model.put("audios",audios);
+
+        //Photo Info
+
+        List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p->
+                p.getMimeType()!=null && p.getMimeType().contains("image") &&
+                        (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
+                        (p.getShootTime()!=null && DateUtil.date2String(p.getShootTime()).startsWith(date))
+        ).collect(Collectors.toList());
+        if (photos!=null && photos.size()>0) {
+            model.put("photos",photos);
+        }
+
+        return model;
+    }
+
     private boolean loopFilter(PhotoInfo p, boolean favoriteFilter) {
         return (!favoriteFilter || (p.getRating()!=null && p.getRating()==5)) &&
                 p.getMimeType()!=null && p.getMimeType().contains("image/") &&

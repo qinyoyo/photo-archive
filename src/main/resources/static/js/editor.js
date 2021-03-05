@@ -1,7 +1,13 @@
-
-function adjustSize(img) {
+function cellWidth() {
+    let sw = window.innerWidth
     let w = 196
+    if (w>(sw-20)/3-10) w = Math.trunc((sw-20)/3-10)
+    return w
+}
+function adjustSize(img) {
     let iw = img.naturalWidth, ih = img.naturalHeight
+    let w = cellWidth()
+    img.parentNode.style.width = w+'px'
     if (iw<=w) {
         img.style.height = Math.min(w,ih) + 'px'
         img.parentNode.style.height = (Math.min(w,ih) + 26) + 'px'
@@ -9,6 +15,10 @@ function adjustSize(img) {
     else {
         img.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px'
         img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)+26) + 'px'
+    }
+    const  checkbox = img.parentNode.querySelector('.grid-cell-label input[type="checkbox"]')
+    if (checkbox) img.onclick = function() {
+        checkbox.checked = !checkbox.checked
     }
 }
 
@@ -353,20 +363,53 @@ function adjustSize(img) {
         }
         dialog.style.display='block'
     }
-
+    const reloadResourceByPath = function(path) {
+        let currentPath = document.getElementById('resource-list').getAttribute("data-path")
+        const url = '/resource?current='+encodeURI(currentPath) + (path ? '&path=' + encodeURI(path) : '')
+        Ajax.get(url, function (responseText) {
+            if (responseText && responseText!='error') {
+                document.getElementById('select-resource-content').innerHTML = responseText
+                initResource()
+            }
+        })
+    }
+    const reloadResourceByDate = function(date) {
+        let currentPath = document.getElementById('resource-list').getAttribute("data-path")
+        const url = '/resource?current='+encodeURI(currentPath) + '&date=' + encodeURI(date)
+        Ajax.get(url, function (responseText) {
+            if (responseText && responseText!='error') {
+                document.getElementById('select-resource-content').innerHTML = responseText
+                initResource()
+            }
+        })
+    }
+    let dateValue = '2000-01-01'
     const initResource = function() {
         const dialog = document.getElementById('select-resource')
+        const cw = cellWidth() + 'px'
+        document.querySelectorAll('.grid-cell-label').forEach(function(e) {
+            e.style.width = cw
+        })
+        document.getElementById('resource-list').style.maxHeight = (window.innerHeight - 120) + 'px'
+
+        const folderPicker = dialog.querySelector('.folder-picker')
+        if (folderPicker) folderPicker.onclick = function() {
+            let path = document.getElementById('resource-list').getAttribute("data-path")
+            reloadResourceByPath(path)
+        }
+        const datePicker = dialog.querySelector('.date-picker')
+        if (datePicker) datePicker.onclick = function() {
+            reloadResourceByDate(dateValue)
+        }
+        const dateItem = dialog.querySelector('.date-item')
+        if (dateItem) dateItem.onclick = function() {
+            dateValue = dialog.querySelector('.date-item-input').value
+            reloadResourceByDate(dateValue)
+        }
         dialog.querySelectorAll('.folder-item').forEach(function(d) {
             let path = d.getAttribute('data-folder')
-            let currentPath = document.getElementById('resource-list').getAttribute("data-path")
-            const url = '/resource?current='+encodeURI(currentPath) + (path ? '&path=' + encodeURI(path) : '')
             d.onclick=function () {
-                Ajax.get(url, function (responseText) {
-                    if (responseText && responseText!='error') {
-                        document.getElementById('select-resource-content').innerHTML = responseText
-                        initResource()
-                    }
-                })
+                reloadResourceByPath(path)
             }
         });
     }
@@ -377,9 +420,16 @@ function adjustSize(img) {
             e.returnValue = dialogText;
             return dialogText;
         };
-        const sw =window.innerWidth,
+        const sw = window.innerWidth,
               bw = document.querySelector('body').clientWidth
         if ((sw - bw)/2 > 32) document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
+
+        document.querySelector('#select-resource .dialog__body').style.width = (sw>600 ? '600px' : sw+'px')
+
+        const cw = cellWidth() + 'px'
+        document.querySelectorAll('.grid-cell-label').forEach(function(e) {
+            e.style.width = cw
+        })
         RE.editor = document.getElementById('editor');
         RE.setBaseFontSize('14px');
         initResource()
@@ -417,7 +467,7 @@ function adjustSize(img) {
                                 let url = []
                                 let alt = []
                                 let imgs = []
-                                indexes.forEach(i=>{
+                                indexes.forEach(function(i){
                                     const img = document.querySelector('#photo-form img.img-index-'+i)
                                     url.push(img.getAttribute("data-value"))
                                     alt.push(img.getAttribute("alt"))
@@ -425,7 +475,7 @@ function adjustSize(img) {
                                 })
                                 let fullHtml = RE.insertImageW(url,alt,720, true)
                                 if (imgs.length>0) {
-                                    imgs.forEach(img=>{
+                                    imgs.forEach(function(img){
                                         let html = '<div class="gps-block">'
                                         let dt = img.getAttribute('data-datetimeoriginal')
                                         let poi = img.getAttribute('title')
