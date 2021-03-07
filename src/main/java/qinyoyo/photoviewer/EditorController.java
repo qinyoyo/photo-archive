@@ -111,6 +111,7 @@ public class EditorController implements ApplicationRunner {
         try {
             String html = FileUtil.getFromFile(new File(source),"UTF8");
             if (html==null) return "文件错误";
+            body=body.replaceAll("<img(?:\\s|\\n)+class=\"lazy-load\"(?:\\s|\\n)+src","<img class=\"lazy-load\" data-src");
             Pattern p=Pattern.compile("(\\<body[^\\>]*\\>)(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
             Matcher m = p.matcher(html);
             if (m.find()) {

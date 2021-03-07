@@ -1,0 +1,950 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/transform_image.css">
+    <script type="text/javascript" src="/static/js/ajax.js"></script>
+    <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
+    <script type="text/javascript" src="/static/js/transform_image.js"></script>
+    <script type="text/javascript" src="/static/js/image_lazy_load.js"></script>
+    <title>福建小清新</title>
+    <style>
+        html {
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-size: 1em; /*五号*/
+        }
+
+        main {
+            display: block;
+        }
+
+        blockquote {
+            display: block;
+            margin-block-start: 0.25em !important;
+            margin-block-end: 0.25em !important;
+            margin-inline-start: 1em !important;
+            margin-inline-end: 1em !important;
+        }
+
+        h1 {
+            font-size: 2em; /* 小一 */
+            margin: 0.67em 0;
+        }
+
+        h2 {
+            font-size: 1.8em; /* 二号 */
+            margin: 0.6em 0;
+        }
+
+        h3 {
+            font-size: 1.6em; /* 小二 */
+            margin: 0.53em 0;
+        }
+
+        h4 {
+            font-size: 1.4em; /* 三号 */
+            margin: 0.46em 0;
+        }
+
+        h5 {
+            font-size: 1.2em; /* 四号 */
+            margin: 0.4em 0;
+        }
+
+        h6 {
+            font-size: 1em; /* 小四 */
+            margin: 0.33em 0;
+        }
+
+        hr {
+            box-sizing: content-box; /* 1 */
+            height: 0; /* 1 */
+            overflow: visible; /* 2 */
+        }
+
+        pre {
+            font-family: monospace, monospace; /* 1 */
+            font-size: 1em; /* 2 */
+        }
+
+        a {
+            background-color: transparent;
+        }
+
+        abbr[title] {
+            border-bottom: none; /* 1 */
+            text-decoration: underline; /* 2 */
+            text-decoration: underline dotted; /* 2 */
+        }
+
+        b,
+        strong {
+            font-weight: bolder;
+        }
+
+        code,
+        kbd,
+        samp {
+            font-family: monospace, monospace; /* 1 */
+            font-size: 1em; /* 2 */
+        }
+
+        small {
+            font-size: 80%;
+        }
+
+        sub,
+        sup {
+            font-size: 75%;
+            line-height: 0;
+            position: relative;
+            vertical-align: baseline;
+        }
+
+        sub {
+            bottom: -0.25em;
+        }
+
+        sup {
+            top: -0.5em;
+        }
+
+        img {
+            border-style: none;
+        }
+
+        button,
+        input,
+        optgroup,
+        select,
+        textarea {
+            font-family: inherit; /* 1 */
+            font-size: 100%; /* 1 */
+            line-height: 1.15; /* 1 */
+            margin: 0; /* 2 */
+        }
+
+        button,
+        input { /* 1 */
+            overflow: visible;
+        }
+
+        button,
+        select { /* 1 */
+            text-transform: none;
+        }
+
+        button,
+        [type="button"],
+        [type="reset"],
+        [type="submit"] {
+            -webkit-appearance: button;
+        }
+
+        button::-moz-focus-inner,
+        [type="button"]::-moz-focus-inner,
+        [type="reset"]::-moz-focus-inner,
+        [type="submit"]::-moz-focus-inner {
+            border-style: none;
+            padding: 0;
+        }
+
+        button:-moz-focusring,
+        [type="button"]:-moz-focusring,
+        [type="reset"]:-moz-focusring,
+        [type="submit"]:-moz-focusring {
+            outline: 1px dotted ButtonText;
+        }
+
+        fieldset {
+            padding: 0.35em 0.75em 0.625em;
+        }
+
+        legend {
+            box-sizing: border-box; /* 1 */
+            color: inherit; /* 2 */
+            display: table; /* 1 */
+            max-width: 100%; /* 1 */
+            padding: 0; /* 3 */
+            white-space: normal; /* 1 */
+        }
+
+        progress {
+            vertical-align: baseline;
+        }
+
+        textarea {
+            overflow: auto;
+        }
+
+        [type="checkbox"],
+        [type="radio"] {
+            box-sizing: border-box; /* 1 */
+            padding: 0; /* 2 */
+        }
+
+        [type="number"]::-webkit-inner-spin-button,
+        [type="number"]::-webkit-outer-spin-button {
+            height: auto;
+        }
+
+        [type="search"] {
+            -webkit-appearance: textfield; /* 1 */
+            outline-offset: -2px; /* 2 */
+        }
+
+        [type="search"]::-webkit-search-decoration {
+            -webkit-appearance: none;
+        }
+
+        ::-webkit-file-upload-button {
+            -webkit-appearance: button; /* 1 */
+            font: inherit; /* 2 */
+        }
+
+        details {
+            display: block;
+        }
+
+        summary {
+            display: list-item;
+        }
+
+        template {
+            display: none;
+        }
+
+        [hidden] {
+            display: none;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            overflow: scroll;
+            display: table;
+            table-layout: fixed;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        .center-block {
+            display: block;
+            text-align: center;
+            vertical-align: middle;
+            width: 100%;
+        }
+
+        .center-block img {
+            max-width: 100%;
+            max-height: 100%;
+            margin: 0 auto;
+        }
+
+        .center-block video, audio {
+            max-width: 100%;
+            max-height: 260px;
+            margin: 0 auto;
+        }
+
+        body {
+            max-width: 738px;
+            box-sizing: border-box;
+            box-sizing: border-box;
+            padding: 10px;
+            margin: auto;
+        }
+
+        .row {
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+        }
+
+        .row img {
+            border-style: none;
+            max-width: 100%;
+            padding: 2px;
+            box-sizing: border-box;
+        }
+
+        .col-1-1 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .col-1-2 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .col-1-3 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+        }
+
+        .col-1-4 {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+
+        .col-1-5 {
+            flex: 0 0 20%;
+            max-width: 20%;
+        }
+
+        .col-1-6 {
+            flex: 0 0 16.6666666%;
+            max-width: 16.6666666%;
+        }
+
+        @media screen and (max-width: 700px) {
+            .col-1-1, .col-1-2, .col-1-3, .col-1-4, .col-1-5, .col-1-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+<div>
+    <h2 style="text-align: center;"><u>福建小清新</u></h2>
+    <div>
+        <div>20200810—0815福州游记</div>
+        <div><br></div>
+        <div><br></div>
+        <div><br></div>
+        <div>
+            0810由于是早航班，昨晚十点我们就睡了，但始终睡不踏实，醒了几次，还总梦到坐飞机晚点，终于熬到闹钟响，五点我们就起床了，匆匆洗漱，匆匆吃了几块饼干，五点半出门，打导航居然到停车处需要50多分钟，20多分钟就开到了T2航站楼附近，导航居然显示还需20多分钟，唐爸爸不放心，停下车来又重设，就只需几分钟了，这次顺利到达目的地，是个体育中心，有人24小时值班，到了先停好车，然后有专车直接把我们送到机场，很顺利。
+        </div>
+        <div>
+            7点55的航班，我们6点多点就到机场了，本来以为新冠原因，手续会复杂些，但并没有，打了登机牌，顺利进了安检，时间尚早，7点10分开始登机，登机前每人必须用凝胶消毒，且让每人均保存一下福州健康码。登机后迟迟不起飞，8点45才顺利起飞。
+        </div>
+        <div>11点多点顺利到达福州机场，正式开启旅程。出机场前必须出示健康码，这就难到一些老年人，不过还是有专人在负责手工，只是要多费些时间。</div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-110519_IMG.JPG"
+                                      alt="20200810-110519_IMG.JPG" src="../Camera/20200810-110519_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-113128_IMG.JPG"
+                                      alt="20200810-113128_IMG.JPG" src="../Camera/20200810-113128_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-10 11:05:19<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市长乐区文岭�?
+&amp;position=119.694168,25.989096&amp;coordinate=wgs84">
+            ✧福建省福州市长乐区文岭</a><br></div>
+        <div class="gps-block">2020-08-10 11:31:28<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市长乐区湖南镇进港厅�?
+&amp;position=119.669083,25.931461&amp;coordinate=wgs84">
+            ✧福建省福州市长乐区湖南镇进港厅</a></div>
+    </div>
+    <div class="gps-block"><br></div>
+    <div>福州的机场在海边，风景自然独特些</div>
+    <div>还在机上滑行，租车公司就来电询问了，因为晚点半小时，估计他早到了。出机场不远就顺利接到车，开了几分钟就到了租车公司门面，办了手续，就开着我们的坐驾尼桑车直奔五星酒店福州世贸洲际酒店</div>
+    <div>福州机场高速收费30元</div>
+    <div>酒店低调，设施中规中居，没有太大的惊喜。房间还是比较大，淋浴房和马桶都在独立的空间里，比较适用</div>
+    <div>入住后我们就出去吃午饭，唐爸爸在大众点评上选了一家评价较高的店——老福州徐记，点了个佛跳墙套餐，荔枝肉，芋泥，都很不错，只怪肚子太小，没吃完就撑着了</div>
+    <div class="row">
+        <div class="col-1-2">
+            <img class="lazy-load" data-src="../Camera/20200810-135122_IMG.JPG" alt="20200810-135122_IMG.JPG"
+                 src="../Camera/20200810-135122_IMG.JPG"></div>
+        <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-135235_IMG.JPG"
+                                  alt="20200810-135235_IMG.JPG" src="../Camera/20200810-135235_IMG.JPG"></div>
+    </div>
+    <div class="gps-block">2020-08-10 13:51:22<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市台江区南门商圈广达�?
+&amp;position=119.301903,26.073900&amp;coordinate=wgs84">
+        ✧福建省福州市台江区南门商圈</a></div>
+    <div><br></div>
+    <div>佛跳墙里有个完整的海参，鲍鱼，猪肚，蹄筋，瑶柱，香菇，鹌鹑蛋各一个。荔枝肉甜度合适，非常合适</div>
+    <div>这是福州带给我们的第一个惊喜，点赞，吃完扶着墙走出餐厅，到酒店开上车来到下午的目的地——三坊七巷</div>
+    <div>
+        <div class="center-block">
+            <div class="row">
+                <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200810-154037_IMG.JPG"
+                                          alt="20200810-154037_IMG.JPG" src="../Camera/20200810-154037_IMG.JPG"></div>
+                <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200810-154201_IMG.JPG"
+                                          alt="20200810-154201_IMG.JPG" src="../Camera/20200810-154201_IMG.JPG"></div>
+                <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200810-161550_IMG.JPG"
+                                          alt="20200810-161550_IMG.JPG" src="../Camera/20200810-161550_IMG.JPG"></div>
+            </div>
+            <div class="gps-block">
+                <div class="row">
+                    <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200810-160910_IMG.JPG"
+                                              alt="20200810-160910_IMG.JPG" src="../Camera/20200810-160910_IMG.JPG">
+                    </div>
+                    <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200810-164829_IMG.JPG"
+                                              alt="20200810-164829_IMG.JPG" src="../Camera/20200810-164829_IMG.JPG">
+                    </div>
+                    <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200810-165659_IMG.JPG"
+                                              alt="20200810-165659_IMG.JPG" src="../Camera/20200810-165659_IMG.JPG">
+                    </div>
+                </div>
+                <div class="gps-block" style="text-align: left;">
+                    <div class="row">
+                        <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-164038_IMG.JPG"
+                                                  alt="20200810-164038_IMG.JPG" src="../Camera/20200810-164038_IMG.JPG">
+                        </div>
+                        <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-170008_IMG.JPG"
+                                                  alt="20200810-170008_IMG.JPG" src="../Camera/20200810-170008_IMG.JPG">
+                        </div>
+                    </div>
+                    <div class="gps-block">2020-08-10 16:40:38<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市鼓楼区南街街道郎官�?,三坊七巷
+&amp;position=119.292603,26.088205&amp;coordinate=wgs84">
+                        ✧福建省福州市鼓楼区南街街道,三坊七巷
+                    </a><br></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="gps-block">
+        <div class="center-block"><br></div>
+    </div>
+    <div>太热，还好墙高，巷深，遮阴</div>
+    <div>三坊七巷是福州的历史之源、文化之根。三坊七巷为国内现存规模较大、保护较为完整的历史文化街区，是全国为数不多的古建筑遗存之一，有“中国城市里坊制度活化石”和“中国明清建筑博物馆”的美称</div>
+    <div>三坊包括衣锦坊 文儒坊 光禄坊，七巷包括杨桥巷、郎官巷、塔巷、黄巷、安民巷、宫巷、吉庇巷、南后街、状元第</div>
+    <div>我们基本上走完了文儒坊，南后街，塔巷等，也就感受一下当地文化，街上很多卖东西的，特色也不突出，也就随意逛逛</div>
+    <div>晚上在酒店附近的叶氏鱼丸吃了一碗鱼丸，一碗肉燕，16元，味道不错。饭后到酒店旁边的公园去逛了一圈，没想还有漂亮的荷花，且能照下酒店全景</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-192959_IMG.JPG"
+                                      alt="20200810-192959_IMG.JPG" src="../Camera/20200810-192959_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-200316_IMG.JPG"
+                                      alt="20200810-200316_IMG.JPG" src="../Camera/20200810-200316_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-10 19:29:59<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市台江区茶亭街道广达�?,茶亭公园
+&amp;position=119.301944,26.068889&amp;coordinate=wgs84">
+            ✧福建省福州市台江区茶亭街道,茶亭公园&nbsp;</a></div>
+    </div>
+    <div>逛了就回酒店了，享受五星级待遇😀😀</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-192728_IMG.JPG"
+                                      alt="20200810-192728_IMG.JPG" src="../Camera/20200810-192728_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200810-200342_IMG.JPG"
+                                      alt="20200810-200342_IMG.JPG" src="../Camera/20200810-200342_IMG.JPG"></div>
+        </div>
+    </div>
+    <div>
+        <div>晚上早早的睡了</div>
+        <div>0811早上很早就醒了，七点多去吃早餐，洲际的早餐中规中矩，没有太惊艳的东西，焗南瓜🎃还可以，牛肉粥也还不错</div>
+        <div>
+            <div class="row">
+                <div class="col-1-4"><img class="lazy-load" data-src="../Camera/20200811-091216_IMG.JPG"
+                                          alt="20200811-091216_IMG.JPG" src="../Camera/20200811-091216_IMG.JPG"></div>
+                <div class="col-1-4"><img class="lazy-load" data-src="../Camera/20200811-091217_IMG.JPG"
+                                          alt="20200811-091217_IMG.JPG" src="../Camera/20200811-091217_IMG.JPG"></div>
+                <div class="col-1-4"><img class="lazy-load" data-src="../Camera/20200811-100514_IMG.JPG"
+                                          alt="20200811-100514_IMG.JPG" src="../Camera/20200811-100514_IMG.JPG"></div>
+                <div class="col-1-4"><img class="lazy-load" data-src="../Camera/20200811-111912_IMG.JPG"
+                                          alt="20200811-111912_IMG.JPG" src="../Camera/20200811-111912_IMG.JPG"></div>
+            </div>
+            <div class="gps-block">2020-08-11 09:12:16<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市台江区南门商圈群众�?
+&amp;position=119.301720,26.071644&amp;coordinate=wgs84">
+                ✧福州世茂洲际酒店</a><br></div>
+            <div class="gps-block"><br></div>
+        </div>
+        <div>饭后本想二逛茶亭公园，突然雨就下得大起来，听说今天有台风，但不会太大。我们便决定等雨小些再出发</div>
+        <div>11点多雨逐渐小了，我们退了房，就出发往平潭。两个小时左右就到了，雨还是淅沥沥时下时停。首先来到第一站海坛古镇，建筑都是新修的，也是“”中国特色”古镇，卖东西的多</div>
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-134839_IMG.JPG"
+                                      alt="20200811-134839_IMG.JPG" src="../Camera/20200811-134839_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-135841_IMG.JPG"
+                                      alt="20200811-135841_IMG.JPG" src="../Camera/20200811-135841_IMG.JPG"></div>
+        </div>
+        <div class="row">
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200811-134937_IMG.JPG"
+                                      alt="20200811-134937_IMG.JPG" src="../Camera/20200811-134937_IMG.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200811-135739_IMG.JPG"
+                                      alt="20200811-135739_IMG.JPG" src="../Camera/20200811-135739_IMG.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200811-140022_IMG.JPG"
+                                      alt="20200811-140022_IMG.JPG" src="../Camera/20200811-140022_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">
+            <div class="row">
+                <div class="col-1-3"><img class="lazy-load" data-src="../Landscape/20200811-142236_L平潭海坛古城.JPG"
+                                          alt="20200811-142236_L平潭海坛古城.JPG"
+                                          src="../Landscape/20200811-142236_L平潭海坛古城.JPG"></div>
+                <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200811-142402_P平潭海坛古城.JPG"
+                                          alt="20200811-142402_P平潭海坛古城.JPG"
+                                          src="../Portrait/20200811-142402_P平潭海坛古城.JPG"></div>
+                <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200811-142559_P平潭海坛古城.JPG"
+                                          alt="20200811-142559_P平潭海坛古城.JPG"
+                                          src="../Portrait/20200811-142559_P平潭海坛古城.JPG"></div>
+            </div>
+            <div class="gps-block">2020-08-11 14:22:36<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭海坛古城
+&amp;position=119.782265,25.466833&amp;coordinate=wgs84">
+                ✧福建省平潭海坛古城&nbsp;</a></div>
+        </div>
+        <div class="gps-block"><br></div>
+    </div>
+    <div>停车收费还挺贵，2小时15元</div>
+    <div>扎实逛了一圈我们又驱车沿环岛东路一直往北开，路过了北港村，景致一般，民宿较多，最出名的是石头会唱歌</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-140553_IMG.JPG"
+                                      alt="20200811-140553_IMG.JPG" src="../Camera/20200811-140553_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-153901_IMG.JPG"
+                                      alt="20200811-153901_IMG.JPG" src="../Camera/20200811-153901_IMG.JPG"></div>
+        </div>
+    </div>
+    <div>然后就又向北来到了长江澳，这里以风车和日落最出名，没想到这里也有蓝蓝的天蓝蓝的海，还有追浪的刺猬球</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200811-161424_P平潭长江澳.JPG"
+                                      alt="20200811-161424_P平潭长江澳.JPG" src="../Portrait/20200811-161424_P平潭长江澳.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-161449_IMG.JPG"
+                                      alt="20200811-161449_IMG.JPG" src="../Camera/20200811-161449_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">
+            <div class="row">
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200811-162343_P平潭长江澳.JPG"
+                                          alt="20200811-162343_P平潭长江澳.JPG"
+                                          src="../Portrait/20200811-162343_P平潭长江澳.JPG"></div>
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200811-162635_P平潭长江澳.JPG"
+                                          alt="20200811-162635_P平潭长江澳.JPG"
+                                          src="../Portrait/20200811-162635_P平潭长江澳.JPG"></div>
+            </div>
+            <div class="row">
+                <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200811-161454_P平潭长江澳.JPG"
+                                          alt="20200811-161454_P平潭长江澳.JPG"
+                                          src="../Portrait/20200811-161454_P平潭长江澳.JPG"></div>
+                <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200811-161606_P平潭长江澳.JPG"
+                                          alt="20200811-161606_P平潭长江澳.JPG"
+                                          src="../Portrait/20200811-161606_P平潭长江澳.JPG"></div>
+                <div class="col-1-3"><img class="lazy-load" data-src="../Landscape/20200811-162824_L平潭长江澳.JPG"
+                                          alt="20200811-162824_L平潭长江澳.JPG"
+                                          src="../Landscape/20200811-162824_L平潭长江澳.JPG"></div>
+            </div>
+            <div class="gps-block">2020-08-11 16:14:54<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭长江澳
+&amp;position=119.775742,25.621287&amp;coordinate=wgs84">
+                ✧福建省平潭长江</a>澳<br></div>
+            <div class="gps-block"><span style="-webkit-text-size-adjust: 100%;">由于今天天气不好，云层太厚，日落就希望渺茫，玩了一会儿我们就驱车去往今天的住处汉庭酒店，汉庭就是那个我们熟悉的汉庭，估计客人少，前台小妹给我们升级了，还送了一份早餐，开心😁�?</span><br>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div>晚饭本打算吃粥，但是路过一家猪蹄店，唐爸爸就被吸引了，于是晚餐一份猪蹄，一份福州乱炖汤</div>
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-194256_IMG.JPG"
+                                      alt="20200811-194256_IMG.JPG" src="../Camera/20200811-194256_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200811-194413_IMG.JPG"
+                                      alt="20200811-194413_IMG.JPG" src="../Camera/20200811-194413_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-11 19:42:56<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市平潭县潭城镇西航路
+&amp;position=119.792511,25.501513&amp;coordinate=wgs84">
+            ✧福建省福州市平潭县潭城镇西航路</a></div>
+    </div>
+    <div>居然还有免费水果，爆米花，李子还特别甜，点赞73米😁😁，吃完还逛了逛平潭县城，顺便消食，晚上也早早就睡了，因为明天要早起去看日出</div>
+    <div>0812 早上4：45起床，简单洗漱就驱车到了龙凤头，这里有长长的海岸线，观日出🌄最佳地。想到跳儿在多伦多是下午，便一直与他们视频，让他们也一起感受一下美</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-051841_P平潭龙凤头.JPG"
+                                      alt="20200812-051841_P平潭龙凤头.JPG" src="../Portrait/20200812-051841_P平潭龙凤头.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-051946_P平潭龙凤头.JPG"
+                                      alt="20200812-051946_P平潭龙凤头.JPG" src="../Portrait/20200812-051946_P平潭龙凤头.JPG">
+            </div>
+        </div>
+        <div class="gps-block">
+            <div class="row">
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-053139_P平潭龙凤头.JPG"
+                                          alt="20200812-053139_P平潭龙凤头.JPG"
+                                          src="../Portrait/20200812-053139_P平潭龙凤头.JPG"></div>
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-053743_P平潭龙凤头.JPG"
+                                          alt="20200812-053743_P平潭龙凤头.JPG"
+                                          src="../Portrait/20200812-053743_P平潭龙凤头.JPG"></div>
+            </div>
+            <div class="gps-block">2020-08-12 05:31:39<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭龙凤头
+&amp;position=119.805390,25.504555&amp;coordinate=wgs84">
+                ✧福建省平潭龙凤头&nbsp;</a></div>
+        </div>
+        <div class="gps-block"><span style="-webkit-text-size-adjust: 100%;">看完日出又回到酒店，收拾好行李也还早，早餐七点才开始，吃好早餐，退了房，首先来到抖音网红地象鼻湾打卡，这景点还在装修，水也很少，在下面根本看不到啥名堂，倒是在山上还能看点象鼻的形状</span><br>
+        </div>
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200812-055052_L平潭龙凤头.JPG"
+                                      alt="20200812-055052_L平潭龙凤头.JPG" src="../Landscape/20200812-055052_L平潭龙凤头.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200812-081505_IMG.JPG"
+                                      alt="20200812-081505_IMG.JPG" src="../Camera/20200812-081505_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-12 08:15:05<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市福清市东瀚镇 X178
+&amp;position=119.604103,25.436466&amp;coordinate=wgs84">
+            ✧福建省福州市福清市东瀚镇 X178&nbsp;</a><br></div>
+    </div>
+    <div>由于天气太热，海边根本呆不住，只有打卡坛南湾</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-084904_P平潭坛南湾.JPG"
+                                      alt="20200812-084904_P平潭坛南湾.JPG" src="../Portrait/20200812-084904_P平潭坛南湾.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-085125_P平潭坛南湾.JPG"
+                                      alt="20200812-085125_P平潭坛南湾.JPG" src="../Portrait/20200812-085125_P平潭坛南湾.JPG">
+            </div>
+        </div>
+        <div class="gps-block">
+            <div class="row">
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-085851_P平潭坛南湾.JPG"
+                                          alt="20200812-085851_P平潭坛南湾.JPG"
+                                          src="../Portrait/20200812-085851_P平潭坛南湾.JPG"></div>
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-090004_P平潭坛南湾.JPG"
+                                          alt="20200812-090004_P平潭坛南湾.JPG"
+                                          src="../Portrait/20200812-090004_P平潭坛南湾.JPG"></div>
+            </div>
+            <div class="gps-block">2020-08-12 08:58:51<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭坛南湾
+&amp;position=119.757095,25.439757&amp;coordinate=wgs84">
+                ✧福建省平潭坛南湾&nbsp;</a></div>
+        </div>
+    </div>
+    <div>然后就去了不要钱的猴岩岛，传说中的离台湾最近，只有68海里，没想到这个景点给我们带来了惊喜，好美啊</div>
+    <div>蓝天，白云，礁石，太唯美</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200812-095438_IMG.JPG"
+                                      alt="20200812-095438_IMG.JPG" src="../Camera/20200812-095438_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-095618_P平潭猴研岛.JPG"
+                                      alt="20200812-095618_P平潭猴研岛.JPG" src="../Portrait/20200812-095618_P平潭猴研岛.JPG">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-095845_P平潭猴研岛.JPG"
+                                      alt="20200812-095845_P平潭猴研岛.JPG" src="../Portrait/20200812-095845_P平潭猴研岛.JPG">
+            </div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-100603_P平潭猴研岛.JPG"
+                                      alt="20200812-100603_P平潭猴研岛.JPG" src="../Portrait/20200812-100603_P平潭猴研岛.JPG">
+            </div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-100833_P平潭猴研岛.JPG"
+                                      alt="20200812-100833_P平潭猴研岛.JPG" src="../Portrait/20200812-100833_P平潭猴研岛.JPG">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-101045_P平潭猴研岛.JPG"
+                                      alt="20200812-101045_P平潭猴研岛.JPG" src="../Portrait/20200812-101045_P平潭猴研岛.JPG">
+            </div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-102349_P平潭猴研岛.JPG"
+                                      alt="20200812-102349_P平潭猴研岛.JPG" src="../Portrait/20200812-102349_P平潭猴研岛.JPG">
+            </div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200812-103329_IMG.JPG"
+                                      alt="20200812-103329_IMG.JPG" src="../Camera/20200812-103329_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-12 10:10:45<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭猴研岛
+&amp;position=119.854462,25.459747&amp;coordinate=wgs84">
+            ✧福建省平潭猴研岛&nbsp;</a></div>
+    </div>
+    <div>就是太热了，出了太多汗水</div>
+    <div>出来就来到了台湾小镇，地下停车场不收费，上来到了一家免税店，买了两个冰淇淋，香港的，好吃，榴莲10元，凤梨15元，25元</div>
+    <div>还顺便买3袋澳洲牛奶，上次妈提到澳洲奶粉还可以 243元</div>
+    <div>
+        从台湾小镇出来，想着把晚上的住宿定了，就来到流水镇，一眼就瞧上了流水码头边的三生屿望，颜值不错，价格比网上便宜几十块到200一晚，交钱出门吃午餐，去的民宿老板推荐的景明海鲜酒楼，点了一斤螺，一份无刺鱼，一份鱼滑汤，味道一般，没吃完，浪费133
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200812-112811_IMG.JPG"
+                                      alt="20200812-112811_IMG.JPG" src="../Camera/20200812-112811_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200812-131920_IMG.JPG"
+                                      alt="20200812-131920_IMG.JPG" src="../Camera/20200812-131920_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-12 11:28:11<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市平潭县 G104(澳前�?)
+&amp;position=119.817429,25.475206&amp;coordinate=wgs84">
+            ✧福建省福州市平潭县 G104(澳前�?)
+        </a><br></div>
+        <div class="gps-block">2020-08-12 13:19:20<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市平潭县 Y038(上流�?)
+&amp;position=119.828140,25.568890&amp;coordinate=wgs84">
+            ✧福建省福州市平潭县 Y038(上流�?)&nbsp;</a><br></div>
+    </div>
+    <div><br></div>
+    <div>打卡仙人井游客中心，凉爽，还看了平潭宣传片😅😅，考虑到天太热，怕花了钱还把自己烤糊了，就闪了</div>
+    <div>然后来到老板推荐的北部生态廊道，景色还不错，但是太小，不一会就逛完</div>
+    <div>路上遇见了很多漂亮的云朵☁️，海天一色，那么那么的蓝</div>
+    <div>出来我们就直奔长江澳等日落🌅，由于昨天来过，就熟门熟路地停好车，下海，日落还早，在沙滩边的太阳伞下静静地看着大海，碰到两个平潭本地人，就聊了聊。终于等到太阳快下山了，日落比较平淡，没有太多惊喜</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-160220_P平潭北部生态廊道.JPG"
+                                      alt="20200812-160220_P平潭北部生态廊道.JPG"
+                                      src="../Portrait/20200812-160220_P平潭北部生态廊道.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200812-164428_P平潭北部生态廊道.JPG"
+                                      alt="20200812-164428_P平潭北部生态廊道.JPG"
+                                      src="../Portrait/20200812-164428_P平潭北部生态廊道.JPG"></div>
+        </div>
+        <div class="row">
+            <div class="col-1-3"><img class="lazy-load" data-src="../Landscape/20200812-163722_L平潭北部生态廊道.JPG"
+                                      alt="20200812-163722_L平潭北部生态廊道.JPG"
+                                      src="../Landscape/20200812-163722_L平潭北部生态廊道.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-180909_P平潭长江澳.JPG"
+                                      alt="20200812-180909_P平潭长江澳.JPG" src="../Portrait/20200812-180909_P平潭长江澳.JPG">
+            </div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200812-182542_P平潭长江澳.JPG"
+                                      alt="20200812-182542_P平潭长江澳.JPG" src="../Portrait/20200812-182542_P平潭长江澳.JPG">
+            </div>
+        </div>
+        <div class="gps-block">2020-08-12 16:37:22<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭北部生态廊道
+&amp;position=119.766717,25.658278&amp;coordinate=wgs84">
+            ✧福建省平潭北部生态廊道
+        </a><br></div>
+        <div class="gps-block">2020-08-12 18:09:09<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭长江澳
+&amp;position=119.788215,25.612205&amp;coordinate=wgs84">
+            ✧福建省平潭长江澳&nbsp;</a></div>
+    </div>
+    <div><br></div>
+    <div>回到酒店，就准备早早地睡了，明早准备看日出</div>
+    <div>0813 早上的日出仍然没有太大惊喜，在民宿照了几张照片就准备去往霞浦</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200813-053908_L平潭流水码头三生屿望民宿.JPG"
+                                      alt="20200813-053908_L平潭流水码头三生屿望民宿.JPG"
+                                      src="../Landscape/20200813-053908_L平潭流水码头三生屿望民宿.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200813-054755_L平潭流水码头三生屿望民宿.JPG"
+                                      alt="20200813-054755_L平潭流水码头三生屿望民宿.JPG"
+                                      src="../Landscape/20200813-054755_L平潭流水码头三生屿望民宿.JPG"></div>
+        </div>
+        <div class="gps-block">
+            <div class="row">
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200813-061420_P平潭流水码头三生屿望民宿.JPG"
+                                          alt="20200813-061420_P平潭流水码头三生屿望民宿.JPG"
+                                          src="../Portrait/20200813-061420_P平潭流水码头三生屿望民宿.JPG"></div>
+                <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200813-061812_P平潭流水码头三生屿望民宿.JPG"
+                                          alt="20200813-061812_P平潭流水码头三生屿望民宿.JPG"
+                                          src="../Portrait/20200813-061812_P平潭流水码头三生屿望民宿.JPG"></div>
+            </div>
+            <div class="gps-block">2020-08-13 06:14:20<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省平潭流水码头-三生屿望民宿
+&amp;position=119.834252,25.577250&amp;coordinate=wgs84">
+                ✧福建省平潭流水码头-三生屿望民宿&nbsp;</a></div>
+        </div>
+    </div>
+    <div>这个民宿地处码头旁，有些闹，主要是船的声音，渔民5点多就上工了。此码头可以到东庠岛，爸爸去哪儿第三季的录像地</div>
+    <div>早上在对面，唐爸爸吃的豆浆油条，我看没啥吃的，就把飞机上发的沙琪玛吃了</div>
+    <div>吃好就又出发，路程较远，需4个多小时，沿途路过了些村庄，给我的感受是当地较富，小洋楼随处可见，且修得满漂亮的</div>
+    <div><br></div>
+    <div>路过宁德滨海特大桥，是一个S湾大桥，比较壮观</div>
+    <div><br></div>
+    <div><br></div>
+    <div>
+        从三沙下道后不久就到了最期待的拾间海民宿，果然颜值担当，太漂亮，很喜欢这个风格，细节做得相当好，设计感十足。我们11点多到的，到得太早，未退房，办好入住手续，就这民宿的餐厅就餐，餐厅的颜值同样高，只是味道与颜值不太匹配，只有贵匹配了😇😇
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200813-175108_P霞浦东壁拾间海民宿.JPG"
+                                      alt="20200813-175108_P霞浦东壁拾间海民宿.JPG"
+                                      src="../Portrait/20200813-175108_P霞浦东壁拾间海民宿.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200813-181300_P霞浦东壁拾间海民宿.JPG"
+                                      alt="20200813-181300_P霞浦东壁拾间海民宿.JPG"
+                                      src="../Portrait/20200813-181300_P霞浦东壁拾间海民宿.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Portrait/20200813-181840_P霞浦东壁拾间海民宿.JPG"
+                                      alt="20200813-181840_P霞浦东壁拾间海民宿.JPG"
+                                      src="../Portrait/20200813-181840_P霞浦东壁拾间海民宿.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-13 17:51:08<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省霞浦东壁-拾间海民宿
+&amp;position=120.185883,26.923503&amp;coordinate=wgs84">
+            ✧福建省霞浦东壁-拾间海民宿&nbsp;</a></div>
+    </div>
+    <div>下午休息，就在房间里等待晚霞，晚霞如期而至，平淡无奇，只是配上美丽的房间阳台，显得小资许多</div>
+    <div>下午没等到晚霞，由于在房间里观霞而没有去小皓，因此也没有拍到滩涂</div>
+    <div>晚上实在不想吃海鲜，想念重庆的麻辣味，只好去搞了两袋方便面，2个鸡蛋，我吃的老坛酸菜面，终于吃了口酸辣的，爽</div>
+    <div>晚上瞄了一眼星星，稀稀落落的，没有什么特别的</div>
+    <div>0814
+        凌晨4点起床，往花竹观日出。花竹是唯一一个可以观看大嵛山岛等福临列岛的小山村，被CCTV评选为中国观日出地标。所以有些期待。导航花竹村，快到村落前，在路旁有一个亭子的停车场停车，沿着观景台指示牌爬上一个小山坡就到了观景台
+    </div>
+    <div>时间有点早，人不是太多，找好位置，静静等候</div>
+    <div>没有太多的惊艳，也没有失望的花竹日出</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200814-050328_L霞浦花竹.JPG"
+                                      alt="20200814-050328_L霞浦花竹.JPG" src="../Landscape/20200814-050328_L霞浦花竹.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200814-053407_L霞浦花竹.JPG"
+                                      alt="20200814-053407_L霞浦花竹.JPG" src="../Landscape/20200814-053407_L霞浦花竹.JPG">
+            </div>
+        </div>
+        <div class="gps-block">2020-08-14 05:03:28<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省霞浦花竹
+&amp;position=120.230438,26.944653&amp;coordinate=wgs84">
+            ✧福建省霞浦花竹&nbsp;</a></div>
+    </div>
+    <div>在三沙镇美美地吃了早餐，我吃的此地特色花生汤和红糖馒头，唐爸爸吃的包子油条豆浆</div>
+    <div>观日后回民宿，在附近各种摆拍，还与儿子视频，期间居然看见了天空战机翱翔</div>
+    <div>
+        在唐爸爸的不停催促下早早地退了房，出门去北岐滩涂，这是这次旅行最大的败笔。由于事前没有做功课，不知滩涂的变化一天之内这么大。退潮后，滩涂全是一遍稀泥地，所以必须等到下午三四点时潮起时，海水才慢慢淹过来。或者看退潮时，滩涂刚露出来的光影。潮汐时间基本与农历对应。所以，退潮后是没必要去滩涂的，应该躺在房间好好休息
+    </div>
+    <div>北岐滩涂扑了空，在路上碰上了好些大榕树。在拐弯处又邂逅了一个颜值民宿——小城外</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200814-071207_IMG.JPG"
+                                      alt="20200814-071207_IMG.JPG" src="../Camera/20200814-071207_IMG.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200814-091438_IMG.JPG"
+                                      alt="20200814-091438_IMG.JPG" src="../Camera/20200814-091438_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-14 07:12:07<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省宁德市霞浦县三沙�? X981
+&amp;position=120.186165,26.923607&amp;coordinate=wgs84">
+            ✧福建省宁德市霞浦县三沙�? X981
+        </a><br></div>
+        <div class="gps-block">2020-08-14 09:14:38<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省宁德市霞浦县松港街道
+&amp;position=120.054550,26.876490&amp;coordinate=wgs84">
+            ✧福建省宁德市霞浦县松港街道&nbsp;</a><br></div>
+    </div>
+    <div class="gps-block">转程去半月里看畲族村落。途径S湾，顺道看看了，也是因为退潮了，一片狼藉</div>
+    <div>半月里不大，村头的几棵大榕树不错。差不多12点离开了</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200814-113941_P霞浦半月里.JPG"
+                                      alt="20200814-113941_P霞浦半月里.JPG" src="../Portrait/20200814-113941_P霞浦半月里.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200814-115923_P霞浦半月里.JPG"
+                                      alt="20200814-115923_P霞浦半月里.JPG" src="../Portrait/20200814-115923_P霞浦半月里.JPG">
+            </div>
+        </div>
+        <div class="gps-block">2020-08-14 11:39:41<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省霞浦半月里
+&amp;position=119.885552,26.755267&amp;coordinate=wgs84">
+            ✧福建省霞浦半月里&nbsp;</a></div>
+    </div>
+    <div>
+        然后就赶到南湾看甲骨文和围网滩涂。与老板聊了聊才知，要等4：30之后，水才会慢慢漫过来，会与滩涂形成丰富的变化，类似甲骨文。由于附近也没有什么店，就在大榕树树荫下休息。到4：15赶过去，说又稍晚了点，应4点开始看，变化更加精彩，没有看到潮水涨的壮观，甲骨文滩涂也快淹没不见了，还好看了个尾巴
+    </div>
+    <div>五彩的围栏已经没有多少彩色了，反倒更加真实</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200814-171827_P霞浦南湾.JPG"
+                                      alt="20200814-171827_P霞浦南湾.JPG" src="../Portrait/20200814-171827_P霞浦南湾.JPG"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200814-181649_IMG.JPG"
+                                      alt="20200814-181649_IMG.JPG" src="../Camera/20200814-181649_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-14 17:18:27<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省霞浦南湾
+&amp;position=119.843117,26.794388&amp;coordinate=wgs84">
+            ✧福建省霞浦南湾&nbsp;</a></div>
+    </div>
+    <div>今天也没有晚霞，差不6点半左右就结束了，启程回福州</div>
+    <div>到福州已9点多了，在江滨大道上去拍解放大桥</div>
+    <div class="row">
+        <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200814-212604_L福州江滨大道.JPG"
+                                  alt="20200814-212604_L福州江滨大道.JPG" src="../Landscape/20200814-212604_L福州江滨大道.JPG">
+        </div>
+        <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200814-220949_L福州江滨大道.JPG"
+                                  alt="20200814-220949_L福州江滨大道.JPG" src="../Landscape/20200814-220949_L福州江滨大道.JPG">
+        </div>
+    </div>
+    <div class="gps-block">2020-08-14 21:26:04<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州江滨大道
+&amp;position=119.306290,26.054032&amp;coordinate=wgs84">
+        ✧福建省福州江滨大道&nbsp;</a></div>
+    <div>晚餐就去了解放大桥头的鱼丸店，点了一份超级大鱼丸15元，一份鱼滑，味道不错，吃光光</div>
+    <div>晚上想到时间已晚，住好酒店不合算，就定了一家便宜的汉庭，停车还免费，才160元，回到酒店11点半了</div>
+    <div>0815
+        由于酒店早餐只有一份，9点过出门，我去了有名的耳聋伯元宵店，点了一份汤圆，这里甜的叫汤圆，咸的叫元宵，我让老板甜的咸的3个，还吃了他家最著名的花生汤，给唐爸爸打包了一份糍粑和3元巨资的五香卤蛋，美美地吃了一顿早餐。此时唐爸爸正好去加油
+    </div>
+    <div>然后去福建博物馆，预约，停车，免费的，这里不得不夸一下唐爸爸，我们的目的地本来是西湖公园，他英明地选择了这里的停车场，不但免费还顺便逛了一圈博物馆，太赞👍了。旁边停车每小时20元，太黑</div>
+    <div>博物馆里了解了一下福州历史，最有感触的是英雄遗书展，展出了一些著名人物的遗书，其中林觉明给我的印象最深，英雄年仅24岁，参加广州起义前给妻子写下的，感人至深</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/IMG20200815121442.jpg"
+                                      alt="IMG20200815121442.jpg" src="../Camera/IMG20200815121442.jpg"></div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Camera/20200815-131543_IMG.JPG"
+                                      alt="20200815-131543_IMG.JPG" src="../Camera/20200815-131543_IMG.JPG"></div>
+        </div>
+        <div class="gps-block">2020-08-15 12:14:42<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市鼓楼区洪山镇芳沁路,福建博物�?
+&amp;position=119.283056,26.096667&amp;coordinate=wgs84">
+            ✧福建省福州市鼓楼区洪山镇芳沁路,福建博物馆&nbsp;</a></div>
+    </div>
+    <div>从博物馆出来就是西湖公园，园中的几只残荷尤为艳丽</div>
+    <div>从西湖公园赶到上下杭，景区逛了逛，下杭依水而建，水边也有许多大榕树。这里有许多小资的咖啡馆，比较有特色。上杭还在重新修葺</div>
+    <div>
+        <div class="row">
+            <div class="col-1-2"><img class="lazy-load" data-src="../Landscape/20200815-135842_L福州上下杭.JPG"
+                                      alt="20200815-135842_L福州上下杭.JPG" src="../Landscape/20200815-135842_L福州上下杭.JPG">
+            </div>
+            <div class="col-1-2"><img class="lazy-load" data-src="../Portrait/20200815-140356_P福州上下杭.JPG"
+                                      alt="20200815-140356_P福州上下杭.JPG" src="../Portrait/20200815-140356_P福州上下杭.JPG">
+            </div>
+        </div>
+        <div class="gps-block">2020-08-15 13:58:42<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州上下杭
+&amp;position=119.301682,26.055145&amp;coordinate=wgs84">
+            ✧福建省福州上下杭
+        </a><br></div>
+        <div class="gps-block">2020-08-15 14:03:56<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州上下杭
+&amp;position=119.301682,26.055145&amp;coordinate=wgs84">
+            ✧福建省福州上下杭&nbsp;</a><br></div>
+    </div>
+    <div>
+        3点半去下杭巷头的王庄阿咪吃饭，被告知5点才营业。于是只有折道去万寿台吃生煎包，没想到味道超级棒，都想打包回重庆了，因为怕乘机麻烦而作罢，我们点了生煎包，拌面，扁肉（其实就是抄手），牛肉滑各一份，吃得干干净净，由于后来就没时间吃饭，上飞机时很后悔没再点些
+    </div>
+    <div>因为要还车，就去了马尾（在去机场的路途中间）。快5点去了马尾罗星塔公园</div>
+    <div>公园的大榕树很有点壮观，一个小学生妹妹做了我们的免费导游。小小年纪都开始社会实践了，赞👍</div>
+    <div>
+        <div class="row">
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200815-165527_IMG.JPG"
+                                      alt="20200815-165527_IMG.JPG" src="../Camera/20200815-165527_IMG.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/20200815-170655_IMG.JPG"
+                                      alt="20200815-170655_IMG.JPG" src="../Camera/20200815-170655_IMG.JPG"></div>
+            <div class="col-1-3"><img class="lazy-load" data-src="../Camera/IMG20200815170743.jpg"
+                                      alt="IMG20200815170743.jpg" src="../Camera/IMG20200815170743.jpg"></div>
+        </div>
+        <div class="gps-block">2020-08-15 16:55:27<a href="https://uri.amap.com/marker?src=mySteps&amp;name=
+✧福建省福州市马尾区罗星塔路,罗星塔公�?
+&amp;position=119.452263,25.983271&amp;coordinate=wgs84">
+            ✧福建省福州市马尾区罗星塔路,罗星塔公</a>园
+        </div>
+    </div>
+    <div>从公园出来6点过去交还车，然后到机场，准备回了渝</div>
+    <div><br></div>
+    <h3>费用</h3>
+    <div>
+        <div>合计&nbsp; &nbsp;5110</div>
+        <div>机票 1725</div>
+        <div>住宿&nbsp; 1080</div>
+        <div>租车 730 ，油 350， 过路322 ，&nbsp; &nbsp;停车 190</div>
+        <div>&nbsp; &nbsp; 共计 1612</div>
+        <div>吃饭&nbsp; 老福州徐 188&nbsp; &nbsp;叶氏鱼丸16&nbsp; &nbsp;</div>
+        <div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;肘子 73</div>
+        <div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;景明海鲜133&nbsp; 沙县小吃 23</div>
+        <div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 油条豆浆 3&nbsp; &nbsp; 拾间海 126&nbsp; 方便面10</div>
+        <div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 三沙镇 33&nbsp; &nbsp; &nbsp;连海鱼丸25</div>
+        <div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 耳聋伯元宵&nbsp; 30&nbsp; &nbsp; 生煎包33</div>
+        <div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;共计 693</div>
+    </div>
+    <div><br></div>
+</div>
+
+
+</body>
+</html>

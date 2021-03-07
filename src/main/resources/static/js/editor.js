@@ -186,7 +186,7 @@ function adjustSize(img) {
         document.execCommand('formatBlock', false, '<blockquote>');
     }
 
-    RE.insertImageW = function(url, alt, width, justGetHtml) {
+    RE.insertImageW = function(url, alt, width, justGetHtml, classes) {
         if (!url || url.length==0) return
         const getAlt = function(i) {
             if (!alt) return 'photo'
@@ -206,7 +206,8 @@ function adjustSize(img) {
             else if (url.length - end == 5) end++
             html += '<div class="row">'
             for (let i = start; i < end; i++) {
-                html += ('<div class="col-1-' + (end - start) + '"><img src="' + url[i] + '" alt="' + getAlt(i) + '"></img></div>')
+                html += ('<div class="col-1-' + (end - start) + '"><img' + (classes?' class="'+classes+'"':'') +
+                    ' src="' + url[i] + '" alt="' + getAlt(i) + '"></img></div>')
             }
             html += '</div>';
             start = end;
@@ -317,18 +318,100 @@ function adjustSize(img) {
     RE.blurFocus = function() {
         RE.editor.blur();
     }
+    RE.removeFormat = function() {
+        document.execCommand('removeFormat', false, null);
+    }
 
+    const setStyle = function(callback) {
+        const html = '<div class="font-style-setter">\n' +
+            '            <div>\n' +
+            '                <input type="radio" checked name="fontStyle" id="style-bold"><label for="style-bold">粗体</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" name="fontStyle" id="style-italic"><label for="style-italic">斜体</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" name="fontStyle" id="style-underline"><label for="style-underline">下划线</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" name="fontStyle" id="style-strikethrough"><label for="style-strikethrough">删除线</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" name="fontStyle" id="style-superscript"><label for="style-superscript">上标</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" name="fontStyle" id="style-subscript"><label for="style-subscript">下标</label>\n' +
+            '            </div>\n' +
+            '        </div>'
+
+        window.openDialog({
+            title: '设置/取消字体样式',
+            body: html,
+            dialogStyle: {
+                minWidth: '200px'
+            },
+            callback: function() {
+                const style=document.querySelector('.font-style-setter input:checked').id.substring(6)
+                setTimeout(function() { callback(style) },100)
+            }
+        })
+    }
     RE.removeFormat = function() {
         document.execCommand('removeFormat', false, null);
     }
 
     const getColor = function(msg, callback) {
-        window.input({
-            title: msg,
-            label: '选择颜色',
-            inputType: 'color',
-            callback: function(v) {
-                if (v) setTimeout(function() { callback(v) },100)
+        const html = '<div>\n' +
+            '            <div>\n' +
+            '                <input type="checkbox" id="color-back"><label for="color-back">设置背景色</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="color" id="color_input"><label for="color_input">选择颜色</label>\n' +
+            '            </div>\n' +
+            '        </div>'
+
+        window.openDialog({
+            title: '选择颜色',
+            body: html,
+            callback: function() {
+                const color = document.getElementById('color_input').value
+                const isBack = document.getElementById('color-back').checked
+                setTimeout(function() { callback(color,isBack) },100)
+            }
+        })
+    }
+    const setTitle = function(callback) {
+        const html = '<div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" checked name="sizeaction" id="size_title"><label for="size_title">设置标题</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <input type="radio" name="sizeaction" id="size_font"><label for="size_font">设置字体大小</label>\n' +
+            '            </div>\n' +
+            '            <div>\n' +
+            '                <label for="size_level">大小</label>\n' +
+            '                <select id="size_level" value="5">\n' +
+            '                    <option value="1">1</option>\n' +
+            '                    <option value="2">2</option>\n' +
+            '                    <option value="3">3</option>\n' +
+            '                    <option value="4">4</option>\n' +
+            '                    <option value="5">5</option>\n' +
+            '                    <option value="6">6</option>\n' +
+            '                </select>\n' +
+            '            </div>\n' +
+            '        </div>'
+
+
+        window.openDialog({
+            title: '选择字体大小',
+            body: html,
+            dialogStyle: {
+                minWidth: '200px'
+            },
+            callback: function() {
+                const level = document.getElementById('size_level').value
+                const isTitle = document.getElementById('size_title').checked
+                setTimeout(function() { callback(level,isTitle) },100)
             }
         })
     }
@@ -462,7 +545,10 @@ function adjustSize(img) {
                             data.append("source",source)
                             data.append("body",html)
                             Ajax.post("/save",data,function (msg){
-                                if (msg=='ok') htmlSaved = html
+                                if (msg=='ok') {
+                                    htmlSaved = html
+                                    message('保存成功')
+                                }
                                 else message(msg)
                             })
                         } else message('没有改变')
@@ -480,7 +566,7 @@ function adjustSize(img) {
                                     alt.push(img.getAttribute("alt"))
                                     imgs.push(img)
                                 })
-                                let fullHtml = RE.insertImageW(url,alt,720, true)
+                                let fullHtml = RE.insertImageW(url,alt,720, true, 'lazy-load')
                                 if (imgs.length>0) {
                                     let detail = ''
                                     imgs.forEach(function(img){
@@ -547,59 +633,48 @@ function adjustSize(img) {
                     case 'numbers':
                         RE.setNumbers()
                         break;
-                    case 'bold':
-                        RE.setBold()
-                        break;
-                    case 'italic':
-                        RE.setItalic()
-                        break;
-                    case 'subscript':
-                        RE.setSubscript()
-                        break;
-                    case 'superscript':
-                        RE.setSuperscript()
-                        break;
-                    case 'strikethrough':
-                        RE.setStrikeThrough()
-                        break;
-                    case 'underline':
-                        RE.setUnderline()
-                        break;
-                    case 'h1':
-                        if (event.shiftKey) RE.setFontSize(6)
-                        else RE.setHeading('1')
-                        break;
-                    case 'h2':
-                        if (event.shiftKey) RE.setFontSize(5)
-                        else RE.setHeading('2')
-                        break;
-                    case 'h3':
-                        if (event.shiftKey) RE.setFontSize(4)
-                        else RE.setHeading('3')
-                        break;
-                    case 'h4':
-                        if (event.shiftKey) RE.setFontSize(3)
-                        else RE.setHeading('4')
-                        break;
-                    case 'h5':
-                        if (event.shiftKey) RE.setFontSize(2)
-                        else RE.setHeading('5')
-                        break;
-                    case 'h6':
-                        if (event.shiftKey) RE.setFontSize(1)
-                        else RE.setHeading('6')
-                        break;
-                    case 'txt_color':
+                    case 'style':
                         if (RE.prepareInsert()){
-                            getColor('选择字体颜色',function (col){
-                                RE.setTextColor(col)
+                            setStyle(function(style) {
+                                RE.restorerange()
+                                switch (style) {
+                                    case 'bold':
+                                        RE.setBold()
+                                        break;
+                                    case 'italic':
+                                        RE.setItalic()
+                                        break;
+                                    case 'subscript':
+                                        RE.setSubscript()
+                                        break;
+                                    case 'superscript':
+                                        RE.setSuperscript()
+                                        break;
+                                    case 'strikethrough':
+                                        RE.setStrikeThrough()
+                                        break;
+                                    case 'underline':
+                                        RE.setUnderline()
+                                        break;
+                                }
                             })
                         }
                         break;
-                    case 'bg_color':
+                    case 'size':
                         if (RE.prepareInsert()){
-                            getColor('选择背景颜色',function (col){
-                                RE.setTextBackgroundColor(col)
+                            setTitle(function(level,isTitle) {
+                                RE.restorerange()
+                                if (isTitle) RE.setHeading(level)
+                                else RE.setFontSize(parseInt(level))
+                            })
+                        }
+                        break;
+                    case 'color':
+                        if (RE.prepareInsert()){
+                            getColor(function (col,isBack){
+                                RE.restorerange()
+                                if (isBack) RE.setTextBackgroundColor(col)
+                                else RE.setTextColor(col)
                             })
                         }
                         break;

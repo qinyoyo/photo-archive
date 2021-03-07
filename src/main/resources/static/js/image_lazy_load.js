@@ -1,26 +1,23 @@
 ;(function () {
     if (document.addEventListener) {
         function DOMContentLoaded() {
-            let images = document.querySelectorAll('img')
-            if (images.length > 6) {
-                window.stop()
+            let images = document.querySelectorAll('img.lazy-load')
+            if (images.length > 0) {
                 let needLoad = []
                 images.forEach(function (img) {
-                    let src = img.getAttribute('src')
-                    if (src && !src.endsWith('.png')) {
-                        img.setAttribute('data-src',src)
-                        img.setAttribute('src', '/static/image/loading.gif')
-                        needLoad.push(img)
-                    }
+                    img.setAttribute('src', '/static/image/loading.gif')
+                    needLoad.push(img)
                 })
                 function showImage() {
                     let notLoad = []
                     const H = window.innerHeight
                     needLoad.forEach(function (img) {
                         const rect = img.getBoundingClientRect()
-                        if (rect.top < H && rect.bottom >= 0) {
+                        if (rect.top < 2*H && rect.bottom >= -H) { // 加载与预加载
                             img.setAttribute('src', img.getAttribute('data-src'))
-                        } else notLoad.push(img)
+                        } else {
+                            notLoad.push(img)
+                        }
                     })
                     if (notLoad.length == 0) window.onscroll = null
                     else needLoad = notLoad

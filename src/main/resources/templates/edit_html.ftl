@@ -27,20 +27,9 @@
     <div><img src="/static/image/outdent.png" data-action="outdent"></div>
     <div><img src="/static/image/bullets.png" data-action="bullets"></div>
     <div><img src="/static/image/numbers.png" data-action="numbers"></div>
-    <div><img src="/static/image/bold.png" data-action="bold"></div>
-    <div><img src="/static/image/italic.png" data-action="italic"></div>
-    <div><img src="/static/image/subscript.png" data-action="subscript"></div>
-    <div><img src="/static/image/superscript.png" data-action="superscript"></div>
-    <div><img src="/static/image/strikethrough.png" data-action="strikethrough"></div>
-    <div><img src="/static/image/underline.png" data-action="underline"></div>
-    <div><img src="/static/image/h1.png" data-action="h1"></div>
-    <div><img src="/static/image/h2.png" data-action="h2"></div>
-    <div><img src="/static/image/h3.png" data-action="h3"></div>
-    <div><img src="/static/image/h4.png" data-action="h4"></div>
-    <div><img src="/static/image/h5.png" data-action="h5"></div>
-    <div><img src="/static/image/h6.png" data-action="h6"></div>
-    <div><img src="/static/image/txt_color.png" data-action="txt_color"></div>
-    <div><img src="/static/image/bg_color.png" data-action="bg_color"></div>
+    <div><img src="/static/image/style.png" data-action="style"></div>
+    <div><img src="/static/image/size.png" data-action="size"></div>
+    <div><img src="/static/image/txt_color.png" data-action="color"></div>
     <div><img src="/static/image/insert_link.png" data-action="insert_link"></div>
     <div><img src="/static/image/undo.png" data-action="undo"></div>
     <div><img src="/static/image/redo.png" data-action="redo"></div>
