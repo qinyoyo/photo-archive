@@ -116,11 +116,13 @@ public class EditorController implements ApplicationRunner {
             if (m.find()) {
                 html = html.substring(0,m.start())+m.group(1) +"\n" + body + "\n</body>" + html.substring(m.end());
                 FileUtil.writeToFile(new File(source),html,"UTF8");
-                new File(source+"_ed.html").delete();
-                String target = pvController.getRootPath() + File.separator + ".modified_steps"
-                        + new File(source).getCanonicalPath().substring(pvController.getRootPath().length());
-                new File(target).getParentFile().mkdirs();
-                Modification.makeLink(source,target);
+                try {
+                    new File(source + "_ed.html").delete();
+                    String target = pvController.getRootPath() + File.separator + ".modified_steps"
+                            + new File(source).getCanonicalPath().substring(pvController.getRootPath().length());
+                    new File(target).getParentFile().mkdirs();
+                    Modification.makeLink(source, target);
+                } catch (Exception e1){}
                 return "ok";
             } else return "not found body";
 

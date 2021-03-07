@@ -195,16 +195,23 @@ function adjustSize(img) {
         }
         url = (typeof url === 'string' ? url.split(',') : url)
         alt = (typeof alt === 'string' ? alt.split(',') : alt)
-        let html
-        if (url.length==1) html = '<div class="center-block"><img src="' + url[0]  + '" alt="' + getAlt(0) + '" width="' + width + '"/></div>';
-        else {
-            width = Math.trunc((url.length<5 ? 990 : 980)/url.length)/10 + '%'
-            html = '<div class="center-block">'
-            for (let i=0;i<url.length;i++) {
-                html += ('<img src="' + url[i] + '" alt="' + getAlt(i) +'"' + ' style="width:'+width+'; padding-right: 2px;"' +'></img>')
+        let end
+        let step
+        if (url.length<6) step = url.length
+        else step = 3
+        let html=''
+        for (let start=0;start<url.length;) {
+            end = start + step
+            if (url.length - end == 1) end++
+            else if (url.length - end == 5) end++
+            html += '<div class="row">'
+            for (let i = start; i < end; i++) {
+                html += ('<div class="col-1-' + (end - start) + '"><img src="' + url[i] + '" alt="' + getAlt(i) + '"></img></div>')
             }
             html += '</div>';
+            start = end;
         }
+
         if (justGetHtml) return html
         else RE.insertHTML(html);
     }
@@ -475,7 +482,9 @@ function adjustSize(img) {
                                 })
                                 let fullHtml = RE.insertImageW(url,alt,720, true)
                                 if (imgs.length>0) {
+                                    let detail = ''
                                     imgs.forEach(function(img){
+                                        let gpsfound = false
                                         let html = '<div class="gps-block">'
                                         let dt = img.getAttribute('data-datetimeoriginal')
                                         let poi = img.getAttribute('title')
@@ -486,6 +495,7 @@ function adjustSize(img) {
                                         let longitude = img.getAttribute('data-gpslongitude')
                                         let latitude = img.getAttribute('data-gpslatitude')
                                         if (longitude && latitude) {
+                                            gpsfound = true
                                             if (!poi) poi='poi'
                                             else if (dt && poi.indexOf(dt)==0) poi=poi.substring(dt.length)
                                             html += (dt?'<span>' + dt + '</span>' : '') +'<a href="'
@@ -499,8 +509,10 @@ function adjustSize(img) {
                                             html += '<span>' + dt + '</span>'
                                         }
                                         html += '</div>'
-                                        fullHtml += html
+                                        detail = html
+                                        if (gpsfound) return
                                     })
+                                    fullHtml += detail
                                 }
                                 if (fullHtml) {
                                     RE.setJustifyLeft()

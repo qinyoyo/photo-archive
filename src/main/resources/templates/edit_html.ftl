@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/static/css/editor.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/editor.js"></script>
+    <script type="text/javascript" src="/static/js/image_lazy_load.js"></script>
     <title><#if title??>${title}</#if></title>
 </head>
 <body>

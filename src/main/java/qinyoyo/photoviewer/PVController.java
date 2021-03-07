@@ -631,7 +631,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 System.out.println("归档主目录为 : "+rootPath);
 
                 isReady = true;
-
+                archiveInfo.removeNotExistInfo();
                 syncFromModification();
                 BaiduGeo.seekAddressInfo(archiveInfo);
                 archiveInfo.createThumbFiles();

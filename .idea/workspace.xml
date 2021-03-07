@@ -1,101 +1,188 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="74cc29cf-b5a3-4bba-9828-0fbcd49bef8e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+    <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/image/loading.gif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/image_lazy_load.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/EditorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/EditorController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/editor.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/editor.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/editor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/editor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/edit_html.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/edit_html.ftl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/newStep.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/newStep.ftl" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectId" id="1pL7LQfSULfDw3P3THud3OOjXci" />
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="D:\Program Files\JetBrains\IntelliJ IDEA 2020.2.3\plugins\maven\lib\maven3" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1pNDnoVDxeY1rSh1kviTGXRayRc" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
-    <property name="ExpandSpringBootJavaOptionsPanel" value="true" />
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
     <property name="RequestMappingsPanelOrder0" value="0" />
     <property name="RequestMappingsPanelOrder1" value="1" />
     <property name="RequestMappingsPanelWidth0" value="75" />
     <property name="RequestMappingsPanelWidth1" value="75" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="project.structure.last.edited" value="SDKs" />
-    <property name="project.structure.proportion" value="0.0" />
-    <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main/resources/static/image" />
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\J2EE\photo-archive\src\main\resources\static\image" />
+    </key>
   </component>
   <component name="RunManager">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="PhotoArchiveApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <module name="photo-archive" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="qinyoyo.PhotoArchiveApplication" />
-      <option name="ALTERNATIVE_JRE_PATH" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
   </component>
-  <component name="SvnConfiguration">
-    <configuration />
-  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="74cc29cf-b5a3-4bba-9828-0fbcd49bef8e" name="Default Changelist" comment="" />
-      <created>1614950459613</created>
+      <changelist id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="" />
+      <created>1615014825169</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1614950459613</updated>
-      <workItem from="1614950460847" duration="956000" />
-      <workItem from="1614951547259" duration="884000" />
+      <updated>1615014825169</updated>
+      <workItem from="1615014826465" duration="11622000" />
+      <workItem from="1615078411406" duration="8950000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/EditorController.java</url>
-          <line>115</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="WindowStateProjectService">
+    <state width="1237" height="184" key="GridCell.Tab.0.bottom" timestamp="1615087846688">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="184" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
+    <state width="1237" height="184" key="GridCell.Tab.0.center" timestamp="1615087846688">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="184" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
+    <state width="1237" height="184" key="GridCell.Tab.0.left" timestamp="1615087846688">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="184" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
+    <state width="1237" height="184" key="GridCell.Tab.0.right" timestamp="1615087846688">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="184" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
+    <state width="1237" height="2" key="GridCell.Tab.1.bottom" timestamp="1615087846684">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.1.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615087846684" />
+    <state width="1237" height="2" key="GridCell.Tab.1.center" timestamp="1615087846681">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.1.center/0.0.1280.680@0.0.1280.680" timestamp="1615087846681" />
+    <state width="1237" height="2" key="GridCell.Tab.1.left" timestamp="1615087846681">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.1.left/0.0.1280.680@0.0.1280.680" timestamp="1615087846681" />
+    <state width="1237" height="2" key="GridCell.Tab.1.right" timestamp="1615087846682">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.1.right/0.0.1280.680@0.0.1280.680" timestamp="1615087846682" />
+    <state width="1237" height="2" key="GridCell.Tab.2.bottom" timestamp="1615087846684">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.2.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615087846684" />
+    <state width="1237" height="2" key="GridCell.Tab.2.center" timestamp="1615087846684">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.2.center/0.0.1280.680@0.0.1280.680" timestamp="1615087846684" />
+    <state width="1237" height="2" key="GridCell.Tab.2.left" timestamp="1615087846684">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.2.left/0.0.1280.680@0.0.1280.680" timestamp="1615087846684" />
+    <state width="1237" height="2" key="GridCell.Tab.2.right" timestamp="1615087846684">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state width="1237" height="2" key="GridCell.Tab.2.right/0.0.1280.680@0.0.1280.680" timestamp="1615087846684" />
+    <state x="339" y="72" width="603" height="536" key="find.popup" timestamp="1615087424101">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state x="339" y="72" width="603" height="536" key="find.popup/0.0.1280.680@0.0.1280.680" timestamp="1615087424101" />
   </component>
 </project>

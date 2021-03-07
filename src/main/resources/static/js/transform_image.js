@@ -232,7 +232,7 @@
         let removedIndexList = []
         let loopDirection = 1
         const totalImages = document.querySelectorAll('img[class*="img-index-"]').length
-        if (totalImages<=1) window.sessionOptions.loopTimer = 0
+        // if (totalImages<=1) window.sessionOptions.loopTimer = 0
         const srcByIndex = function (imgIndex) {
             while (removedIndexList.indexOf(imgIndex)>=0) {
                 imgIndex = imgIndex + loopDirection
@@ -1300,7 +1300,7 @@
             };
             xhr.send();
         }
-        else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
+        // else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
     }
     window.AutoLoopPlayImage =function(starterIndex){
         rangeExif = window.sessionOptions.rangeExif ?

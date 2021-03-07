@@ -12,6 +12,7 @@
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
+    <script type="text/javascript" src="/static/js/image_lazy_load.js"></script>
     <title>${title}</title>
     <style>
         html {
@@ -20,7 +21,7 @@
         }
         body {
             margin: 0;
-            font-size: 0.875em; /*五号*/
+            font-size: 1em;
         }
         main {
             display: block;
@@ -200,7 +201,6 @@
         [hidden] {
             display: none;
         }
-        ${at}charset "UTF-8";
         html {
             height: 100%;
         }
@@ -231,10 +231,55 @@
             max-width: 738px;
             padding: 10px;
             margin: auto;
+            position: relative;
+            box-sizing: border-box;
+        }
+        .row {
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+        .row img {
+            border-style: none;
+            max-width: 100%;
+            padding: 2px;
+            box-sizing: border-box;
+        }
+        .col-1-1 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .col-1-2 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .col-1-3 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+        }
+        .col-1-4 {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+        .col-1-5 {
+            flex: 0 0 20%;
+            max-width: 20%;
+        }
+        .col-1-6 {
+            flex: 0 0 16.6666666%;
+            max-width: 16.6666666%;
+        }
+        @media screen and (max-width: 700px) {
+            .col-1-1, .col-1-2,.col-1-3,.col-1-4,.col-1-5,.col-1-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
-<body onload="TransformImage('img')">
+<body>
     <div>
         <h2 style="text-align: center;"> <u>${title}</u> </h2>
         <div>输入游记内容</div>

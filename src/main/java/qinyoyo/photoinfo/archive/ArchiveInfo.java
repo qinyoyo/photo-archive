@@ -302,13 +302,6 @@ public class ArchiveInfo {
                         .create();
                 Type type = new TypeToken<ArrayList<PhotoInfo>>() {}.getType();
                 infos = gson.fromJson(json, type);
-                if (infos!=null) {
-                    Iterator<PhotoInfo> iterator = infos.iterator();
-                    while (iterator.hasNext()) {
-                        PhotoInfo p = iterator.next();
-                        if (!new File(p.fullPath(path)).exists()) iterator.remove();
-                    }
-                }
                 readFromFile = true;
                 return;
             }
@@ -316,6 +309,15 @@ public class ArchiveInfo {
         seekPhotoInfo();
     }
 
+    public void removeNotExistInfo() {
+        if (infos!=null) {
+            Iterator<PhotoInfo> iterator = infos.iterator();
+            while (iterator.hasNext()) {
+                PhotoInfo p = iterator.next();
+                if (!new File(p.fullPath(path)).exists()) iterator.remove();
+            }
+        }
+    }
     public void sortInfos() {
     	ArchiveUtils.defaultSort(infos);
     }
