@@ -3,6 +3,7 @@
         function DOMContentLoaded() {
             let images = document.querySelectorAll('img')
             if (images.length > 6) {
+                window.stop()
                 let needLoad = []
                 images.forEach(function (img) {
                     let src = img.getAttribute('src')
@@ -12,7 +13,6 @@
                         needLoad.push(img)
                     }
                 })
-
                 function showImage() {
                     let notLoad = []
                     const H = window.innerHeight

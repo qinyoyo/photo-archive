@@ -23,20 +23,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/image/loading.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/image_lazy_load.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/EditorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/EditorController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/editor.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/editor.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/editor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/editor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/edit_html.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/edit_html.ftl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/newStep.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/newStep.ftl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/image_lazy_load.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/image_lazy_load.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,19 +70,6 @@
     </key>
   </component>
   <component name="RunManager">
-    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="CLASS" />
-      <properties />
-      <listeners />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="PhotoArchiveApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <module name="photo-archive" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="qinyoyo.PhotoArchiveApplication" />
@@ -113,6 +88,7 @@
       <updated>1615014825169</updated>
       <workItem from="1615014826465" duration="11622000" />
       <workItem from="1615078411406" duration="8950000" />
+      <workItem from="1615089069321" duration="2633000" />
     </task>
     <servers />
   </component>
@@ -132,38 +108,38 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1237" height="184" key="GridCell.Tab.0.bottom" timestamp="1615087846688">
+    <state width="1237" height="197" key="GridCell.Tab.0.bottom" timestamp="1615091860543">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="184" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
-    <state width="1237" height="184" key="GridCell.Tab.0.center" timestamp="1615087846688">
+    <state width="1237" height="197" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615091860543" />
+    <state width="1237" height="197" key="GridCell.Tab.0.center" timestamp="1615091860543">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="184" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
-    <state width="1237" height="184" key="GridCell.Tab.0.left" timestamp="1615087846688">
+    <state width="1237" height="197" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1615091860543" />
+    <state width="1237" height="197" key="GridCell.Tab.0.left" timestamp="1615091860543">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="184" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
-    <state width="1237" height="184" key="GridCell.Tab.0.right" timestamp="1615087846688">
+    <state width="1237" height="197" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1615091860543" />
+    <state width="1237" height="197" key="GridCell.Tab.0.right" timestamp="1615091860543">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="184" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1615087846688" />
-    <state width="1237" height="2" key="GridCell.Tab.1.bottom" timestamp="1615087846684">
+    <state width="1237" height="197" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1615091860543" />
+    <state width="1237" height="2" key="GridCell.Tab.1.bottom" timestamp="1615091860533">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="2" key="GridCell.Tab.1.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615087846684" />
-    <state width="1237" height="2" key="GridCell.Tab.1.center" timestamp="1615087846681">
+    <state width="1237" height="2" key="GridCell.Tab.1.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615091860533" />
+    <state width="1237" height="2" key="GridCell.Tab.1.center" timestamp="1615091860533">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="2" key="GridCell.Tab.1.center/0.0.1280.680@0.0.1280.680" timestamp="1615087846681" />
-    <state width="1237" height="2" key="GridCell.Tab.1.left" timestamp="1615087846681">
+    <state width="1237" height="2" key="GridCell.Tab.1.center/0.0.1280.680@0.0.1280.680" timestamp="1615091860533" />
+    <state width="1237" height="2" key="GridCell.Tab.1.left" timestamp="1615091860533">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="2" key="GridCell.Tab.1.left/0.0.1280.680@0.0.1280.680" timestamp="1615087846681" />
-    <state width="1237" height="2" key="GridCell.Tab.1.right" timestamp="1615087846682">
+    <state width="1237" height="2" key="GridCell.Tab.1.left/0.0.1280.680@0.0.1280.680" timestamp="1615091860533" />
+    <state width="1237" height="2" key="GridCell.Tab.1.right" timestamp="1615091860533">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
-    <state width="1237" height="2" key="GridCell.Tab.1.right/0.0.1280.680@0.0.1280.680" timestamp="1615087846682" />
+    <state width="1237" height="2" key="GridCell.Tab.1.right/0.0.1280.680@0.0.1280.680" timestamp="1615091860533" />
     <state width="1237" height="2" key="GridCell.Tab.2.bottom" timestamp="1615087846684">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
