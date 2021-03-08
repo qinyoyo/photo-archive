@@ -5,6 +5,11 @@ import freemarker.cache.NullCacheStorage;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -19,6 +24,8 @@ import qinyoyo.photoinfo.archive.Modification;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
+import qinyoyo.utils.StepHtmlUtil;
+import qinyoyo.utils.Util;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,6 +40,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Controller
 public class EditorController implements ApplicationRunner {
+
     @Autowired
     PVController pvController;
     private static final Configuration CONFIGURATION = new Configuration(Configuration.VERSION_2_3_22);
@@ -44,21 +52,40 @@ public class EditorController implements ApplicationRunner {
             return "message";
         }
         String rootPath = pvController.getRootPath();
-        String html = FileUtil.getFromFile(new File(rootPath,path),"UTF8");
-        if (html==null) {
+        Document doc ;
+        try {
+            doc = StepHtmlUtil.formatStepHtml(new File(rootPath,path),"");
+        } catch (IOException e) {
+            e.printStackTrace();
             model.addAttribute("message",path + " 打开失败");
             return "message";
         }
         if (scanResource!=null && scanResource) {
             scanImageForHtml(path);
         }
-        Map<String, Object> attributes = new HashMap<>();
-        Pattern p=Pattern.compile("\\<title\\>(.*)\\</title\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
-        Matcher m = p.matcher(html);
-        if (m.find()) attributes.put("title",m.group(1));
-        p=Pattern.compile("(\\<body[^\\>]*\\>)(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
-        m = p.matcher(html);
-        if (m.find()) attributes.put("body",m.group(2));
+
+        Map<String,Object> attributes = new HashMap<>();
+        String style = "", script = "";
+
+        Element head = doc.head();
+        Elements title = head.getElementsByTag("title");
+        if (title!=null) attributes.put("title",title.text());
+
+            String hs =getElementTagAndDeleteRange(head,"style",STYLE_BEGIN,STYLE_END);
+            if (!hs.isEmpty()) style = style + (style.isEmpty()?"":"\n")+ hs;
+            hs =getElementTagAndDeleteRange(head,"script",SCRIPT_BEGIN,SCRIPT_END);
+            if (!hs.isEmpty()) script = script + (script.isEmpty()?"":"\n")+ hs;
+        }
+        String hs =getElementTagAndDeleteRange(doc,"style",STYLE_BEGIN,STYLE_END);
+        if (!hs.isEmpty()) style = style + (style.isEmpty()?"":"\n")+ hs;
+        hs =getElementTagAndDeleteRange(doc,"script",SCRIPT_BEGIN,SCRIPT_END);
+        if (!hs.isEmpty()) script = script + (script.isEmpty()?"":"\n")+ hs;
+
+        if (!style.isEmpty()) attributes.put("style",style);
+        if (!style.isEmpty()) attributes.put("script",script);
+
+        attributes.put("body",doc.body().html());
+
         try {
             String folder = new File(path).getParent();
             if (folder.endsWith(".web")) folder = new File(folder).getParent();
@@ -201,6 +228,7 @@ public class EditorController implements ApplicationRunner {
                 Map<String,Object> attr = new HashMap<String,Object>(){{
                     put("title",newStep);
                 }};
+                String style = FileUtil.getFromFile(new File())
                 freeMarkerWriter("newStep.ftl",dir.getAbsolutePath()+File.separator+"index.html",attr);
                 archiveInfo.rescanFile(new File(dir,"index.html"));
             }

@@ -13,7 +13,18 @@
     <script type="text/javascript" src="/static/js/editor.js"></script>
     <script type="text/javascript" src="/static/js/image_lazy_load.js"></script>
     <title><#if title??>${title}</#if></title>
+    <#if style??>
+    <style>
+        ${style}
+    </style>
+    </#if>
+    <#if script??>
+    <script>
+        ${script}
+    </script>
+    </#if>
 </head>
+
 <body>
 <div id="tools" class = "float-editor__buttons">
     <div><img src="/static/image/save.png" data-action="save"></div>

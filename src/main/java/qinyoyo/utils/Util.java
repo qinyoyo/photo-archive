@@ -1,6 +1,7 @@
 package qinyoyo.utils;
 
 
+import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -8,7 +9,7 @@ import org.springframework.boot.env.PropertiesPropertySourceLoader;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.NonNull;
+
 import javax.servlet.http.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -111,5 +112,14 @@ public class Util {
         return msg + sw.toString();
     }
 
+    static public String replaceBetween(String str, @NonNull String begin, @NonNull String end, @NonNull String newText) {
+        if (str==null) return "";
+        int s = str.indexOf(begin);
+        if (s<0) return str;
+        int e = str.indexOf(end);
+        if (e<0 || e<=s) return str;
+        e += end.length();
+        return (s>0?str.substring(0,s):"") + newText + (e<str.length() ? str.substring(e) : "");
+    }
 
 }

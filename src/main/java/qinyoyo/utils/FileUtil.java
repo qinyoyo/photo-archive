@@ -3,6 +3,9 @@ package qinyoyo.utils;
 
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.boot.web.server.MimeMappings;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import qinyoyo.photoinfo.ArchiveUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +39,7 @@ public class FileUtil {
             }
             return sb.toString();
         } catch (IOException e) {
+            e.printStackTrace();
             return null;
         } finally {
             try {
@@ -46,6 +50,16 @@ public class FileUtil {
         }
     }
 
+    public static String getFromResource(String url) {
+        try {
+            ResourceLoader loader = new DefaultResourceLoader();
+            Resource resource = loader.getResource(url);
+            return getFromFile(resource.getFile(),"UTF-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public static void writeToFile(File file, String string) {
         writeToFile(file, string, "GBK");
     }
