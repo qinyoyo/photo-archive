@@ -8,8 +8,6 @@ import freemarker.template.TemplateExceptionHandler;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.jsoup.select.Evaluator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -18,14 +16,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.RedirectView;
-import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.Modification;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.StepHtmlUtil;
-import qinyoyo.utils.Util;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,7 +36,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Controller
 public class EditorController implements ApplicationRunner {
-
     @Autowired
     PVController pvController;
     private static final Configuration CONFIGURATION = new Configuration(Configuration.VERSION_2_3_22);
@@ -54,7 +49,9 @@ public class EditorController implements ApplicationRunner {
         String rootPath = pvController.getRootPath();
         Document doc ;
         try {
-            doc = StepHtmlUtil.formatStepHtml(new File(rootPath,path),"");
+            doc = StepHtmlUtil.formattedStepHtml(new File(rootPath,path),
+                    new Element("link").attr("rel","stylesheet")
+                            .attr("href","/static/css/pv.css"));
         } catch (IOException e) {
             e.printStackTrace();
             model.addAttribute("message",path + " 打开失败");
@@ -65,27 +62,8 @@ public class EditorController implements ApplicationRunner {
         }
 
         Map<String,Object> attributes = new HashMap<>();
-        String style = "", script = "";
-
-        Element head = doc.head();
-        Elements title = head.getElementsByTag("title");
-        if (title!=null) attributes.put("title",title.text());
-
-            String hs =getElementTagAndDeleteRange(head,"style",STYLE_BEGIN,STYLE_END);
-            if (!hs.isEmpty()) style = style + (style.isEmpty()?"":"\n")+ hs;
-            hs =getElementTagAndDeleteRange(head,"script",SCRIPT_BEGIN,SCRIPT_END);
-            if (!hs.isEmpty()) script = script + (script.isEmpty()?"":"\n")+ hs;
-        }
-        String hs =getElementTagAndDeleteRange(doc,"style",STYLE_BEGIN,STYLE_END);
-        if (!hs.isEmpty()) style = style + (style.isEmpty()?"":"\n")+ hs;
-        hs =getElementTagAndDeleteRange(doc,"script",SCRIPT_BEGIN,SCRIPT_END);
-        if (!hs.isEmpty()) script = script + (script.isEmpty()?"":"\n")+ hs;
-
-        if (!style.isEmpty()) attributes.put("style",style);
-        if (!style.isEmpty()) attributes.put("script",script);
-
+        if (doc.title()!=null) attributes.put("title",doc.title());
         attributes.put("body",doc.body().html());
-
         try {
             String folder = new File(path).getParent();
             if (folder.endsWith(".web")) folder = new File(folder).getParent();
@@ -103,7 +81,10 @@ public class EditorController implements ApplicationRunner {
             editFile.delete();
             attributes.put("resource",resourceHtml);
             attributes.put("sourceFile",new File(rootPath,path).getCanonicalPath());
-            freeMarkerWriter("edit_html.ftl", editFile.getCanonicalPath(), attributes);
+            freeMarkerWriter("edit_body.ftl", editFile.getCanonicalPath(), attributes);
+            Document editDoc = Jsoup.parse(editFile,"utf-8");
+            doc.body().html(editDoc.body().html());
+            FileUtil.writeToFile(editFile,StepHtmlUtil.htmlString(doc),"utf-8");
             return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
         } catch (Exception e) {
             model.addAttribute("message",e.getMessage());
@@ -136,24 +117,19 @@ public class EditorController implements ApplicationRunner {
     public String saveEditor(HttpServletRequest request, String source,String body) {
         if (source==null) return "error";
         try {
-            String html = FileUtil.getFromFile(new File(source),"UTF8");
-            if (html==null) return "文件错误";
-            body=body.replaceAll("<img(?:\\s|\\n)+class=\"lazy-load\"(?:\\s|\\n)+src","<img class=\"lazy-load\" data-src");
-            Pattern p=Pattern.compile("(\\<body[^\\>]*\\>)(.*)\\</body\\>",Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
-            Matcher m = p.matcher(html);
-            if (m.find()) {
-                html = html.substring(0,m.start())+m.group(1) +"\n" + body + "\n</body>" + html.substring(m.end());
-                FileUtil.writeToFile(new File(source),html,"UTF8");
-                try {
-                    new File(source + "_ed.html").delete();
-                    String target = pvController.getRootPath() + File.separator + ".modified_steps"
-                            + new File(source).getCanonicalPath().substring(pvController.getRootPath().length());
-                    new File(target).getParentFile().mkdirs();
-                    Modification.makeLink(source, target);
-                } catch (Exception e1){}
-                return "ok";
-            } else return "not found body";
-
+            Document doc = Jsoup.parse(new File(source),"UTF8");
+            if (doc==null) return "文件错误";
+            doc.body().html(body);
+            doc=StepHtmlUtil.formattedStepHtml(doc);
+            FileUtil.writeToFile(new File(source),StepHtmlUtil.htmlString(doc),"UTF8");
+            try {
+                new File(source + "_ed.html").delete();
+                String target = pvController.getRootPath() + File.separator + ".modified_steps"
+                        + new File(source).getCanonicalPath().substring(pvController.getRootPath().length());
+                new File(target).getParentFile().mkdirs();
+                Modification.makeLink(source, target);
+            } catch (Exception e1){}
+            return "ok";
         } catch (Exception e) {
             return e.getMessage();
         }
@@ -221,15 +197,20 @@ public class EditorController implements ApplicationRunner {
         return new String(bos.toByteArray(),"utf-8");
     }
 
+    static final String NEW_STEP_BODY = "<body>\n" +
+            "    <div>\n" +
+            "        <h2 style=\"text-align: center;\"> <u>TITLE</u> </h2>\n" +
+            "        <div>输入游记内容</div>\n" +
+            "    </div>\n" +
+            "</body>";
     public void createHtmlFile(String rootPath, String path, String newStep, ArchiveInfo archiveInfo) {
         try {
             File dir = new File(new File(rootPath, path), newStep+".web");
             if (dir.mkdirs()) {
-                Map<String,Object> attr = new HashMap<String,Object>(){{
-                    put("title",newStep);
-                }};
-                String style = FileUtil.getFromFile(new File())
-                freeMarkerWriter("newStep.ftl",dir.getAbsolutePath()+File.separator+"index.html",attr);
+                Document doc = new Document(NEW_STEP_BODY.replace("TITLE",newStep));
+                doc = StepHtmlUtil.formattedStepHtml(doc);
+                doc.title(newStep);
+                FileUtil.writeToFile(new File(dir,"index.html"),StepHtmlUtil.htmlString(doc),"utf-8");
                 archiveInfo.rescanFile(new File(dir,"index.html"));
             }
         } catch (Exception e) {}

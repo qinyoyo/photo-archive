@@ -1,30 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="renderer" content="webkit">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/static/css/pv.css">
-    <link rel="stylesheet" href="/static/css/editor.css">
-    <script type="text/javascript" src="/static/js/ajax.js"></script>
-    <script type="text/javascript" src="/static/js/editor.js"></script>
-    <script type="text/javascript" src="/static/js/image_lazy_load.js"></script>
-    <title><#if title??>${title}</#if></title>
-    <#if style??>
-    <style>
-        ${style}
-    </style>
-    </#if>
-    <#if script??>
-    <script>
-        ${script}
-    </script>
-    </#if>
-</head>
-
 <body>
 <div id="tools" class = "float-editor__buttons">
     <div><img src="/static/image/save.png" data-action="save"></div>
@@ -46,7 +19,7 @@
     <div><img src="/static/image/redo.png" data-action="redo"></div>
 </div>
 <div id="editor" contenteditable="true" data-file="${sourceFile}">
-${body?replace('contenteditable="false"','contenteditable="true"')}
+${body}
 </div>
 
 <div id="select-resource" style="display:none" class="dialog__wrapper">
@@ -64,13 +37,10 @@ ${body?replace('contenteditable="false"','contenteditable="true"')}
                 <button class="dialog__button" onclick="document.getElementById('select-resource').style.display='none'">取消</button>
             </div>
         </div>
-
     </div>
 </div>
-
-
 </body>
-</html>
+
 
 
 
