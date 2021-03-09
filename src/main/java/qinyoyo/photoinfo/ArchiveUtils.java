@@ -40,8 +40,6 @@ public class ArchiveUtils {
     public static final String folder_info_dat = ".folder_info.dat";
     public static final String folder_info_lost_log = ".folder_info_lost.log";
     public static final String DELETED_FILES = ".deleted.dat";
-    public static String FFMPEG = "ffmpeg";
-    public static String FFMPEG_VERSION = null;
     public static String VIDEO_CAPTURE_AT = "00:00:01";
     public static String THUMB = ".thumb";
     public static String DELETED = ".deleted";

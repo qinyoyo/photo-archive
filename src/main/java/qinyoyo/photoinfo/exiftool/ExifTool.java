@@ -1,10 +1,13 @@
 package qinyoyo.photoinfo.exiftool;
 
 import javafx.util.Pair;
+import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.utils.Util;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Double.parseDouble;
 
@@ -12,6 +15,8 @@ public class ExifTool {
     public  static final String RESULT = ":RESULT:";
     public  static final String ERROR = ":ERROR:";
     public  static String EXIFTOOL = "exiftool";
+    public static String FFMPEG = "ffmpeg";
+    public  static String FFMPEG_VERSION = null;
     public  static Double INSTALLED_VERSION;
     private static ExifTool instance = null;
     public  static ExifTool getInstance(){
@@ -21,6 +26,7 @@ public class ExifTool {
     }
     private ExifTool() {
         if (INSTALLED_VERSION==null) INSTALLED_VERSION = getInstalledVersion();
+        if (FFMPEG_VERSION==null) FFMPEG_VERSION = getInstalledFfmpegVersion();
     }
     public static Double getInstalledVersion(){
         while (INSTALLED_VERSION == null) {
@@ -45,6 +51,43 @@ public class ExifTool {
             }
         }
         return INSTALLED_VERSION;
+    }
+    public static String getInstalledFfmpegVersion() {
+        while (ExifTool.FFMPEG_VERSION==null) {
+            List<String> argsList = new ArrayList<>();
+            argsList.add(ExifTool.FFMPEG);
+            argsList.add("-version");
+            try {
+                Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false, argsList);
+                if (result.getKey().size() == 0) {
+                    throw new RuntimeException("Could not get version of <" + ExifTool.FFMPEG + ">.");
+                }
+                Pattern p = Pattern.compile("version\\s+(\\S+)",Pattern.CASE_INSENSITIVE);
+                for (String s : result.getKey()) {
+                    Matcher m = p.matcher(s);
+                    if (m.find()) {
+                        ExifTool.FFMPEG_VERSION = m.group(1);
+                        break;
+                    }
+                }
+                if (ExifTool.FFMPEG_VERSION==null) ExifTool.FFMPEG_VERSION = result.getKey().get(0);
+                System.out.println("Installed <" + ExifTool.FFMPEG + "> Version: " + ExifTool.FFMPEG_VERSION);
+                return ExifTool.FFMPEG_VERSION;
+            } catch (Exception e) {
+                System.out.println(e.getMessage()+" Where is ffmpeg installed or 'q' for skip?");
+                try {
+                    Scanner in = new Scanner(System.in);
+                    String input = in.nextLine().trim();
+                    if (input.equals("q")) {
+                        ExifTool.FFMPEG = null;
+                        ExifTool.FFMPEG_VERSION="";
+                        return ExifTool.FFMPEG_VERSION;
+                    }
+                    ExifTool.FFMPEG = new File(input, "ffmpeg").getCanonicalPath();
+                } catch (IOException ex){ Util.printStackTrace(ex);}
+            }
+        }
+        return ExifTool.FFMPEG_VERSION;
     }
     /**
      * 获得目录或文件的exif信息

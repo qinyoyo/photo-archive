@@ -54,46 +54,10 @@ public class ArchiveInfo {
 	public void setExifTool(ExifTool exifTool) {
 		this.exifTool = exifTool;
 	}
-	public void checkFfmpeg() {
-        while (ArchiveUtils.FFMPEG_VERSION==null) {
-            List<String> argsList = new ArrayList<>();
-            argsList.add(ArchiveUtils.FFMPEG);
-            argsList.add("-version");
-            try {
-                Pair<List<String>, List<String>> result = CommandRunner.runWithResult(false, argsList);
-                if (result.getKey().size() == 0) {
-                    throw new RuntimeException("Could not get version of <" + ArchiveUtils.FFMPEG + ">.");
-                }
-                Pattern p = Pattern.compile("version\\s+(\\S+)",Pattern.CASE_INSENSITIVE);
-                for (String s : result.getKey()) {
-                    Matcher m = p.matcher(s);
-                    if (m.find()) {
-                        ArchiveUtils.FFMPEG_VERSION = m.group(1);
-                        break;
-                    }
-                }
-                if (ArchiveUtils.FFMPEG_VERSION==null) ArchiveUtils.FFMPEG_VERSION = result.getKey().get(0);
-                System.out.println("Installed <" + ArchiveUtils.FFMPEG + "> Version: " + ArchiveUtils.FFMPEG_VERSION);
-                return;
-            } catch (Exception e) {
-                System.out.println(e.getMessage()+" Where is ffmpeg installed or 'q' for skip?");
-                try {
-                    Scanner in = new Scanner(System.in);
-                    String input = in.nextLine().trim();
-                    if (input.equals("q")) {
-                        ArchiveUtils.FFMPEG = null;
-                        ArchiveUtils.FFMPEG_VERSION="";
-                        return;
-                    }
-                    ArchiveUtils.FFMPEG = new File(input, "ffmpeg").getCanonicalPath();
-                } catch (IOException ex){ Util.printStackTrace(ex);}
-            }
-        }
-    }
+
     public ArchiveInfo() {
         exifToolArgs = null;
         exifTool = ExifTool.getInstance();
-        checkFfmpeg();
         infos = new ArrayList<>();
     }
     public ArchiveInfo(String dir) {
@@ -102,7 +66,6 @@ public class ArchiveInfo {
     public ArchiveInfo(String dir, List<String> args) {
         exifToolArgs = args;
         exifTool = ExifTool.getInstance();
-        checkFfmpeg();
         File d = new File(dir);
         if (!d.exists()) d.mkdirs();
         try {
@@ -342,8 +305,8 @@ public class ArchiveInfo {
             thumbFile.getParentFile().mkdirs();
             if (p.getMimeType().contains("image/")) {
                 ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
-            } else if (ArchiveUtils.FFMPEG!=null && p.getMimeType().contains("video/")) {
-                CommandRunner.run(ArchiveUtils.FFMPEG,"-i", imgPath, "-y", "-f", "image2",
+            } else if (ExifTool.FFMPEG!=null && p.getMimeType().contains("video/")) {
+                CommandRunner.run(ExifTool.FFMPEG,"-i", imgPath, "-y", "-f", "image2",
                         // "-t","0.0001",
                         "-frames:v", "1", "-ss", ArchiveUtils.VIDEO_CAPTURE_AT,
                         // "-s", size,

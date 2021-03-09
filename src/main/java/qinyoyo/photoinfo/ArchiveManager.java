@@ -35,7 +35,6 @@ public class ArchiveManager {
         archiveInfo.saveInfos();
     }
     public static boolean archive() {
-        new ArchiveInfo();
         ArchiveInfo archived=null;
         File dir=null;
         while(dir==null || !dir.exists() || !dir.isDirectory()) {

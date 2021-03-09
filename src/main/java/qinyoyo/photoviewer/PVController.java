@@ -434,6 +434,8 @@ public class PVController implements ApplicationRunner , ErrorController {
                         pi.setMimeType("text/html");
                         pi.setSubTitle(d.getName().substring(0,d.getName().length()-4));
                         list.add(pi);
+                        archiveInfo.getInfos().add(pi);
+                        afterChanged();
                     }
                 }
                 return list;
@@ -605,11 +607,9 @@ public class PVController implements ApplicationRunner , ErrorController {
     public void run(ApplicationArguments args) throws Exception {
         ArchiveUtils.setOutput(this.getClass(),STDOUT);
         String ffmpeg = env.getProperty("photo.ffmpeg");
-        if (ffmpeg!=null) ArchiveUtils.FFMPEG = ffmpeg;
+        if (ffmpeg!=null) ExifTool.FFMPEG = ffmpeg;
         String exiftool = env.getProperty("photo.exiftool");
         if (exiftool!=null) ExifTool.EXIFTOOL = exiftool;
-
-        new ArchiveInfo();
 
         unlockPassword = env.getProperty("photo.password");
         if (unlockPassword ==null) unlockPassword = "19960802";
