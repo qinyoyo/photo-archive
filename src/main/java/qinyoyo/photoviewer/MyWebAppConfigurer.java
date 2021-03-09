@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import qinyoyo.utils.SpringContextUtil;
+import qinyoyo.utils.Util;
 
 @Configuration
 public class MyWebAppConfigurer implements WebMvcConfigurer  {
@@ -26,7 +27,7 @@ public class MyWebAppConfigurer implements WebMvcConfigurer  {
             try {
                 String webappPath = webapp.getCanonicalPath() + File.separator;
                 registry.addResourceHandler("/**").addResourceLocations("file:" + webappPath);
-            } catch (Exception e) {}
+            } catch (Exception e){ Util.printStackTrace(e);}
         }
     }
     @Override

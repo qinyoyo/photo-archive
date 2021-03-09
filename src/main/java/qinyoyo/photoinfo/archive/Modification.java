@@ -11,6 +11,7 @@ import qinyoyo.utils.DateUtil;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.FileUtil;
+import qinyoyo.utils.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +77,7 @@ public class Modification {
             try {
                 Modification m = gson.fromJson(s,Modification.class);
                 list.add(m);
-            } catch (Exception e) {}
+            } catch (Exception e){ Util.printStackTrace(e);}
         }
         return list;
     }
@@ -378,7 +379,7 @@ public class Modification {
                         acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
                         return acc;
                     },(acc,p)->null);
-                } catch (Exception e){}
+                } catch (Exception e){ Util.printStackTrace(e);}
             } else {
                 pathList.add(path);
             }

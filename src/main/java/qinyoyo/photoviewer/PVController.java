@@ -379,12 +379,12 @@ public class PVController implements ApplicationRunner , ErrorController {
                 msg = "403 Error";
             } else {
                 if (e != null) {
-                    msg = Util.printStackTrace(e);
+                    msg = Util.getStackTrace(e);
                 }
                 else msg = "内部异常";
             }
         } else if (e!=null) {
-            msg=Util.printStackTrace(e);
+            msg=Util.getStackTrace(e);
         }
         model.addAttribute("message",msg);
         return "message";
@@ -491,7 +491,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                     if (pp.length()<=rootPath.length()) map.put("path","");
                     else map.put("path", pp.substring(rootPath.length()+1));
                     subDirectories.add(map);
-                }catch (Exception e) {}
+                }catch (Exception e){ Util.printStackTrace(e);}
             }
             if (subDirs!=null && subDirs.length>0) {
                 for (File f : subDirs) {
@@ -500,7 +500,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                     try {
                         map.put("path", f.getCanonicalPath().substring(rootPath.length()+1));
                         subDirectories.add(map);
-                    }catch (Exception e) {}
+                    }catch (Exception e){ Util.printStackTrace(e);}
                 }
             }
             if (subDirectories.size()>0) {

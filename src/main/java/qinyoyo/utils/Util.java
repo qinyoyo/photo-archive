@@ -101,7 +101,7 @@ public class Util {
         }
     }
 
-    static public String printStackTrace(Exception e) {
+    static public String getStackTrace(Exception e) {
         if (e==null) return null;
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
@@ -111,15 +111,21 @@ public class Util {
         else msg = msg + "\n";
         return msg + sw.toString();
     }
-
+    static public void printStackTrace(Exception e) {
+        if (System.console()!=null || ("file".equals(Util.class.getResource("").getProtocol()))) {
+            e.printStackTrace();
+        }
+    }
     static public String replaceBetween(String str, @NonNull String begin, @NonNull String end, @NonNull String newText) {
         if (str==null) return "";
-        int s = str.indexOf(begin);
-        if (s<0) return str;
-        int e = str.indexOf(end);
-        if (e<0 || e<=s) return str;
-        e += end.length();
-        return (s>0?str.substring(0,s):"") + newText + (e<str.length() ? str.substring(e) : "");
+        while (true) {
+            int s = str.indexOf(begin);
+            if (s < 0) return str;
+            int e = str.indexOf(end);
+            if (e < 0 || e <= s) return str;
+            e += end.length();
+            str = (s > 0 ? str.substring(0, s) : "") + newText + (e < str.length() ? str.substring(e) : "");
+        }
     }
     public static String editCss() {
         return FileUtil.getFromResource("/static/css/editor.css");

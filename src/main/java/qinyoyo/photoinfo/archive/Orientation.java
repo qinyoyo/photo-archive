@@ -3,6 +3,7 @@ package qinyoyo.photoinfo.archive;
 import lombok.Getter;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
+import qinyoyo.utils.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +94,7 @@ public enum Orientation {
             try {
                 int i = Integer.parseInt(name);
                 if (i>=NONE.value && i<=R270.value) return i;
-            } catch (Exception e) {}
+            } catch (Exception e){ Util.printStackTrace(e);}
         }
         return NONE.value;
     }
@@ -134,8 +135,7 @@ public enum Orientation {
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList==null || msgList.size()==0) return null;
             return value(msgList.get(0));
-        } catch (IOException e) {
-        }
+        } catch (IOException e){ Util.printStackTrace(e);}
         return null;
     }
 }

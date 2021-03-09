@@ -186,7 +186,7 @@ function adjustSize(img) {
         document.execCommand('formatBlock', false, '<blockquote>');
     }
 
-    RE.insertImageW = function(url, alt, width, justGetHtml, classes) {
+    RE.insertImageW = function(url, alt, width, classes, justGetHtml) {
         if (!url || url.length==0) return
         const getAlt = function(i) {
             if (!alt) return 'photo'
@@ -274,7 +274,8 @@ function adjustSize(img) {
         document.execCommand('insertHTML', false, html);
     }
 
-    RE.prepareInsert = function() {
+    RE.prepareInsert = function(newLine) {
+        if (newLine) document.execCommand('insertHTML', false, "<div></div>");
         return RE.backuprange();
     }
 
@@ -360,7 +361,7 @@ function adjustSize(img) {
         document.execCommand('removeFormat', false, null);
     }
 
-    const getColor = function(msg, callback) {
+    const getColor = function(callback) {
         const html = '<div>\n' +
             '            <div>\n' +
             '                <input type="checkbox" id="color-back"><label for="color-back">设置背景色</label>\n' +
@@ -554,7 +555,7 @@ function adjustSize(img) {
                         } else message('没有改变')
                         break;
                     case 'insert_image':
-                        if (RE.prepareInsert()){
+                        if (RE.prepareInsert(true)){
                             getResource('photo',function (values){
                                 const indexes = values.split(',')
                                 let url = []
@@ -566,12 +567,12 @@ function adjustSize(img) {
                                     alt.push(img.getAttribute("alt"))
                                     imgs.push(img)
                                 })
-                                let fullHtml = RE.insertImageW(url,alt,720, true, 'lazy-load')
+                                let fullHtml = RE.insertImageW(url,alt,720, 'lazy-load', true)
                                 if (imgs.length>0) {
                                     let detail = ''
                                     imgs.forEach(function(img){
                                         let gpsfound = false
-                                        let html = '<div class="gps-block">'
+                                        let html = '<div class="center-block">'
                                         let dt = img.getAttribute('data-datetimeoriginal')
                                         let poi = img.getAttribute('title')
                                         if (poi) {
@@ -601,8 +602,9 @@ function adjustSize(img) {
                                     fullHtml += detail
                                 }
                                 if (fullHtml) {
-                                    RE.setJustifyLeft()
+                                    fullHtml += "<div></div>"
                                     RE.insertHTML(fullHtml)
+                                    RE.setJustifyLeft()
                                 }
                             })
                         }
@@ -665,7 +667,7 @@ function adjustSize(img) {
                             setTitle(function(level,isTitle) {
                                 RE.restorerange()
                                 if (isTitle) RE.setHeading(level)
-                                else RE.setFontSize(parseInt(level))
+                                else RE.setFontSize(7 - parseInt(level))
                             })
                         }
                         break;

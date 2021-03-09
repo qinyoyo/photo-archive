@@ -1,6 +1,8 @@
 package qinyoyo.photoinfo.exiftool;
 
 import javafx.util.Pair;
+import qinyoyo.utils.Util;
+
 import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -85,7 +87,7 @@ public final class CommandRunner {
                 process.getInputStream().close();
                 process.getOutputStream().close();
             }
-            catch(Exception ee){}
+            catch(Exception ee){ Util.printStackTrace(ee);}
         }
         if (redirectOutput!=null && redirectOutput.exists()) {
         	try {

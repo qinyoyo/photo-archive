@@ -1,9 +1,12 @@
 package qinyoyo.photoinfo;
 
+import org.jsoup.nodes.Document;
 import qinyoyo.photoinfo.archive.*;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
+import qinyoyo.utils.StepHtmlUtil;
+import qinyoyo.utils.Util;
 
 import java.io.*;
 import java.nio.file.*;
@@ -85,13 +88,11 @@ public class ArchiveUtils {
                     if (in1 != null)
                         try {
                             in1.close();
-                        } catch (IOException e) {
-                        }
+                        } catch (IOException e){ Util.printStackTrace(e);}
                     if (in2 != null)
                         try {
                             in2.close();
-                        } catch (IOException e) {
-                        }
+                        } catch (IOException e){ Util.printStackTrace(e);}
                 }
             }
         }
@@ -109,14 +110,12 @@ public class ArchiveUtils {
             if (objectOutputStream!=null) {
                 try {
                     objectOutputStream.close();
-                } catch (IOException e) {
-                }
+                } catch (IOException e){ Util.printStackTrace(e);}
             }
             if (outputStream!=null) {
                 try {
                     outputStream.close();
-                } catch (IOException e) {
-                }
+                } catch (IOException e){ Util.printStackTrace(e);}
             }
         }
     }
@@ -139,8 +138,7 @@ public class ArchiveUtils {
             if (fileInputStream != null)
                 try {
                     fileInputStream.close();
-                } catch (IOException e) {
-                }
+                } catch (IOException e){ Util.printStackTrace(e);}
         }
         return null;
     }
@@ -220,6 +218,17 @@ public class ArchiveUtils {
             add(Key.SUBJECT_CODE);
         }});
     }
+    public static void formatStepHtml(File file) {
+        if (file.exists() && !file.isDirectory() && (file.getName().toLowerCase().endsWith(".html") || file.getName().toLowerCase().endsWith(".htm"))) {
+            try {
+                Document doc = StepHtmlUtil.formattedStepHtml(file);
+                if (doc!=null) FileUtil.writeToFile(file,StepHtmlUtil.htmlString(doc),"utf-8");
+                System.out.println("    格式化游记 : " + file.getPath());
+            } catch (IOException e) {
+                Util.printStackTrace(e);
+            }
+        }
+    }
     public static List<Key> differentOf(PhotoInfo p1, PhotoInfo p2) {
         List<Key> diff = new ArrayList<>();
         if(!equals(p1.getOrientation(),p2.getOrientation())) diff.add(Key.ORIENTATION);
@@ -259,7 +268,7 @@ public class ArchiveUtils {
                 target = new File(targetDir, pi.getFileName());
                 Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
 
     }
     private static int sync2List(List<PhotoInfo> list1, List<PhotoInfo> list2, String rootPath) {
@@ -345,7 +354,7 @@ public class ArchiveUtils {
                     modificationList.add(new Modification(Modification.Exif,
                             thumbPath.substring(root.length() + 1), params));
                 }
-            } catch (Exception e){}
+            } catch (Exception e){ Util.printStackTrace(e);}
 
         }
         if (!modificationList.isEmpty()) {

@@ -19,7 +19,9 @@ import java.util.Arrays;
 
 @SpringBootApplication
 public class PhotoArchiveApplication {
+    public static boolean ideMode = false;
     public static void main(String[] args) {
+        ideMode = "file".equals(PhotoArchiveApplication.class.getResource("").getProtocol());
         if (args!=null && args.length>0) {
             if (args[0].equals("-a") || args.equals("--archive")) {
                 if (!ArchiveManager.archive())  return;
@@ -82,7 +84,7 @@ public class PhotoArchiveApplication {
         int pid = getProcessID(log);
         try {
             FileUtil.writeToFile(new File(SpringContextUtil.getProjectHomeDirection(),"pid.log"),String.valueOf(pid));
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder(clazz);
         appBuilder.properties("file.encoding=UTF-8");
         String myPropertyFile = additionalPropertyFile(customerProperties == null ? "iotequ" : customerProperties);

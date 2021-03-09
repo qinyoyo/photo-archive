@@ -2,11 +2,14 @@ package qinyoyo.photoinfo.archive;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jsoup.nodes.Document;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
+import qinyoyo.utils.StepHtmlUtil;
+import qinyoyo.utils.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -274,6 +277,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             lastModified = file.lastModified();
         }
     }
+
     public void setFile(String rootPath, File file) throws Exception {
         String dir = file.getParentFile().getCanonicalPath();
         if (!dir.startsWith(rootPath)) throw new RuntimeException(rootPath + " 不包含 " + file.getAbsolutePath());
@@ -286,7 +290,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             String subTitle = subFolder.substring(0,subFolder.length()-4);
             int pos = subTitle.lastIndexOf(File.separator);
             setSubTitle(pos>=0 ? subTitle.substring(pos+1) : subTitle);
-            System.out.println("    处理游记 : " + getSubTitle());
+            ArchiveUtils.formatStepHtml(file);
         }
     }
     // 不读取exif信息，便于快速读取
@@ -403,7 +407,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                 else if (k.equals(Key.getName(Key.SUBJECT_CODE))) {
                     subjectCode = s;
                 }
-            } catch (Exception e) {}
+            } catch (Exception e){ Util.printStackTrace(e);}
         }
     }
 
@@ -547,14 +551,13 @@ public class PhotoInfo implements Serializable,Cloneable {
                 getFileProperties(new File(imgPath));
                 return true;
             }
-        } catch (Exception e) {
-        }
+        } catch (Exception e){ Util.printStackTrace(e);}
         return false;
     }
     public boolean delete(String rootPath) {
         try {
             new File(fullThumbPath(rootPath)).delete();
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
         return (new File(fullPath(rootPath)).delete());
     }
 

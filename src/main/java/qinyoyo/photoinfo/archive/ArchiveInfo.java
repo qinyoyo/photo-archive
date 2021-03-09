@@ -11,6 +11,7 @@ import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.ImageUtil;
+import qinyoyo.utils.Util;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -85,8 +86,7 @@ public class ArchiveInfo {
                         return;
                     }
                     ArchiveUtils.FFMPEG = new File(input, "ffmpeg").getCanonicalPath();
-                } catch (IOException ex) {
-                }
+                } catch (IOException ex){ Util.printStackTrace(ex);}
             }
         }
     }
@@ -179,7 +179,7 @@ public class ArchiveInfo {
                 });
                 System.out.println("成功扫描文件数: "+list.size());
             }
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
     }
 
     /**
@@ -260,8 +260,7 @@ public class ArchiveInfo {
                                 count++;
                             }
 	                    } else System.out.println("    忽略文件 " + file);
-	                } catch (Exception e1) {
-	                }
+	                } catch (Exception e1){ Util.printStackTrace(e1);}
             	}
             }
         }
@@ -285,12 +284,14 @@ public class ArchiveInfo {
             }
         }
     }
-    public void seekPhotoInfo() {
+    private void seekPhotoInfo() {
         File dir = new File(path);
         infos = new ArrayList<>();
         seekPhotoInfosInFolder(dir, infos);
+        sortInfos();
+        saveInfos();
     }
-    public void readInfos() {
+    private void readInfos() {
         File af = new File(path, ArchiveUtils.ARCHIVE_FILE);
         System.out.println("从 "+af.getAbsolutePath()+" 读取数据");
         String json = FileUtil.getFromFile(af,"UTF-8");
@@ -305,7 +306,7 @@ public class ArchiveInfo {
                 readFromFile = true;
                 return;
             }
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
         seekPhotoInfo();
     }
 
@@ -348,8 +349,7 @@ public class ArchiveInfo {
                         // "-s", size,
                         thumbPath);
             }
-        } catch (IOException e) {
-        }
+        } catch (IOException e){ Util.printStackTrace(e);}
     }
     public void createThumbFiles(String subFolder) {
         List<PhotoInfo> list = subFolderInfos(subFolder);
@@ -448,7 +448,7 @@ public class ArchiveInfo {
                     String fullP = path + File.separator + ArchiveUtils.THUMB + target.getCanonicalPath().substring(path.length());
                     File targetThumb = new File(fullP);
                     Files.move(sourceThumb.toPath(), targetThumb.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception e) {}
+                } catch (Exception e){ Util.printStackTrace(e);}
             }
             int index1 = path.equals(sourceRootPath) ? infos.indexOf(pi) : -1;
             int index2 = indexOf(target);
@@ -539,8 +539,7 @@ public class ArchiveInfo {
                 boolean same = false;
                 try {
                     same = pii.sameAs(pij);
-                } catch (Exception e) {
-                }
+                } catch (Exception e){ Util.printStackTrace(e);}
                 if (same) {
                     rm.add(pii);
                     sameAs.add(pij);

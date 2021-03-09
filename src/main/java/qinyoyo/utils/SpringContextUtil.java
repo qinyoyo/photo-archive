@@ -52,7 +52,7 @@ public class SpringContextUtil implements ApplicationContextAware {
                 File hd = new File(path).getParentFile().getParentFile();
                 try {
                     setProjectHomeDirection(hd.getCanonicalPath());
-                } catch (Exception e) {}
+                } catch (Exception e){ Util.printStackTrace(e);}
             } else {
                 setProjectHomeDirection(FileUtil.getPath(null));
             }

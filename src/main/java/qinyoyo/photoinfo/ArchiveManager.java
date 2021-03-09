@@ -53,6 +53,7 @@ public class ArchiveManager {
         if (archived==null) return false;
         boolean shutdown = false;
         String rootEndWithSeparator = archived.getPath()+File.separator;
+        final String rootPath = archived.getPath();
         while (true) {
             boolean done = false;
             String path = "";
@@ -64,6 +65,7 @@ public class ArchiveManager {
                             "5 将一个目录合并入归档\n" +
                             "6 重新命名目录文件\n" +
                             "7 删除空目录\n" +
+                            "8 重新格式化游记文件\n" +
                             "s 启动浏览服务\n" +
                             "0 下一个操作之后关机\n" +
                             "q 退出\n请选择一个操作", "");
@@ -172,18 +174,22 @@ public class ArchiveManager {
                                 String name1 = pi.getFileName();
                                 if (name1.equals(name0)) System.out.println(name0 + " 没有重命名");
                                 else System.out.println(name0 + " 重命名为 " + name1);
-                            } catch (Exception e) {
-                            }
+                            } catch (Exception e){ Util.printStackTrace(e);}
                         }
                         afterChanged(archived);
                         done = true;
                     }
                     break;
                 case "7":
-                    FileUtil.removeEmptyFolder(new File(archived.getPath()));
+                    FileUtil.removeEmptyFolder(new File(rootPath));
                     done = true;
                     break;
-
+                case "8":
+                    archived.getInfos().stream().filter(p->p.getMimeType()!=null && p.getMimeType().contains("html")).forEach(p->{
+                        ArchiveUtils.formatStepHtml(new File(p.fullPath(rootPath)));
+                    });
+                    done = true;
+                    break;
                 default:
                     System.out.println("错误的选择！");
             }

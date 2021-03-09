@@ -39,14 +39,14 @@ public class FileUtil {
             }
             return sb.toString();
         } catch (IOException e) {
-            e.printStackTrace();
+            Util.printStackTrace(e);
             return null;
         } finally {
             try {
                 if (in != null) in.close();
                 if (r != null) r.close();
                 if (s != null) s.close();
-            } catch (IOException e) {}
+            } catch (IOException e){ Util.printStackTrace(e);}
         }
     }
 
@@ -56,7 +56,7 @@ public class FileUtil {
             Resource resource = loader.getResource(url);
             return getFromFile(resource.getFile(),"UTF-8");
         } catch (IOException e) {
-            e.printStackTrace();
+            Util.printStackTrace(e);
             return null;
         }
     }
@@ -78,13 +78,13 @@ public class FileUtil {
             w.close();
             s.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            Util.printStackTrace(e);
         } finally {
             try {
                 if (pw != null) pw.close();
                 if (w != null) w.close();
                 if (s != null) s.close();
-            } catch (IOException e) {}
+            } catch (IOException e){ Util.printStackTrace(e);}
         }
     }
 
@@ -99,7 +99,7 @@ public class FileUtil {
             else s = s.trim() + "\r\n" + string;
             writeToFile(file, s, charset);
         } catch (Exception e) {
-            e.printStackTrace();
+            Util.printStackTrace(e);
         }
     }
 
@@ -175,7 +175,7 @@ public class FileUtil {
             removeEmptyFolder(source.toFile());
             removeEmptyFolder(target.toFile());
         } catch (IOException e) {
-            e.printStackTrace();
+            Util.printStackTrace(e);
         }
     }
 }

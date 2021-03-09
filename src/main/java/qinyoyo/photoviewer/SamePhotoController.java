@@ -10,6 +10,7 @@ import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.FolderInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.utils.FileUtil;
+import qinyoyo.utils.Util;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -79,7 +80,7 @@ public class SamePhotoController {
                 if (fp.indexOf(rootPath) == 0) {
                     return new PhotoInfo(rootPath, file).delete(rootPath);
                 } else return file.delete();
-            } catch (Exception e) {}
+            } catch (Exception e){ Util.printStackTrace(e);}
         }
         return false;
     }
@@ -96,7 +97,7 @@ public class SamePhotoController {
                 else if (file1.length() <= file2.length()) return deleteFile(file1);
                 else return deleteFile(file2);
             }
-        }catch (Exception e) {}
+        }catch (Exception e){ Util.printStackTrace(e);}
         return false;
     }
 
@@ -132,8 +133,7 @@ public class SamePhotoController {
                 if (fn.startsWith(ArchiveUtils.DELETED+File.separator)) {
                     try {
                         Files.move(new File(rootPath, fn).toPath(),new File(rootPath, fn.substring(8)).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                    }
+                    } catch (IOException e){ Util.printStackTrace(e);}
                 }
             }
             try {

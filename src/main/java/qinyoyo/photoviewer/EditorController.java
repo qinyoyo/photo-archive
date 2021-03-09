@@ -22,6 +22,7 @@ import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.StepHtmlUtil;
+import qinyoyo.utils.Util;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,7 +52,10 @@ public class EditorController implements ApplicationRunner {
         try {
             doc = StepHtmlUtil.formattedStepHtml(new File(rootPath,path),
                     new Element("link").attr("rel","stylesheet")
-                            .attr("href","/static/css/pv.css"));
+                            .attr("href","/static/css/pv.css"),
+                    new Element("script").attr("type","text/javascript")
+                            .attr("src","/static/js/editor.js")
+                    );
         } catch (IOException e) {
             e.printStackTrace();
             model.addAttribute("message",path + " 打开失败");
@@ -128,7 +132,7 @@ public class EditorController implements ApplicationRunner {
                         + new File(source).getCanonicalPath().substring(pvController.getRootPath().length());
                 new File(target).getParentFile().mkdirs();
                 Modification.makeLink(source, target);
-            } catch (Exception e1){}
+            } catch (Exception e1){ Util.printStackTrace(e1);}
             return "ok";
         } catch (Exception e) {
             return e.getMessage();
@@ -149,9 +153,7 @@ public class EditorController implements ApplicationRunner {
                 File recFile = new File(src);
                 if (!recFile.exists()) scanFile(recFile);
             }
-        } catch (Exception e) {
-
-        }
+        } catch (Exception e){ Util.printStackTrace(e);}
     }
     private void scanFile(File srcFile) {
         try {
@@ -197,23 +199,28 @@ public class EditorController implements ApplicationRunner {
         return new String(bos.toByteArray(),"utf-8");
     }
 
-    static final String NEW_STEP_BODY = "<body>\n" +
-            "    <div>\n" +
-            "        <h2 style=\"text-align: center;\"> <u>TITLE</u> </h2>\n" +
-            "        <div>输入游记内容</div>\n" +
-            "    </div>\n" +
-            "</body>";
+    static final String NEW_STEP_HTML = "<!doctype html>\n" +
+            "<html>\n" +
+            "<head>\n" +
+            "  <title>TITLE</title>\n"+
+            "</head>\n"+
+            "<body>\n" +
+            "  <div>\n" +
+            "    <h2 style=\"text-align: center;\"> <u>TITLE</u> </h2>\n" +
+            "      <div>输入游记内容</div>\n" +
+            "  </div>\n" +
+            "</body>\n</html>";
     public void createHtmlFile(String rootPath, String path, String newStep, ArchiveInfo archiveInfo) {
         try {
             File dir = new File(new File(rootPath, path), newStep+".web");
-            if (dir.mkdirs()) {
-                Document doc = new Document(NEW_STEP_BODY.replace("TITLE",newStep));
+            if (!new File(dir,"index.html").exists()) {
+                dir.mkdirs();
+                Document doc = Jsoup.parse(NEW_STEP_HTML.replaceAll("TITLE", newStep));
                 doc = StepHtmlUtil.formattedStepHtml(doc);
-                doc.title(newStep);
-                FileUtil.writeToFile(new File(dir,"index.html"),StepHtmlUtil.htmlString(doc),"utf-8");
-                archiveInfo.rescanFile(new File(dir,"index.html"));
+                FileUtil.writeToFile(new File(dir, "index.html"), StepHtmlUtil.htmlString(doc), "utf-8");
+                archiveInfo.rescanFile(new File(dir, "index.html"));
             }
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
     }
     @Override
     public void run(ApplicationArguments args) throws Exception {

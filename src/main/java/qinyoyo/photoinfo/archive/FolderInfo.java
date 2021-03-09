@@ -6,6 +6,7 @@ import lombok.Setter;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
+import qinyoyo.utils.Util;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -159,8 +160,7 @@ public class FolderInfo {
 						yfi.setPriority(2000);
 						list.add(yfi);
 					}
-				} catch (Exception e) {
-				}
+				} catch (Exception e){ Util.printStackTrace(e);}
 			}
 			if (ff.length<2) continue;
 			if (fi==null || !fiPath.toLowerCase().equals((ff[0]+"\\"+ff[1]).toLowerCase())) {

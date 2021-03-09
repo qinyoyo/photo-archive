@@ -1,6 +1,7 @@
 package qinyoyo.photoinfo.exiftool;
 
 import javafx.util.Pair;
+import qinyoyo.utils.Util;
 
 import java.io.*;
 import java.util.*;
@@ -40,8 +41,7 @@ public class ExifTool {
                     Scanner in = new Scanner(System.in);
                     String input = in.nextLine().trim();
                     EXIFTOOL = new File(input, "exiftool").getCanonicalPath();
-                } catch (IOException ex) {
-                }
+                } catch (IOException ex){ Util.printStackTrace(ex);}
             }
         }
         return INSTALLED_VERSION;
@@ -125,7 +125,7 @@ public class ExifTool {
             for (String msg : msgList) {
                 if (msg.contains("1") && msg.contains("file") && msg.contains("updated")) return true;
             }
-        } catch (Exception e) {}
+        } catch (Exception e){ Util.printStackTrace(e);}
         return false;
     }
     private Map<String,Map<String, Object>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
