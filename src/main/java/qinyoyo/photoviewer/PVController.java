@@ -412,34 +412,29 @@ public class PVController implements ApplicationRunner , ErrorController {
                             p.getMimeType()!=null && p.getMimeType().contains(mime) &&
                             folder.equals(p.getSubFolder().lastIndexOf(File.separator) >=0 ? p.getSubFolder().substring(0,p.getSubFolder().lastIndexOf(File.separator)) : "")
                     ).collect(Collectors.toList());
+            List<PhotoInfo> list2 = ArchiveUtils.stepUnderFolder(rootPath,folder,false);
             if (list1!=null && list1.size()>0) {
-                if (list!=null) {
-                    list.addAll(list1);
-                    return list;
-                }   else return list1;
-            } else {
-                // 子目录
-                File[] subDirs = new File(rootPath,folder).listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File pathname) {
-                        if (pathname.isDirectory() && pathname.getName().endsWith(".web")) {
-                            return new File(pathname,"index.html").exists();
-                        } else return false;
-                    }
-                });
-                if (subDirs!=null && subDirs.length>0) {
-                    if (list==null) list = new ArrayList<>();
-                    for (File d: subDirs) {
-                        PhotoInfo pi = new PhotoInfo(rootPath,new File(d,"index.html"));
-                        pi.setMimeType("text/html");
-                        pi.setSubTitle(d.getName().substring(0,d.getName().length()-4));
-                        list.add(pi);
-                        archiveInfo.getInfos().add(pi);
-                        afterChanged();
+                if (list == null) list = new ArrayList<>();
+                list.addAll(list1);
+                if (list2 != null && list2.size() > 0) {
+                    for (Iterator iterator = list2.iterator(); iterator.hasNext(); ) {
+                        PhotoInfo p2 = (PhotoInfo) iterator.next();
+                        for (PhotoInfo p1 : list1) {
+                            if (p1.getSubFolder().equals(p2.getSubFolder()) && p1.getFileName().equals(p2.getFileName())) {
+                                iterator.remove();
+                                break;
+                            }
+                        }
                     }
                 }
-                return list;
             }
+            if (list2!=null && list2.size()>0){
+                if (list==null) list=new ArrayList<>();
+                list.addAll(list2);
+                archiveInfo.getInfos().addAll(list2);
+                afterChanged();
+            }
+            return list;
         } else return list;
     }
 

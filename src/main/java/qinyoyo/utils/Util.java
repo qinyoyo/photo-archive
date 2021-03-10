@@ -127,8 +127,8 @@ public class Util {
             str = (s > 0 ? str.substring(0, s) : "") + newText + (e < str.length() ? str.substring(e) : "");
         }
     }
-    public static String editCss() {
-        return FileUtil.getFromResource("/static/css/editor.css");
+    public static String stepHtmlCss() {
+        return FileUtil.getFromResource("/static/css/step.css");
     }
     public static String lazyLoadScript() {
         return FileUtil.getFromResource("/static/js/image_lazy_load.js");

@@ -217,6 +217,36 @@ function adjustSize(img) {
         else RE.insertHTML(html);
     }
 
+    RE.gpsHref = function(longitude,latitude, poi, dt) {
+        if (longitude && latitude) {
+            let html = '<div class="center-block">'
+            if (!poi) poi='poi'
+            if (dt && poi.indexOf(dt)===0) poi=poi.substring(dt.length)
+            html += (dt?'<span>' + dt + '</span>' : '') +'<a href="'
+                + "https://uri.amap.com/marker?src=mySteps" + "&name=" + encodeURI(poi)
+                + "&position=" + longitude +"," + latitude
+                + "&coordinate=wgs84"
+                + '">' + poi + '</a><br>'
+            html += '</div>'
+            return html
+        } else if (poi || dt) {
+            let html = '<div class="center-block">'
+            html += '<span>' + (dt?dt:'') + (poi?poi:'') + '</span>'
+            html += '</div>'
+            return html
+        } else return ''
+    }
+
+    RE.insertImageWithGpsInfo = function(url, alt, classes, longitude,latitude, poi, dt) {
+        let html = RE.insertImageW(url, alt, 700, classes, true)
+        let label =  RE.gpsHref(longitude,latitude, poi, dt)
+        if (label) {
+            html += (label + '<div></div>')
+            RE.insertHTML(html)
+            RE.setJustifyLeft()
+        }  else RE.insertHTML(html);
+    }
+
     RE.insertVideoW = function(url, width) {
         if (!url || url.length==0) return
         let html
@@ -567,45 +597,21 @@ function adjustSize(img) {
                                     alt.push(img.getAttribute("alt"))
                                     imgs.push(img)
                                 })
-                                let fullHtml = RE.insertImageW(url,alt,720, 'lazy-load', true)
+                                let dt = '', poi = '', longitude ='', latitude= ''
                                 if (imgs.length>0) {
-                                    let detail = ''
                                     imgs.forEach(function(img){
-                                        let gpsfound = false
-                                        let html = '<div class="center-block">'
-                                        let dt = img.getAttribute('data-datetimeoriginal')
-                                        let poi = img.getAttribute('title')
+                                        dt = img.getAttribute('data-datetimeoriginal')
+                                        poi = img.getAttribute('title')
                                         if (poi) {
                                             let pos = poi.indexOf('\ufeff')
                                             if (pos>=0) poi = poi.substring(0,pos)
                                         }
-                                        let longitude = img.getAttribute('data-gpslongitude')
-                                        let latitude = img.getAttribute('data-gpslatitude')
-                                        if (longitude && latitude) {
-                                            gpsfound = true
-                                            if (!poi) poi='poi'
-                                            else if (dt && poi.indexOf(dt)==0) poi=poi.substring(dt.length)
-                                            html += (dt?'<span>' + dt + '</span>' : '') +'<a href="'
-                                                + "https://uri.amap.com/marker?src=mySteps" + "&name=" + poi
-                                                + "&position=" + longitude +"," + latitude
-                                                + "&coordinate=wgs84"
-                                                + '">' + poi + '</a><br>'
-                                        } else if (poi) {
-                                            html += '<span>' + poi + '</span>'
-                                        } else if (dt) {
-                                            html += '<span>' + dt + '</span>'
-                                        }
-                                        html += '</div>'
-                                        detail = html
-                                        if (gpsfound) return
+                                        longitude = img.getAttribute('data-gpslongitude')
+                                        latitude = img.getAttribute('data-gpslatitude')
+                                        if (longitude && latitude)  return
                                     })
-                                    fullHtml += detail
                                 }
-                                if (fullHtml) {
-                                    fullHtml += "<div></div>"
-                                    RE.insertHTML(fullHtml)
-                                    RE.setJustifyLeft()
-                                }
+                                RE.insertImageWithGpsInfo(url, alt, 'lazy-load', longitude,latitude, poi, dt)
                             })
                         }
                         break;

@@ -11,7 +11,7 @@
                   const H = window.innerHeight
                   needLoad.forEach(function (img) {
                       const rect = img.getBoundingClientRect()
-                      if (rect.top < 2*H && rect.bottom >= -H) { // 加载与预加载
+                      if (rect.top < H+200 && rect.bottom >= -200) {
                           img.setAttribute('src', img.getAttribute('data-src'))
                       } else {
                           notLoad.push(img)

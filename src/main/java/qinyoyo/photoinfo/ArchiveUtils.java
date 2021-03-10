@@ -223,6 +223,7 @@ public class ArchiveUtils {
                 if (doc!=null) FileUtil.writeToFile(file,StepHtmlUtil.htmlString(doc),"utf-8");
                 System.out.println("    格式化游记 : " + file.getPath());
             } catch (IOException e) {
+                System.out.println("    格式化失败(" + e.getMessage()+"): " + file.getPath());
                 Util.printStackTrace(e);
             }
         }
@@ -523,6 +524,34 @@ public class ArchiveUtils {
             System.out.println("Now :"+DateUtil.date2String(new Date()));
             System.out.println("归档完成");
         }
+    }
+
+    public static List<PhotoInfo> stepUnderFolder(String rootPath, String folder, boolean includeSubFolder) {
+        List<PhotoInfo> list = new ArrayList<>();
+        File[] subDirs = new File(rootPath,folder).listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                if (pathname.isDirectory() && pathname.getName().endsWith(".web")) {
+                    return new File(pathname,"index.html").exists();
+                } else if (includeSubFolder) {
+                    return pathname.isDirectory() && !pathname.getName().endsWith(".web") && !pathname.getName().startsWith(".");
+                } else return false;
+            }
+        });
+        if (subDirs!=null && subDirs.length>0) {
+            for (File d: subDirs) {
+                if (d.getName().endsWith(".web")) {
+                    PhotoInfo pi = new PhotoInfo(rootPath, new File(d, "index.html"));
+                    pi.setMimeType("text/html");
+                    pi.setSubTitle(d.getName().substring(0, d.getName().length() - 4));
+                    list.add(pi);
+                } else {
+                    List<PhotoInfo> subList = stepUnderFolder(rootPath, folder + (folder.isEmpty()?"":File.separator) + d.getName(), includeSubFolder);
+                    if (subList!=null && subList.size()>0) list.addAll(subList);
+                }
+            }
+        }
+        return list;
     }
 
 }

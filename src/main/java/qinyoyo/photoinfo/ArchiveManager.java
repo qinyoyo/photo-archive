@@ -9,9 +9,7 @@ import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.Util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class ArchiveManager {
 
@@ -184,9 +182,27 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "8":
+                    // 已归档的 html 文件
+                    Set<String> archivedSteps = new HashSet<String>();
                     archived.getInfos().stream().filter(p->p.getMimeType()!=null && p.getMimeType().contains("html")).forEach(p->{
-                        ArchiveUtils.formatStepHtml(new File(p.fullPath(rootPath)));
+                        String stepPath = p.fullPath(rootPath);
+                        ArchiveUtils.formatStepHtml(new File(stepPath));
+                        archivedSteps.add(stepPath);
                     });
+                    // 未归档的 html 文件归档
+                    List<PhotoInfo> stepList = ArchiveUtils.stepUnderFolder(rootPath,"",true);
+                    if (archivedSteps.size()>0 && stepList!=null && stepList.size()>0){
+                        for (Iterator iterator = stepList.iterator(); iterator.hasNext(); ) {
+                            if (archivedSteps.contains(((PhotoInfo) iterator.next()).fullPath(rootPath))) iterator.remove();
+                        }
+                    }
+                    if (stepList!=null && stepList.size()>0) {
+                        stepList.forEach(p->{
+                            ArchiveUtils.formatStepHtml(new File(p.fullPath(rootPath)));
+                        });
+                        archived.getInfos().addAll(stepList);
+                        afterChanged(archived);
+                    }
                     done = true;
                     break;
                 default:

@@ -31,7 +31,7 @@ public class StepHtmlUtil {
         else if (e.is("link") && e.hasAttr("href") &&
                 (e.attr("href").endsWith("/font-awesome.min.css") ||
                 e.attr("href").endsWith("/font-awesome.css") ||
-                e.attr("href").endsWith("/editor.css") ||
+                e.attr("href").endsWith("/step.css") ||
                 e.attr("href").endsWith("/transform_image.css"))) return true;
         else if (e.is("script") && e.hasAttr("src") &&
                 (e.attr("src").endsWith("/ajax.js") ||
@@ -81,9 +81,9 @@ public class StepHtmlUtil {
             e.appendTo(head);
         }
 
-        String style = Util.editCss();
-        if (style==null) style="";
-        else style = "\n      " + STYLE_BEGIN + "\n" + style + "\n      " + STYLE_END + "\n";
+        String style = Util.stepHtmlCss();
+        if (style==null) throw new FileNotFoundException("css标准文件读取失败");
+        style = "\n      " + STYLE_BEGIN + "\n" + style + "\n      " + STYLE_END + "\n";
         for (Element e : extraElements.stream().filter(e->e.is("style")).collect(Collectors.toList())) {
             String html = e.html();
             if (html!=null && !html.isEmpty()) style = style + html + "\n";
@@ -95,7 +95,7 @@ public class StepHtmlUtil {
         }
 
         String script = Util.lazyLoadScript();
-        if (script==null) script="";
+        if (script==null) throw new FileNotFoundException("lazy-load脚本文件读取失败");
         script = "\n      " + SCRIPT_BEGIN + "\n" + script + "\n      " + SCRIPT_END + "\n";
         for (Element e : extraElements.stream().filter(e->e.is("script") && !e.hasAttr("src")).collect(Collectors.toList())) {
             String html = e.html();
@@ -114,12 +114,13 @@ public class StepHtmlUtil {
         if (body!=null) {
             body.removeAttr("onload");
             body.removeAttr("contenteditable");
-            Elements imgs = body.select("img.lazy-load");
+            Elements imgs = body.select("img");
             if (imgs != null) {
                 for (Element e : imgs) {
                     if (e.hasAttr("src")) {
                         e.attr("data-src", e.attr("src"));
                         e.removeAttr("src");
+                        e.addClass("lazy-load");
                     }
                 }
             }
