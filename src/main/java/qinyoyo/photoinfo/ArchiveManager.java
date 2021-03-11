@@ -23,9 +23,8 @@ public class ArchiveManager {
         }
         return input;
     }
-    public static String inputSubFolder(String rootEndWithSeparator) {
-        String path = ArchiveUtils.formatterSubFolder(getInputString("归档目录 "+rootEndWithSeparator+" 下的一个子目录(空表示改归档目录)：", ""));
-        if (path.startsWith(rootEndWithSeparator)) path = path.substring(rootEndWithSeparator.length());
+    public static String inputSubFolder(String rootPath) {
+        String path = ArchiveUtils.formatterSubFolder(getInputString("归档目录 "+rootPath+" 下的一个子目录(空表示改归档目录)：", ""),rootPath);
         return path;
     }
     public static void afterChanged(ArchiveInfo archiveInfo) {
@@ -35,7 +34,7 @@ public class ArchiveManager {
     public static boolean archive() {
         File dir=null;
         String rootInput = "E:\\Photo\\Archived";
-        boolean clear=false, same=false,other=false;
+        boolean clear=false, same=false,other=false, removeNotExist=true;
         while(dir==null || !dir.exists() || !dir.isDirectory()) {
             rootInput = getInputString("输入已经归档的目录路径", "E:\\Photo\\Archived");
             if (rootInput.isEmpty() || rootInput.equals("-")) break;
@@ -44,12 +43,15 @@ public class ArchiveManager {
                 clear = Util.boolValue(getInputString("是否重新完全扫描", "no"));
                 same = Util.boolValue(getInputString("将相同文件移到.delete目录", "no"));
                 other = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
+                removeNotExist = Util.boolValue(getInputString("删除不存在的项目", "yes"));
             }
         }
         ArchiveInfo archived=ArchiveUtils.getArchiveInfo(rootInput, clear, same,other);
         if (archived==null) return false;
+        if (removeNotExist && archived.removeNotExistInfo()>0) {
+            afterChanged(archived);
+        }
         boolean shutdown = false;
-        String rootEndWithSeparator = archived.getPath()+File.separator;
         final String rootPath = archived.getPath();
         while (true) {
             boolean done = false;
@@ -73,12 +75,12 @@ public class ArchiveManager {
                     shutdown = true;
                     break;
                 case "1":
-                    path = inputSubFolder(rootEndWithSeparator);
+                    path = inputSubFolder(rootPath);
                     archived.createThumbFiles(path);
                     done = true;
                     break;
                 case "2":
-                    path = inputSubFolder(rootEndWithSeparator);;
+                    path = inputSubFolder(rootPath);;
                     ArchiveUtils.syncThumbOrientation(archived, path);
                     done = true;
                     break;
@@ -96,7 +98,7 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "4":
-                    path = inputSubFolder(rootEndWithSeparator);;
+                    path = inputSubFolder(rootPath);;
                     if (path != null && !path.isEmpty()) {
                         if (Modification.scanAction(path, archived))
                             Modification.save(new Modification(Modification.Scan, path, null), archived.getPath());
@@ -130,7 +132,7 @@ public class ArchiveManager {
                     }
                     break;
                 case "6":
-                    path = inputSubFolder(rootEndWithSeparator);
+                    path = inputSubFolder(rootPath);
                     String pat = "";
                     while (pat==null || pat.isEmpty()) {
                         pat = getInputString("文件名格式(输入空显示提示)", PhotoInfo.RENAME_PATTERN);

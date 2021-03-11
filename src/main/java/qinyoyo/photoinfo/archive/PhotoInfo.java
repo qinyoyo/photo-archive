@@ -75,6 +75,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             return (v>=0.0?"N":"S")+r;
         }  return (v>=0.0?"E":"W")+r;
     }
+    // this,与 currentPath均为 归档目录下的path，不包含归档目录名，为相对目录
     public String urlPath(String currentPath) {
         String sub = getSubFolder();
         if (sub == null || sub.isEmpty()) {

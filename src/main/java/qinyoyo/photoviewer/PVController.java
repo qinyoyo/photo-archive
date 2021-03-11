@@ -310,7 +310,7 @@ public class PVController implements ApplicationRunner , ErrorController {
     @ResponseBody
     @RequestMapping(value = "range")
     public String range(String path, String value, String type, String start,String end, Boolean includeSubFolder) {
-        final String subPath=ArchiveUtils.formatterSubFolder(path);
+        final String subPath=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         if (type==null) return "error";
         Optional<Key> k = Key.findKeyWithName(type);
         if (k.isPresent()) {
@@ -464,7 +464,7 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
         Map<String,Object> model = new HashMap<>();
-        path=ArchiveUtils.formatterSubFolder(path);
+        path=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         model.put("separator",File.separator);
         if (path!=null && !path.isEmpty()) {
             model.put("pathNames",path.split("\\\\|/"));

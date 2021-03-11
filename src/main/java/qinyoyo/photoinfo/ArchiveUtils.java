@@ -254,9 +254,10 @@ public class ArchiveUtils {
                 Document doc = StepHtmlUtil.formattedStepHtml(file);
                 if (doc!=null) {
                     if (archiveInfo!=null) {
-                        String dir = file.getParentFile().getCanonicalPath();
-                        Elements resource = doc.select("img,video,audio");
+                        String currentPath = file.getParentFile().getCanonicalPath();
                         String rootPath = archiveInfo.getPath();
+                        Elements resource = doc.select("img,video,audio");
+
                         resource.forEach(e -> {
                             String attr = "data-src";
                             String src = e.attr(attr);
@@ -268,14 +269,14 @@ public class ArchiveUtils {
                                 try {
                                     src = URLDecoder.decode(src, "utf-8");
                                     if (src.startsWith("/")) src = rootPath + src;
-                                    else src = dir + "/" + src;
+                                    else src = currentPath + "/" + src;
                                     File recFile = new File(src);
                                     if (!recFile.exists()) {
-                                        String foundResource = scanResourceUrl(archiveInfo, recFile, dir);
+                                        String foundResource = scanResourceUrl(archiveInfo, recFile, formatterSubFolder(currentPath,rootPath));
                                         if (foundResource == null) {
                                             System.out.println("资源找不到 :" + src);
                                         } else
-                                            e.attr(attr, URLEncoder.encode(foundResource, "utf-8"));
+                                            e.attr(attr, foundResource);
                                     }
                                 } catch (Exception ee) {
                                     Util.printStackTrace(ee);
@@ -477,9 +478,14 @@ public class ArchiveUtils {
             }
         }
     }
-    public static String formatterSubFolder(String path) {
+
+    public static String formatterSubFolder(String path,String rootPath) {
         if (path==null) return "";
         if (!File.separator.equals("/")) path = path.replace("/",File.separator);
+        if (rootPath!=null && !rootPath.isEmpty()) {
+            if (rootPath.equals(path)) return "";
+            else if (path.startsWith(rootPath+File.separator)) path = path.substring(rootPath.length()+1);
+        }
         if (path.startsWith(File.separator)) path=path.substring(1);
         else if (path.endsWith(File.separator)) path = path.substring(0,path.length()-1);
         return path;

@@ -10,6 +10,7 @@ import qinyoyo.photoinfo.ArchiveUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -21,10 +22,19 @@ public class FileUtil {
 
     public static String getFromFile(File file, String charset) {
         FileInputStream s = null;
+        try {
+            s = new FileInputStream(file);
+            return getFromStream(s,charset);
+        } catch (IOException e) {
+            Util.printStackTrace(e);
+            return null;
+        }
+    }
+
+    public static String getFromStream(InputStream s, String charset) {
         InputStreamReader r = null;
         BufferedReader in = null;
         try {
-            s = new FileInputStream(file);
             r = new InputStreamReader(s, charset);
             in = new BufferedReader(r);
             StringBuilder sb = new StringBuilder();
@@ -49,15 +59,20 @@ public class FileUtil {
             } catch (IOException e){ Util.printStackTrace(e);}
         }
     }
-
     public static String getFromResource(String url) {
         try {
             ResourceLoader loader = new DefaultResourceLoader();
             Resource resource = loader.getResource(url);
             return getFromFile(resource.getFile(),"UTF-8");
-        } catch (IOException e) {
-            Util.printStackTrace(e);
-            return null;
+        } catch (Exception e) {
+            try {
+                ClassLoader loader = FileUtil.class.getClassLoader();
+                InputStream stream = loader.getResourceAsStream(url);
+                return getFromStream(stream, "UTF-8");
+            } catch (Exception e1) {
+                Util.printStackTrace(e);
+                return null;
+            }
         }
     }
     public static void writeToFile(File file, String string) {

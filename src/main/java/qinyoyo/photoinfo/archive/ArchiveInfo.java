@@ -273,21 +273,26 @@ public class ArchiveInfo {
         seekPhotoInfo();
     }
 
-    public void removeNotExistInfo() {
+    public int removeNotExistInfo() {
+        int removed = 0;
         if (infos!=null) {
             Iterator<PhotoInfo> iterator = infos.iterator();
             while (iterator.hasNext()) {
                 PhotoInfo p = iterator.next();
-                if (!new File(p.fullPath(path)).exists()) iterator.remove();
+                if (!new File(p.fullPath(path)).exists()) {
+                    iterator.remove();
+                    removed ++;
+                }
             }
         }
+        return removed;
     }
     public void sortInfos() {
     	ArchiveUtils.defaultSort(infos);
     }
     public List<PhotoInfo> subFolderInfos(String subFolder) {
         if (subFolder==null || subFolder.isEmpty()) return infos;
-        final String standardFubFolder = ArchiveUtils.formatterSubFolder(subFolder);
+        final String standardFubFolder = ArchiveUtils.formatterSubFolder(subFolder, path);
         return infos.stream().filter(p->{
             String sub = p.getSubFolder();
             return standardFubFolder.equals(sub) || sub.startsWith(standardFubFolder+File.separator);

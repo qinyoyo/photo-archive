@@ -14,8 +14,8 @@ import static java.lang.Double.parseDouble;
 public class ExifTool {
     public  static final String RESULT = ":RESULT:";
     public  static final String ERROR = ":ERROR:";
-    public  static String EXIFTOOL = "exiftool";
-    public static String FFMPEG = "ffmpeg";
+    public  static String EXIFTOOL = "E:\\Photo\\exiftool.exe";
+    public static String FFMPEG = "E:\\Photo\\ffmpeg.exe";
     public  static String FFMPEG_VERSION = null;
     public  static Double INSTALLED_VERSION;
     private static ExifTool instance = null;
