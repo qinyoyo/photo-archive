@@ -1,6 +1,8 @@
 package qinyoyo.photoinfo;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import qinyoyo.photoinfo.archive.*;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.DateUtil;
@@ -9,11 +11,14 @@ import qinyoyo.utils.StepHtmlUtil;
 import qinyoyo.utils.Util;
 
 import java.io.*;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ArchiveUtils {
     public static final Key[] NEED_KEYS = new Key[]{
@@ -216,11 +221,70 @@ public class ArchiveUtils {
             add(Key.SUBJECT_CODE);
         }});
     }
-    public static void formatStepHtml(File file) {
+
+    /* 扫描添加html文件的资源引用文件 */
+    private static String scanResourceUrl(ArchiveInfo archiveInfo, File srcFile, String currentPath) {
+        try {
+            String rootPath=archiveInfo.getPath();
+            String name = srcFile.getName();
+            String dir = srcFile.getParentFile().getCanonicalPath();
+            List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p -> name.equals(p.getFileName())).collect(Collectors.toList());
+            if (list != null && list.size() > 0) {
+                int maxMatch = 0, position=0;
+                for (int i=0;i<list.size();i++) {
+                    int macher = 0;
+                    String path = new File(rootPath,list.get(i).getSubFolder()).getCanonicalPath();
+                    while (macher<path.length() && macher<dir.length() && path.charAt(macher)==dir.charAt(macher)) macher++;
+                    if (macher>maxMatch) {
+                        maxMatch = macher;
+                        position = i;
+                    }
+                }
+                return list.get(position).urlPath(currentPath);
+            } else System.out.println("Not found "+srcFile.getCanonicalPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void formatStepHtml(ArchiveInfo archiveInfo,File file) {
         if (file.exists() && !file.isDirectory() && (file.getName().toLowerCase().endsWith(".html") || file.getName().toLowerCase().endsWith(".htm"))) {
             try {
                 Document doc = StepHtmlUtil.formattedStepHtml(file);
-                if (doc!=null) FileUtil.writeToFile(file,StepHtmlUtil.htmlString(doc),"utf-8");
+                if (doc!=null) {
+                    if (archiveInfo!=null) {
+                        String dir = file.getParentFile().getCanonicalPath();
+                        Elements resource = doc.select("img,video,audio");
+                        String rootPath = archiveInfo.getPath();
+                        resource.forEach(e -> {
+                            String attr = "data-src";
+                            String src = e.attr(attr);
+                            if (src == null || src.isEmpty()) {
+                                attr = "src";
+                                src = e.attr(attr);
+                            }
+                            if (src != null && !src.isEmpty()) {
+                                try {
+                                    src = URLDecoder.decode(src, "utf-8");
+                                    if (src.startsWith("/")) src = rootPath + src;
+                                    else src = dir + "/" + src;
+                                    File recFile = new File(src);
+                                    if (!recFile.exists()) {
+                                        String foundResource = scanResourceUrl(archiveInfo, recFile, dir);
+                                        if (foundResource == null) {
+                                            System.out.println("资源找不到 :" + src);
+                                        } else
+                                            e.attr(attr, URLEncoder.encode(foundResource, "utf-8"));
+                                    }
+                                } catch (Exception ee) {
+                                    Util.printStackTrace(ee);
+                                }
+                            }
+                        });
+                    }
+                    FileUtil.writeToFile(file,StepHtmlUtil.htmlString(doc),"utf-8");
+                }
                 System.out.println("    格式化游记 : " + file.getPath());
             } catch (IOException e) {
                 System.out.println("    格式化失败(" + e.getMessage()+"): " + file.getPath());

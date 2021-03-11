@@ -41,7 +41,7 @@ public class EditorController implements ApplicationRunner {
     PVController pvController;
     private static final Configuration CONFIGURATION = new Configuration(Configuration.VERSION_2_3_22);
     @RequestMapping(value = "editor")
-    public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean scanResource) {
+    public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         if (path==null || path.isEmpty()) {
             model.addAttribute("message","请指定一个文件");
@@ -60,9 +60,6 @@ public class EditorController implements ApplicationRunner {
             e.printStackTrace();
             model.addAttribute("message",path + " 打开失败");
             return "message";
-        }
-        if (scanResource!=null && scanResource) {
-            scanImageForHtml(path);
         }
 
         Map<String,Object> attributes = new HashMap<>();
@@ -138,47 +135,7 @@ public class EditorController implements ApplicationRunner {
             return e.getMessage();
         }
     }
-    private void scanImageForHtml(String path) {
-        try {
-            String rootPath = pvController.getRootPath();
-            String dir = new File(rootPath, path).getParentFile().getCanonicalPath();
-            String html = FileUtil.getFromFile(new File(rootPath, path), "UTF8");
-            if (html == null) return;
-            Pattern p = Pattern.compile("\\<(img|video|audio).*?\\ssrc\\s*=\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
-            Matcher m = p.matcher(html);
-            while (m.find()) {
-                String src=m.group(2).trim();
-                if (src.startsWith("/")) src = rootPath+src;
-                else src = dir +"/" + src;
-                File recFile = new File(src);
-                if (!recFile.exists()) scanFile(recFile);
-            }
-        } catch (Exception e){ Util.printStackTrace(e);}
-    }
-    private void scanFile(File srcFile) {
-        try {
-            String rootPath = pvController.getRootPath();
-            ArchiveInfo archiveInfo = pvController.getArchiveInfo();
-            String name = srcFile.getName();
-            String dir = srcFile.getParentFile().getCanonicalPath();
-            List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p -> name.equals(p.getFileName())).collect(Collectors.toList());
-            if (list != null && list.size() > 0) {
-                int maxMatch = 0, position=0;
-                for (int i=0;i<list.size();i++) {
-                    int macher = 0;
-                    String path = new File(rootPath,list.get(i).getSubFolder()).getCanonicalPath();
-                    while (macher<path.length() && macher<dir.length() && path.charAt(macher)==dir.charAt(macher)) macher++;
-                    if (macher>maxMatch) {
-                        maxMatch = macher;
-                        position = i;
-                    }
-                }
-                Files.copy(new File(list.get(position).fullPath(rootPath)).toPath(), srcFile.toPath());
-            } else System.out.println("Not found "+srcFile.getCanonicalPath());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+
     void freeMarkerWriter(final String ftl, String filePath, Map<String, Object> attributes) throws Exception {
         Template template;
         template = CONFIGURATION.getTemplate(ftl);

@@ -290,7 +290,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             String subTitle = subFolder.substring(0,subFolder.length()-4);
             int pos = subTitle.lastIndexOf(File.separator);
             setSubTitle(pos>=0 ? subTitle.substring(pos+1) : subTitle);
-            ArchiveUtils.formatStepHtml(file);
+            ArchiveUtils.formatStepHtml(null,file);
         }
     }
     // 不读取exif信息，便于快速读取

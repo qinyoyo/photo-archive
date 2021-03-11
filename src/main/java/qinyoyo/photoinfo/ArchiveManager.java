@@ -33,20 +33,20 @@ public class ArchiveManager {
         archiveInfo.saveInfos();
     }
     public static boolean archive() {
-        ArchiveInfo archived=null;
         File dir=null;
+        String rootInput = "E:\\Photo\\Archived";
+        boolean clear=false, same=false,other=false;
         while(dir==null || !dir.exists() || !dir.isDirectory()) {
-            String input = getInputString("输入已经归档的目录路径", "E:\\Photo\\Archived");
-            if (input.isEmpty() || input.equals("-")) break;
-            dir = new File(input);
+            rootInput = getInputString("输入已经归档的目录路径", "E:\\Photo\\Archived");
+            if (rootInput.isEmpty() || rootInput.equals("-")) break;
+            dir = new File(rootInput);
             if (dir!=null && dir.exists() && dir.isDirectory()) {
-                boolean clear = Util.boolValue(getInputString("是否重新完全扫描", "no"));
-                boolean same = Util.boolValue(getInputString("将相同文件移到.delete目录", "no"));
-                boolean other = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
-                archived=ArchiveUtils.getArchiveInfo(input, clear, same,other);
+                clear = Util.boolValue(getInputString("是否重新完全扫描", "no"));
+                same = Util.boolValue(getInputString("将相同文件移到.delete目录", "no"));
+                other = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
             }
         }
-
+        ArchiveInfo archived=ArchiveUtils.getArchiveInfo(rootInput, clear, same,other);
         if (archived==null) return false;
         boolean shutdown = false;
         String rootEndWithSeparator = archived.getPath()+File.separator;
@@ -115,10 +115,10 @@ public class ArchiveManager {
                                 archived.addDirectory(new File(path));
                                 done = true;
                             } else {
-                                boolean clear = Util.boolValue(getInputString("是否重新完全扫描", "no"));
-                                boolean same = Util.boolValue(getInputString("将相同文件移到.delete目录", "yes"));
-                                boolean other = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
-                                ArchiveInfo camera = ArchiveUtils.getArchiveInfo(path, clear, same, other);
+                                boolean clear1 = Util.boolValue(getInputString("是否重新完全扫描", "no"));
+                                boolean same1 = Util.boolValue(getInputString("将相同文件移到.delete目录", "yes"));
+                                boolean other1 = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
+                                ArchiveInfo camera = ArchiveUtils.getArchiveInfo(path, clear1, same1, other1);
                                 if (camera!=null && camera.getInfos().size()>0) {
                                     System.out.println("删除归档文件夹已经存在的待归档文件...");
                                     camera.scanSameFilesWith(archived);
@@ -186,7 +186,7 @@ public class ArchiveManager {
                     Set<String> archivedSteps = new HashSet<String>();
                     archived.getInfos().stream().filter(p->p.getMimeType()!=null && p.getMimeType().contains("html")).forEach(p->{
                         String stepPath = p.fullPath(rootPath);
-                        ArchiveUtils.formatStepHtml(new File(stepPath));
+                        ArchiveUtils.formatStepHtml(archived, new File(stepPath));
                         archivedSteps.add(stepPath);
                     });
                     // 未归档的 html 文件归档
@@ -198,7 +198,7 @@ public class ArchiveManager {
                     }
                     if (stepList!=null && stepList.size()>0) {
                         stepList.forEach(p->{
-                            ArchiveUtils.formatStepHtml(new File(p.fullPath(rootPath)));
+                            ArchiveUtils.formatStepHtml(archived,new File(p.fullPath(rootPath)));
                         });
                         archived.getInfos().addAll(stepList);
                         afterChanged(archived);
