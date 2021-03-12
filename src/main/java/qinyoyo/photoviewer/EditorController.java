@@ -116,6 +116,9 @@ public class EditorController implements ApplicationRunner {
             Document doc = Jsoup.parse(new File(source),"UTF8");
             if (doc==null) return "文件错误";
             doc.body().html(body);
+            doc.select("img.lazy-load").forEach(img->{
+                if (img.hasAttr("data-src") && img.hasAttr("src")) img.removeAttr("src");
+            });
             doc=StepHtmlUtil.formattedStepHtml(doc);
             FileUtil.writeToFile(new File(source),StepHtmlUtil.htmlString(doc),"UTF8");
             try {
