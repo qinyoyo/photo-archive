@@ -223,7 +223,7 @@
         <#list htmls as h>
             <div class="folder-list__item">
                 <#if sessionOptions.htmlEditable>
-                <a href = "/editor?path=${fileUrl(h)}" style="padding-right: 8px;" ><i class="fa fa-edit" title="编辑游记"></i></a>
+                <a href = "/${h.subFolder?replace('\\','/')}/editor?html=${h.fileName}" style="padding-right: 8px;" ><i class="fa fa-edit" title="编辑游记"></i></a>
                 </#if>
                 <a href = "${fileUrl(h)}" class="html-index-${h?index?c}" title="阅读游记"><#if h.subTitle?? && h.subTitle!=''>${h.subTitle}<#else>${h.fileName}</#if></a>
             </div>

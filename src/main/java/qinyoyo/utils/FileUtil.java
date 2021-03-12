@@ -61,18 +61,28 @@ public class FileUtil {
     }
     public static String getFromResource(String url) {
         try {
-            ResourceLoader loader = new DefaultResourceLoader();
-            Resource resource = loader.getResource(url);
-            return getFromFile(resource.getFile(),"UTF-8");
+            ClassLoader loader = FileUtil.class.getClassLoader();
+            if (loader==null) return getFromResource1(url);
+            InputStream stream = loader.getResourceAsStream(url);
+            if (stream==null) return getFromResource1(url);
+            return getFromStream(stream, "UTF-8");
         } catch (Exception e) {
-            try {
-                ClassLoader loader = FileUtil.class.getClassLoader();
-                InputStream stream = loader.getResourceAsStream(url);
-                return getFromStream(stream, "UTF-8");
-            } catch (Exception e1) {
-                Util.printStackTrace(e);
-                return null;
-            }
+            Util.printStackTrace(e);
+            return null;
+        }
+    }
+    private static String getFromResource1(String url) {
+        try {
+            ResourceLoader loader = new DefaultResourceLoader();
+            if (loader==null) return null;
+            Resource resource = loader.getResource(url);
+            if (resource==null) return null;
+            File file = resource.getFile();
+            if (file==null) return null;
+            return getFromFile(file,"UTF-8");
+        } catch (Exception e) {
+            Util.printStackTrace(e);
+            return null;
         }
     }
     public static void writeToFile(File file, String string) {

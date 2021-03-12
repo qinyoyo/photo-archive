@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.RedirectView;
+import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.Modification;
 import qinyoyo.photoinfo.archive.PhotoInfo;
@@ -40,53 +41,47 @@ public class EditorController implements ApplicationRunner {
     @Autowired
     PVController pvController;
     private static final Configuration CONFIGURATION = new Configuration(Configuration.VERSION_2_3_22);
-    @RequestMapping(value = "editor")
-    public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+
+    @RequestMapping(value = "**/editor")
+    public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String html) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
-        if (path==null || path.isEmpty()) {
+        if (html==null || html.isEmpty()) {
             model.addAttribute("message","请指定一个文件");
             return "message";
         }
+        String currentUrl = request.getServletPath();
+        currentUrl = currentUrl.substring(0,currentUrl.length()-6);
+        if (currentUrl.startsWith("/")) currentUrl = currentUrl.substring(1);
+        if (currentUrl.endsWith("/") ) currentUrl = currentUrl.substring(0,currentUrl.length()-1);
+
         String rootPath = pvController.getRootPath();
-        Document doc ;
+        String folder = ArchiveUtils.formatterSubFolder(currentUrl,rootPath);
+        String htmlPath = folder + File.separator + html;
+
+        Document doc;
         try {
-            doc = StepHtmlUtil.formattedStepHtml(new File(rootPath,path),
-                    new Element("link").attr("rel","stylesheet")
-                            .attr("href","/static/css/pv.css"),
-                    new Element("script").attr("type","text/javascript")
-                            .attr("src","/static/js/editor.js")
-                    );
+            doc = Jsoup.parse(new File(rootPath,htmlPath),"utf-8");
         } catch (IOException e) {
             e.printStackTrace();
-            model.addAttribute("message",path + " 打开失败");
+            model.addAttribute("message",htmlPath + " 打开失败");
             return "message";
         }
 
-        Map<String,Object> attributes = new HashMap<>();
-        if (doc.title()!=null) attributes.put("title",doc.title());
-        attributes.put("body",doc.body().html());
+        if (doc.title()!=null) model.addAttribute("title",doc.title());
+        model.addAttribute("body",doc.body().html());
         try {
-            String folder = new File(path).getParent();
+
             if (folder.endsWith(".web")) folder = new File(folder).getParent();
             Optional<PhotoInfo> photoInfo = pvController.getArchiveInfo().subFolderInfos(folder).stream().filter(pi ->
                     pi.getMimeType() != null && pi.getMimeType().contains("image") && pi.getShootTime() != null).findFirst();
             Map<String, Object> pa = pvController.getPathAttributesByDate(DateUtil.date2String(photoInfo.isPresent() ? photoInfo.get().getShootTime() : new Date(),"yyyy-MM-dd"), options.isFavoriteFilter());
-            String current = new File(path).getParent().replaceAll("\\\\","/");
-            if (current.startsWith("/")) current = current.substring(1);
-            if (current.endsWith("/") ) current = current.substring(0,current.length()-1);
-            pa.put("currentPath",current);
+
+            pa.put("currentPath",currentUrl);
             pa.put("sessionOptions",options);
             String resourceHtml = freeMarkerWriter("resource.ftl",pa);
-            String reUrl = path + "_ed.html";
-            File editFile = new File(rootPath,reUrl);
-            editFile.delete();
-            attributes.put("resource",resourceHtml);
-            attributes.put("sourceFile",new File(rootPath,path).getCanonicalPath());
-            freeMarkerWriter("edit_body.ftl", editFile.getCanonicalPath(), attributes);
-            Document editDoc = Jsoup.parse(editFile,"utf-8");
-            doc.body().html(editDoc.body().html());
-            FileUtil.writeToFile(editFile,StepHtmlUtil.htmlString(doc),"utf-8");
-            return new RedirectView(new String(reUrl.getBytes("UTF-8"),"iso-8859-1"));
+            model.addAttribute("resource",resourceHtml);
+            model.addAttribute("sourceFile",new File(rootPath,htmlPath).getCanonicalPath());
+            return "editor_html";
         } catch (Exception e) {
             model.addAttribute("message",e.getMessage());
             return "message";

@@ -172,20 +172,7 @@
           max-height:260px;
           margin: 0 auto;
       }
-      .float-editor__buttons {
-          position: fixed;
-          top: 10px;
-          right: 0px;
-          width: 32px;
-          border: none;
-          outline: none;
-          font-size: 8px;
-          text-align: center;
-          background: transparent;
-          color: #ffffff;
-          z-index:9999;
-      }
-      
+
       body {
           max-width: 738px;
           width: 100%;
@@ -205,11 +192,6 @@
           -ms-flex-wrap: wrap;
           flex-wrap: wrap;
           text-align: center;
-      }
-      .float-editor__buttons img {
-          width: 24px;
-          height: 24px;
-          background: #808080;
       }
       img.lazy-load {
           border-style: none;

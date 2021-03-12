@@ -1,0 +1,34 @@
+.float-editor__buttons {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    height:32px;
+    left:0;
+    width: 100%;
+    margin: auto;
+    position: fixed;
+    bottom: 0px;
+    border: none;
+    outline: none;
+    font-size: 8px;
+    text-align: center;
+    background: transparent;
+    z-index:9999;
+}
+.transform_image_show .float-editor__buttons {
+    display: none;
+}
+.float-editor__buttons img {
+    width: 32px;
+    height: 32px;
+    margin: auto;
+    background: #808080;
+}
+.float-editor__dialog {
+    position: fixed;
+    bottom: 32px;
+    margin: auto;
+    left: 0;
+    right: 0;
+    width: 200px;
+}

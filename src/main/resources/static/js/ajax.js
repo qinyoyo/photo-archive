@@ -69,9 +69,15 @@
         }
 
         const dlgContent = document.createElement('div')
-        dlgContent.className='dialog__content'
+        dlgContent.className='dialog__content' + (options.dialogClass ? ' '+options.dialogClass : '')
+        if (options.dialogStyle){
+            if (options.dialogStyle){
+                Object.keys(options.dialogStyle).forEach(function (key){
+                    dlgContent.style[key]=options.dialogStyle[key]
+                })
+            }
+        }
         dlgWrapper.appendChild(dlgContent)
-
 
         const dlgTitleWrapper = document.createElement('div')
         dlgTitleWrapper.className='dialog__title'
@@ -87,11 +93,11 @@
         dlgTitleWrapper.appendChild(closeIcon)
 
         const dlgBody = document.createElement('div')
-        dlgBody.className='dialog__body'
-        if (options.dialogStyle) {
-            if (options.dialogStyle) {
-                Object.keys(options.dialogStyle).forEach(function(key){
-                    dlgBody.style[key] = options.dialogStyle[key]
+        dlgBody.className='dialog__body' + (options.dialogBodyClass ? ' '+options.dialogBodyClass : '')
+        if (options.dialogBodyStyle) {
+            if (options.dialogBodyStyle) {
+                Object.keys(options.dialogBodyStyle).forEach(function(key){
+                    dlgBody.style[key] = options.dialogBodyStyle[key]
                 })
             }
         }
@@ -135,7 +141,13 @@
         })
     }
     window.input = function(options) {
-        let dlgOptions = {}
+        let dlgOptions = {
+            title: options.title,
+            dialogClass: options.dialogClass,
+            dialogStyle: options.dialogStyle,
+            dialogBodyClass: options.dialogBodyClass,
+            dialogBodyStyle: options.dialogBodyStyle
+        }
         const dlgBody = document.createElement('div')
         if (options.title) dlgOptions.title = options.title
         if (options.label) {

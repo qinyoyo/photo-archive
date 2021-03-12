@@ -981,6 +981,11 @@
         let d = document.querySelector('.tran-img__wrapper')
         if (d) d.remove()
         document.querySelector('body').style.overflow = 'auto'
+        let bodyClass = document.querySelector('body').className
+        if (bodyClass && bodyClass.indexOf('transform_image_show')>=0) {
+            bodyClass = bodyClass.replace('transform_image_show','').trim()
+            document.querySelector('body').className = bodyClass
+        } else if (!bodyClass) bodyClass = 'transform_image_show'
     }
 
     const createImagePlayerDialog = function() {
@@ -1018,6 +1023,12 @@
     const addImageDialog = function(index, initialThumb) {
         removeImageDialog()
         addModel()
+
+        let bodyClass = document.querySelector('body').className
+        if (bodyClass && bodyClass.indexOf('transform_image_show')<0) {
+            bodyClass = bodyClass + ' transform_image_show'
+        } else if (!bodyClass) bodyClass = 'transform_image_show'
+        document.querySelector('body').className = bodyClass
 
         const imageEditable = document.querySelector('body.image-editable')
         if (!imageEditable) rangeExif = null

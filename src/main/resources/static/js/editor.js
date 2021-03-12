@@ -378,7 +378,8 @@ function adjustSize(img) {
         window.openDialog({
             title: '设置/取消字体样式',
             body: html,
-            dialogStyle: {
+            dialogClass: 'float-editor__dialog',
+            dialogBodyStyle: {
                 minWidth: '200px'
             },
             callback: function() {
@@ -403,6 +404,7 @@ function adjustSize(img) {
 
         window.openDialog({
             title: '选择颜色',
+            dialogClass: 'float-editor__dialog',
             body: html,
             callback: function() {
                 const color = document.getElementById('color_input').value
@@ -436,7 +438,8 @@ function adjustSize(img) {
         window.openDialog({
             title: '选择字体大小',
             body: html,
-            dialogStyle: {
+            dialogClass: 'float-editor__dialog',
+            dialogBodyStyle: {
                 minWidth: '200px'
             },
             callback: function() {
@@ -449,9 +452,7 @@ function adjustSize(img) {
     const getLinkResource = function(callback) {
         window.input({
             title: '输入一个链接地址',
-            dialogStyle: {
-                width: '300px'
-            },
+            dialogClass: 'float-editor__dialog',
             inputType: 'url',
             callback: function(v) {
                 if (v) setTimeout(function() { callback(v) },100)
@@ -543,7 +544,7 @@ function adjustSize(img) {
         };
         const sw = window.innerWidth,
               bw = document.querySelector('body').clientWidth
-        if ((sw - bw)/2 > 32) document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
+        //if ((sw - bw)/2 > 32) document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
 
         document.querySelector('#select-resource .dialog__body').style.width = (sw>600 ? '600px' : sw+'px')
 
