@@ -94,7 +94,7 @@ public enum Orientation {
             try {
                 int i = Integer.parseInt(name);
                 if (i>=NONE.value && i<=R270.value) return i;
-            } catch (Exception e){ Util.printStackTrace(e);}
+            } catch (Exception e){}
         }
         return NONE.value;
     }

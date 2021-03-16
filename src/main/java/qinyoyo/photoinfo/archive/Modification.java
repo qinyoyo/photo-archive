@@ -291,7 +291,6 @@ public class Modification {
         }
     }
     public static boolean removeAction(String path,ArchiveInfo archiveInfo) {
-        String rootPath = archiveInfo.getPath();
         if (ArchiveUtils.deletePhoto(archiveInfo,path)) {
             return true;
         }
@@ -305,7 +304,7 @@ public class Modification {
             if (dir.exists()) {
                 new File(rootPath+File.separator+path+File.separator+".need-scan").delete();
                 archiveInfo.rescanFile(dir);
-                archiveInfo.getInfos().stream().filter(p->p.getSubFolder().startsWith(path)).forEach(p->archiveInfo.createThumbFiles(p));
+                archiveInfo.createThumbFiles(path);
                 archiveInfo.sortInfos();
                 archiveInfo.saveInfos();
                 return true;

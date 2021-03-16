@@ -443,6 +443,7 @@ public class ArchiveInfo {
         // ArchiveUtils.saveObj(af, infos);
         Gson gson = new GsonBuilder()
                 .setLenient()
+                .setPrettyPrinting()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
                 .create();
 
