@@ -318,9 +318,46 @@ public class Modification {
         Path linkPath = Paths.get(targetLink);
         Files.createSymbolicLink(linkPath,srcPath);
     }
+    public static void execute(List<Modification> list, String rootPath) {
+        File imgDir = new File(rootPath,temp_path);
+        File xmpDir = new File(imgDir,XMP);
+        xmpDir.mkdirs();
+        FileUtil.removeFilesInDir(xmpDir, false);
+        FileUtil.removeFilesInDir(imgDir,false);
+        int count = 0;
+        Map<String,File> files = new HashMap<>();
+        for (Modification m : list) {
+            if (m.getAction()!=Exif || m.getParams()==null || m.getParams().isEmpty()) continue;
+            File img = new File(rootPath, m.getPath());
+            if (img.exists() && img.isFile()) {
+            String xml = xmlString(m.getParams());
+            String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
+                try {
+                    makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
+                    if (new File(imgDir, link).exists()) {
+                        File xmpFile = new File(xmpDir, count + ".xmp");
+                        FileUtil.writeToFile(xmpFile, xml, "UTF-8");
+                        count++;
+                        files.put(link, img);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if (count>=1000) {
+                executeExiftool(xmpDir,imgDir,files);
+                files.clear();
+                count=0;
+            }
+        }
+        if (count>0) {
+            executeExiftool(xmpDir,imgDir,files);
+        }
+        FileUtil.removeFilesInDir(xmpDir,true);
+        FileUtil.removeFilesInDir(imgDir,true);
+    }
     public static void execute(List<Modification> list, ArchiveInfo archiveInfo) {
         String rootPath = archiveInfo.getPath();
-
         list.stream().filter(m->m.action==Scan).reduce(new HashSet<String>(),(acc,m)-> {
                 if (!acc.contains(m.path)) acc.add(m.path);
                 return acc;

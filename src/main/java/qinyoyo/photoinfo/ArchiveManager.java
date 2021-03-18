@@ -73,7 +73,7 @@ public class ArchiveManager {
         String s = getProperty(env,key,def?"true":"false");
         return Util.boolValue(s);
     }
-    static boolean rename(ArchiveInfo archived, String path) {
+    static boolean rename(List<PhotoInfo> infos, String rootPath) {
         String pat = "";
         while (pat==null || pat.isEmpty()) {
             pat = getInputString("文件名格式(输入?显示提示)", PhotoInfo.RENAME_PATTERN);
@@ -106,12 +106,11 @@ public class ArchiveManager {
                         "    %E %e只能使用一个，任意位置");
             }
         }
-        List<PhotoInfo> infos = archived.subFolderInfos(path);
         if (infos!=null) {
             for (PhotoInfo pi : infos) {
                 try {
                     String name0 = pi.getFileName();
-                    pi.rename(archived.getPath(), pat);
+                    pi.rename(rootPath, pat);
                     String name1 = pi.getFileName();
                     if (name1.equals(name0)) System.out.println(name0 + " 没有重命名");
                     else System.out.println(name0 + " 重命名为 " + name1);
@@ -171,11 +170,7 @@ public class ArchiveManager {
                         add("--ext");
                         add("xmp");
                     }};
-                    ArchiveInfo raw = new ArchiveInfo(path, args);
-                    raw.sortInfos();
-                    raw.saveInfos();
-                    ArchiveUtils.syncExifAttributesByTime(archived, raw);
-                    raw.saveInfos();
+                    ArchiveUtils.syncExifAttributesByTime(archived.getInfos(), photoInfoListIn(path,false), path);
                     done = true;
                     break;
                 case "4":
@@ -216,9 +211,10 @@ public class ArchiveManager {
                     }
                     break;
                 case "6":
-                    path = inputSubFolder("选择需要重新命名的目录",rootPath);
+                    path = inputSubFolder("选择需要重新命名的目录(不含子目录)",rootPath);
                     if (path==null) break;
-                    if (rename(archived, path)) {
+                    final String temPath = path;
+                    if (rename(archived.getInfos().stream().filter(p->p.getSubFolder().equals(temPath)).collect(Collectors.toList()), archived.getPath())) {
                         done = true;
                         afterChanged(archived);
                     }
@@ -265,7 +261,7 @@ public class ArchiveManager {
                     }
                     break;
                 case "b":
-                    path = inputSubFolder("选择需要归档的子目录",rootPath);
+                    path = inputSubFolder("选择需要归档的目录(不包含子目录)",rootPath);
                     if (path==null) break;
                     writeGpxFile(archived,path);
                     break;
@@ -278,12 +274,17 @@ public class ArchiveManager {
             }
         }
     }
-
+    static List<PhotoInfo> photoInfoListIn(String path,boolean includeSubFolder) {
+        List<PhotoInfo> list=new ArrayList<>();
+        ArchiveInfo.seekPhotoInfosInFolder(new File(path),path,includeSubFolder,null,list);
+        return list;
+    }
     static boolean imageOperations() {
         String currentPath = FileUtil.getCurrentPath();
         boolean shutdown = false;
         List<Map<Long,Map<String,Object>>> gpxPoints = new ArrayList<>();
         String menuString =
+                "操作对象均不包含子目录下图像\n" +
                 "1 根据图像文件获得gpx地理信息\n" +
                 "2 校正图像拍摄时间\n" +
                 "3 根据gpx文件写入地理信息\n" +
@@ -303,14 +304,14 @@ public class ArchiveManager {
                     shutdown = true;
                     break;
                 case "1":
-                    path = chooseFolder("选择图像目录(含子目录)",currentPath);
+                    path = chooseFolder("选择图像目录",currentPath);
                     if (path==null) break;
                     currentPath = path;
-                    writeGpxFile(new ArchiveInfo(path),"");
+                    writeGpxFile(photoInfoListIn(path,false),new File(path,".archive.gpx"));
                     done = true;
                     break;
                 case "2":
-                    path = chooseFolder("选择图像目录(不含子目录)",currentPath);
+                    path = chooseFolder("选择图像目录",currentPath);
                     if (path==null) break;
                     currentPath = path;
                     changeDateTime(path);
@@ -318,7 +319,7 @@ public class ArchiveManager {
                     break;
                 case "3":
                     if (gpxPoints.size()==0) {
-                        String gpxPath = chooseFolder("选择gpx文件目录",currentPath);
+                        String gpxPath = chooseFolder("选择gpx文件所在目录",currentPath);
                         String title = getInputString("设置默认标题", "");
                         TreeMap<Long, Map<String,Object>> gpxMap = GpxUtils.readGpxInfo(new File(gpxPath),title);
                         for (Long dt : gpxMap.keySet()) {
@@ -328,7 +329,7 @@ public class ArchiveManager {
                         }
                     }
                     if (gpxPoints.size()>0) {
-                        path = chooseFolder("选择图像目录(含子目录)", currentPath);
+                        path = chooseFolder("选择图像目录", currentPath);
                         if (path == null) break;
                         currentPath = path;
                         writeGpxInfo(path,gpxPoints);
@@ -336,10 +337,10 @@ public class ArchiveManager {
                     }
                     break;
                 case "4":
-                    path = chooseFolder("选择图像目录(含子目录)", currentPath);
+                    path = chooseFolder("选择图像目录", currentPath);
                     if (path==null) break;
                     currentPath = path;
-                    done = rename(new ArchiveInfo(path),"");
+                    done = rename(photoInfoListIn(path,false),path);
                     break;
                 case "5":
                     path = chooseFolder("选择需要删除子空白目录的主目录", currentPath);
@@ -392,20 +393,22 @@ public class ArchiveManager {
         } else System.out.println("格式错误，请重新输入");
     }
 
-    public static void writeGpxFile(ArchiveInfo archiveInfo, String folder) {
-        if (folder==null) folder="";
-        else folder = ArchiveUtils.formatterSubFolder(folder,archiveInfo.getPath());
-        List<PhotoInfo> list = archiveInfo.subFolderInfos(folder);
+    public static void writeGpxFile(List<PhotoInfo> list,File file) {
         if (list!=null && list.size()>0) {
             list = list.stream().filter(p->p.getShootTime()!=null && p.getLatitude()!=null && p.getLongitude()!=null).collect(Collectors.toList());
             BaiduGeo.seekAddressInfo(list.stream().filter(p->p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null).collect(Collectors.toList()));
             if (list!=null && list.size()>0) {
                 TimeZone zone = inputTimeZone("拍摄时区");
                 String title = getInputString("设置默认标题", "");
-                File gpx = new File(archiveInfo.getPath(),(folder.isEmpty() ? "" : folder + File.separator) + ".archive.gpx");
-                GpxUtils.writeGpxInfo(gpx,list,title,zone);
+                GpxUtils.writeGpxInfo(file,list,title,zone);
             }
         }
+    }
+    public static void writeGpxFile(ArchiveInfo archiveInfo, String folder) {
+        final String subPath = (folder==null ?"" :ArchiveUtils.formatterSubFolder(folder,archiveInfo.getPath()));
+        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->p.getSubFolder().equals(subPath)).collect(Collectors.toList());
+        File gpx = new File(archiveInfo.getPath(),(subPath.isEmpty() ? "" : subPath + File.separator) + ".archive.gpx");
+        writeGpxFile(list,gpx);
     }
     public static int seekGpxPoints(List<Map<Long,Map<String,Object>>> gpxPoints, int begin, long dtValue) {
         long prev = gpxPoints.get(begin).keySet().iterator().next();
@@ -422,8 +425,7 @@ public class ArchiveManager {
         return -1;
     }
     public static void writeGpxInfo(String path,List<Map<Long,Map<String,Object>>> gpxPoints) {
-        ArchiveInfo archiveInfo = new ArchiveInfo(path);
-        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->
+        List<PhotoInfo> list = photoInfoListIn(path,false).stream().filter(p->
                 p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null &&
                         (p.getLongitude()==null || p.getLatitude()==null))
                 .collect(Collectors.toList());
@@ -444,8 +446,7 @@ public class ArchiveManager {
                 } else break;
             }
             if (modifications.size()>0) {
-                Modification.execute(modifications,archiveInfo);
-                ArchiveUtils.clearArchiveInfoFile(path);
+                Modification.execute(modifications,path);
             }
         }
     }
@@ -455,7 +456,7 @@ public class ArchiveManager {
         ExifTool.EXIFTOOL = getProperty(env,"photo.exiftool", "E:\\Photo\\exiftool.exe");
         String rootInput = getProperty(env,"photo.root-path", null);
         boolean clear=false, same=false,other=false, removeNotExist=true;
-        rootInput = chooseFolder("输入已经归档的目录路径", rootInput);
+        rootInput = chooseFolder("选择归档的目录路径(取消操作未归档图像)", rootInput);
         if (rootInput==null) return imageOperations();
         File dir = new File(rootInput);
         if (dir!=null && dir.exists() && dir.isDirectory()) {

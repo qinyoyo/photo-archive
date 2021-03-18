@@ -372,8 +372,7 @@ public class ArchiveUtils {
     }
 
 
-    public static void syncExifAttributesByTime(ArchiveInfo source, ArchiveInfo target) {
-        List<PhotoInfo> sourceList = source.getInfos(), targetList = target.getInfos();
+    public static void syncExifAttributesByTime(List<PhotoInfo> sourceList, List<PhotoInfo> targetList, String targetRootPath) {
         Iterator<PhotoInfo> iter = sourceList.iterator();
         int index = 0;
         List<Modification> modificationList = new ArrayList<>();
@@ -401,7 +400,7 @@ public class ArchiveUtils {
                 }
             }
         }
-        if (!modificationList.isEmpty()) Modification.execute(modificationList,target);
+        if (!modificationList.isEmpty()) Modification.execute(modificationList,targetRootPath);
         System.out.println("同步RAW文件数量: "+modified+"; 忽略相同文件数: "+same+"; 匹配失败文件数: "+(targetList.size()-modified-same));
     }
     public static void syncThumbOrientation(ArchiveInfo archiveInfo, String subFolder) {
