@@ -152,6 +152,18 @@ public class ExifTool {
             if (stdErr!=null && stdErr.size()>0) put(ERROR,stdErr);
         }};
     }
+    public static int updatesFiles(Map<String, List<String>> result) {
+        if (result==null) return 0;
+        List<String> msgList = result.get(ExifTool.RESULT);
+        if (msgList == null || msgList.size() == 0) return 0;
+        for (String msg : msgList) {
+            msg = msg.toLowerCase();
+            Pattern p = Pattern.compile("(\\d+).*files?.*updated");
+            Matcher m = p.matcher(msg);
+            if (m.find()) return Integer.parseInt(m.group(1));
+        }
+        return 0;
+    }
     public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
         try {
             if (attrs == null || attrs.size() == 0) return false;
@@ -163,11 +175,7 @@ public class ExifTool {
             }
             if (overwriteOriginal) argsList[attrs.size()] = "-overwrite_original";
             Map<String, List<String>> result = execute(dir, argsList);
-            List<String> msgList = result.get(ExifTool.RESULT);
-            if (msgList == null || msgList.size() == 0) return false;
-            for (String msg : msgList) {
-                if (msg.contains("1") && msg.contains("file") && msg.contains("updated")) return true;
-            }
+            return updatesFiles(result)==1;
         } catch (Exception e){ Util.printStackTrace(e);}
         return false;
     }

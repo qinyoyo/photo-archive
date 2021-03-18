@@ -53,6 +53,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private Double longitude;
     private Double latitude;
     private Double altitude;
+    private String gpsDatetime;
 
     String lengString(long l) {
         String s = String.valueOf(l);
@@ -369,6 +370,9 @@ public class PhotoInfo implements Serializable,Cloneable {
                             if (ref!=null && ref.toString().equals("0")) altitude = -altitude;
                         }
                     }
+                }
+                if (k.equals(Key.getName(Key.GPS_DATETIME))) {
+                    gpsDatetime = s;
                 }
                 else if (k.equals(Key.getName(Key.MIME_TYPE))) {
                     mimeType = s;

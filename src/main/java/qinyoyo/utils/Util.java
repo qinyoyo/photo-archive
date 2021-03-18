@@ -9,6 +9,7 @@ import org.springframework.boot.env.PropertiesPropertySourceLoader;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.*;
 import java.io.*;
@@ -132,5 +133,23 @@ public class Util {
     }
     public static String lazyLoadScript() {
         return FileUtil.getFromResource("/static/js/image_lazy_load.js");
+    }
+    public static Map<String,Object> getYaml(File file) {
+        Yaml yml = new Yaml();
+        Reader reader = null;
+        try {
+            reader = new FileReader(file);
+            return yml.loadAs(reader, Map.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (reader!=null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
 }

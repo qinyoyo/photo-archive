@@ -2,6 +2,7 @@ package qinyoyo.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -9,6 +10,12 @@ public class DateUtil {
     public static String date2String(Date dt,String fmt) {
         if (dt == null) return null;
         return new SimpleDateFormat(fmt).format(dt);
+    }
+    public static String date2String(Date dt,String fmt, TimeZone zone) {
+        if (dt == null) return null;
+        SimpleDateFormat sdf = new SimpleDateFormat(fmt);
+        if (zone!=null) sdf.setTimeZone(zone);
+        return sdf.format(dt);
     }
     public static String date2String(Date dt) {
         return date2String(dt,"yyyy-MM-dd HH:mm:ss");

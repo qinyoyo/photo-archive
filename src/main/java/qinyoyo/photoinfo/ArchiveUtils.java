@@ -25,7 +25,7 @@ public class ArchiveUtils {
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
             Key.MODEL, Key.LENS_ID, Key.ORIENTATION, Key.IMAGE_WIDTH, Key.IMAGE_HEIGHT,
             Key.DOCUMENT_ID, Key.IPTCDigest,
-            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME,
             Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
             Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
     public static final Key[] MODIFIABLE_KEYS = new Key[]{
@@ -508,18 +508,19 @@ public class ArchiveUtils {
         return null;
     }
 
+    public static void clearArchiveInfoFile(String path) {
+        new File(path,ArchiveUtils.ARCHIVE_FILE).delete();
+        new File(path,ArchiveUtils.ARCHIVE_FILE+ ".sorted.dat").delete();
+        new File(path,ArchiveUtils.same_photo_log).delete();
+        new File(path,ArchiveUtils.manual_other_bat).delete();
+        new File(path,ArchiveUtils.manual_rm_bat).delete();
+        new File(path,ArchiveUtils.manual_archive_bat).delete();
+        new File(path,ArchiveUtils.no_shottime_log).delete();
+        new File(path,ArchiveUtils.folder_info_dat).delete();
+    }
     public static ArchiveInfo getArchiveInfo(String path, boolean clearInfo, boolean removeSameFile, boolean moveOtherFile) {
         if (path==null || path.isEmpty() || "-".equals(path)) return null;
-        if (clearInfo) {
-            new File(path,ArchiveUtils.ARCHIVE_FILE).delete();
-            new File(path,ArchiveUtils.ARCHIVE_FILE+ ".sorted.dat").delete();
-            new File(path,ArchiveUtils.same_photo_log).delete();
-            new File(path,ArchiveUtils.manual_other_bat).delete();
-            new File(path,ArchiveUtils.manual_rm_bat).delete();
-            new File(path,ArchiveUtils.manual_archive_bat).delete();
-            new File(path,ArchiveUtils.no_shottime_log).delete();
-            new File(path,ArchiveUtils.folder_info_dat).delete();
-        }
+        if (clearInfo) clearArchiveInfoFile(path);
         ArchiveInfo	a = new ArchiveInfo(path);
         if (!a.isReadFromFile()) ArchiveUtils.processDir(a, removeSameFile, moveOtherFile);
         return a;

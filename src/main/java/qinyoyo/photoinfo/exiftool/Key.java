@@ -42,7 +42,7 @@ public enum Key {
     GPS_PROCESS_METHOD("GPSProcessingMethod", String.class),
     GPS_SPEED("GPSSpeed", Double.class),
     GPS_SPEED_REF("GPSSpeedRef", String.class),
-    GPS_TIMESTAMP("GPSTimeStamp", String.class),
+    GPS_DATETIME("GPSDatetime", String.class),
 
     IMAGE_HEIGHT("ImageHeight", Integer.class,"图像高度"),
     IMAGE_WIDTH("ImageWidth", Integer.class,"图像宽度"),

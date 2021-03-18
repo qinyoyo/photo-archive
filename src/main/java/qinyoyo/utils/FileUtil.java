@@ -203,4 +203,11 @@ public class FileUtil {
             Util.printStackTrace(e);
         }
     }
+    public static String getCurrentPath() {
+        try {
+            return new File(".").getCanonicalPath();
+        } catch (IOException e) {
+            return ".";
+        }
+    }
 }

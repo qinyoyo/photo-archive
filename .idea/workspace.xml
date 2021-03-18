@@ -23,10 +23,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Orientation.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Orientation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/exiftool/ExifTool.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/exiftool/ExifTool.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/exiftool/Key.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/exiftool/Key.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/DateUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/DateUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/FileUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/FileUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/Util.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/Util.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -131,6 +139,8 @@
       <workItem from="1615792459384" duration="1290000" />
       <workItem from="1615801082313" duration="7000" />
       <workItem from="1615886893020" duration="890000" />
+      <workItem from="1615942893483" duration="24694000" />
+      <workItem from="1616033430538" duration="25047000" />
     </task>
     <servers />
   </component>
@@ -238,22 +248,54 @@
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java</url>
+          <line>75</line>
+          <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java</url>
+          <line>25</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>101</line>
-          <option name="timeStamp" value="14" />
+          <line>329</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
+          <line>445</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>425</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>431</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>360</line>
+          <option name="timeStamp" value="42" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="SpringBootApplicationConfigurationType">
-        <watch expression="script" language="JAVA" />
-        <watch expression="loader.getResource(url)" language="JAVA" />
-        <watch expression="request.getServletPath()" language="JAVA" />
-        <watch expression="e" language="JAVA" />
-        <watch expression="request.getPathTranslated()" language="JAVA" />
+        <watch expression="trkList.getLength()" language="JAVA" />
+        <watch expression="trk" language="JAVA" />
+        <watch expression="cc.getLength()" language="JAVA" />
+        <watch expression="node" language="JAVA" />
+        <watch expression="value" language="JAVA" />
         <watch expression="Parser.unescapeEntities(script, false)" language="JAVA" />
+        <watch expression="value.getNodeName()" language="JAVA" />
         <watch expression="e.dataset()" language="JAVA" />
-        <watch expression="head" language="JAVA" />
+        <watch expression="value.getNodeValue()" language="JAVA" />
+        <watch expression="value.getTextContent()" language="JAVA" />
         <watch expression="newHead.outerHtml()" language="JAVA" />
         <watch expression="doc.toString()" language="JAVA" />
         <watch expression="doc.select(&quot;script&quot;).get(3)" language="JAVA" />
@@ -262,6 +304,12 @@
         <watch expression="new TextNode(script)" language="JAVA" />
         <watch expression="archiveInfo.getInfos().stream().filter(p-&gt;p.getFileName().equals(&quot;index.html&quot;)).collect(Collectors.toList())" language="JAVA" custom="java.util.stream.Collectors" />
         <watch expression="FileUtil.class.getClassLoader().getResourceAsStream(url)" language="JAVA" />
+        <watch expression="m.group(1)" language="JAVA" />
+        <watch expression="m.groups" language="JAVA" />
+        <watch expression="m.group(2)" language="JAVA" />
+        <watch expression="m.group(3)" language="JAVA" />
+        <watch expression="m.group(4)" language="JAVA" />
+        <watch expression="m.group(5)" language="JAVA" />
       </configuration>
     </watches-manager>
   </component>

@@ -86,88 +86,104 @@ public class BaiduGeo {
         return s;
     }
 
-    public static void seekAddressInfo(ArchiveInfo archiveInfo) {
-        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p ->
-                p.getLatitude() != null && p.getLongitude() != null
-                        && p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null
-        ).collect(Collectors.toList());
+    public static List<PhotoInfo> seekAddressInfo(List<PhotoInfo> list) {
         if (list != null && list.size() > 0) {
             list.sort((a, b) -> {
                 int r = a.getSubFolder().compareTo(b.getSubFolder());
                 return r == 0 ? a.compareTo(b) : r;
             });
             List<PhotoInfo> changedList = new ArrayList<>();
-            new Thread() {
-                @Override
-                public void run() {
-                    System.out.println(list.size() + " geo points need seek");
-                    int count = 0;
-                    double delta = 0.0001;
-                    PhotoInfo p0 = null;
-                    for (PhotoInfo p : list) {
-                        try {
-                            if (p0 != null && Math.abs(p.getLatitude() - p0.getLatitude()) < delta && Math.abs(p.getLongitude() - p0.getLongitude()) < delta) {
-                                p.setCountry(p0.getCountry());
-                                p.setProvince(p0.getProvince());
-                                p.setCity(p0.getCity());
-                                p.setLocation(p0.getLocation());
-                                if (p.getSubjectCode() == null) p.setSubjectCode(p0.getSubjectCode());
-                                else if (p0.getSubjectCode() == null) p0.setSubjectCode(p.getSubjectCode());
-                                count++;
-                                changedList.add(p);
+            System.out.println(list.size() + " geo points need seek");
+            int count = 0;
+            double delta = 0.0001;
+            PhotoInfo p0 = null;
+            for (PhotoInfo p : list) {
+                try {
+                    if (p0 != null && Math.abs(p.getLatitude() - p0.getLatitude()) < delta && Math.abs(p.getLongitude() - p0.getLongitude()) < delta) {
+                        p.setCountry(p0.getCountry());
+                        p.setProvince(p0.getProvince());
+                        p.setCity(p0.getCity());
+                        p.setLocation(p0.getLocation());
+                        if (p.getSubjectCode() == null) p.setSubjectCode(p0.getSubjectCode());
+                        else if (p0.getSubjectCode() == null) p0.setSubjectCode(p.getSubjectCode());
+                        count++;
+                        changedList.add(p);
+                    } else {
+                        Info info = getGeoInfo(p.getLongitude(), p.getLatitude(), null);
+                        if (info.status!=null && info.status == 0 && info.result!=null) {
+                            Result result = info.result;
+                            Address addressComponent = result.addressComponent;
+                            if (addressComponent==null) continue;
+                            String  country = addressComponent.country,
+                                    province = addressComponent.province, city = addressComponent.city,
+                                    district = addressComponent.district,town = addressComponent.town,
+                                    street = addressComponent.street;
+                            boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) || ArchiveUtils.hasChinese(city);
+                            p.setCountry(trunc(country, Key.COUNTRY));
+                            p.setProvince(trunc(province, Key.STATE));
+                            if (city.equals(province) || city.isEmpty()) {
+                                p.setCity(trunc(district,Key.CITY));
+                                district = "";
                             } else {
-                                Info info = getGeoInfo(p.getLongitude(), p.getLatitude(), null);
-                                if (info.status!=null && info.status == 0 && info.result!=null) {
-                                    Result result = info.result;
-                                    Address addressComponent = result.addressComponent;
-                                    if (addressComponent==null) continue;
-                                    p.setCountry(trunc(addressComponent.country, Key.COUNTRY));
-                                    p.setProvince(trunc(addressComponent.province, Key.STATE));
-                                    p.setCity(trunc(addressComponent.city, Key.CITY));
-                                    boolean cc = ArchiveUtils.hasChinese(p.getCountry()) || ArchiveUtils.hasChinese(p.getProvince()) || ArchiveUtils.hasChinese(p.getCity());
-
-                                    String town = addressComponent.town, district = addressComponent.district,
-                                            street = addressComponent.street;
-                                    String loc = cc ? ArchiveUtils.join(null, district, town, street)
-                                            : ArchiveUtils.join(",", street, town, district);
-                                    int maxLocLen = Key.getMaxLength(Key.LOCATION);
-                                    if (utf8Length(loc) > maxLocLen) {
-                                        loc = cc ? ArchiveUtils.join(null, district, town)
-                                                : ArchiveUtils.join(",", town, district);
-                                        if (loc == null || loc.isEmpty()) loc = street;
-                                        if (utf8Length(loc) > maxLocLen) {
-                                            loc = district;
-                                            if (loc == null || loc.isEmpty()) loc = town;
-                                            if (loc == null || loc.isEmpty()) loc = street;
-                                        }
-                                        loc = trunc(loc, Key.LOCATION);
-                                    }
-                                    p.setLocation(loc);
-
-                                    if (p.getSubjectCode() == null || p.getSubjectCode().indexOf("行摄") >= 0 || p.getSubjectCode().indexOf("人像") >= 0 || p.getSubjectCode().equals("风景")) {
-                                        List<Poi> pois = result.pois;
-                                        if (pois!=null && pois.size()>0) {
-                                            Poi poi = pois.get(0);
-                                            if ("内".equals(poi.direction) || "0".equals(poi.distance))
-                                                p.setSubjectCode(trunc(poi.name, Key.SUBJECT_CODE));
-                                        }
-                                    }
-                                    count++;
-                                    p0 = p;
-                                    changedList.add(p);
+                                String jcity = cc ? ArchiveUtils.join(null, city,district)
+                                        : ArchiveUtils.join(",", district, city);
+                                if (utf8Length(jcity) > Key.getMaxLength(Key.CITY)) {
+                                    p.setCity(trunc(city,Key.CITY));
                                 } else {
-                                    System.out.println(info.message);
+                                    p.setCity(jcity);
+                                    district = "";
                                 }
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+
+                            String loc = cc ? ArchiveUtils.join(null, district, town, street)
+                                    : ArchiveUtils.join(",", street, town, district);
+                            int maxLocLen = Key.getMaxLength(Key.LOCATION);
+                            if (utf8Length(loc) > maxLocLen) {
+                                loc = cc ? ArchiveUtils.join(null, district, town)
+                                        : ArchiveUtils.join(",", town, district);
+                                if (loc == null || loc.isEmpty()) loc = street;
+                                if (utf8Length(loc) > maxLocLen) {
+                                    loc = district;
+                                    if (loc == null || loc.isEmpty()) loc = town;
+                                    if (loc == null || loc.isEmpty()) loc = street;
+                                }
+                                loc = trunc(loc, Key.LOCATION);
+                            }
+                            p.setLocation(loc);
+
+                            if (p.getSubjectCode() == null || p.getSubjectCode().indexOf("行摄") >= 0 || p.getSubjectCode().indexOf("人像") >= 0 || p.getSubjectCode().equals("风景")) {
+                                List<Poi> pois = result.pois;
+                                if (pois!=null && pois.size()>0) {
+                                    Poi poi = pois.get(0);
+                                    if ("内".equals(poi.direction) || "0".equals(poi.distance))
+                                        p.setSubjectCode(trunc(poi.name, Key.SUBJECT_CODE));
+                                }
+                            }
+                            count++;
+                            p0 = p;
+                            changedList.add(p);
+                        } else {
+                            System.out.println(info.message);
                         }
                     }
-                    System.out.println(count + " geo points seeked");
-                    archiveInfo.saveInfos();
-                    ArchiveUtils.writeAddress(changedList, archiveInfo);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            }.start();
+            }
+            System.out.println(count + " geo points seeked");
+            return changedList;
+        }
+        return null;
+    }
+    public static void seekAddressInfo(ArchiveInfo archiveInfo) {
+        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p ->
+                p.getLatitude() != null && p.getLongitude() != null &&
+                p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null
+        ).collect(Collectors.toList());
+        List<PhotoInfo> changedList = seekAddressInfo(list);
+        if (changedList!=null && changedList.size()>0) {
+            if (archiveInfo!=null) ArchiveUtils.writeAddress(changedList, archiveInfo);
+            archiveInfo.saveInfos();
         }
     }
 }

@@ -282,17 +282,6 @@ public class PVController implements ApplicationRunner , ErrorController {
         else return "fail";
     }
 
-    void syncFromModification() {
-        List<Modification> list = Modification.read(rootPath);
-        if (list!=null) {
-            System.out.println("同步修改...");
-            Modification.execute(list,archiveInfo);
-            Modification.resetSyncAction(rootPath);
-            System.out.println("同步修改完成.");
-            afterChanged();
-        }
-    }
-
     @ResponseBody
     @RequestMapping(value = "scan")
     public String scan(String path) {
@@ -624,11 +613,8 @@ public class PVController implements ApplicationRunner , ErrorController {
                 archiveInfo = new ArchiveInfo(rootPath);
                 rootPath = archiveInfo.getPath();  // 标准化
                 System.out.println("归档主目录为 : "+rootPath);
-
                 isReady = true;
                 archiveInfo.removeNotExistInfo();
-                syncFromModification();
-                BaiduGeo.seekAddressInfo(archiveInfo);
                 archiveInfo.createThumbFiles();
                 System.out.println("Photo viewer started.");
             }
