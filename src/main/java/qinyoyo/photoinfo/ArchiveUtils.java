@@ -30,9 +30,9 @@ public class ArchiveUtils {
             Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
             Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
     public static final Key[] MODIFIABLE_KEYS = new Key[]{
-            Key.SUBJECT_CODE,
+            Key.SUBJECT_CODE, Key.ORIENTATION,
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,
-            Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.SCENE,
+            Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
             Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME
     };
@@ -311,6 +311,7 @@ public class ArchiveUtils {
         if(!equals(p1.getLongitude(),p2.getLongitude())) diff.add(Key.GPS_LONGITUDE);
         if(!equals(p1.getLatitude(),p2.getLatitude())) diff.add(Key.GPS_LATITUDE);
         if(!equals(p1.getAltitude(),p2.getAltitude())) diff.add(Key.GPS_ALTITUDE);
+        if(!equals(p1.getGpsDatetime(),p2.getGpsDatetime())) diff.add(Key.GPS_DATETIME);
         if(!equals(p1.getArtist(),p2.getArtist())) diff.add(Key.ARTIST);
         if(!equals(p1.getHeadline(),p2.getHeadline())) diff.add(Key.HEADLINE);
         if(!equals(p1.getSubTitle(),p2.getSubTitle())) diff.add(Key.DESCRIPTION);

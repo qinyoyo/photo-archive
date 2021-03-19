@@ -238,10 +238,10 @@ public class ArchiveInfo {
     public void createThumbFiles(String subFolder) {
         List<PhotoInfo> list = subFolderInfos(subFolder);
         if (list!=null && list.size()>0) {
+            System.out.println("重建缩略图数量 :"+list.size() + " ...");
             for (PhotoInfo p : list) {
                 createThumbFiles(p);
             }
-            System.out.println("重建缩略图数量 :"+list.size());
         }
     }
     public void createThumbFiles() {

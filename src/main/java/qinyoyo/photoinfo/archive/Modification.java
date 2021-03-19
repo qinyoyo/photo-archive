@@ -149,6 +149,9 @@ public class Modification {
                         value = String.format("%.6f",altitude);
                     }
                     break;
+                case GPS_DATETIME:
+                    value = pi.getGpsDatetime();
+                    break;
                 case ARTIST:
                     value = pi.getArtist();
                     break;

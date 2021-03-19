@@ -58,19 +58,20 @@ public class ArchiveManager {
         archiveInfo.sortInfos();
         archiveInfo.saveInfos();
     }
-    static String getProperty(Map<String, Object> env, @NonNull String key,String def) {
+    static String getProperty(@NonNull String key,String def) {
         if (env==null) return def;
+        Map<String, Object> e = env;
         String [] kk = key.split("\\.");
         for (int i=0;i < kk.length; i++) {
-            Object obj = env.get(kk[i]);
+            Object obj = e.get(kk[i]);
             if (obj==null) return def;
             else if (i==kk.length-1) return obj.toString();
-            else if (obj instanceof Map) env = (Map<String, Object>)obj;
+            else if (obj instanceof Map) e = (Map<String, Object>)obj;
         }
         return def;
     }
     static boolean getProperty(Map<String, Object> env, @NonNull String key,boolean def) {
-        String s = getProperty(env,key,def?"true":"false");
+        String s = getProperty(key,def?"true":"false");
         return Util.boolValue(s);
     }
     static boolean rename(List<PhotoInfo> infos, String rootPath) {
@@ -457,11 +458,11 @@ public class ArchiveManager {
     }
     public static boolean archive() {
         env = Util.getYaml(new File(FileUtil.getCurrentPath(), "pv.yml"));
-        ExifTool.FFMPEG = getProperty(env,"photo.ffmpeg", "E:\\Photo\\ffmpeg.exe");
-        ExifTool.EXIFTOOL = getProperty(env,"photo.exiftool", "E:\\Photo\\exiftool.exe");
+        ExifTool.FFMPEG = getProperty("photo.ffmpeg", "E:\\Photo\\ffmpeg.exe");
+        ExifTool.EXIFTOOL = getProperty("photo.exiftool", "E:\\Photo\\exiftool.exe");
         ExifTool.getInstalledVersion();
         ExifTool.getInstalledFfmpegVersion();
-        currentPath = getProperty(env,"photo.root-path", null);
+        currentPath = getProperty("photo.root-path", null);
         boolean clear=false, same=false,other=false, removeNotExist=true;
         String rootPath = chooseFolder("选择归档的目录路径(取消操作未归档图像)");
         if (rootPath==null) return imageOperations();
