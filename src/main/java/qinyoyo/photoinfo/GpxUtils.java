@@ -185,6 +185,7 @@ public class GpxUtils {
                                             if (province != null) map.put(Key.getName(Key.STATE), province);
                                             if (city != null) map.put(Key.getName(Key.CITY), city);
                                             if (location != null) map.put(Key.getName(Key.LOCATION), location);
+                                            map.put(Key.getName(Key.GPS_DATETIME), dt.substring(0,4)+":"+dt.substring(5,7)+":" + dt.substring(8) +"Z");
                                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                                             result.put(sdf.parse(dt).getTime(), map);
