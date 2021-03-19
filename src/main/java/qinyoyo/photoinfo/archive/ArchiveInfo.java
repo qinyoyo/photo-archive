@@ -6,8 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
-import qinyoyo.photoinfo.exiftool.Key;
-import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.ImageUtil;
 import qinyoyo.utils.Util;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 public class ArchiveInfo {
     private String path; // 末尾不带分隔符
     private List<PhotoInfo> infos;
-    private static ExifTool exifTool = ExifTool.getInstance();
     private boolean readFromFile = false;
     private List<String> exifToolArgs = null;
 
@@ -44,12 +41,6 @@ public class ArchiveInfo {
 	}
 	public void setInfos(List<PhotoInfo> infos) {
 		this.infos = infos;
-	}
-	public ExifTool getExifTool() {
-		return exifTool;
-	}
-	public void setExifTool(ExifTool exifTool) {
-		this.exifTool = exifTool;
 	}
 
     public ArchiveInfo() {
@@ -107,8 +98,7 @@ public class ArchiveInfo {
                 if (!thumb.exists()) createThumbFiles(pi);
                 System.out.println("成功扫描文件 "+p);
             } else {
-                List<PhotoInfo> list = new ArrayList<>();
-                seekPhotoInfosInFolder(f,path, true, exifToolArgs, list);
+                List<PhotoInfo> list = ArchiveUtils.seekPhotoInfosInFolder(f,path, true, exifToolArgs);
                 final String seekPath = f.getCanonicalPath().length() == path.length() ? "" : f.getCanonicalPath().substring(path.length()+1);
                 final String subSeekPath = seekPath.isEmpty() ? "" : seekPath + File.separator;
                 List<PhotoInfo> existedList = infos.stream().filter(
@@ -174,82 +164,9 @@ public class ArchiveInfo {
         }
     }
 
-    public static void seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder, List<String> exifToolArgs, List<PhotoInfo> infoList) {
-        if (!dir.isDirectory() || !dir.exists()) return;
-        File [] files = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return (!pathname.isDirectory() && pathname.getName().startsWith(".") && pathname.length() == 4096);
-            }
-        });
-        if (files!=null && files.length>0) {
-            System.out.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+files.length);
-            for (File f : files) f.delete();
-        }
-        System.out.println("批量搜索 "+dir.getAbsolutePath());
-        Map<String, Map<String, Object>> fileInfos = null;
-
-        int count = 0; 
-        try {
-            fileInfos = exifTool.query(dir, exifToolArgs, ArchiveUtils.NEED_KEYS);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (fileInfos!=null) {
-            for (String file : fileInfos.keySet()) {
-            	if (file.equals(ExifTool.ERROR)) {
-            		System.out.println(fileInfos.get(file).get(Key.DESCRIPTION));
-            	} else {
-	                try {
-	                    if (SupportFileType.isSupport(file)) {
-	                        PhotoInfo photoInfo = new PhotoInfo(rootPath, new File(dir, file));
-	                        photoInfo.setPropertiesBy(fileInfos.get(file));
-                            if (photoInfo.getShootTime()==null && photoInfo.getCreateTime()!=null && photoInfo.getMimeType()!=null && !photoInfo.getMimeType().toLowerCase().startsWith("image"))
-                                photoInfo.setShootTime(photoInfo.getCreateTime());
-                            if (photoInfo.getShootTime()==null) {
-                                photoInfo.setShootTime(DateUtil.getShootTimeFromFileName(photoInfo.getFileName()));
-                                if (photoInfo.getShootTime()!=null) {
-                                    ExifTool.getInstance().execute(new File(photoInfo.fullPath(rootPath)), "-overwrite_original",
-                                            "-DateTimeOriginal="+DateUtil.date2String(photoInfo.getShootTime()));
-                                }
-                            }
-	                        if (dir.getName().endsWith(".web") && photoInfo.getMimeType()!=null && photoInfo.getMimeType().contains("html") && !photoInfo.getFileName().equals("index.html")) {
-                                System.out.println("    忽略文件 " + file);
-                            } else {
-                                infoList.add(photoInfo);
-                                count++;
-                            }
-	                    } else System.out.println("    忽略文件 " + file);
-	                } catch (Exception e1){ Util.printStackTrace(e1);}
-            	}
-            }
-        }
-        System.out.println("    处理文件数 : "+count);
-        if (includeSubFolder) {
-            File[] subDirs = dir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    if (pathname.getName().startsWith(".")) return false;
-                    return pathname.isDirectory();
-                }
-            });
-            if (subDirs != null && subDirs.length > 0) {
-                List<File> dirs = Arrays.asList(subDirs);
-                dirs.sort((a, b) -> {
-                    return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
-                });
-                for (File d : dirs) {
-                    if (d.isDirectory()) {
-                        seekPhotoInfosInFolder(d, rootPath, includeSubFolder, exifToolArgs, infoList);
-                    }
-                }
-            }
-        }
-    }
     private void seekPhotoInfo() {
         File dir = new File(path);
-        infos = new ArrayList<>();
-        seekPhotoInfosInFolder(dir, path, true, exifToolArgs, infos);
+        infos = ArchiveUtils.seekPhotoInfosInFolder(dir, path, true, exifToolArgs);
         sortInfos();
         saveInfos();
     }
@@ -460,7 +377,6 @@ public class ArchiveInfo {
                 rmf.mkdirs();
                 ArchiveInfo rma = new ArchiveInfo();
                 rma.setPath(rmf.getCanonicalPath());
-                rma.setExifTool(getExifTool());
                 rma.setInfos(new ArrayList<>(other));
                 rma.saveInfos();
                 if(!copyTo) ArchiveUtils.removeAll(all, other);
@@ -624,7 +540,6 @@ public class ArchiveInfo {
                 rmf.mkdirs();
                 ArchiveInfo rma = new ArchiveInfo();
                 rma.setPath(rmf.getCanonicalPath());
-                rma.setExifTool(getExifTool());
                 rma.setInfos(rm);
                 rma.saveInfos();
                 ArchiveUtils.removeAll(all, rm);

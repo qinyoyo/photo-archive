@@ -76,19 +76,6 @@
     </key>
   </component>
   <component name="RunManager">
-    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="CLASS" />
-      <properties />
-      <listeners />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="PhotoArchiveApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <module name="photo-archive" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="qinyoyo.PhotoArchiveApplication" />
@@ -99,7 +86,7 @@
       </method>
     </configuration>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="false" />
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -134,11 +121,13 @@
       <workItem from="1615886893020" duration="890000" />
       <workItem from="1615942893483" duration="24694000" />
       <workItem from="1616033430538" duration="25047000" />
+      <workItem from="1616112643301" duration="2524000" />
+      <workItem from="1616115214603" duration="2175000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -165,26 +154,26 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="446" height="466" key="DebuggerActiveHint/0.0.1920.1040@0.0.1920.1040" timestamp="1615205739388" />
-    <state width="1860" height="501" key="GridCell.Tab.0.bottom" timestamp="1616078983279">
+    <state width="1860" height="267" key="GridCell.Tab.0.bottom" timestamp="1616115179028">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615116059050" />
-    <state width="1860" height="501" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616078983279" />
-    <state width="1860" height="501" key="GridCell.Tab.0.center" timestamp="1616078983279">
+    <state width="1860" height="267" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
+    <state width="1860" height="267" key="GridCell.Tab.0.center" timestamp="1616115179028">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1615116059050" />
-    <state width="1860" height="501" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616078983279" />
-    <state width="1860" height="501" key="GridCell.Tab.0.left" timestamp="1616078983278">
+    <state width="1860" height="267" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
+    <state width="1860" height="267" key="GridCell.Tab.0.left" timestamp="1616115179028">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1615116059049" />
-    <state width="1860" height="501" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616078983278" />
-    <state width="1860" height="501" key="GridCell.Tab.0.right" timestamp="1616078983279">
+    <state width="1860" height="267" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
+    <state width="1860" height="267" key="GridCell.Tab.0.right" timestamp="1616115179028">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1615116059050" />
-    <state width="1860" height="501" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616078983279" />
+    <state width="1860" height="267" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
     <state width="1860" height="372" key="GridCell.Tab.1.bottom" timestamp="1615472572634">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -236,7 +225,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java</url>
-          <line>279</line>
+          <line>280</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
@@ -251,28 +240,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>330</line>
+          <line>327</line>
           <option name="timeStamp" value="38" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>447</line>
+          <line>443</line>
           <option name="timeStamp" value="39" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
-          <line>462</line>
-          <option name="timeStamp" value="40" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
-          <line>468</line>
-          <option name="timeStamp" value="41" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
-          <line>397</line>
-          <option name="timeStamp" value="42" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

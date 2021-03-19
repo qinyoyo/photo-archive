@@ -318,7 +318,7 @@ public class Modification {
         Path linkPath = Paths.get(targetLink);
         Files.createSymbolicLink(linkPath,srcPath);
     }
-    public static void execute(List<Modification> list, String rootPath) {
+    public static void execute(Map<String,Map<String,Object>> pathMap, String rootPath) {
         File imgDir = new File(rootPath,temp_path);
         File xmpDir = new File(imgDir,XMP);
         xmpDir.mkdirs();
@@ -326,11 +326,13 @@ public class Modification {
         FileUtil.removeFilesInDir(imgDir,false);
         int count = 0;
         Map<String,File> files = new HashMap<>();
-        for (Modification m : list) {
-            if (m.getAction()!=Exif || m.getParams()==null || m.getParams().isEmpty()) continue;
-            File img = new File(rootPath, m.getPath());
+        for (String path : pathMap.keySet()) {
+            if (path==null || path.isEmpty()) continue;
+            Map<String,Object> params = pathMap.get(path);
+            if (path.isEmpty() || params ==null || params.isEmpty()) continue;
+            File img = new File(rootPath, path);
             if (img.exists() && img.isFile()) {
-            String xml = xmlString(m.getParams());
+            String xml = xmlString(params);
             String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                 try {
                     makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
@@ -356,6 +358,16 @@ public class Modification {
         FileUtil.removeFilesInDir(xmpDir,true);
         FileUtil.removeFilesInDir(imgDir,true);
     }
+    private static Map<String,Object> reduceParams(ArchiveInfo archiveInfo,String filePath, Map<String,Object>params) {
+        File img = new File(archiveInfo.getPath(), filePath);
+        Map<String,Object> nm = new HashMap<>();
+        if (img.exists() && img.isFile()) {
+            PhotoInfo info = archiveInfo.find(img);
+            nm.putAll(params);
+            if (info != null) deleteSameProperties(info, nm);
+        }
+        return nm;
+    }
     public static void execute(List<Modification> list, ArchiveInfo archiveInfo) {
         String rootPath = archiveInfo.getPath();
         list.stream().filter(m->m.action==Scan).reduce(new HashSet<String>(),(acc,m)-> {
@@ -376,100 +388,73 @@ public class Modification {
             .reduce(exifMap,(acc,m)->{
                 if (m.path==null || m.params==null || m.params.isEmpty()) return acc;
                 String key = m.path;
+                long now = new Date().getTime();
                 if (m.params.containsKey(start_photo) && m.params.containsKey(end_photo)) {
-                    key = key + "|" + m.params.get(start_photo).toString() + "|" + m.params.get(end_photo).toString();
-                }
-                if (acc.containsKey(key)) {
-                    acc.get(key).putAll(m.params);
-                } else {
-                    Map<String,Object> nm = new HashMap<>();
-                    nm.putAll(m.params);
-                    acc.put(key,nm);
-                }
-                acc.get(key).remove(start_photo);
-                acc.get(key).remove(end_photo);
-                return acc;
-            },(acc,m)->null);
-
-        File imgDir = new File(rootPath,temp_path);
-        File xmpDir = new File(imgDir,XMP);
-        xmpDir.mkdirs();
-        FileUtil.removeFilesInDir(xmpDir, false);
-        FileUtil.removeFilesInDir(imgDir,false);
-        int count = 0;
-        Map<String,File> files = new HashMap<>();
-        for (String key : exifMap.keySet()) {
-            Map<String,Object> params = exifMap.get(key);
-            String [] keys = key.split("\\|");
-            String path = keys[0];
-            List<String> pathList = new ArrayList<>();
-            if (keys.length==3) {
-                try {
-                    final boolean includeSubFolder = params.containsKey(include_sub_folder) && (Boolean)(params.get(include_sub_folder));
-                    PhotoInfo start = archiveInfo.find(new File(rootPath,keys[1])), end = archiveInfo.find(new File(rootPath,keys[2]));
-                    if (start==null || end==null) continue;
-                    archiveInfo.getInfos().stream().filter(p ->
-                            (p.getSubFolder().equals(path) || (includeSubFolder && p.getSubFolder().startsWith(path)))
-                            && p.compareTo(start)>=0 && p.compareTo(end)<=0
-                    ).reduce(pathList,(acc,p)-> {
-                        acc.add(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder() + File.separator + p.getFileName()));
-                        return acc;
-                    },(acc,p)->null);
-                } catch (Exception e){ Util.printStackTrace(e);}
-            } else {
-                pathList.add(path);
-            }
-            params.remove(include_sub_folder);
-            long now = new Date().getTime();
-            for (String filePath : pathList) {
-                File img = new File(rootPath, filePath);
-                if (img.exists() && img.isFile()) {
-                    PhotoInfo info = archiveInfo.find(img);
-                    Map<String,Object> nm = new HashMap<>();
-                    nm.putAll(params);
-                    if (count>0 && keys.length==3 && nm.containsKey(Key.getName(Key.DATETIMEORIGINAL))) {  // 批量修改时间，加1秒
-                        Object v = nm.get(Key.getName(Key.DATETIMEORIGINAL));
-                        if (v!=null) {
-                            Date dt = DateUtil.string2Date(v.toString());
-                            if (dt==null) continue;
-                            dt = new Date(dt.getTime() + count*1000);
-                            nm.put(Key.getName(Key.DATETIMEORIGINAL), DateUtil.date2String(dt));
+                    String startPath = m.params.get(start_photo).toString(), endPath = m.params.get(end_photo).toString();
+                    m.params.remove(start_photo);
+                    m.params.remove(end_photo);
+                    final boolean includeSubFolder = m.params.containsKey(include_sub_folder) && (Boolean)(m.params.get(include_sub_folder));
+                    m.params.remove(include_sub_folder);
+                    PhotoInfo start = archiveInfo.find(new File(rootPath,startPath)), end = archiveInfo.find(new File(rootPath,endPath));
+                    if (start==null || end==null) return acc;
+                    int pos0 = archiveInfo.getInfos().indexOf(start), pos1=archiveInfo.getInfos().indexOf(end);
+                    for (int i=pos0;i<=pos1;i++) {
+                        PhotoInfo info = archiveInfo.getInfos().get(i);
+                        if (!includeSubFolder && !info.getSubFolder().equals(key)) continue;
+                        File img = new File(info.fullPath(archiveInfo.getPath()));
+                        if (img.exists() && img.isFile()) {
+                            Map<String,Object> nm = new HashMap<>();
+                            nm.putAll(m.params);
+                            if (nm.containsKey(Key.getName(Key.DATETIMEORIGINAL))) {  // 批量修改时间，加1秒
+                                Object v = nm.get(Key.getName(Key.DATETIMEORIGINAL));
+                                if (v!=null) {
+                                    Date dt = DateUtil.string2Date(v.toString());
+                                    if (dt==null) continue;
+                                    dt = new Date(dt.getTime() + (i-pos0)*1000);
+                                    nm.put(Key.getName(Key.DATETIMEORIGINAL), DateUtil.date2String(dt));
+                                }
+                            }
+                            deleteSameProperties(info, nm);
+                            if (nm!=null && !nm.isEmpty()) {
+                                String filePath = info.getSubFolder() + (info.getSubFolder().isEmpty()?"":File.separator) + info.getFileName();
+                                if (acc.containsKey(filePath)) {
+                                    acc.get(filePath).putAll(nm);
+                                } else {
+                                    acc.put(filePath,nm);
+                                }
+                                info.setPropertiesBy(nm);
+                                info.setLastModified(now);
+                            }
                         }
                     }
-                    if (info!=null) {
-                        deleteSameProperties(info, nm);
-                        if (nm.isEmpty()) continue;
-                    }
-                    String xml = xmlString(nm);
-                    String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
-                    try {
-                        makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
-                        if (new File(imgDir, link).exists()) {
-                            File xmpFile = new File(xmpDir, count + ".xmp");
-                            FileUtil.writeToFile(xmpFile, xml, "UTF-8");
-                            count++;
-                            files.put(link, img);
+                } else {
+                    File img = new File(archiveInfo.getPath(), key);
+                    if (img.exists() && img.isFile()) {
+                        Map<String,Object> nm = new HashMap<>();
+                        PhotoInfo info = archiveInfo.find(img);
+                        nm.putAll(m.params);
+                        if (info != null) {
+                            deleteSameProperties(info, nm);
+                        }
+                        if (nm!=null && !nm.isEmpty()) {
+                            if (acc.containsKey(key)) {
+                                acc.get(key).putAll(nm);
+                            } else {
+                                acc.put(key,nm);
+                            }
                             if (info!=null) {
                                 info.setPropertiesBy(nm);
                                 info.setLastModified(now);
                             }
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
                 }
-            }
-            if (count>=1000) {
-                executeExiftool(xmpDir,imgDir,files);
-                files.clear();
-                count=0;
-            }
+                return acc;
+            },(acc,m)->null);
+
+        if (!exifMap.isEmpty()) {
+            execute(exifMap,archiveInfo.getPath());
         }
-        if (count>0) {
-            executeExiftool(xmpDir,imgDir,files);
-        }
-        FileUtil.removeFilesInDir(xmpDir,true);
-        FileUtil.removeFilesInDir(imgDir,true);
     }
     public static void resetSyncAction(String rootPath) {
         new File(rootPath, modification_dat +".sync").delete();

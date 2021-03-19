@@ -1,7 +1,6 @@
 package qinyoyo.photoinfo;
 
 import lombok.NonNull;
-import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.archive.Modification;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
@@ -14,8 +13,6 @@ import qinyoyo.utils.Util;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
-import java.io.IOException;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class ArchiveManager {
     static Map<String, Object> env = null;
-    public static String getInputString(String message, String def) {
+    private static String getInputString(String message, String def) {
         String input=def;
         Scanner in = new Scanner(System.in);
         System.out.print(message + (def==null || def.isEmpty() ? ": " : ("(" + def + "): ")));
@@ -32,7 +29,7 @@ public class ArchiveManager {
         return input;
     }
 
-    public static String chooseFolder(String title, String current) {
+    private static String chooseFolder(String title, String current) {
         int result = 0;
         String path = null;
         JFileChooser fileChooser = new JFileChooser();
@@ -48,13 +45,13 @@ public class ArchiveManager {
         } else return null;
     }
 
-    public static String inputSubFolder(String title, String rootPath) {
+    private static String inputSubFolder(String title, String rootPath) {
         String path = chooseFolder(title, rootPath);
         if (path==null) return null;
         path = ArchiveUtils.formatterSubFolder(path,rootPath);
         return path;
     }
-    public static void afterChanged(ArchiveInfo archiveInfo) {
+    private static void afterChanged(ArchiveInfo archiveInfo) {
         archiveInfo.sortInfos();
         archiveInfo.saveInfos();
     }
@@ -275,14 +272,14 @@ public class ArchiveManager {
         }
     }
     static List<PhotoInfo> photoInfoListIn(String path,boolean includeSubFolder) {
-        List<PhotoInfo> list=new ArrayList<>();
-        ArchiveInfo.seekPhotoInfosInFolder(new File(path),path,includeSubFolder,null,list);
+        List<PhotoInfo> list=ArchiveUtils.seekPhotoInfosInFolder(new File(path),path,includeSubFolder,null);
+        ArchiveUtils.defaultSort(list);
         return list;
     }
     static boolean imageOperations() {
         String currentPath = FileUtil.getCurrentPath();
         boolean shutdown = false;
-        List<Map<Long,Map<String,Object>>> gpxPoints = new ArrayList<>();
+        TreeMap<Long, Map<String,Object>> gpxPoints = null;
         String menuString =
                 "操作对象均不包含子目录下图像\n" +
                 "1 根据图像文件获得gpx地理信息\n" +
@@ -321,12 +318,7 @@ public class ArchiveManager {
                     if (gpxPoints.size()==0) {
                         String gpxPath = chooseFolder("选择gpx文件所在目录",currentPath);
                         String title = getInputString("设置默认标题", "");
-                        TreeMap<Long, Map<String,Object>> gpxMap = GpxUtils.readGpxInfo(new File(gpxPath),title);
-                        for (Long dt : gpxMap.keySet()) {
-                            Map<Long,Map<String,Object>> map = new HashMap<>();
-                            map.put(dt,gpxMap.get(dt));
-                            gpxPoints.add(map);
-                        }
+                        gpxPoints = GpxUtils.readGpxInfo(new File(gpxPath),title);
                     }
                     if (gpxPoints.size()>0) {
                         path = chooseFolder("选择图像目录", currentPath);
@@ -358,7 +350,7 @@ public class ArchiveManager {
             }
         }
     }
-    public static TimeZone inputTimeZone(String title) {
+    private static TimeZone inputTimeZone(String title) {
         while (true) {
             String zs = getInputString(title==null?"时区":title, "GMT+8:00").toUpperCase();
             Pattern p = Pattern.compile("^(GMT)?(\\+|-)?((0?\\d|10|11|12)(:00|:30)?)$");
@@ -372,7 +364,7 @@ public class ArchiveManager {
         }
     }
 
-    public static void changeDateTime(String path) {
+    private static void changeDateTime(String path) {
         String zs = getInputString("时间调整值[+/-]HH[:mm[:ss]]", "0");
         if (zs.equals("0")) return;
         Pattern p = Pattern.compile("^(\\+|-)?(\\d{1,2}(:\\d{1,2}(:\\d{1,2})?)?)$");
@@ -393,7 +385,7 @@ public class ArchiveManager {
         } else System.out.println("格式错误，请重新输入");
     }
 
-    public static void writeGpxFile(List<PhotoInfo> list,File file) {
+    private static void writeGpxFile(List<PhotoInfo> list,File file) {
         if (list!=null && list.size()>0) {
             list = list.stream().filter(p->p.getShootTime()!=null && p.getLatitude()!=null && p.getLongitude()!=null).collect(Collectors.toList());
             BaiduGeo.seekAddressInfo(list.stream().filter(p->p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null).collect(Collectors.toList()));
@@ -404,27 +396,27 @@ public class ArchiveManager {
             }
         }
     }
-    public static void writeGpxFile(ArchiveInfo archiveInfo, String folder) {
+    private static void writeGpxFile(ArchiveInfo archiveInfo, String folder) {
         final String subPath = (folder==null ?"" :ArchiveUtils.formatterSubFolder(folder,archiveInfo.getPath()));
         List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->p.getSubFolder().equals(subPath)).collect(Collectors.toList());
         File gpx = new File(archiveInfo.getPath(),(subPath.isEmpty() ? "" : subPath + File.separator) + ".archive.gpx");
         writeGpxFile(list,gpx);
     }
-    public static int seekGpxPoints(List<Map<Long,Map<String,Object>>> gpxPoints, int begin, long dtValue) {
-        long prev = gpxPoints.get(begin).keySet().iterator().next();
-        for (int i=begin;i<gpxPoints.size();i++) {
-            Map<Long,Map<String,Object>> point = gpxPoints.get(i);
-            long utc = point.keySet().iterator().next();
-            if (utc == dtValue) return i;
+    private static Map<String,Object> seekGpxPoints(TreeMap<Long, Map<String,Object>> gpxPoints, long dtValue) {
+        long prev = -1;
+        Iterator<Long> iterator = gpxPoints.keySet().iterator();
+        while (iterator.hasNext()) {
+            long utc = iterator.next();
+            if (utc == dtValue) return gpxPoints.get(utc);
             else if (utc<dtValue) prev = utc;
-            else {
-                if (utc - dtValue > dtValue - prev) return i>begin ? i-1 : begin;
-                else return i;
-            }
+            else if (prev == -1) return gpxPoints.get(utc);
+            else if (utc - dtValue > dtValue - prev) return gpxPoints.get(prev);
+            else return gpxPoints.get(utc);
         }
-        return -1;
+        if (prev == -1) return null;
+        else return gpxPoints.get(prev);
     }
-    public static void writeGpxInfo(String path,List<Map<Long,Map<String,Object>>> gpxPoints) {
+    private static void writeGpxInfo(String path,TreeMap<Long, Map<String,Object>> gpxPoints) {
         List<PhotoInfo> list = photoInfoListIn(path,false).stream().filter(p->
                 p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null &&
                         (p.getLongitude()==null || p.getLatitude()==null))
@@ -433,16 +425,12 @@ public class ArchiveManager {
             TimeZone zone = inputTimeZone("拍摄时区");
             int timeAdjust = TimeZone.getDefault().getRawOffset() - zone.getRawOffset();
             if (zone.hasSameRules(TimeZone.getDefault())) zone=null;
-            List<Modification> modifications = new ArrayList<>();
-            int begin = 0;
+            Map<String,Map<String,Object>> modifications = new HashMap<>();
             for (PhotoInfo pi : list) {
                 long dt = pi.getShootTime().getTime() + timeAdjust;
-                int index = seekGpxPoints(gpxPoints,begin,dt);
-                if (index>=0) {
-                    begin = index;
-                    Map<String,Object> params = gpxPoints.get(index).get(gpxPoints.get(index).keySet().iterator().next());
-                    modifications.add(new Modification(Modification.Exif,
-                            pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),params));
+                Map<String,Object> params = seekGpxPoints(gpxPoints,dt);
+                if (params!=null && !params.isEmpty()) {
+                    modifications.put(pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),params);
                 } else break;
             }
             if (modifications.size()>0) {

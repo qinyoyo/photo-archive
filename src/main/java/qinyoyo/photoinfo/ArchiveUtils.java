@@ -4,6 +4,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import qinyoyo.photoinfo.archive.*;
+import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
@@ -375,7 +376,7 @@ public class ArchiveUtils {
     public static void syncExifAttributesByTime(List<PhotoInfo> sourceList, List<PhotoInfo> targetList, String targetRootPath) {
         Iterator<PhotoInfo> iter = sourceList.iterator();
         int index = 0;
-        List<Modification> modificationList = new ArrayList<>();
+        Map<String,Map<String,Object>> modificationList = new HashMap<>();
         int modified = 0, same = 0;
         while (iter.hasNext()) {
             PhotoInfo srcPi = iter.next();
@@ -393,9 +394,8 @@ public class ArchiveUtils {
                     Modification.deleteSameProperties(tarPi,params);
                     if (!params.isEmpty()) {
                         modified ++;
-                        modificationList.add(new Modification(Modification.Exif,
-                                tarPi.getSubFolder() + (tarPi.getSubFolder().isEmpty()?"":File.separator) + tarPi.getFileName(),
-                                params));
+                        modificationList.put(tarPi.getSubFolder() + (tarPi.getSubFolder().isEmpty()?"":File.separator) + tarPi.getFileName(),
+                                params);
                     } else same ++;
                 }
             }
@@ -623,5 +623,78 @@ public class ArchiveUtils {
         }
         return list;
     }
+    public static List<PhotoInfo> seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder, List<String> exifToolArgs) {
+        List<PhotoInfo> infoList = new ArrayList<>();
+        if (!dir.isDirectory() || !dir.exists()) return infoList;
+        File [] files = dir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return (!pathname.isDirectory() && pathname.getName().startsWith(".") && pathname.length() == 4096);
+            }
+        });
+        if (files!=null && files.length>0) {
+            System.out.println("删除 "+dir.getAbsolutePath()+" .开始的小文件 : "+files.length);
+            for (File f : files) f.delete();
+        }
+        System.out.println("批量搜索 "+dir.getAbsolutePath());
+        Map<String, Map<String, Object>> fileInfos = null;
 
+        int count = 0;
+        try {
+            fileInfos = ExifTool.getInstance().query(dir, exifToolArgs, ArchiveUtils.NEED_KEYS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (fileInfos!=null) {
+            for (String file : fileInfos.keySet()) {
+                if (file.equals(ExifTool.ERROR)) {
+                    System.out.println(fileInfos.get(file).get(Key.DESCRIPTION));
+                } else {
+                    try {
+                        if (SupportFileType.isSupport(file)) {
+                            PhotoInfo photoInfo = new PhotoInfo(rootPath, new File(dir, file));
+                            photoInfo.setPropertiesBy(fileInfos.get(file));
+                            if (photoInfo.getShootTime()==null && photoInfo.getCreateTime()!=null && photoInfo.getMimeType()!=null && !photoInfo.getMimeType().toLowerCase().startsWith("image"))
+                                photoInfo.setShootTime(photoInfo.getCreateTime());
+                            if (photoInfo.getShootTime()==null) {
+                                photoInfo.setShootTime(DateUtil.getShootTimeFromFileName(photoInfo.getFileName()));
+                                if (photoInfo.getShootTime()!=null) {
+                                    ExifTool.getInstance().execute(new File(photoInfo.fullPath(rootPath)), "-overwrite_original",
+                                            "-DateTimeOriginal="+DateUtil.date2String(photoInfo.getShootTime()));
+                                }
+                            }
+                            if (dir.getName().endsWith(".web") && photoInfo.getMimeType()!=null && photoInfo.getMimeType().contains("html") && !photoInfo.getFileName().equals("index.html")) {
+                                System.out.println("    忽略文件 " + file);
+                            } else {
+                                infoList.add(photoInfo);
+                                count++;
+                            }
+                        } else System.out.println("    忽略文件 " + file);
+                    } catch (Exception e1){ Util.printStackTrace(e1);}
+                }
+            }
+        }
+        System.out.println("    处理文件数 : "+count);
+        if (includeSubFolder) {
+            File[] subDirs = dir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    if (pathname.getName().startsWith(".")) return false;
+                    return pathname.isDirectory();
+                }
+            });
+            if (subDirs != null && subDirs.length > 0) {
+                List<File> dirs = Arrays.asList(subDirs);
+                dirs.sort((a, b) -> {
+                    return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
+                });
+                for (File d : dirs) {
+                    if (d.isDirectory()) {
+                        infoList.addAll(seekPhotoInfosInFolder(d, rootPath, includeSubFolder, exifToolArgs));
+                    }
+                }
+            }
+        }
+        return infoList;
+    }
 }
