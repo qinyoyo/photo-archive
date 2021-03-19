@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 public class ArchiveManager {
     static Map<String, Object> env = null;
+    static String currentPath = ".";
     private static String getInputString(String message, String def) {
         String input=def;
         Scanner in = new Scanner(System.in);
@@ -29,24 +30,26 @@ public class ArchiveManager {
         return input;
     }
 
-    private static String chooseFolder(String title, String current) {
+    private static String chooseFolder(String title) {
         int result = 0;
         String path = null;
         JFileChooser fileChooser = new JFileChooser();
         FileSystemView fsv = FileSystemView.getFileSystemView();  //注意了，这里重要的一句
-        fileChooser.setCurrentDirectory(current==null || current.isEmpty() ? fsv.getHomeDirectory() : new File(current));
+        fileChooser.setCurrentDirectory(currentPath==null || currentPath.isEmpty() ? fsv.getHomeDirectory() : new File(currentPath));
         fileChooser.setDialogTitle(title==null || title.isEmpty() ? "请选择目录" : title);
         fileChooser.setApproveButtonText("确定");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         result = fileChooser.showOpenDialog(null);
         if (JFileChooser.APPROVE_OPTION == result) {
             path=fileChooser.getSelectedFile().getPath();
+            currentPath = path;
             return path;
         } else return null;
     }
 
     private static String inputSubFolder(String title, String rootPath) {
-        String path = chooseFolder(title, rootPath);
+        currentPath = rootPath;
+        String path = chooseFolder(title);
         if (path==null) return null;
         path = ArchiveUtils.formatterSubFolder(path,rootPath);
         return path;
@@ -119,10 +122,12 @@ public class ArchiveManager {
     }
 
     static boolean archiveWithArchivedInfo(@NonNull ArchiveInfo archived) {
-        String currentPath = FileUtil.getCurrentPath();
+        currentPath = FileUtil.getCurrentPath();
         boolean shutdown = false;
         final String rootPath = archived.getPath();
-        String menuString = "1 重建缩略图文件\n" +
+        String menuString =
+                        "\n——————————————————————————————\n" +
+                        "1 重建缩略图文件\n" +
                         "2 同步缩略图方向属性\n" +
                         "3 将属性写入到RAW文件\n" +
                         "4 重新扫描子目录\n" +
@@ -160,7 +165,7 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "3":
-                    path = chooseFolder("输入需要同步的RAW目录", currentPath);
+                    path = chooseFolder("输入需要同步的RAW目录");
                     if (path==null) break;
                     currentPath = path;
                     List<String> args = new ArrayList<String>() {{
@@ -182,7 +187,7 @@ public class ArchiveManager {
                     }
                     break;
                 case "5":
-                    path = chooseFolder("输入待归档的目录", currentPath);
+                    path = chooseFolder("输入待归档的目录");
                     if (path==null) break;
                     currentPath = path;
                     if (!path.isEmpty()) {
@@ -246,6 +251,7 @@ public class ArchiveManager {
                     break;
                 case "9":
                     BaiduGeo.seekAddressInfo(archived);
+                    done = true;
                     break;
                 case "a":
                     List<Modification> list = Modification.read(rootPath);
@@ -255,12 +261,13 @@ public class ArchiveManager {
                         Modification.resetSyncAction(rootPath);
                         afterChanged(archived);
                         System.out.println("同步修改完成.");
+                        done = true;
                     }
                     break;
                 case "b":
                     path = inputSubFolder("选择需要归档的目录(不包含子目录)",rootPath);
                     if (path==null) break;
-                    writeGpxFile(archived,path);
+                    done = writeGpxFile(archived,path)>0;
                     break;
                 default:
                     System.out.println("错误的选择！");
@@ -277,11 +284,12 @@ public class ArchiveManager {
         return list;
     }
     static boolean imageOperations() {
-        String currentPath = FileUtil.getCurrentPath();
+        currentPath = FileUtil.getCurrentPath();
         boolean shutdown = false;
         TreeMap<Long, Map<String,Object>> gpxPoints = null;
         String menuString =
-                "操作对象均不包含子目录下图像\n" +
+                "\n——————————————————————————————\n" +
+                "未归档图像文件处理(不包含子目录下图像)\n" +
                 "1 根据图像文件获得gpx地理信息\n" +
                 "2 校正图像拍摄时间\n" +
                 "3 根据gpx文件写入地理信息\n" +
@@ -301,43 +309,41 @@ public class ArchiveManager {
                     shutdown = true;
                     break;
                 case "1":
-                    path = chooseFolder("选择图像目录",currentPath);
+                    path = chooseFolder("选择图像目录");
                     if (path==null) break;
-                    currentPath = path;
-                    writeGpxFile(photoInfoListIn(path,false),new File(path,".archive.gpx"));
-                    done = true;
+                    done = writeGpxFile(photoInfoListIn(path,false),new File(path,".archive.gpx")) > 0;
                     break;
                 case "2":
-                    path = chooseFolder("选择图像目录",currentPath);
+                    path = chooseFolder("选择图像目录");
                     if (path==null) break;
-                    currentPath = path;
                     changeDateTime(path);
                     done = true;
                     break;
                 case "3":
-                    if (gpxPoints.size()==0) {
-                        String gpxPath = chooseFolder("选择gpx文件所在目录",currentPath);
+                    if (gpxPoints==null || gpxPoints.size()==0) {
+                        String gpxPath = chooseFolder("选择gpx文件所在目录");
+                        if (gpxPath==null) break;
                         String title = getInputString("设置默认标题", "");
                         gpxPoints = GpxUtils.readGpxInfo(new File(gpxPath),title);
+                        if (gpxPoints==null || gpxPoints.size()==0) {
+                            System.out.println("未找到GPS信息");
+                            break;
+                        }
+                        System.out.println("找到GPS信息数量: "+gpxPoints.size());
                     }
-                    if (gpxPoints.size()>0) {
-                        path = chooseFolder("选择图像目录", currentPath);
-                        if (path == null) break;
-                        currentPath = path;
-                        writeGpxInfo(path,gpxPoints);
-                        done = true;
-                    }
+                    path = chooseFolder("选择图像目录");
+                    if (path == null) break;
+                    writeGpxInfo(path,gpxPoints);
+                    done = true;
                     break;
                 case "4":
-                    path = chooseFolder("选择图像目录", currentPath);
+                    path = chooseFolder("选择图像目录");
                     if (path==null) break;
-                    currentPath = path;
                     done = rename(photoInfoListIn(path,false),path);
                     break;
                 case "5":
-                    path = chooseFolder("选择需要删除子空白目录的主目录", currentPath);
+                    path = chooseFolder("选择需要删除子空白目录的主目录");
                     if (path==null) break;
-                    currentPath = path;
                     FileUtil.removeEmptyFolder(new File(path));
                     done = true;
                     break;
@@ -365,42 +371,49 @@ public class ArchiveManager {
     }
 
     private static void changeDateTime(String path) {
-        String zs = getInputString("时间调整值[+/-]HH[:mm[:ss]]", "0");
-        if (zs.equals("0")) return;
-        Pattern p = Pattern.compile("^(\\+|-)?(\\d{1,2}(:\\d{1,2}(:\\d{1,2})?)?)$");
-        Matcher m = p.matcher(zs);
-        if (m.find()) {
-            String jj = (m.group(1) != null && m.group(1).equals("-") ? "-" : "+");
-            try {
-                Map<String, List<String>> result = ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-AllDates" + jj + "=" + m.group(2));
-                if (ExifTool.updatesFiles(result)>0) {
-                    ArchiveUtils.clearArchiveInfoFile(path);
-                }
-                for (String k : result.keySet()) {
-                    for (String s: result.get(k)) {
-                        System.out.println(s);
+        while(true) {
+            String zs = getInputString("时间调整值[+/-]HH[:mm[:ss]]", "0");
+            if (zs.equals("0")) return;
+            Pattern p = Pattern.compile("^(\\+|-)?(\\d{1,2}(:\\d{1,2}(:\\d{1,2})?)?)$");
+            Matcher m = p.matcher(zs);
+            if (m.find()) {
+                String jj = (m.group(1) != null && m.group(1).equals("-") ? "-" : "+");
+                try {
+                    System.out.println("调整拍摄时间...");
+                    Map<String, List<String>> result = ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-AllDates" + jj + "=" + m.group(2));
+                    for (String k : result.keySet()) {
+                        for (String s : result.get(k)) {
+                            System.out.println(s);
+                        }
                     }
+                } catch (Exception e) {
                 }
-            } catch (Exception e) {}
-        } else System.out.println("格式错误，请重新输入");
+                return;
+            } else System.out.println("格式错误，请重新输入");
+        }
     }
 
-    private static void writeGpxFile(List<PhotoInfo> list,File file) {
+    private static int writeGpxFile(List<PhotoInfo> list,File file) {
         if (list!=null && list.size()>0) {
             list = list.stream().filter(p->p.getShootTime()!=null && p.getLatitude()!=null && p.getLongitude()!=null).collect(Collectors.toList());
+            System.out.println("检索地址信息...");
             BaiduGeo.seekAddressInfo(list.stream().filter(p->p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null).collect(Collectors.toList()));
             if (list!=null && list.size()>0) {
                 TimeZone zone = inputTimeZone("拍摄时区");
                 String title = getInputString("设置默认标题", "");
-                GpxUtils.writeGpxInfo(file,list,title,zone);
-            }
+                int count = GpxUtils.writeGpxInfo(file,list,title,zone);
+                if (count>0) System.out.println("写入 "+count + " 条GPS记录到 "+file.getAbsolutePath());
+                else System.out.println("写入地理信息数据失败");
+                return count;
+            } else System.out.println("没有检索到GPS数据");
         }
+        return 0;
     }
-    private static void writeGpxFile(ArchiveInfo archiveInfo, String folder) {
+    private static int writeGpxFile(ArchiveInfo archiveInfo, String folder) {
         final String subPath = (folder==null ?"" :ArchiveUtils.formatterSubFolder(folder,archiveInfo.getPath()));
         List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->p.getSubFolder().equals(subPath)).collect(Collectors.toList());
         File gpx = new File(archiveInfo.getPath(),(subPath.isEmpty() ? "" : subPath + File.separator) + ".archive.gpx");
-        writeGpxFile(list,gpx);
+        return writeGpxFile(list,gpx);
     }
     private static Map<String,Object> seekGpxPoints(TreeMap<Long, Map<String,Object>> gpxPoints, long dtValue) {
         long prev = -1;
@@ -425,6 +438,7 @@ public class ArchiveManager {
             TimeZone zone = inputTimeZone("拍摄时区");
             int timeAdjust = TimeZone.getDefault().getRawOffset() - zone.getRawOffset();
             if (zone.hasSameRules(TimeZone.getDefault())) zone=null;
+            System.out.println("图像检索处理中...");
             Map<String,Map<String,Object>> modifications = new HashMap<>();
             for (PhotoInfo pi : list) {
                 long dt = pi.getShootTime().getTime() + timeAdjust;
@@ -435,24 +449,29 @@ public class ArchiveManager {
             }
             if (modifications.size()>0) {
                 Modification.execute(modifications,path);
+                System.out.println("更新gps信息文件数量："+modifications.size());
+                return;
             }
         }
+        System.out.println("没有需要修改的图像文件");
     }
     public static boolean archive() {
         env = Util.getYaml(new File(FileUtil.getCurrentPath(), "pv.yml"));
         ExifTool.FFMPEG = getProperty(env,"photo.ffmpeg", "E:\\Photo\\ffmpeg.exe");
         ExifTool.EXIFTOOL = getProperty(env,"photo.exiftool", "E:\\Photo\\exiftool.exe");
-        String rootInput = getProperty(env,"photo.root-path", null);
+        ExifTool.getInstalledVersion();
+        ExifTool.getInstalledFfmpegVersion();
+        currentPath = getProperty(env,"photo.root-path", null);
         boolean clear=false, same=false,other=false, removeNotExist=true;
-        rootInput = chooseFolder("选择归档的目录路径(取消操作未归档图像)", rootInput);
-        if (rootInput==null) return imageOperations();
-        File dir = new File(rootInput);
+        String rootPath = chooseFolder("选择归档的目录路径(取消操作未归档图像)");
+        if (rootPath==null) return imageOperations();
+        File dir = new File(rootPath);
         if (dir!=null && dir.exists() && dir.isDirectory()) {
             clear = Util.boolValue(getInputString("是否重新完全扫描", "no"));
             same = Util.boolValue(getInputString("将相同文件移到.delete目录", "no"));
             other = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "no"));
             removeNotExist = Util.boolValue(getInputString("删除不存在的项目", "yes"));
-            ArchiveInfo archived = ArchiveUtils.getArchiveInfo(rootInput, clear, same,other);
+            ArchiveInfo archived = ArchiveUtils.getArchiveInfo(rootPath, clear, same,other);
             if (archived!=null && removeNotExist && archived.removeNotExistInfo()>0) {
                 afterChanged(archived);
             }

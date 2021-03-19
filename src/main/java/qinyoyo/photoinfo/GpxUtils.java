@@ -41,13 +41,13 @@ public class GpxUtils {
     private static String nullUseEmpty(String s) {
         return s==null?"":s;
     }
-    public static File writeGpxInfo(File file, List<PhotoInfo> list, String title, final TimeZone zone) {
+    public static int writeGpxInfo(File file, List<PhotoInfo> list, String title, final TimeZone zone) {
         Document dom;
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try {
+            int count = 0;
             DocumentBuilder db = dbf.newDocumentBuilder();
             dom = db.newDocument();
-            // create the root element
             Element rootEle = dom.createElement("gpx");
             rootEle.setAttribute("xmlns","http://www.topografix.com/GPX/1/1");
             rootEle.setAttribute("creator","com.tang.photo-archive");
@@ -82,6 +82,7 @@ public class GpxUtils {
                     trkpt.appendChild(dom.createElement("desc")).setTextContent(desc);
                 }
                 trkseg.appendChild(trkpt);
+                count++;
             }
             trk.appendChild(trkseg);
             dom.appendChild(rootEle);
@@ -92,15 +93,15 @@ public class GpxUtils {
                 tr.setOutputProperty(OutputKeys.METHOD, "xml");
                 tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
                 tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-                tr.transform(new DOMSource(dom),
-                        new StreamResult(new FileOutputStream(file)));
+                tr.transform(new DOMSource(dom), new StreamResult(new FileOutputStream(file)));
+                return count;
             } catch (Exception te) {
                 System.out.println(te.getMessage());
             }
         } catch (Exception pce) {
             System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
         }
-        return file;
+        return 0;
     }
     public static TreeMap<Long, Map<String,Object>> readGpxInfo(File file,String defTitle) {
         TreeMap<Long, Map<String,Object>> result = new TreeMap<>();
