@@ -1098,6 +1098,8 @@
                         const e = transformObject.indexImg()
                         if (e) rangeExif.start = decodeURI(img.getAttribute('src'))
                         if (rangeExif.start) {
+                            let pos = rangeExif.start.indexOf('?')
+                            if (pos>=0) rangeExif.start = rangeExif.start.substring(0,pos)
                             let needResumeLoop = isLooping()
                             if (needResumeLoop) {
                                 pauseLoop()
@@ -1217,6 +1219,8 @@
                     if (rangeExif.start && transformObject) {
                         rangeExif.end = decodeURI(img.getAttribute('src'))
                         if (rangeExif.end) {
+                            let pos = rangeExif.end.indexOf('?')
+                            if (pos>=0) rangeExif.end = rangeExif.end.substring(0,pos)
                             let msg = (rangeExif.value ? '批量设置 '+ rangeExif.note +'=' + rangeExif.value : '批量删除 '+ rangeExif.note) + ' ?\n' +
                                 '['+ rangeExif.start + ' 至 ' + rangeExif.end + ']'
                             let needResumeLoop = isLooping()

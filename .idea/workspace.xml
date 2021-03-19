@@ -24,10 +24,9 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +78,6 @@
     <configuration name="PhotoArchiveApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <module name="photo-archive" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="qinyoyo.PhotoArchiveApplication" />
-      <option name="PROGRAM_PARAMETERS" value="-a" />
       <option name="ALTERNATIVE_JRE_PATH" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -123,6 +121,7 @@
       <workItem from="1616033430538" duration="25047000" />
       <workItem from="1616112643301" duration="2524000" />
       <workItem from="1616115214603" duration="2175000" />
+      <workItem from="1616118103449" duration="4388000" />
     </task>
     <servers />
   </component>
@@ -142,78 +141,78 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1615466523151">
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1616119271032">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1615466523151" />
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1616119271032" />
     <state x="371" y="87" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1615109498732">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
     <state x="371" y="87" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.680@0.0.1280.680" timestamp="1615109498732" />
-    <state width="446" height="466" key="DebuggerActiveHint" timestamp="1615205739388">
+    <state width="446" height="466" key="DebuggerActiveHint" timestamp="1616121356610">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="446" height="466" key="DebuggerActiveHint/0.0.1920.1040@0.0.1920.1040" timestamp="1615205739388" />
-    <state width="1860" height="267" key="GridCell.Tab.0.bottom" timestamp="1616115179028">
+    <state width="446" height="466" key="DebuggerActiveHint/0.0.1920.1040@0.0.1920.1040" timestamp="1616121356610" />
+    <state width="1860" height="267" key="GridCell.Tab.0.bottom" timestamp="1616122496062">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615116059050" />
-    <state width="1860" height="267" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
-    <state width="1860" height="267" key="GridCell.Tab.0.center" timestamp="1616115179028">
+    <state width="1860" height="267" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496062" />
+    <state width="1860" height="267" key="GridCell.Tab.0.center" timestamp="1616122496062">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1615116059050" />
-    <state width="1860" height="267" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
-    <state width="1860" height="267" key="GridCell.Tab.0.left" timestamp="1616115179028">
+    <state width="1860" height="267" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496062" />
+    <state width="1860" height="267" key="GridCell.Tab.0.left" timestamp="1616122496062">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1615116059049" />
-    <state width="1860" height="267" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
-    <state width="1860" height="267" key="GridCell.Tab.0.right" timestamp="1616115179028">
+    <state width="1860" height="267" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496062" />
+    <state width="1860" height="267" key="GridCell.Tab.0.right" timestamp="1616122496062">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1615116059050" />
-    <state width="1860" height="267" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616115179028" />
-    <state width="1860" height="372" key="GridCell.Tab.1.bottom" timestamp="1615472572634">
+    <state width="1860" height="267" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496062" />
+    <state width="1860" height="250" key="GridCell.Tab.1.bottom" timestamp="1616122496057">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.1.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615116059043" />
-    <state width="1860" height="372" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.1.center" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496057" />
+    <state width="1860" height="250" key="GridCell.Tab.1.center" timestamp="1616122496056">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.1.center/0.0.1280.680@0.0.1280.680" timestamp="1615116059042" />
-    <state width="1860" height="372" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.1.left" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496056" />
+    <state width="1860" height="250" key="GridCell.Tab.1.left" timestamp="1616122496056">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.1.left/0.0.1280.680@0.0.1280.680" timestamp="1615116059042" />
-    <state width="1860" height="372" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.1.right" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496056" />
+    <state width="1860" height="250" key="GridCell.Tab.1.right" timestamp="1616122496057">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="217" key="GridCell.Tab.1.right/0.0.1280.680@0.0.1280.680" timestamp="1615116059042" />
-    <state width="1860" height="372" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.2.bottom" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496057" />
+    <state width="1860" height="250" key="GridCell.Tab.2.bottom" timestamp="1616122496057">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="60" key="GridCell.Tab.2.bottom/0.0.1280.680@0.0.1280.680" timestamp="1615098595409" />
-    <state width="1860" height="372" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.2.center" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496057" />
+    <state width="1860" height="250" key="GridCell.Tab.2.center" timestamp="1616122496057">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="60" key="GridCell.Tab.2.center/0.0.1280.680@0.0.1280.680" timestamp="1615098595409" />
-    <state width="1860" height="372" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.2.left" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496057" />
+    <state width="1860" height="250" key="GridCell.Tab.2.left" timestamp="1616122496057">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="60" key="GridCell.Tab.2.left/0.0.1280.680@0.0.1280.680" timestamp="1615098595409" />
-    <state width="1860" height="372" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
-    <state width="1860" height="372" key="GridCell.Tab.2.right" timestamp="1615472572634">
+    <state width="1860" height="250" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496057" />
+    <state width="1860" height="250" key="GridCell.Tab.2.right" timestamp="1616122496057">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="60" key="GridCell.Tab.2.right/0.0.1280.680@0.0.1280.680" timestamp="1615098595409" />
-    <state width="1860" height="372" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1615472572634" />
+    <state width="1860" height="250" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616122496057" />
     <state x="509" y="110" width="905" height="820" key="find.popup" timestamp="1615291804129">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -244,9 +243,29 @@
           <option name="timeStamp" value="38" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>443</line>
-          <option name="timeStamp" value="39" />
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>388</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>455</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>349</line>
+          <option name="timeStamp" value="43" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
+          <line>355</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java</url>
+          <line>301</line>
+          <option name="timeStamp" value="45" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

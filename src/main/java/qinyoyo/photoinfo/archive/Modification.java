@@ -387,7 +387,7 @@ public class Modification {
         list.stream().filter(m->m.action==Exif && !removedPaths.contains(m.path))
             .reduce(exifMap,(acc,m)->{
                 if (m.path==null || m.params==null || m.params.isEmpty()) return acc;
-                String key = m.path;
+                String filePath = m.path;
                 long now = new Date().getTime();
                 if (m.params.containsKey(start_photo) && m.params.containsKey(end_photo)) {
                     String startPath = m.params.get(start_photo).toString(), endPath = m.params.get(end_photo).toString();
@@ -400,7 +400,8 @@ public class Modification {
                     int pos0 = archiveInfo.getInfos().indexOf(start), pos1=archiveInfo.getInfos().indexOf(end);
                     for (int i=pos0;i<=pos1;i++) {
                         PhotoInfo info = archiveInfo.getInfos().get(i);
-                        if (!includeSubFolder && !info.getSubFolder().equals(key)) continue;
+                        if (!includeSubFolder && !info.getSubFolder().equals(filePath)) continue;
+                        if (includeSubFolder && !info.getSubFolder().equals(filePath) && !info.getSubFolder().startsWith(filePath+File.separator)) continue;
                         File img = new File(info.fullPath(archiveInfo.getPath()));
                         if (img.exists() && img.isFile()) {
                             Map<String,Object> nm = new HashMap<>();
@@ -416,11 +417,11 @@ public class Modification {
                             }
                             deleteSameProperties(info, nm);
                             if (nm!=null && !nm.isEmpty()) {
-                                String filePath = info.getSubFolder() + (info.getSubFolder().isEmpty()?"":File.separator) + info.getFileName();
-                                if (acc.containsKey(filePath)) {
-                                    acc.get(filePath).putAll(nm);
+                                String file = info.getSubFolder() + (info.getSubFolder().isEmpty()?"":File.separator) + info.getFileName();
+                                if (acc.containsKey(file)) {
+                                    acc.get(file).putAll(nm);
                                 } else {
-                                    acc.put(filePath,nm);
+                                    acc.put(file,nm);
                                 }
                                 info.setPropertiesBy(nm);
                                 info.setLastModified(now);
@@ -428,7 +429,7 @@ public class Modification {
                         }
                     }
                 } else {
-                    File img = new File(archiveInfo.getPath(), key);
+                    File img = new File(archiveInfo.getPath(), filePath);
                     if (img.exists() && img.isFile()) {
                         Map<String,Object> nm = new HashMap<>();
                         PhotoInfo info = archiveInfo.find(img);
@@ -437,10 +438,10 @@ public class Modification {
                             deleteSameProperties(info, nm);
                         }
                         if (nm!=null && !nm.isEmpty()) {
-                            if (acc.containsKey(key)) {
-                                acc.get(key).putAll(nm);
+                            if (acc.containsKey(filePath)) {
+                                acc.get(filePath).putAll(nm);
                             } else {
-                                acc.put(key,nm);
+                                acc.put(filePath,nm);
                             }
                             if (info!=null) {
                                 info.setPropertiesBy(nm);

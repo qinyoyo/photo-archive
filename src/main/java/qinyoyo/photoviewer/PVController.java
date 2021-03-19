@@ -307,10 +307,12 @@ public class PVController implements ApplicationRunner , ErrorController {
             new Thread() {
                 @Override
                 public void run() {
+                    String startPath = start.indexOf("?") > 0 ? start.substring(0,start.indexOf("?")) : start;
+                    String endPath = end.indexOf("?") > 0 ? end.substring(0,end.indexOf("?")) : end;
                     Map<String, Object> map = new HashMap<String, Object>() {{
                             put(Key.getName(key), value);
-                            put(Modification.start_photo,start);
-                            put(Modification.end_photo,end);
+                            put(Modification.start_photo,startPath);
+                            put(Modification.end_photo,endPath);
                             put(Modification.include_sub_folder, includeSubFolder!=null && includeSubFolder);
                     }};
                     Modification.execute(new ArrayList<Modification>(){{
