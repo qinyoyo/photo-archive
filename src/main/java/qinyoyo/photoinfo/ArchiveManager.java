@@ -172,7 +172,7 @@ public class ArchiveManager {
                         add("--ext");
                         add("xmp");
                     }};
-                    ArchiveUtils.syncExifAttributesByTime(archived.getInfos(), photoInfoListIn(path,false), path);
+                    ArchiveUtils.syncExifAttributesByTime(archived.getInfos(), photoInfoListIn(path,false, args), path);
                     done = true;
                     break;
                 case "4":
@@ -278,8 +278,8 @@ public class ArchiveManager {
             }
         }
     }
-    static List<PhotoInfo> photoInfoListIn(String path,boolean includeSubFolder) {
-        List<PhotoInfo> list=ArchiveUtils.seekPhotoInfosInFolder(new File(path),path,includeSubFolder,null);
+    static List<PhotoInfo> photoInfoListIn(String path,boolean includeSubFolder, List<String> args) {
+        List<PhotoInfo> list=ArchiveUtils.seekPhotoInfosInFolder(new File(path),path,includeSubFolder,args);
         ArchiveUtils.defaultSort(list);
         return list;
     }
@@ -311,7 +311,7 @@ public class ArchiveManager {
                 case "1":
                     path = chooseFolder("选择图像目录");
                     if (path==null) break;
-                    done = writeGpxFile(photoInfoListIn(path,false),new File(path,".archive.gpx")) > 0;
+                    done = writeGpxFile(photoInfoListIn(path,false,null),new File(path,".archive.gpx")) > 0;
                     break;
                 case "2":
                     path = chooseFolder("选择图像目录");
@@ -339,7 +339,7 @@ public class ArchiveManager {
                 case "4":
                     path = chooseFolder("选择图像目录");
                     if (path==null) break;
-                    done = rename(photoInfoListIn(path,false),path);
+                    done = rename(photoInfoListIn(path,false,null),path);
                     break;
                 case "5":
                     path = chooseFolder("选择需要删除子空白目录的主目录");
@@ -430,7 +430,7 @@ public class ArchiveManager {
         else return gpxPoints.get(prev);
     }
     private static void writeGpxInfo(String path,TreeMap<Long, Map<String,Object>> gpxPoints) {
-        List<PhotoInfo> list = photoInfoListIn(path,false).stream().filter(p->
+        List<PhotoInfo> list = photoInfoListIn(path,false,null).stream().filter(p->
                 p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null &&
                         (p.getLongitude()==null || p.getLatitude()==null))
                 .collect(Collectors.toList());

@@ -32,10 +32,9 @@ public class ArchiveUtils {
     public static final Key[] MODIFIABLE_KEYS = new Key[]{
             Key.SUBJECT_CODE,
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,
-            Key.MODEL, Key.LENS_ID,
             Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.SCENE,
             Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,
-            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE,
+            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME
     };
     public static final String no_shottime_log = ".no_shottime.log";
     public static final String manual_other_bat = ".manual_other.bat";
@@ -388,7 +387,7 @@ public class ArchiveUtils {
                 long pc = tarPi.getShootTime().getTime() - srcPi.getShootTime().getTime();
                 if ( pc < 0) continue;
                 else if (pc > 0) break;
-                else {
+                else if (equals(tarPi.getModel(),srcPi.getModel())){
                     index++;
                     Map<String, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS), true);
                     Modification.deleteSameProperties(tarPi,params);
@@ -398,6 +397,7 @@ public class ArchiveUtils {
                                 params);
                     } else same ++;
                 }
+                else continue;
             }
         }
         if (!modificationList.isEmpty()) Modification.execute(modificationList,targetRootPath);
