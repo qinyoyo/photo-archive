@@ -8,17 +8,16 @@ import java.util.regex.Pattern;
 
 public class DateUtil {
     public static String date2String(Date dt,String fmt) {
-        if (dt == null) return null;
-        return new SimpleDateFormat(fmt).format(dt);
+        return date2String(dt,fmt,null);
     }
     public static String date2String(Date dt,String fmt, TimeZone zone) {
         if (dt == null) return null;
-        SimpleDateFormat sdf = new SimpleDateFormat(fmt);
+        SimpleDateFormat sdf = new SimpleDateFormat(fmt==null?"yyyy-MM-dd HH:mm:ss":fmt);
         if (zone!=null) sdf.setTimeZone(zone);
         return sdf.format(dt);
     }
     public static String date2String(Date dt) {
-        return date2String(dt,"yyyy-MM-dd HH:mm:ss");
+        return date2String(dt,"yyyy-MM-dd HH:mm:ss",null);
     }
 
     public static Date dayOf(Date dt) {
@@ -28,16 +27,23 @@ public class DateUtil {
         return new Date(dayOf(dt).getTime()+24l*60*60*1000);
     }
     public static Date string2Date(String s, String fmt) {
+        return string2Date(s, fmt, null);
+    }
+    public static Date string2Date(String s, String fmt, TimeZone zone) {
         if (s == null)
             return null;
         try {
-            return new SimpleDateFormat(fmt).parse(s);
+            SimpleDateFormat sdf = new SimpleDateFormat(fmt);
+            if (zone!=null) sdf.setTimeZone(zone);
+            return sdf.parse(s);
         } catch (Exception e) {
             return null;
         }
     }
-
     public static Date string2Date(String s) {
+        return string2DateByZone(s,null);
+    }
+    public static Date string2DateByZone(String s,TimeZone zone) {
         try {
             if (s == null || s.equals("-")) return null;
             Pattern p = Pattern.compile("(\\d{4})[^0-9](\\d{2})[^0-9](\\d{2})[^0-9](\\d{2})[^0-9](\\d{2})[^0-9](\\d{2})(\\.\\d+)?");
@@ -48,11 +54,11 @@ public class DateUtil {
                 if (ms == null || ms.isEmpty()) ms = ".000";
                 else if (ms.length() > 4) ms = ms.substring(0, 4);
                 else while (ms.length() < 4) ms = ms + "0";
-                if (m.end() == s.length()) return string2Date(newS + ms, "yyyy-MM-dd HH:mm:ss.SSS");
+                if (m.end() == s.length()) return string2Date(newS + ms, "yyyy-MM-dd HH:mm:ss.SSS",zone);
                 else {
                     String z = s.substring(m.end()).trim();
                     newS = newS + ms;
-                    if (z.isEmpty()) return string2Date(newS, "yyyy-MM-dd HH:mm:ss.SSS");
+                    if (z.isEmpty()) return string2Date(newS, "yyyy-MM-dd HH:mm:ss.SSS",zone);
                     else {
                         if (z.toLowerCase().equals("z")) z="+0000";
                         return string2Date(newS + z, "yyyy-MM-dd HH:mm:ss.SSSz");

@@ -4,15 +4,20 @@ import lombok.NonNull;
 import qinyoyo.photoinfo.archive.Modification;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
+import qinyoyo.photoinfo.archive.TimeZoneTable;
 import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
+import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.BaiduGeo;
+import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.Util;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -139,6 +144,7 @@ public class ArchiveManager {
                         "9 获取地理位置信息\n" +
                         "a 执行 .modification.dat.sync\n" +
                         "b 生成 gpx 归档文件\n" +
+                        "c 生成gpsDatetime\n" +
                         "0 下一个操作之后关机\n" +
                         "s 启动浏览服务\n" +
                         "q 退出\n请选择一个操作";
@@ -269,6 +275,10 @@ public class ArchiveManager {
                     path = inputSubFolder("选择需要归档的目录(不包含子目录)",rootPath);
                     if (path==null) break;
                     done = writeGpxFile(archived,path)>0;
+                    break;
+                case "c":
+                    addGpsDatetime(archived);
+                    done = true;
                     break;
                 default:
                     System.out.println("错误的选择！");
@@ -455,6 +465,28 @@ public class ArchiveManager {
             }
         }
         System.out.println("没有需要修改的图像文件");
+    }
+    private static void addGpsDatetime(ArchiveInfo archiveInfo) {
+        List<PhotoInfo> list=archiveInfo.getInfos().stream().filter(p->p.getShootTime()!=null &&
+                p.getMimeType()!=null && p.getMimeType().contains("image") &&
+                p.getGpsDatetime()==null && p.getLongitude()!=null).collect(Collectors.toList());
+        Map<String,Map<String,Object>> pathMap = new HashMap<>();
+        list.forEach(p->{
+            TimeZone zone = TimeZoneTable.getTimeZone(p.getCountry(),p.getProvince(),p.getCity(),p.getLongitude());
+            if (zone!=null) {
+                String fmt = "yyyy:MM:dd HH:mm:ss";
+                String s= DateUtil.date2String(p.getShootTime(),fmt);
+                Date gpsDt = DateUtil.string2Date(s,fmt,zone);
+                p.setGpsDatetime(DateUtil.date2String(gpsDt,fmt,TimeZone.getTimeZone("UTC"))+"Z");
+                Map<String,Object> map = new HashMap<>();
+                map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
+                pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
+            } else System.out.println(p.toString());
+        });
+        if (!pathMap.isEmpty()) {
+            Modification.execute(pathMap,archiveInfo.getPath());
+            archiveInfo.saveInfos();
+        }
     }
     public static boolean archive() {
         env = Util.getYaml(new File(FileUtil.getCurrentPath(), "pv.yml"));

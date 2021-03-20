@@ -14,6 +14,8 @@ import qinyoyo.utils.Util;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -585,5 +587,33 @@ public class PhotoInfo implements Serializable,Cloneable {
         else if (d1.getTime() < d2.getTime())
             return -1;
         else return nameCompare(p);
+    }
+    public Date convertGpsDateTime() {
+        if (gpsDatetime!=null) {
+            return DateUtil.string2DateByZone(gpsDatetime,TimeZone.getTimeZone("UTC"));
+        } else return null;
+    }
+    public TimeZone getTimeZone() {
+        TimeZone zone = TimeZoneTable.getTimeZone(country,province,city,longitude);
+        if (zone!=null) return zone;
+        if (shootTime!=null) {
+            Date gpsDt = convertGpsDateTime();
+            if (gpsDt!=null) {
+                String fmt = "yyyy-MM-dd HH:mm:ss";
+                SimpleDateFormat sdf = new SimpleDateFormat(fmt);
+                String s=sdf.format(shootTime);
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                try {
+                    long delta = (sdf.parse(s).getTime() - gpsDt.getTime())/1000/60;
+                    long hour = delta / 60, minute = delta % 60;
+                    if (minute > 30) hour += (hour>=0?1:-1);
+                    if (hour>=-12 && hour<=12) {
+                        return TimeZone.getTimeZone("GMT"+(hour>0?"+":"")+hour);
+                    }
+                } catch (ParseException e) {
+                }
+            }
+        }
+        return TimeZone.getDefault();
     }
 }
