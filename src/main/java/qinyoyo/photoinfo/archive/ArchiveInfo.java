@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
+import qinyoyo.utils.BaiduGeo;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.ImageUtil;
 import qinyoyo.utils.Util;
@@ -68,6 +69,9 @@ public class ArchiveInfo {
         if (af.exists()) readInfos();
         else seekPhotoInfo();
         if (infos==null)  infos = new ArrayList<>();
+        infos.stream().filter(p->p.getLatitude()!=null && p.getLongitude()!=null && p.getCountry()!=null && !p.getCountry().trim().isEmpty()).forEach(p->{
+            BaiduGeo.setGeoInfoIntoDatabase(p);
+        });
     }
 
     /**

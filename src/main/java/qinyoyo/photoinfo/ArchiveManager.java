@@ -408,11 +408,10 @@ public class ArchiveManager {
         if (list!=null && list.size()>0) {
             list = list.stream().filter(p->p.getShootTime()!=null && p.getLatitude()!=null && p.getLongitude()!=null).collect(Collectors.toList());
             System.out.println("检索地址信息...");
-            BaiduGeo.seekAddressInfo(list.stream().filter(p->p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null).collect(Collectors.toList()));
+            BaiduGeo.seekAddressInfo(list.stream().filter(p->p.getCountry() == null || p.getCountry().trim().isEmpty()).collect(Collectors.toList()),null);
             if (list!=null && list.size()>0) {
-                TimeZone zone = inputTimeZone("拍摄时区");
                 String title = getInputString("设置默认标题", "");
-                int count = GpxUtils.writeGpxInfo(file,list,title,zone);
+                int count = GpxUtils.writeGpxInfo(file,list,title);
                 if (count>0) System.out.println("写入 "+count + " 条GPS记录到 "+file.getAbsolutePath());
                 else System.out.println("写入地理信息数据失败");
                 return count;

@@ -1,14 +1,15 @@
 package qinyoyo.utils;
 
 import qinyoyo.photoinfo.ArchiveUtils;
+import qinyoyo.photoinfo.GpxUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.photoinfo.exiftool.Key;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BaiduGeo {
@@ -54,6 +55,61 @@ public class BaiduGeo {
         String  message;
     }
 
+    private static Map<String,Map<String,String>> geoDatabase = new TreeMap<>();
+    private static String geoStringKey(double longitude,double latitude) {
+        return String.format("%.4f_%.4f",longitude,latitude);
+    }
+    public static Map<String,String> getGeoInfoFromDatabase(double longitude,double latitude) {
+        return geoDatabase.get(geoStringKey(longitude,latitude));
+    }
+    private static final String COUNTRY = "country";
+    private static final String PROVINCE = "province";
+    private static final String CITY = "city";
+    private static final String LOCATION = "location";
+    private static final String POI = "poi";
+    private static boolean isEmpty(String s) {
+        return s==null || s.trim().isEmpty();
+    }
+    public static void setGeoInfoIntoDatabase(PhotoInfo pi) {
+        if (pi.getLongitude()!=null && pi.getLatitude()!=null && !isEmpty(pi.getCountry())) {
+            setGeoInfoIntoDatabase(pi.getLongitude(),pi.getLatitude(),pi.getCountry(),pi.getProvince(),
+                    pi.getCity(),pi.getLocation(),pi.getSubjectCode());
+        }
+    }
+    public static void setGeoInfoIntoDatabase(double longitude,double latitude,String country,String province,
+                                              String city,String location,String poi) {
+        if (!isEmpty(country)) {
+            String key = geoStringKey(longitude, latitude);
+            Map<String,String> geo = geoDatabase.get(key);
+            if (geo==null) geo = new HashMap<>();
+            if (!isEmpty(country)) geo.put(COUNTRY,country);
+            if (!isEmpty(province)) geo.put(PROVINCE,province);
+            if (!isEmpty(city)) geo.put(CITY,city);
+            if (!isEmpty(location)) geo.put(LOCATION,location);
+            if (!isEmpty(poi)) geo.put(POI,poi);
+            geoDatabase.put(key,geo);
+        }
+    }
+    public static boolean setGeoInfoFromDatabase(PhotoInfo pi) {
+        if (pi.getLongitude()!=null && pi.getLatitude()!=null) {
+            String key = geoStringKey(pi.getLongitude(), pi.getLatitude());
+            Map<String,String> geo = geoDatabase.get(key);
+            if (geo!=null) {
+                String s = geo.get(COUNTRY);
+                if (!isEmpty(s)) pi.setCountry(s);
+                s = geo.get(PROVINCE);
+                if (!isEmpty(s)) pi.setProvince(s);
+                s = geo.get(CITY);
+                if (!isEmpty(s)) pi.setCity(s);
+                s = geo.get(LOCATION);
+                if (!isEmpty(s)) pi.setLocation(s);
+                s = geo.get(POI);
+                if (!isEmpty(s)) pi.setSubjectCode(s);
+                return true;
+            }
+        }
+        return false;
+    }
     private static final String address = "http://api.map.baidu.com/reverse_geocoding/v3/?ak=%s&output=json&coordtype=wgs84ll&extensions_poi=1&poi_types=旅游景点&extensions_town=true&location=%.6f,%.6f";
     private static final String defaultAK = "0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o";
 
@@ -86,26 +142,24 @@ public class BaiduGeo {
         return s;
     }
 
-    public static List<PhotoInfo> seekAddressInfo(List<PhotoInfo> list) {
+    public static List<PhotoInfo> seekAddressInfo(List<PhotoInfo> list,String rootPath) {
+        if (rootPath!=null) {
+            File google = new File(rootPath,".google.gpx");
+            GpxUtils.readGpxInfo(google,"");
+            google.delete();
+        }
         if (list != null && list.size() > 0) {
             list.sort((a, b) -> {
                 int r = a.getSubFolder().compareTo(b.getSubFolder());
                 return r == 0 ? a.compareTo(b) : r;
             });
             List<PhotoInfo> changedList = new ArrayList<>();
+            List<PhotoInfo> failedList = new ArrayList<>();
             System.out.println(list.size() + " geo points need seek");
-            int count = 0;
-            double delta = 0.0001;
-            PhotoInfo p0 = null;
+            int count = 0, failed = 0;
             for (PhotoInfo p : list) {
                 try {
-                    if (p0 != null && Math.abs(p.getLatitude() - p0.getLatitude()) < delta && Math.abs(p.getLongitude() - p0.getLongitude()) < delta) {
-                        p.setCountry(p0.getCountry());
-                        p.setProvince(p0.getProvince());
-                        p.setCity(p0.getCity());
-                        p.setLocation(p0.getLocation());
-                        if (p.getSubjectCode() == null) p.setSubjectCode(p0.getSubjectCode());
-                        else if (p0.getSubjectCode() == null) p0.setSubjectCode(p.getSubjectCode());
+                    if (setGeoInfoFromDatabase(p)) {
                         count++;
                         changedList.add(p);
                     } else {
@@ -118,6 +172,11 @@ public class BaiduGeo {
                                     province = addressComponent.province, city = addressComponent.city,
                                     district = addressComponent.district,town = addressComponent.town,
                                     street = addressComponent.street;
+                            if (isEmpty(country)) {
+                                failedList.add(p);
+                                failed++;
+                                continue;
+                            }
                             boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) || ArchiveUtils.hasChinese(city);
                             p.setCountry(trunc(country, Key.COUNTRY));
                             p.setProvince(trunc(province, Key.STATE));
@@ -160,17 +219,24 @@ public class BaiduGeo {
                                 }
                             }
                             count++;
-                            p0 = p;
                             changedList.add(p);
+                            setGeoInfoIntoDatabase(p);
                         } else {
                             System.out.println(info.message);
+                            failedList.add(p);
+                            failed++;
                         }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    failedList.add(p);
+                    failed++;
                 }
             }
-            System.out.println(count + " geo points seeked");
+            System.out.println(count + " geo points seeked. " + (failed>0?failed+" points failed.":""));
+            if (rootPath!=null) {
+                GpxUtils.writeGpxInfo(new File(rootPath,".missedGeoInfo.gpx"),failedList,null);
+            }
             return changedList;
         }
         return null;
@@ -178,9 +244,9 @@ public class BaiduGeo {
     public static void seekAddressInfo(ArchiveInfo archiveInfo) {
         List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p ->
                 p.getLatitude() != null && p.getLongitude() != null &&
-                p.getProvince() == null && p.getCity() == null && p.getLocation() == null && p.getCountry() == null
+                (p.getCountry() == null || p.getCountry().trim().isEmpty())
         ).collect(Collectors.toList());
-        List<PhotoInfo> changedList = seekAddressInfo(list);
+        List<PhotoInfo> changedList = seekAddressInfo(list,archiveInfo.getPath());
         if (changedList!=null && changedList.size()>0) {
             if (archiveInfo!=null) ArchiveUtils.writeAddress(changedList, archiveInfo);
             archiveInfo.saveInfos();

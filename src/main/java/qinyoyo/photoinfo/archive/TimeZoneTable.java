@@ -166,6 +166,7 @@ public class TimeZoneTable {
             case "san marino" : return "Europe/San_Marino" ;
             case "ukraine" : return "Europe/Kiev" ;
             case "spain" : return "Europe/Madrid" ;
+            case "希腊":
             case "greece" : return "Europe/Athens" ;
             case "hungary" : return "Europe/Budapest" ;
             case "italy" : return "Europe/Rome" ;
@@ -275,6 +276,7 @@ public class TimeZoneTable {
             case "morocco" : return "Africa/Blantyre" ;
             case "mozambique" : return "Africa/Maputo" ;
             case "namibia" : return "Africa/Windhoek" ;
+            case "南非":
             case "south africa" : return "Africa/Johannesburg" ;
             case "niger" : return "Africa/Niamey" ;
             case "nigeria" : return "Africa/Blantyre" ;

@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import qinyoyo.photoinfo.exiftool.Key;
+import qinyoyo.utils.BaiduGeo;
 import qinyoyo.utils.DateUtil;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -41,7 +42,7 @@ public class GpxUtils {
     private static String nullUseEmpty(String s) {
         return s==null?"":s;
     }
-    public static int writeGpxInfo(File file, List<PhotoInfo> list, String title, final TimeZone zone) {
+    public static int writeGpxInfo(File file, List<PhotoInfo> list, String title) {
         Document dom;
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try {
@@ -60,7 +61,11 @@ public class GpxUtils {
             meta.appendChild(dom.createElement("name")).setTextContent("StepRecord");
             meta.appendChild(dom.createElement("author")).setTextContent("qinyoyo");
             meta.appendChild(dom.createElement("copyright")).setTextContent("reserved");
-            meta.appendChild(dom.createElement("time")).setTextContent(utcTimeString(list.get(0).getShootTime(),zone));
+
+            String dt = formatUtcDt(list.get(0).getGpsDatetime());
+            if (dt==null) dt = utcTimeString(list.get(0).getShootTime(),list.get(0).getTimeZone());
+
+            meta.appendChild(dom.createElement("time")).setTextContent(dt);
 
             rootEle.appendChild(meta);
             Element trk = dom.createElement("trk");
@@ -72,9 +77,9 @@ public class GpxUtils {
                 if (pi.getLatitude()!=null) trkpt.setAttribute("lat",String.format("%.7f",pi.getLatitude()));
                 if (pi.getLongitude()!=null) trkpt.setAttribute("lon",String.format("%.7f",pi.getLongitude()));
                 if (pi.getAltitude()!=null) trkpt.appendChild(dom.createElement("ele")).setTextContent(String.format("%.7f",pi.getAltitude()));
-                String dt = formatUtcDt(pi.getGpsDatetime());
+                dt = formatUtcDt(pi.getGpsDatetime());
                 if (dt!=null) trkpt.appendChild(dom.createElement("time")).setTextContent(dt);
-                else if (pi.getShootTime()!=null) trkpt.appendChild(dom.createElement("time")).setTextContent(utcTimeString(pi.getShootTime(),zone));
+                else if (pi.getShootTime()!=null) trkpt.appendChild(dom.createElement("time")).setTextContent(utcTimeString(pi.getShootTime(),pi.getTimeZone()));
                 if (pi.getSubjectCode()!=null) trkpt.appendChild(dom.createElement("step")).setTextContent(pi.getSubjectCode());
                 if (pi.getCountry()!=null || pi.getProvince()!=null || pi.getCity()!=null || pi.getLocation()!=null) {
                     String desc = String.format("%s|%s|%s|%s",nullUseEmpty(pi.getCountry()),
@@ -185,6 +190,8 @@ public class GpxUtils {
                                             if (province != null) map.put(Key.getName(Key.STATE), province);
                                             if (city != null) map.put(Key.getName(Key.CITY), city);
                                             if (location != null) map.put(Key.getName(Key.LOCATION), location);
+                                            BaiduGeo.setGeoInfoIntoDatabase(lon,lat,country,province,
+                                                    city,location,step);
                                             map.put(Key.getName(Key.GPS_DATETIME), dt.substring(0,4)+":"+dt.substring(5,7)+":" + dt.substring(8) +"Z");
                                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));

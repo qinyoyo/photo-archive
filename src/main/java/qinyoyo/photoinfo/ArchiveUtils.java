@@ -1,7 +1,6 @@
 package qinyoyo.photoinfo;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import qinyoyo.photoinfo.archive.*;
 import qinyoyo.photoinfo.exiftool.ExifTool;
@@ -13,9 +12,7 @@ import qinyoyo.utils.Util;
 
 import java.io.*;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
