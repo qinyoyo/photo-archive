@@ -471,8 +471,29 @@ public class ArchiveManager {
                 p.getGpsDatetime()==null && p.getLongitude()!=null).collect(Collectors.toList());
         Map<String,Map<String,Object>> pathMap = new HashMap<>();
         list.forEach(p->{
-            String ctr = p.getCountryCode();
-            if (ctr==null || ctr.trim().isEmpty()) ctr=p.getCountry();
+            //String ctr = p.getCountryCode();
+            //if (ctr==null || ctr.trim().isEmpty()) ctr=p.getCountry();
+            String ctr=p.getCountryCode(), dir=p.getSubFolder();
+            if (Util.isEmpty(ctr)) {
+                ctr="CN";
+                if (dir.contains("俄罗斯")) ctr = "RU";
+                else if (dir.contains("Hongkong")) ctr = "CN";
+                else if (dir.contains("巴厘岛")) ctr = "ID";
+                else if (dir.contains("French")) ctr = "FR";
+                else if (dir.contains("German")) ctr = "DE";
+                else if (dir.contains("HK")) ctr = "CN";
+                else if (dir.contains("Italy")) ctr = "IT";
+                else if (dir.contains("Swissland")) ctr = "CH";
+                else if (dir.contains("201207 Canada")) ctr = "CA";
+                else if (dir.contains("Greece")) ctr = "GR";
+                else if (dir.contains("柬埔寨")) ctr = "CM";
+                else if (dir.contains("南非")) ctr = "ZA";
+                else if (dir.contains("温哥华")) ctr = "CA";
+                else if (dir.contains("201707 美加")) ctr = "US";
+                else if (dir.contains("Canada")) ctr = "CA";
+                else if (dir.contains("Australia")) ctr = "AU";
+            }
+
             TimeZone zone = TimeZoneTable.getTimeZone(ctr,p.getProvince(),p.getCity(),p.getLongitude());
             if (zone!=null) {
                 String fmt = "yyyy:MM:dd HH:mm:ss";
@@ -481,6 +502,7 @@ public class ArchiveManager {
                 p.setGpsDatetime(DateUtil.date2String(gpsDt,fmt,TimeZone.getTimeZone("UTC"))+"Z");
                 Map<String,Object> map = new HashMap<>();
                 map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
+                if (Util.isEmpty(p.getCountryCode())) map.put(Key.getName(Key.COUNTRY_CODE),ctr);
                 pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
             } else System.out.println(p.toString());
         });
