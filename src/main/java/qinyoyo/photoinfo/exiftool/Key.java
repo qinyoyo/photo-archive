@@ -82,6 +82,7 @@ public enum Key {
     Y_RESOLUTION("YResolution", Double.class),
 
     COUNTRY("IPTC:Country-PrimaryLocationName",String.class,"国家",64),
+    COUNTRY_CODE("xmp:CountryCode",String.class,"国家代码",2),
     STATE("IPTC:Province-State",String.class, "省/州",32),
     CITY("IPTC:City",String.class,"城市/县",32),
     LOCATION("IPTC:Sub-location",String.class,"地址",32),

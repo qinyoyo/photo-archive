@@ -25,12 +25,12 @@ public class ArchiveUtils {
             Key.DOCUMENT_ID, Key.IPTCDigest,
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME,
             Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
-            Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
+            Key.COUNTRY,Key.COUNTRY_CODE,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
     public static final Key[] MODIFIABLE_KEYS = new Key[]{
             Key.SUBJECT_CODE, Key.ORIENTATION,
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,
             Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
-            Key.COUNTRY,Key.STATE,Key.CITY,Key.LOCATION,
+            Key.COUNTRY,Key.COUNTRY_CODE, Key.STATE,Key.CITY,Key.LOCATION,
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME
     };
     public static final String no_shottime_log = ".no_shottime.log";
@@ -295,6 +295,7 @@ public class ArchiveUtils {
         if(!equals(p1.getOrientation(),p2.getOrientation())) diff.add(Key.ORIENTATION);
         if(!equals(p1.getRating(),p2.getRating())) diff.add(Key.RATING);
         if(!equals(p1.getCountry(),p2.getCountry())) diff.add(Key.COUNTRY);
+        if(!equals(p1.getCountryCode(),p2.getCountryCode())) diff.add(Key.COUNTRY_CODE);
         if(!equals(p1.getProvince(),p2.getProvince())) diff.add(Key.STATE);
         if(!equals(p1.getCity(),p2.getCity())) diff.add(Key.CITY);
         if(!equals(p1.getLocation(),p2.getLocation())) diff.add(Key.LOCATION);

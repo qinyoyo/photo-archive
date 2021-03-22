@@ -1,7 +1,6 @@
 package qinyoyo.photoinfo.exiftool;
 
 import javafx.util.Pair;
-import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.utils.Util;
 
 import java.io.*;

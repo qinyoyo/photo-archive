@@ -172,6 +172,9 @@ public class Modification {
                 case COUNTRY:
                     value = pi.getCountry();
                     break;
+                case COUNTRY_CODE:
+                    value = pi.getCountryCode();
+                    break;
                 case STATE:
                     value = pi.getProvince();
                     break;

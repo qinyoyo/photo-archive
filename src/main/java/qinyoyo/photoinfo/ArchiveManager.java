@@ -471,7 +471,9 @@ public class ArchiveManager {
                 p.getGpsDatetime()==null && p.getLongitude()!=null).collect(Collectors.toList());
         Map<String,Map<String,Object>> pathMap = new HashMap<>();
         list.forEach(p->{
-            TimeZone zone = TimeZoneTable.getTimeZone(p.getCountry(),p.getProvince(),p.getCity(),p.getLongitude());
+            String ctr = p.getCountryCode();
+            if (ctr==null || ctr.trim().isEmpty()) ctr=p.getCountry();
+            TimeZone zone = TimeZoneTable.getTimeZone(ctr,p.getProvince(),p.getCity(),p.getLongitude());
             if (zone!=null) {
                 String fmt = "yyyy:MM:dd HH:mm:ss";
                 String s= DateUtil.date2String(p.getShootTime(),fmt);

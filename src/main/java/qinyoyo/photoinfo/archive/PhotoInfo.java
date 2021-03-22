@@ -38,6 +38,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     private String documentId;
 
     private String country;
+    private String countryCode;
     private String province;
     private String city;
     private String location;
@@ -402,6 +403,9 @@ public class PhotoInfo implements Serializable,Cloneable {
                 else if (k.equals(Key.getName(Key.COUNTRY))) {
                     country = s;
                 }
+                else if (k.equals(Key.getName(Key.COUNTRY_CODE))) {
+                    countryCode = s;
+                }
                 else if (k.equals(Key.getName(Key.STATE))) {
                     province = s;
                 }
@@ -594,7 +598,9 @@ public class PhotoInfo implements Serializable,Cloneable {
         } else return null;
     }
     public TimeZone getTimeZone() {
-        TimeZone zone = TimeZoneTable.getTimeZone(country,province,city,longitude);
+        String ctr = countryCode;
+        if (ctr==null || ctr.trim().isEmpty()) ctr=country;
+        TimeZone zone = TimeZoneTable.getTimeZone(ctr,province,city,longitude);
         if (zone!=null) return zone;
         if (shootTime!=null) {
             Date gpsDt = convertGpsDateTime();

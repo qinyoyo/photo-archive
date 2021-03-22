@@ -6,10 +6,7 @@ import qinyoyo.photoinfo.archive.PhotoInfo;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.BaiduGeo;
 import qinyoyo.utils.DateUtil;
@@ -82,8 +79,8 @@ public class GpxUtils {
                 else if (pi.getShootTime()!=null) trkpt.appendChild(dom.createElement("time")).setTextContent(utcTimeString(pi.getShootTime(),pi.getTimeZone()));
                 if (pi.getSubjectCode()!=null) trkpt.appendChild(dom.createElement("step")).setTextContent(pi.getSubjectCode());
                 if (pi.getCountry()!=null || pi.getProvince()!=null || pi.getCity()!=null || pi.getLocation()!=null) {
-                    String desc = String.format("%s|%s|%s|%s",nullUseEmpty(pi.getCountry()),
-                            nullUseEmpty(pi.getProvince()),nullUseEmpty(pi.getCity()),nullUseEmpty(pi.getLocation()));
+                    String desc = String.format("%s|%s|%s|%s|%s",nullUseEmpty(pi.getCountry()),
+                            nullUseEmpty(pi.getProvince()),nullUseEmpty(pi.getCity()),nullUseEmpty(pi.getLocation()),nullUseEmpty(pi.getCountryCode()));
                     trkpt.appendChild(dom.createElement("desc")).setTextContent(desc);
                 }
                 trkseg.appendChild(trkpt);
@@ -151,7 +148,7 @@ public class GpxUtils {
                             Node trkpt = trkptList.item(k);
                             double lat = 2000, lon = 2000;
                             Double ele=null;
-                            String dt=null, step=null, country=null, province=null, city=null, location=null;
+                            String dt=null, step=null, country=null, province=null, city=null, location=null, countryCode=null;
                             if (trkpt.getNodeName().equals("trkpt")) {
                                 try {
                                     NamedNodeMap attrs = trkpt.getAttributes();
@@ -176,6 +173,7 @@ public class GpxUtils {
                                                 if (desc.length > 1) province = desc[1];
                                                 if (desc.length > 2) city = desc[2];
                                                 if (desc.length > 3) location = desc[3];
+                                                if (desc.length > 4) countryCode = desc[4];
                                             }
                                         }
                                         if (dt != null) {
@@ -187,11 +185,11 @@ public class GpxUtils {
                                             if (ele != null) map.put(Key.getName(Key.GPS_ALTITUDE), ele);
                                             if (step != null) map.put(Key.getName(Key.SUBJECT_CODE), step);
                                             if (country != null) map.put(Key.getName(Key.COUNTRY), country);
+                                            if (countryCode != null) map.put(Key.getName(Key.COUNTRY_CODE), countryCode);
                                             if (province != null) map.put(Key.getName(Key.STATE), province);
                                             if (city != null) map.put(Key.getName(Key.CITY), city);
                                             if (location != null) map.put(Key.getName(Key.LOCATION), location);
-                                            BaiduGeo.setGeoInfoIntoDatabase(lon,lat,country,province,
-                                                    city,location,step);
+                                            BaiduGeo.setGeoInfoIntoDatabase(lon,lat,country,countryCode,province,city,location,step);
                                             map.put(Key.getName(Key.GPS_DATETIME), dt.substring(0,4)+":"+dt.substring(5,7)+":" + dt.substring(8) +"Z");
                                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));

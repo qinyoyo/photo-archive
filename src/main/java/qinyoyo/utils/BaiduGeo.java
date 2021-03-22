@@ -63,6 +63,7 @@ public class BaiduGeo {
         return geoDatabase.get(geoStringKey(longitude,latitude));
     }
     private static final String COUNTRY = "country";
+    private static final String COUNTRY_CODE = "countryCode";
     private static final String PROVINCE = "province";
     private static final String CITY = "city";
     private static final String LOCATION = "location";
@@ -72,17 +73,18 @@ public class BaiduGeo {
     }
     public static void setGeoInfoIntoDatabase(PhotoInfo pi) {
         if (pi.getLongitude()!=null && pi.getLatitude()!=null && !isEmpty(pi.getCountry())) {
-            setGeoInfoIntoDatabase(pi.getLongitude(),pi.getLatitude(),pi.getCountry(),pi.getProvince(),
+            setGeoInfoIntoDatabase(pi.getLongitude(),pi.getLatitude(),pi.getCountry(), pi.getCountryCode(), pi.getProvince(),
                     pi.getCity(),pi.getLocation(),pi.getSubjectCode());
         }
     }
-    public static void setGeoInfoIntoDatabase(double longitude,double latitude,String country,String province,
+    public static void setGeoInfoIntoDatabase(double longitude,double latitude,String country,String countryCode, String province,
                                               String city,String location,String poi) {
         if (!isEmpty(country)) {
             String key = geoStringKey(longitude, latitude);
             Map<String,String> geo = geoDatabase.get(key);
             if (geo==null) geo = new HashMap<>();
             if (!isEmpty(country)) geo.put(COUNTRY,country);
+            if (!isEmpty(countryCode)) geo.put(COUNTRY_CODE,country);
             if (!isEmpty(province)) geo.put(PROVINCE,province);
             if (!isEmpty(city)) geo.put(CITY,city);
             if (!isEmpty(location)) geo.put(LOCATION,location);
@@ -97,6 +99,8 @@ public class BaiduGeo {
             if (geo!=null) {
                 String s = geo.get(COUNTRY);
                 if (!isEmpty(s)) pi.setCountry(s);
+                s = geo.get(COUNTRY_CODE);
+                if (!isEmpty(s)) pi.setCountryCode(s);
                 s = geo.get(PROVINCE);
                 if (!isEmpty(s)) pi.setProvince(s);
                 s = geo.get(CITY);
@@ -144,7 +148,7 @@ public class BaiduGeo {
 
     public static List<PhotoInfo> seekAddressInfo(List<PhotoInfo> list,String rootPath) {
         if (rootPath!=null) {
-            File google = new File(rootPath,".google.gpx");
+            File google = new File(rootPath,".googleP.gpx");
             GpxUtils.readGpxInfo(google,"");
             google.delete();
         }
@@ -168,7 +172,7 @@ public class BaiduGeo {
                             Result result = info.result;
                             Address addressComponent = result.addressComponent;
                             if (addressComponent==null) continue;
-                            String  country = addressComponent.country,
+                            String  country = addressComponent.country, countryCode = addressComponent.country_code_iso2,
                                     province = addressComponent.province, city = addressComponent.city,
                                     district = addressComponent.district,town = addressComponent.town,
                                     street = addressComponent.street;
@@ -178,6 +182,7 @@ public class BaiduGeo {
                                 continue;
                             }
                             boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) || ArchiveUtils.hasChinese(city);
+                            p.setCountryCode(countryCode);
                             p.setCountry(trunc(country, Key.COUNTRY));
                             p.setProvince(trunc(province, Key.STATE));
                             if (city.equals(province) || city.isEmpty()) {
