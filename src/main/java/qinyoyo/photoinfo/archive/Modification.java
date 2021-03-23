@@ -310,7 +310,6 @@ public class Modification {
             if (dir.exists()) {
                 new File(rootPath+File.separator+path+File.separator+".need-scan").delete();
                 archiveInfo.rescanFile(dir);
-                archiveInfo.createThumbFiles(path);
                 archiveInfo.sortInfos();
                 archiveInfo.saveInfos();
                 return true;

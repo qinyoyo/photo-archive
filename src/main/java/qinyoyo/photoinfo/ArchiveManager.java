@@ -54,9 +54,22 @@ public class ArchiveManager {
         fileChooser.setMultiSelectionEnabled(multiSelection);
         result = fileChooser.showOpenDialog(null);
         if (JFileChooser.APPROVE_OPTION == result) {
-            currentPath=fileChooser.getSelectedFile().getPath();
-            return fileChooser.getSelectedFiles();
-        } else return null;
+            if (multiSelection) {
+                File [] files = fileChooser.getSelectedFiles();
+                if (files!=null && files.length>0) {
+                    File f = files[0];
+                    currentPath = files[0].isDirectory() ? files[0].getPath() : files[0].getParent();
+                    return files;
+                }
+            } else {
+                File f = fileChooser.getSelectedFile();
+                if (f!=null) {
+                    currentPath = f.isDirectory() ? f.getPath() : f.getParent();
+                    return new File[]{f};
+                }
+            }
+        }
+        return null;
     }
 
     private static String inputSubFolder(String title, String rootPath) {

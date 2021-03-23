@@ -99,7 +99,10 @@ public class ArchiveInfo {
                 pi.readProperties(path);
                 File thumb = new File(pi.fullThumbPath(path));
                 sortInfos();
-                if (!thumb.exists()) createThumbFiles(pi);
+                if (!thumb.exists()) {
+                    System.out.println("创建缩略图 "+thumb.getPath() + " ...");
+                    createThumbFiles(pi);
+                }
                 System.out.println("成功扫描文件 "+p);
             } else {
                 List<PhotoInfo> list = ArchiveUtils.seekPhotoInfosInFolder(f,path, true, exifToolArgs);
@@ -114,7 +117,10 @@ public class ArchiveInfo {
                     for (int i = 0; i < list.size(); i++) {
                         File thumb = new File(list.get(i).fullThumbPath(path));
                         addFilesPath.add(list.get(i).fullThumbPath(path));
-                        if (!thumb.exists()) createThumbFiles(list.get(i));
+                        if (!thumb.exists()) {
+                            System.out.println("创建缩略图 "+thumb.getPath() + " ...");
+                            createThumbFiles(list.get(i));
+                        }
                     }
                 }
                 sortInfos();

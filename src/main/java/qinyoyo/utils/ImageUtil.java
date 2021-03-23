@@ -1,5 +1,6 @@
 package qinyoyo.utils;
 
+import net.coobird.thumbnailator.Thumbnails;
 import qinyoyo.photoinfo.archive.Orientation;
 
 import java.awt.Graphics2D;
@@ -13,6 +14,9 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class ImageUtil {
+
+
+
     /** * 图片文件读取 * * @param srcImgPath * @return */
     private static BufferedImage InputImage(String srcImgPath) {
         BufferedImage srcImage = null;
@@ -35,9 +39,31 @@ public class ImageUtil {
      */
     public static void compressImage(String srcImgPath, String outImgPath,
                                      int new_w, int new_h, Integer orientation) {
-        BufferedImage src = InputImage(srcImgPath);
+        /*BufferedImage src = InputImage(srcImgPath);
         if (src==null) return;
-        disposeImage(src, outImgPath, new_w, new_h, orientation);
+        disposeImage(src, outImgPath, new_w, new_h, orientation); */
+
+        BufferedImage src = InputImage(srcImgPath);
+        int old_w = src.getWidth();
+        int old_h = src.getHeight();
+        float scaleX = ((float)new_w)/old_w, scaleY=((float)new_h)/old_h;
+        if (scaleX>scaleY) new_w = (int)(scaleY * old_w);
+        else if (scaleY>scaleX) new_h = (int)(scaleX * old_h);
+
+        try {
+            File file = new File(outImgPath);
+            if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
+            Thumbnails.of(srcImgPath)
+                    .height(new_h)
+                    .width(new_w)
+                    .outputQuality(0.6f)
+                    .outputFormat("jpg")
+                    .toFile(outImgPath);
+            Orientation.setOrientationAndRating(file,orientation,null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
@@ -71,7 +97,7 @@ public class ImageUtil {
     }
 
     /** * 处理图片 * * @param src * @param outImgPath * @param new_w * @param new_h */
-    private synchronized static void disposeImage(BufferedImage src,
+    private static void disposeImage(BufferedImage src,
                                                   String outImgPath, int new_w, int new_h, Integer orientation) {
         // 得到图片
         int old_w = src.getWidth();
