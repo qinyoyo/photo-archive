@@ -1,10 +1,7 @@
 package qinyoyo.photoinfo;
 
 import lombok.NonNull;
-import qinyoyo.photoinfo.archive.Modification;
-import qinyoyo.photoinfo.archive.ArchiveInfo;
-import qinyoyo.photoinfo.archive.PhotoInfo;
-import qinyoyo.photoinfo.archive.TimeZoneTable;
+import qinyoyo.photoinfo.archive.*;
 import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
@@ -14,6 +11,7 @@ import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.Util;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.text.ParseException;
@@ -35,7 +33,15 @@ public class ArchiveManager {
         return input;
     }
 
-    private static String chooseFolder(String title) {
+    private static String chooseFolder(String title, FileFilter filter) {
+        File[] f = selectFiles(title,false,filter);
+        if (f==null || f.length==0) return null;
+        else {
+            if (f[0].isDirectory()) return f[0].getPath();
+            else return f[0].getParent();
+        }
+    }
+    private static File[] selectFiles(String title, boolean multiSelection, FileFilter filter) {
         int result = 0;
         String path = null;
         JFileChooser fileChooser = new JFileChooser();
@@ -43,18 +49,19 @@ public class ArchiveManager {
         fileChooser.setCurrentDirectory(currentPath==null || currentPath.isEmpty() ? fsv.getHomeDirectory() : new File(currentPath));
         fileChooser.setDialogTitle(title==null || title.isEmpty() ? "请选择目录" : title);
         fileChooser.setApproveButtonText("确定");
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setFileSelectionMode(filter!=null ? JFileChooser.FILES_AND_DIRECTORIES : JFileChooser.DIRECTORIES_ONLY);
+        if (filter!=null) fileChooser.setFileFilter(filter);
+        fileChooser.setMultiSelectionEnabled(multiSelection);
         result = fileChooser.showOpenDialog(null);
         if (JFileChooser.APPROVE_OPTION == result) {
-            path=fileChooser.getSelectedFile().getPath();
-            currentPath = path;
-            return path;
+            currentPath=fileChooser.getSelectedFile().getPath();
+            return fileChooser.getSelectedFiles();
         } else return null;
     }
 
     private static String inputSubFolder(String title, String rootPath) {
         currentPath = rootPath;
-        String path = chooseFolder(title);
+        String path = chooseFolder(title, null);
         if (path==null) return null;
         path = ArchiveUtils.formatterSubFolder(path,rootPath);
         return path;
@@ -127,6 +134,16 @@ public class ArchiveManager {
         return false;
     }
 
+    private static  FileFilter fileFilter = new FileFilter() {
+        @Override
+        public boolean accept(File f) {
+            return f.isDirectory() || SupportFileType.isSupport(f.getName());
+        }
+        @Override
+        public String getDescription() {
+            return null;
+        }
+    };
     static boolean archiveWithArchivedInfo(@NonNull ArchiveInfo archived) {
         currentPath = FileUtil.getCurrentPath();
         boolean shutdown = false;
@@ -172,7 +189,7 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "3":
-                    path = chooseFolder("输入需要同步的RAW目录");
+                    path = chooseFolder("输入需要同步的RAW目录",fileFilter);
                     if (path==null) break;
                     currentPath = path;
                     List<String> args = new ArrayList<String>() {{
@@ -194,7 +211,7 @@ public class ArchiveManager {
                     }
                     break;
                 case "5":
-                    path = chooseFolder("输入待归档的目录");
+                    path = chooseFolder("输入待归档的目录",fileFilter);
                     if (path==null) break;
                     currentPath = path;
                     if (!path.isEmpty()) {
@@ -320,40 +337,50 @@ public class ArchiveManager {
                     shutdown = true;
                     break;
                 case "1":
-                    path = chooseFolder("选择图像目录");
+                    path = chooseFolder("选择图像目录",fileFilter);
                     if (path==null) break;
                     done = writeGpxFile(photoInfoListIn(path,false,null),new File(path,".archive.gpx")) > 0;
                     break;
                 case "2":
-                    path = chooseFolder("选择图像目录");
+                    path = chooseFolder("选择图像目录",fileFilter);
                     if (path==null) break;
                     changeDateTime(path);
                     done = true;
                     break;
                 case "3":
                     if (gpxPoints==null || gpxPoints.size()==0) {
-                        String gpxPath = chooseFolder("选择gpx文件所在目录");
-                        if (gpxPath==null) break;
+                        File[] files = selectFiles("选择gpx文件", true, new FileFilter() {
+                            @Override
+                            public boolean accept(File f) {
+                                return f.isDirectory() || f.getName().endsWith(".gpx");
+                            }
+
+                            @Override
+                            public String getDescription() {
+                                return null;
+                            }
+                        });
+                        if (files==null) break;
                         String title = getInputString("设置默认标题", "");
-                        gpxPoints = GpxUtils.readGpxInfo(new File(gpxPath),title);
+                        gpxPoints = GpxUtils.readGpxInfo(files,title);
                         if (gpxPoints==null || gpxPoints.size()==0) {
                             System.out.println("未找到GPS信息");
                             break;
                         }
                         System.out.println("找到GPS信息数量: "+gpxPoints.size());
                     }
-                    path = chooseFolder("选择图像目录");
+                    path = chooseFolder("选择图像目录",fileFilter);
                     if (path == null) break;
                     writeGpxInfo(path,gpxPoints);
                     done = true;
                     break;
                 case "4":
-                    path = chooseFolder("选择图像目录");
+                    path = chooseFolder("选择图像目录",fileFilter);
                     if (path==null) break;
                     done = rename(photoInfoListIn(path,false,null),path);
                     break;
                 case "5":
-                    path = chooseFolder("选择需要删除子空白目录的主目录");
+                    path = chooseFolder("选择需要删除子空白目录的主目录",null);
                     if (path==null) break;
                     FileUtil.removeEmptyFolder(new File(path));
                     done = true;
@@ -368,15 +395,21 @@ public class ArchiveManager {
         }
     }
     private static TimeZone inputTimeZone(String title) {
+        return inputTimeZone(title,"GMT+8:00");
+    }
+
+    private static List<String> allTimeZoneIds = null;
+    private static TimeZone inputTimeZone(String title,String defId) {
+        if (allTimeZoneIds==null) allTimeZoneIds = Arrays.asList(TimeZone.getAvailableIDs());
         while (true) {
-            String zs = getInputString(title==null?"时区":title, "GMT+8:00").toUpperCase();
+            String zs = getInputString(title==null?"时区":title, defId);
+            if (allTimeZoneIds.contains(zs)) return TimeZone.getTimeZone(zs);
+            zs=zs.toUpperCase();
             Pattern p = Pattern.compile("^(GMT)?(\\+|-)?((0?\\d|10|11|12)(:00|:30)?)$");
             Matcher m = p.matcher(zs);
             if (m.find()) {
                 zs = "GMT" + (m.group(2)==null || m.group(2).isEmpty() ? "+" : m.group(2)) + m.group(3);
-                TimeZone zone = TimeZone.getTimeZone(zs);
-                System.out.println(zone.getID());
-                return zone;
+                return TimeZone.getTimeZone(zs);
             } else System.out.println("时区格式错误，请重新输入");
         }
     }
@@ -445,7 +478,14 @@ public class ArchiveManager {
                         (p.getLongitude()==null || p.getLatitude()==null))
                 .collect(Collectors.toList());
         if (list!=null && list.size()>0) {
-            TimeZone zone = inputTimeZone("拍摄时区");
+            Map<String, Object> firstPoint = gpxPoints.get(gpxPoints.keySet().iterator().next());
+            Object cty = firstPoint.get(Key.getName(Key.COUNTRY_CODE)),
+                    state = firstPoint.get(Key.getName(Key.STATE)),
+                    city = firstPoint.get(Key.getName(Key.CITY)),
+                    lon = firstPoint.get(Key.getName(Key.GPS_LONGITUDE));
+            TimeZone defaultZone = TimeZoneTable.getTimeZone(cty==null?null:(String)cty,state==null?null:(String)state,
+                    city==null?null:(String)city,lon==null?null:(Double)lon);
+            TimeZone zone = inputTimeZone("拍摄时区",defaultZone==null?"GMT+8:00":defaultZone.getID());
             int timeAdjust = TimeZone.getDefault().getRawOffset() - zone.getRawOffset();
             if (zone.hasSameRules(TimeZone.getDefault())) zone=null;
             System.out.println("图像检索处理中...");
@@ -519,7 +559,7 @@ public class ArchiveManager {
         ExifTool.getInstalledFfmpegVersion();
         currentPath = getProperty("photo.root-path", null);
         boolean clear=false, same=false,other=false, removeNotExist=true;
-        String rootPath = chooseFolder("选择归档的目录路径(取消操作未归档图像)");
+        String rootPath = chooseFolder("选择归档的目录路径(取消操作未归档图像)",null);
         if (rootPath==null) return imageOperations();
         File dir = new File(rootPath);
         if (dir!=null && dir.exists() && dir.isDirectory()) {

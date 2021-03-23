@@ -105,6 +105,13 @@ public class GpxUtils {
         }
         return 0;
     }
+    public static TreeMap<Long, Map<String,Object>> readGpxInfo(File[] files,String defTitle) {
+        TreeMap<Long, Map<String,Object>> result = new TreeMap<>();
+        for (File f: files) {
+            result.putAll(readGpxInfo(f, defTitle));
+        }
+        return result;
+    }
     public static TreeMap<Long, Map<String,Object>> readGpxInfo(File file,String defTitle) {
         TreeMap<Long, Map<String,Object>> result = new TreeMap<>();
         if (!file.exists()) return result;
