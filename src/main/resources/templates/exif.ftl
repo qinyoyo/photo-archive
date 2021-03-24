@@ -23,6 +23,7 @@
         document.querySelector('.thumb-image').setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +file)
         document.querySelector('.scroll-from-wrapper').style.display='block'
 
+        document.getElementById('fileName').value = file
         let v=dom.getAttribute('data-artist')
         document.getElementById('artist').value = (v?v:'')
 
@@ -67,6 +68,9 @@
         document.getElementById('rating').value = (v?v:'')
 
         v=dom.getAttribute('data-orientation')
+        if (v && parseInt(v) > 1 && !sessionOptions.supportOrientation) {
+            document.querySelector('.thumb-image').className = "thumb-image img-index-0 orientation-"+v
+        } else document.querySelector('.thumb-image').className = "thumb-image img-index-0"
         document.getElementById('orientation').value = (v?v:'')
 
         v=dom.getAttribute('data-gpslongitude')
@@ -81,7 +85,27 @@
         v=dom.getAttribute('data-gpsdatetime')
         if (v && v.length == 20) v=v.substring(0,4)+'-'+v.substring(5,7)+'-'+v.substring(8,10)+'T'+v.substring(11,19)
         document.getElementById('gpsDatetime').value = (v?v:'')
+
+        document.getElementById('submit').setAttribute('disabled','disabled')
     }
+
+    function changed() {
+        document.getElementById('submit').removeAttribute('disabled')
+    }
+    function save() {
+        const form = document.getElementById('exifForm')
+        let url = '/saveExif'
+        const data = {}
+        form.querySelectorAll('input,select').forEach(function(e) {
+            if (e.getAttribute('name')) data[e.getAttribute('name')] = e.value
+        })
+        Ajax(url,data,function(msg) {
+            if (msg=='ok') {
+                document.getElementById('submit').setAttribute('disabled','disabled')
+            } else toast(msg)
+        })
+    }
+
     window.onload=function(){
         if (window.sessionOptions.mobile) {
             removeClass(document.querySelector('.grid-box2'),'grid-box2')
@@ -196,24 +220,27 @@
     <div class="scroll-from-wrapper" style="display:none">
         <div class="scroll-items">
             <div class="thumb-image-wrapper">
-                <img class="thumb-image" />
+                <img class="thumb-image img-index-0"/>
             </div>
-            <form id="exif">
-                <div><label for="artist">拍摄者</label><input id="artist" name="artist"></div>
-                <div><label for="shootTime">拍摄时间</label><input id="shootTime" name="shootTime" type="datetime-local" step="0.001"></div>
-                <div><label for="model">设备</label><input id="model" name="model"></div>
-                <div><label for="lens">镜头</label><input id="lens" name="lens"></div>
-                <div><label for="subjectCode">POI</label><input id="subjectCode" name="subjectCode"></div>
-                <div><label for="country">国家</label><input id="country" name="country"></div>
-                <div><label for="countryCode">国家代码</label><input id="countryCode" name="countryCode" maxlength="2"></div>
-                <div><label for="province">省/州</label><input id="province" name="province"  maxlength="4"></div>
-                <div><label for="city">城市</label><input id="city" name="city"></div>
-                <div><label for="location">地址</label><input id="location" name="location"></div>
-                <div><label for="headline">标题</label><input id="headline" name="headline"></div>
-                <div><label for="subTitle">题注</label><input id="subTitle" name="subTitle"></div>
-                <div><label for="scene">场景</label><input id="scene" name="scene"></div>
+            <form id="exifForm">
+                <input id="subFolder" name="subFolder" type="hidden" value="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>${separator}</#if></#list></#if>">
+                <input id="fileName" name="fileName" type="hidden">
+
+                <div><label for="artist">拍摄者</label><input id="artist" name="artist" onchange="changed()"></div>
+                <div><label for="shootTime">拍摄时间</label><input id="shootTime" name="shootTime" type="datetime-local" step="0.001" onchange="changed()"></div>
+                <div><label for="model">设备</label><input id="model" name="model" onchange="changed()"></div>
+                <div><label for="lens">镜头</label><input id="lens" name="lens" onchange="changed()"></div>
+                <div><label for="subjectCode">POI</label><input id="subjectCode" name="subjectCode" onchange="changed()"></div>
+                <div><label for="country">国家</label><input id="country" name="country" onchange="changed()"></div>
+                <div><label for="countryCode">国家代码</label><input id="countryCode" name="countryCode" maxlength="2" onchange="changed()"></div>
+                <div><label for="province">省/州</label><input id="province" name="province"  maxlength="4" onchange="changed()"></div>
+                <div><label for="city">城市</label><input id="city" name="city" onchange="changed()"></div>
+                <div><label for="location">地址</label><input id="location" name="location" onchange="changed()"></div>
+                <div><label for="headline">标题</label><input id="headline" name="headline" onchange="changed()"></div>
+                <div><label for="subTitle">题注</label><input id="subTitle" name="subTitle" onchange="changed()"></div>
+                <div><label for="scene">场景</label><input id="scene" name="scene" onchange="changed()"></div>
                 <div><label for="rating">星级</label>
-                    <select id="rating" name="rating">
+                    <select id="rating" name="rating" onchange="changed()">
                         <option value="">无</option>
                         <option value="1">☆</option>
                         <option value="2">☆☆</option>
@@ -223,7 +250,7 @@
                     </select>
                 </div>
                 <div><label for="orientation">方向</label>
-                    <select id="orientation" name="orientation">
+                    <select id="orientation" name="orientation" onchange="changed()">
                         <option value="">默认</option>
                         <option value="1">水平</option>
                         <option value="2">垂直翻转</option>
@@ -235,10 +262,13 @@
                         <option value="8">逆时针旋转270度</option>
                     </select>
                 </div>
-                <div><label for="longitude">经度</label><input id="longitude" name="longitude" type="number" min="-180" max="180" step="0.000001"></div>
-                <div><label for="latitude">纬度</label><input id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.000001"></div>
-                <div><label for="altitude">海拔</label><input id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1"></div>
-                <div><label for="gpsDatetime">GPS时间</label><input id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1"></div>
+                <div><label for="longitude">经度</label><input id="longitude" name="longitude" type="number" min="-180" max="180" step="0.000001" onchange="changed()"></div>
+                <div><label for="latitude">纬度</label><input id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.000001" onchange="changed()"></div>
+                <div><label for="altitude">海拔</label><input id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1" onchange="changed()"></div>
+                <div><label for="gpsDatetime">GPS时间</label><input id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed()"></div>
+                <div style="text-align: center">
+                    <button id="submit" class="dialog__button" onclick="save()">保存</button>
+                </div>
             </form>
         </div>
     </div>

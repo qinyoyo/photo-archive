@@ -23,13 +23,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/exif.ftl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/photo-archive.iml" beforeDir="false" afterPath="$PROJECT_DIR$/photo-archive.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/ajax.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/ajax.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/photo_attributes.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/photo_attributes.ftl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/session-options.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/session-options.ftl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/exif.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/exif.ftl" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -160,6 +155,7 @@
       <workItem from="1616499984094" duration="4329000" />
       <workItem from="1616556197957" duration="3835000" />
       <workItem from="1616570354278" duration="9988000" />
+      <workItem from="1616583755668" duration="3271000" />
     </task>
     <servers />
   </component>
