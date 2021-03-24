@@ -94,12 +94,17 @@
     }
     function save() {
         const form = document.getElementById('exifForm')
-        let url = '/saveExif'
-        const data = {}
+        let url = '/exifSave'
+        let data = new FormData()
         form.querySelectorAll('input,select').forEach(function(e) {
-            if (e.getAttribute('name')) data[e.getAttribute('name')] = e.value
+            const name = e.getAttribute('name')
+            let value = e.value
+            if ( name && value) {
+                if (name==='shootTime') value = value.replace('T',' ')
+                data.append(name, value)
+            }
         })
-        Ajax(url,data,function(msg) {
+        Ajax.post(url,data,function(msg) {
             if (msg=='ok') {
                 document.getElementById('submit').setAttribute('disabled','disabled')
             } else toast(msg)
@@ -222,7 +227,7 @@
             <div class="thumb-image-wrapper">
                 <img class="thumb-image img-index-0"/>
             </div>
-            <form id="exifForm">
+            <form id="exifForm" method="post" action="/exifSave">
                 <input id="subFolder" name="subFolder" type="hidden" value="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>${separator}</#if></#list></#if>">
                 <input id="fileName" name="fileName" type="hidden">
 
@@ -267,7 +272,7 @@
                 <div><label for="altitude">海拔</label><input id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1" onchange="changed()"></div>
                 <div><label for="gpsDatetime">GPS时间</label><input id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed()"></div>
                 <div style="text-align: center">
-                    <button id="submit" class="dialog__button" onclick="save()">保存</button>
+                    <input id="submit" type="submit" class="dialog__button" value="保存">
                 </div>
             </form>
         </div>

@@ -269,11 +269,12 @@ public class Modification {
             return header + r + tail;
         }
     }
-    private static void executeExiftool(File xmpDir, File imgDir, Map<String,File> files) {
+    private static int executeExiftool(File xmpDir, File imgDir, Map<String,File> files) {
         try {
             Map<String, List<String>> result = ExifTool.getInstance().execute(imgDir, "-m",
                     "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                     "-tagsfromfile", XMP + File.separator + "%f.xmp");
+            int count = ExifTool.updatesFiles(result);
             List<String> error = result.get(ExifTool.ERROR);
             if (error != null && error.size() > 0) {
                 for (String err : error)
@@ -292,8 +293,10 @@ public class Modification {
             }
             FileUtil.removeFilesInDir(xmpDir, false);
             FileUtil.removeFilesInDir(imgDir,false);
+            return count;
         } catch (Exception e) {
             e.printStackTrace();
+            return 0;
         }
     }
     public static boolean removeAction(String path,ArchiveInfo archiveInfo) {
@@ -323,13 +326,13 @@ public class Modification {
         Path linkPath = Paths.get(targetLink);
         Files.createSymbolicLink(linkPath,srcPath);
     }
-    public static void execute(Map<String,Map<String,Object>> pathMap, String rootPath) {
+    public static int execute(Map<String,Map<String,Object>> pathMap, String rootPath) {
         File imgDir = new File(rootPath,temp_path);
         File xmpDir = new File(imgDir,XMP);
         xmpDir.mkdirs();
         FileUtil.removeFilesInDir(xmpDir, false);
         FileUtil.removeFilesInDir(imgDir,false);
-        int count = 0;
+        int count = 0, updated = 0;
         Map<String,File> files = new HashMap<>();
         for (String path : pathMap.keySet()) {
             if (path==null || path.isEmpty()) continue;
@@ -352,16 +355,17 @@ public class Modification {
                 }
             }
             if (count>=1000) {
-                executeExiftool(xmpDir,imgDir,files);
+                updated += executeExiftool(xmpDir,imgDir,files);
                 files.clear();
                 count=0;
             }
         }
         if (count>0) {
-            executeExiftool(xmpDir,imgDir,files);
+            updated += executeExiftool(xmpDir,imgDir,files);
         }
         FileUtil.removeFilesInDir(xmpDir,true);
         FileUtil.removeFilesInDir(imgDir,true);
+        return updated;
     }
     private static Map<String,Object> reduceParams(ArchiveInfo archiveInfo,String filePath, Map<String,Object>params) {
         File img = new File(archiveInfo.getPath(), filePath);
@@ -373,7 +377,8 @@ public class Modification {
         }
         return nm;
     }
-    public static void execute(List<Modification> list, ArchiveInfo archiveInfo) {
+    public static int execute(List<Modification> list, ArchiveInfo archiveInfo) {
+        int updated = 0;
         String rootPath = archiveInfo.getPath();
         list.stream().filter(m->m.action==Scan).reduce(new HashSet<String>(),(acc,m)-> {
                 if (!acc.contains(m.path)) acc.add(m.path);
@@ -385,9 +390,9 @@ public class Modification {
             if (!acc.contains(m.path)) acc.add(m.path);
             return acc;
         },(acc,m)->null);
-        removedPaths.forEach(path->{
-            removeAction(path, archiveInfo);
-        });
+        for (String path:removedPaths) {
+            if (removeAction(path, archiveInfo)) updated++;
+        }
         Map<String,Map<String,Object>> exifMap = new HashMap<>();
         list.stream().filter(m->m.action==Exif && !removedPaths.contains(m.path))
             .reduce(exifMap,(acc,m)->{
@@ -459,8 +464,9 @@ public class Modification {
             },(acc,m)->null);
 
         if (!exifMap.isEmpty()) {
-            execute(exifMap,archiveInfo.getPath());
+            updated += execute(exifMap,archiveInfo.getPath());
         }
+        return updated;
     }
     public static void resetSyncAction(String rootPath) {
         new File(rootPath, modification_dat +".sync").delete();

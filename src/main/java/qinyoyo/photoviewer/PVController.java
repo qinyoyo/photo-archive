@@ -12,6 +12,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.utils.*;
@@ -193,6 +194,26 @@ public class PVController implements ApplicationRunner , ErrorController {
                 SessionOptions.getSessionOptions(request).isFavoriteFilter());
         model.addAllAttributes(res);
         return "exif";
+    }
+    @ResponseBody
+    @RequestMapping(value = "/exifSave")
+    public String exifSave(@RequestBody Map<String,Object> p1, HttpServletRequest request, HttpServletResponse response, String path) {
+/*        if (p1!=null) {
+            PhotoInfo p0 = archiveInfo.find(p1.getSubFolder(),p1.getFileName());
+            if (p0!=null) {
+                List<Key> keys = ArchiveUtils.differentOf(p0,p1);
+                if (keys!=null && !keys.isEmpty()) {
+                    Map<String,Object> params = Modification.exifMap(p1,keys, false);
+                    Map<String,Map<String,Object>> map = new HashMap<>();
+                    map.put(p0.getSubFolder()+(p0.getSubFolder().isEmpty()?"":File.separator)+p0.getFileName(),params);
+                    if (Modification.execute(map,archiveInfo.getPath())>0) {
+                        p0.setPropertiesBy(params);
+                        afterChanged();
+                    } else return "修改失败";
+                }
+            }
+        }*/
+        return "ok";
     }
     @RequestMapping(value = "play")
     public String playFolder(Model model, HttpServletRequest request, String path, Integer index) {

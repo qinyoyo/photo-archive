@@ -592,11 +592,15 @@ public class ArchiveInfo {
             String name = f.getName();
             int start = path.length()+1, end = fullPath.length()-name.length()-1;
             String subFolder = start < end ? fullPath.substring(start,end) : "";
-            PhotoInfo photoInfo = infos.stream().filter(p -> p.getSubFolder().equals(subFolder) && p.getFileName().equals(name)).findFirst().get();
-            return photoInfo;
+            return find(subFolder,name);
         } catch (Exception e) {
             return null;
         }
+    }
+    public PhotoInfo find(String subFolder,String name) {
+        Optional<PhotoInfo> photoInfo = infos.stream().filter(p -> p.getSubFolder().equals(subFolder) && p.getFileName().equals(name)).findFirst();
+        if (photoInfo.isPresent()) return photoInfo.get();
+        else return null;
     }
 
 }
