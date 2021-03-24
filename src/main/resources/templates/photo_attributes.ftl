@@ -49,6 +49,9 @@
     <#if p.rating??>
         data-rating="${p.rating}"
     </#if>
+    <#if p.scene??>
+        data-scene="${p.scene}"
+    </#if>
     <#if p.width??>
         data-width="${p.width?c}"
     </#if>
@@ -82,6 +85,9 @@
     <#if p.country??>
         data-country-primarylocationname="${p.country}"
     </#if>
+    <#if p.countryCode??>
+        data-country-code="${p.countryCode}"
+    </#if>
     <#if p.province??>
         data-province-state="${p.province}"
     </#if>
@@ -99,6 +105,9 @@
     </#if>
     <#if p.altitude??>
         data-gpsaltitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"
+    </#if>
+    <#if p.gpsDatetime??>
+        data-gpsdatetime="${p.gpsDatetime}"
     </#if>
     title="${photoTitle(p)}"
 </#macro>

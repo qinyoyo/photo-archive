@@ -182,7 +182,18 @@ public class PVController implements ApplicationRunner , ErrorController {
         setBackgroundMusic(request,model,path);
         return "index";
     }
-
+    @RequestMapping(value = "/exif")
+    public String exifEdit(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "message";
+        }
+        commonAttribute(model,request);
+        Map<String, Object> res = getPathAttributes(path, false,
+                SessionOptions.getSessionOptions(request).isFavoriteFilter());
+        model.addAllAttributes(res);
+        return "exif";
+    }
     @RequestMapping(value = "play")
     public String playFolder(Model model, HttpServletRequest request, String path, Integer index) {
         if (!isReady) {
@@ -438,7 +449,7 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
 
 
-    private void commonAttribute(Model model, HttpServletRequest request) {
+    public void commonAttribute(Model model, HttpServletRequest request) {
         initStatics(model);
         SessionOptions options = SessionOptions.getSessionOptions(request);
         model.addAttribute("sessionOptions",options);

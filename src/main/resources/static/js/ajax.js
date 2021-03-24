@@ -173,4 +173,26 @@
         }
         openDialog(dlgOptions)
     }
+    window.addClass = function(dom,cls) {
+        let cls0 = dom.className
+        if (!cls0) dom.className = cls
+        else {
+            let ac = cls0.split(' ')
+            if (ac.indexOf(cls)<0) {
+                ac.push(cls)
+                dom.className = ac.join(' ')
+            }
+        }
+    }
+    window.removeClass = function(dom,cls) {
+        let cls0 = dom.className
+        if (cls0) {
+            let ac = cls0.split(' ')
+            let i = ac.indexOf(cls)
+            if (i>=0) {
+                ac.splice(i,1)
+                dom.className = ac.join(' ')
+            }
+        }
+    }
 })();
