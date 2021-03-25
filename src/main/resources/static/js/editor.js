@@ -602,6 +602,7 @@ function adjustSize(img) {
                                 if (imgs.length>0) {
                                     imgs.forEach(function(img){
                                         dt = img.getAttribute('data-datetimeoriginal')
+                                        if (dt && dt.length>10) dt=dt.substring(0,16)
                                         poi = img.getAttribute('title')
                                         if (poi) {
                                             let pos = poi.indexOf('\ufeff')

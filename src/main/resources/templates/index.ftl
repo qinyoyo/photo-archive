@@ -103,9 +103,15 @@
             const name=document.getElementById('stepName').value
             if (!name) {
                 message('必须输入游记名')
-                return
             }
             window.location.href = '/?path=' + (path ? encodeURI(path) : '') + '&newStep=' + encodeURI(name)
+            return
+        }
+        e = document.getElementById('exif')
+        if (e && e.checked) {
+            const path = e.getAttribute('data-folder')
+            window.location.href = '/exif?path=' + (path ? encodeURI(path) : '')
+            return
         }
         e = document.getElementById('rescan')
         if (e && e.checked) {
@@ -115,6 +121,7 @@
                     toast('已提交后台执行')
                 }
             })
+            return
         }
         e = document.getElementById('login')
         if (e && e.checked) {
@@ -175,7 +182,7 @@
         没有可循环播放的图像
     </#if>
     <#else>
-    <div class="folder-head">
+    <div class="folder-head no-wrap">
         <div class="folder-head__left">
             <i class="fa fa-home folder-item folder-head__item" data-folder=""></i>
             <#if pathNames??>
@@ -201,7 +208,7 @@
         </div>
     </div>
     <#if subDirectories??>
-        <div class="folder-list" >
+        <div class="folder-list no-wrap" >
             <#list subDirectories as d>
                 <div class="folder-list__item folder-item" data-folder="${d.path}">
                     <i class = "fa fa-folder folder__icon"></i>
@@ -211,7 +218,7 @@
             </#list>
         </div>
     </#if>
-    <div class="collapse">
+    <div class="collapse no-wrap">
     <#if htmls??>
         <div class = "collapse-item<#if !photos?? && !videos?? && !audios??>-expanded</#if> folder-list__item">
             <i class = "fa fa-file-text-o collapse__icon"></i>
@@ -318,6 +325,9 @@
                     <div><label for="stepName">游记名</label><input type="text" style="width:200px;" id="stepName"></div>
                 </div>
                 </#if>
+                <div>
+                    <input type="radio" name="action" id="exif" data-folder="${path}" onclick="radioClick(this)"><label for="exif">exif信息编辑</label>
+                </div>
                 <div>
                     <input type="radio" name="action" id="rescan" data-folder="${path}" onclick="radioClick(this)"><label for="rescan">重新扫描 ${path}</label>
                 </div>

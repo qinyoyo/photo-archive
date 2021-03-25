@@ -21,6 +21,12 @@ body {
 .fa-heart.favorite-item {
     color: #f66;
 }
+.no-wrap {
+    text-overflow: ellipsis;
+    word-break: keep-all;
+    white-space: nowrap;
+    overflow: hidden;
+}
 .folder-list__item {
     font-size: 16px;
     display: -webkit-box;

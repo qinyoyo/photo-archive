@@ -166,6 +166,7 @@ public class Modification {
                     break;
                 case ORIENTATION:
                     if (pi.getOrientation()!=null) value = Orientation.name(pi.getOrientation());
+                    break;
                 case SCENE:
                     value = pi.getScene();
                     break;

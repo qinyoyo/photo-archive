@@ -55,8 +55,7 @@
                     if (typeof callback==='function') callback.call(this, xhr.responseText);
                 }
             };
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-Type", "application/json;charset=utf-8");
+            xhr.open("post", url, true);
             xhr.send(data);
         }
     }

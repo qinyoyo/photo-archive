@@ -47,7 +47,11 @@ public class ArchiveUtils {
     public static String DELETED = ".deleted";
     public static boolean equals(Object obj1, Object obj2) {
         if (obj1 == null && obj2 == null) return true;
-        else if (obj1 != null && obj2 != null) return obj1.equals(obj2);
+        else if (obj1 != null && obj2 != null) {
+            if (obj1 instanceof Double && obj2 instanceof Double)
+                return Math.abs((Double)obj1 - (Double)obj2) < 0.00001;
+            else return obj1.equals(obj2);
+        }
         else return false;
     }
 
@@ -301,9 +305,9 @@ public class ArchiveUtils {
         if(!equals(p1.getLocation(),p2.getLocation())) diff.add(Key.LOCATION);
         if(!equals(p1.getSubjectCode(),p2.getSubjectCode())) diff.add(Key.SUBJECT_CODE);
         if(!equals(p1.getShootTime(),p2.getShootTime())) diff.add(Key.DATETIMEORIGINAL);
-        if(!equals(p1.getCreateTime(),p2.getCreateTime())) diff.add(Key.CREATEDATE);
-        if(!equals(p1.getDocumentId(),p2.getDocumentId())) diff.add(Key.DOCUMENT_ID);
-        if(!equals(p1.getDigest(),p2.getDigest())) diff.add(Key.IPTCDigest);
+        //(!equals(p1.getCreateTime(),p2.getCreateTime())) diff.add(Key.CREATEDATE);
+        //(!equals(p1.getDocumentId(),p2.getDocumentId())) diff.add(Key.DOCUMENT_ID);
+        //(!equals(p1.getDigest(),p2.getDigest())) diff.add(Key.IPTCDigest);
         if(!equals(p1.getModel(),p2.getModel())) diff.add(Key.MODEL);
         if(!equals(p1.getLens(),p2.getLens())) diff.add(Key.LENS_ID);
         if(!equals(p1.getLongitude(),p2.getLongitude())) diff.add(Key.GPS_LONGITUDE);

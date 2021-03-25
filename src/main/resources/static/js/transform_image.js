@@ -134,7 +134,8 @@
             looperState = 1
             if (runAtOnce) transformObject.loopAction()
             else loopTimerId=setTimeout(transformObject.loopAction, window.sessionOptions.loopTimer)
-        } else looperState = 0
+        }
+        else looperState = 0
         setPlayButtonIcon()
     }
 
@@ -1170,16 +1171,17 @@
                 bkMusic.src = '/music?click='+new Date().getTime()
             }
         }
-
-        createButton({
-            className:'play',
-            title: '自动播放/暂停',
-            iconClass:'fa fa-pause-circle-o',
-            onclick:function (){
-                if (isLooping()) pauseLoop()
-                else startLoop(true)
-            }
-        })
+        if (window.sessionOptions.loopTimer) {
+            createButton({
+                className:'play',
+                title: '自动播放/暂停',
+                iconClass:'fa fa-pause-circle-o',
+                onclick:function (){
+                    if (isLooping()) pauseLoop()
+                    else startLoop(true)
+                }
+            })
+        } else stopLoop()
 
         if (fullScreenElement() !==0 ) {
             createButton({
@@ -1315,7 +1317,7 @@
             };
             xhr.send();
         }
-        // else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
+        else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
     }
     window.AutoLoopPlayImage =function(starterIndex){
         rangeExif = window.sessionOptions.rangeExif ?

@@ -189,18 +189,30 @@ public class PVController implements ApplicationRunner , ErrorController {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            model.addAttribute("message","请先解锁!!!");
+            return "message";
+        }
+
         commonAttribute(model,request);
         Map<String, Object> res = getPathAttributes(path, false,
                 SessionOptions.getSessionOptions(request).isFavoriteFilter());
         model.addAllAttributes(res);
         return "exif";
     }
+
     @ResponseBody
     @RequestMapping(value = "/exifSave")
-    public String exifSave(@RequestBody Map<String,Object> p1, HttpServletRequest request, HttpServletResponse response, String path) {
-/*        if (p1!=null) {
+    public String exifSave(PhotoInfo p1, HttpServletRequest request, HttpServletResponse response, String path) {
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
+        }
+        if (p1!=null) {
             PhotoInfo p0 = archiveInfo.find(p1.getSubFolder(),p1.getFileName());
             if (p0!=null) {
+                p1.setCreateTime(p0.getCreateTime());  // 不修改此参数
                 List<Key> keys = ArchiveUtils.differentOf(p0,p1);
                 if (keys!=null && !keys.isEmpty()) {
                     Map<String,Object> params = Modification.exifMap(p1,keys, false);
@@ -208,11 +220,19 @@ public class PVController implements ApplicationRunner , ErrorController {
                     map.put(p0.getSubFolder()+(p0.getSubFolder().isEmpty()?"":File.separator)+p0.getFileName(),params);
                     if (Modification.execute(map,archiveInfo.getPath())>0) {
                         p0.setPropertiesBy(params);
+                        if (params.containsKey(Key.getName(Key.ORIENTATION))) {
+                            try {
+                                String thumbPath = p0.fullThumbPath(archiveInfo.getPath());
+                                Orientation.setOrientationAndRating(new File(thumbPath), p0.getOrientation(), p0.getRating());
+                                p0.getFileProperties(new File(p0.fullPath(archiveInfo.getPath())));
+                                return "ok,"+p0.getLastModified();
+                            } catch (Exception e){}
+                        }
                         afterChanged();
                     } else return "修改失败";
                 }
             }
-        }*/
+        }
         return "ok";
     }
     @RequestMapping(value = "play")
@@ -282,8 +302,12 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @ResponseBody
     @RequestMapping(value = "remove")
-    public String remove(String path) {
+    public String remove(String path,HttpServletRequest request) {
         if (!isReady) return "message";
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
+        }
         if (Modification.removeAction(path,archiveInfo)) {
             Modification.save(new Modification(Modification.Remove,path,null),rootPath);
             return "ok";
@@ -292,9 +316,13 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
     @ResponseBody
     @RequestMapping(value = "orientation")
-    public String orientation(String path, Integer [] orientations, Integer rating) {
+    public String orientation(String path, Integer [] orientations, Integer rating, HttpServletRequest request) {
         if (!isReady) {
             return "error";
+        }
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
         }
         if (path==null) return "error";
         PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
@@ -316,7 +344,11 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @ResponseBody
     @RequestMapping(value = "scan")
-    public String scan(String path) {
+    public String scan(String path, HttpServletRequest request) {
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
+        }
         if (path==null || path.isEmpty()) return "error";
         new Thread() {
             @Override
@@ -330,7 +362,11 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @ResponseBody
     @RequestMapping(value = "range")
-    public String range(String path, String value, String type, String start,String end, Boolean includeSubFolder) {
+    public String range(String path, String value, String type, String start,String end, Boolean includeSubFolder,HttpServletRequest request) {
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
+        }
         final String subPath=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         if (type==null) return "error";
         Optional<Key> k = Key.findKeyWithName(type);

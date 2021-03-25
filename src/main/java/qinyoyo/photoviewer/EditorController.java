@@ -45,6 +45,10 @@ public class EditorController implements ApplicationRunner {
     @RequestMapping(value = "**/editor")
     public Object editor(Model model, HttpServletRequest request, HttpServletResponse response, String html) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            model.addAttribute("message","请先解锁!!!");
+            return "message";
+        }
         if (html==null || html.isEmpty()) {
             model.addAttribute("message","请指定一个文件");
             return "message";
@@ -111,6 +115,10 @@ public class EditorController implements ApplicationRunner {
     @ResponseBody
     @RequestMapping(value = "save", method = POST)
     public String saveEditor(HttpServletRequest request, String source,String body) {
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
+        }
         if (source==null) return "error";
         try {
             Document doc = Jsoup.parse(new File(source),"UTF8");

@@ -298,6 +298,9 @@ public class PhotoInfo implements Serializable,Cloneable {
             ArchiveUtils.formatStepHtml(null,file);
         }
     }
+    // 用于接受post数据
+    public PhotoInfo() {
+    }
     // 不读取exif信息，便于快速读取
     public  PhotoInfo(String rootPath, File file) {
         try {

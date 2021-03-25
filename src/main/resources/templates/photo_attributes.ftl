@@ -59,7 +59,7 @@
         data-height="${p.height?c}"
     </#if>
     <#if p.shootTime??>
-        data-datetimeoriginal="${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss')}"
+        data-datetimeoriginal="${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss.SSS')}"
     </#if>
     <#if p.createTime??>
         data-createdate="${statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss')}"
