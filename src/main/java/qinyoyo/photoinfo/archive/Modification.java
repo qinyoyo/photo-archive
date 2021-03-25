@@ -341,8 +341,8 @@ public class Modification {
             if (path.isEmpty() || params ==null || params.isEmpty()) continue;
             File img = new File(rootPath, path);
             if (img.exists() && img.isFile()) {
-            String xml = xmlString(params);
-            String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
+                String xml = xmlString(params);
+                String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                 try {
                     makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
                     if (new File(imgDir, link).exists()) {
@@ -350,6 +350,21 @@ public class Modification {
                         FileUtil.writeToFile(xmpFile, xml, "UTF-8");
                         count++;
                         files.put(link, img);
+                        if (params.containsKey(Key.getName(Key.ORIENTATION))) {
+                            File thumb = new File(rootPath+File.separator+ArchiveUtils.THUMB, path);
+                            if (thumb.exists() && thumb.isFile()) {
+                                String thumbLink = count + (thumb.getName().lastIndexOf(".") >= 0 ? thumb.getName().substring(thumb.getName().lastIndexOf(".")) : "");
+                                makeLink(thumb.getCanonicalPath(), new File(imgDir, thumbLink).getCanonicalPath());
+                                if (new File(imgDir, thumbLink).exists()) {
+                                    File thumbXmpFile = new File(xmpDir, count + ".xmp");
+                                    Map<String,Object> thumbParams = new HashMap<>();
+                                    thumbParams.put(Key.getName(Key.ORIENTATION),params.get(Key.getName(Key.ORIENTATION)));
+                                    FileUtil.writeToFile(thumbXmpFile, xmlString(thumbParams), "UTF-8");
+                                    count++;
+                                    files.put(thumbLink, thumb);
+                                }
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -184,56 +184,76 @@ public class PVController implements ApplicationRunner , ErrorController {
         return "index";
     }
     @RequestMapping(value = "/exif")
-    public String exifEdit(Model model, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String exifEdit(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean recursion) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
-        SessionOptions options = SessionOptions.getSessionOptions(request);
+/*        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             model.addAttribute("message","请先解锁!!!");
             return "message";
-        }
-
+        }*/
+        String subFolder=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         commonAttribute(model,request);
-        Map<String, Object> res = getPathAttributes(path, false,
-                SessionOptions.getSessionOptions(request).isFavoriteFilter());
+        Map<String, Object> res = getFolderPathAttributes(path, false);
         model.addAllAttributes(res);
+        final boolean incSub = (recursion!=null && recursion ? true : false);
+        model.addAttribute("recursion",incSub);
+        List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p ->
+               p.getMimeType()!=null && p.getMimeType().contains("image") &&
+               (subFolder.equals(p.getSubFolder()) ||
+                 (incSub && p.getSubFolder().startsWith(subFolder+File.separator))   )
+            ).collect(Collectors.toList());
+        if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
         return "exif";
     }
 
     @ResponseBody
     @RequestMapping(value = "/exifSave")
     public String exifSave(PhotoInfo p1, HttpServletRequest request, HttpServletResponse response, String path) {
-        SessionOptions options = SessionOptions.getSessionOptions(request);
+/*        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             return "请先解锁!!!";
-        }
+        }*/
         if (p1!=null) {
-            PhotoInfo p0 = archiveInfo.find(p1.getSubFolder(),p1.getFileName());
-            if (p0!=null) {
-                p1.setCreateTime(p0.getCreateTime());  // 不修改此参数
-                List<Key> keys = ArchiveUtils.differentOf(p0,p1);
-                if (keys!=null && !keys.isEmpty()) {
-                    Map<String,Object> params = Modification.exifMap(p1,keys, false);
-                    Map<String,Map<String,Object>> map = new HashMap<>();
-                    map.put(p0.getSubFolder()+(p0.getSubFolder().isEmpty()?"":File.separator)+p0.getFileName(),params);
-                    if (Modification.execute(map,archiveInfo.getPath())>0) {
-                        p0.setPropertiesBy(params);
-                        if (params.containsKey(Key.getName(Key.ORIENTATION))) {
-                            try {
-                                String thumbPath = p0.fullThumbPath(archiveInfo.getPath());
-                                Orientation.setOrientationAndRating(new File(thumbPath), p0.getOrientation(), p0.getRating());
-                                p0.getFileProperties(new File(p0.fullPath(archiveInfo.getPath())));
-                                return "ok,"+p0.getLastModified();
-                            } catch (Exception e){}
-                        }
-                        afterChanged();
-                    } else return "修改失败";
+            PhotoInfo photoInfo = null;
+            String [] subFolders = p1.getSubFolder().split(","),
+                    files = p1.getFileName().split(",");
+            List<Modification> list=new ArrayList<>();
+            for (int i=0;i<files.length;i++) {
+                PhotoInfo p0 = archiveInfo.find(subFolders[i], files[i]);
+                if (p0 != null) {
+                    List<Key> keys = ArchiveUtils.differentOf(p0, p1);
+                    if (keys != null && !keys.isEmpty()) {
+                        Map<String, Object> params = Modification.exifMap(p1, keys, false);
+                        if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
+                        String fullPath = p0.getSubFolder() + (p0.getSubFolder().isEmpty() ? "" : File.separator) + p0.getFileName();
+                        list.add(new Modification(Modification.Exif, fullPath, params));
+                    }
                 }
             }
+            if (files.length==1 && list.size()>0) {
+               int count = Modification.execute(list,archiveInfo);
+               if (count>0) {
+                   afterChanged();
+                   if (photoInfo!=null) return "ok,"+photoInfo.getLastModified();
+                   else return "ok";
+                } else return "修改失败";
+            } else if (list.size()>0) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        if (Modification.execute(list,archiveInfo)>0) {
+                            archiveInfo.sortInfos();
+                            archiveInfo.saveInfos();
+                        }
+                    }
+                }.start();
+                return "提交后台处理，稍后需要刷新";
+            }
         }
-        return "ok";
+        return "没有需要修改的对象";
     }
     @RequestMapping(value = "play")
     public String playFolder(Model model, HttpServletRequest request, String path, Integer index) {
@@ -521,7 +541,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         model.addAttribute("editableExifTag",editableExifTag);
     }
 
-    public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
+    public Map<String,Object> getFolderPathAttributes(String path, boolean just4ResourceList) {
         Map<String,Object> model = new HashMap<>();
         path=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         model.put("separator",File.separator);
@@ -534,35 +554,48 @@ public class PVController implements ApplicationRunner , ErrorController {
             File[] subDirs = dir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File pathname) {
-                    if (pathname.getName().startsWith(".") || (!just4ResourceList && pathname.getName().endsWith(".web"))) return false;
+                    if (pathname.getName().startsWith(".") || (!just4ResourceList && pathname.getName().endsWith(".web")))
+                        return false;
                     return pathname.isDirectory();
                 }
             });
-            List<Map<String,Object>> subDirectories = new ArrayList<>();
+            List<Map<String, Object>> subDirectories = new ArrayList<>();
             if (!path.isEmpty()) {
-                Map<String,Object> map = new HashMap<>();
-                map.put("name","..");
+                Map<String, Object> map = new HashMap<>();
+                map.put("name", "..");
                 try {
                     String pp = dir.getParentFile().getCanonicalPath();
-                    if (pp.length()<=rootPath.length()) map.put("path","");
-                    else map.put("path", pp.substring(rootPath.length()+1));
+                    if (pp.length() <= rootPath.length()) map.put("path", "");
+                    else map.put("path", pp.substring(rootPath.length() + 1));
                     subDirectories.add(map);
-                }catch (Exception e){ Util.printStackTrace(e);}
-            }
-            if (subDirs!=null && subDirs.length>0) {
-                for (File f : subDirs) {
-                    Map<String,Object> map = new HashMap<>();
-                    map.put("name",f.getName());
-                    try {
-                        map.put("path", f.getCanonicalPath().substring(rootPath.length()+1));
-                        subDirectories.add(map);
-                    }catch (Exception e){ Util.printStackTrace(e);}
+                } catch (Exception e) {
+                    Util.printStackTrace(e);
                 }
             }
-            if (subDirectories.size()>0) {
-                subDirectories.sort((a,b)->a.get("name").toString().compareTo(b.get("name").toString()));
-                model.put("subDirectories",subDirectories);
+            if (subDirs != null && subDirs.length > 0) {
+                for (File f : subDirs) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", f.getName());
+                    try {
+                        map.put("path", f.getCanonicalPath().substring(rootPath.length() + 1));
+                        subDirectories.add(map);
+                    } catch (Exception e) {
+                        Util.printStackTrace(e);
+                    }
+                }
             }
+            if (subDirectories.size() > 0) {
+                subDirectories.sort((a, b) -> a.get("name").toString().compareTo(b.get("name").toString()));
+                model.put("subDirectories", subDirectories);
+            }
+        }
+        return model;
+    }
+    public Map<String,Object> getPathAttributes(String path, boolean just4ResourceList, boolean favoriteFilter) {
+        Map<String,Object> model = getFolderPathAttributes(path, just4ResourceList);
+        path=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
+        File dir = new File(rootPath+File.separator+path);
+        if (dir.exists() && dir.isDirectory()) {
             if (!just4ResourceList) {
                 // html文件
                 List<PhotoInfo> htmls = mimeListInPath("html", path, favoriteFilter);

@@ -28,33 +28,87 @@
           'longitude','latitude','altitude','gpsDatetime'
         ]
     let selectedDom = null
-
-    function selectFile(dom) {
-        selectedDom = dom
-        const file=dom.getAttribute('data-file')
-        const lastModified = dom.getAttribute('data-lastmodified')
+    function refresh() {
+        const e = document.getElementById('recursion')
         const curPath = document.getElementById('app').getAttribute('data-folder')
-        const thumbDom = document.querySelector('.thumb-image')
-        thumbDom.setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +file
-             + (lastModified?'?click='+lastModified:''))
-        thumbDom.setAttribute('data-src','/' + curPath + (curPath?'/':'') +file
-            + (lastModified?'?click='+lastModified:''))
-        thumbDom.setAttribute('title',dom.getAttribute('title'))
-        document.querySelector('.scroll-from-wrapper').style.display='block'
-
-        document.getElementById('fileName').value = file
-        for (let i=0;i<dataKeys.length;i++) {
-            let v=dom.getAttribute(dataKeys[i])
-            if (v && nameKeys[i]==='shootTime') v=v.replace(' ','T')
-            else if (v && nameKeys[i]==='gpsDatetime' && v.length==20) v=v.substring(0,4)+'-'+v.substring(5,7)+'-'+v.substring(8,10)+'T'+v.substring(11,19)
-            else if (v && nameKeys[i]==='orientation') {
-                if (v && parseInt(v) > 1 && !sessionOptions.supportOrientation) {
-                    document.querySelector('.thumb-image').className = "thumb-image img-index-0 orientation-"+v
-                } else document.querySelector('.thumb-image').className = "thumb-image img-index-0"
+        window.location.href = '/exif?path=' + (curPath ? encodeURI(curPath) : '') + '&recursion='+(e.checked ? 'true':'false')
+    }
+    function selectFile(dom,event) {
+        const fileItems = document.querySelectorAll('.file-item')
+        if (event.ctrlKey) {
+            if (dom.className.indexOf('selected')>=0) {
+                removeClass(dom,'selected')
+                fileItems.forEach(function(i) {
+                    if (i.className.indexOf('selected')>=0) {
+                        selectedDom = i
+                        return
+                    }
+                })
             }
-            document.getElementById(nameKeys[i]).value = (v?v:'')
+            else {
+                addClass(dom,'selected')
+                selectedDom = dom
+            }
+        } else if (event.shiftKey) {
+            selectedDom = dom
+            let start = -1, end = -1, index = -1
+            for (let i=0;i<fileItems.length;i++) {
+                if (fileItems[i]===dom) index = i;
+                if (fileItems[i].className.indexOf('selected')>=0) {
+                    if (start==-1) start=i;
+                    else end=i;
+                }
+            }
+            if (index<start) {
+                for (let i=index;i<start;i++) {
+                    addClass(fileItems[i],'selected')
+                }
+            } else if (index>end) {
+                for (let i=end+1;i<=index;i++) {
+                    addClass(fileItems[i],'selected')
+                }
+            }
+        } else {
+            selectedDom = dom
+            fileItems.forEach(function (i) {
+                if (i == dom) addClass(i, 'selected')
+                else removeClass(i, 'selected')
+            })
         }
-        document.getElementById('submit').setAttribute('disabled','disabled')
+        let folders = [], files=[]
+        document.querySelectorAll('.file-item.selected').forEach(function (i) {
+            folders.push(i.getAttribute('data-folder'))
+            files.push(i.getAttribute('data-file'))
+        })
+        document.getElementById('subFolder').value = folders.join(',')
+        document.getElementById('fileName').value = files.join(',')
+        if (selectedDom) {
+            const file = selectedDom.getAttribute('data-file')
+            const lastModified = selectedDom.getAttribute('data-lastmodified')
+            const curPath = selectedDom.getAttribute('data-folder').replace(/\\/g, '/')
+            const thumbDom = document.querySelector('.thumb-image')
+            thumbDom.setAttribute('src', '/.thumb/' + curPath + (curPath ? '/' : '') + file
+                + (lastModified ? '?click=' + lastModified : ''))
+            thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
+                + (lastModified ? '?click=' + lastModified : ''))
+            thumbDom.setAttribute('title', selectedDom.getAttribute('title'))
+            document.querySelector('.scroll-from-wrapper').style.display = 'block'
+            for (let i = 0; i < dataKeys.length; i++) {
+                let v = selectedDom.getAttribute(dataKeys[i])
+                if (v && nameKeys[i] === 'shootTime') v = v.replace(' ', 'T')
+                else if (v && nameKeys[i] === 'gpsDatetime' && v.length == 20) v = v.substring(0, 4) + '-' + v.substring(5, 7) + '-' + v.substring(8, 10) + 'T' + v.substring(11, 19)
+                else if (v && nameKeys[i] === 'orientation') {
+                    if (v && parseInt(v) > 1 && !sessionOptions.supportOrientation) {
+                        document.querySelector('.thumb-image').className = "thumb-image img-index-0 orientation-" + v
+                    } else document.querySelector('.thumb-image').className = "thumb-image img-index-0"
+                }
+                document.getElementById(nameKeys[i]).value = (v ? v : '')
+            }
+            if (files.length>1) {
+                document.getElementById('shootTime').value = ''
+            }
+            document.getElementById('submit').setAttribute('disabled', 'disabled')
+        }
     }
 
     function changed() {
@@ -83,11 +137,12 @@
                 }
                 let pp = msg.split(',')
                 if (pp.length>1) {
-                    const curPath = document.getElementById('app').getAttribute('data-folder')
+                    const file=selectedDom.getAttribute('data-file')
+                    const curPath = selectedDom.getAttribute('data-folder').replace(/\\/g,'/')
                     selectedDom.setAttribute('data-lastmodified',pp[1])
-                    document.querySelector('.thumb-image').setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +data.get('fileName')
+                    document.querySelector('.thumb-image').setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +file
                         +'?click='+pp[1])
-                    document.querySelector('.thumb-image').setAttribute('data-src','/' + curPath + (curPath?'/':'') + data.get('fileName')
+                    document.querySelector('.thumb-image').setAttribute('data-src','/' + curPath + (curPath?'/':'') + file
                         +'?click='+pp[1])
                 }
 
@@ -115,12 +170,8 @@
         })
         const fileItems = document.querySelectorAll('.file-item')
         if (fileItems.length>0) fileItems.forEach(function(v) {
-            v.onclick = function() {
-                selectFile(v)
-                fileItems.forEach(function(i) {
-                    if (i==v) addClass(i,'selected')
-                    else removeClass(i,'selected')
-                })
+            v.onclick = function(event) {
+                selectFile(v,event)
             }
         })
         TransformImage('.thumb-image')
@@ -146,12 +197,12 @@
         max-height:100%;
         overflow: auto;
     }
-    label {
+    form label {
         width:64px;
         text-align: right;
         display: inline-block;
     }
-    input, select {
+    form input, form select {
         width: calc(100% - 80px);
         margin-left: 5px;
         border-width: 1px;
@@ -183,6 +234,9 @@
                 </#list>
             </#if>
         </div>
+        <div class="folder-head__right">
+            <input type="checkbox" id="recursion"<#if recursion?? && recursion> checked</#if> onclick="refresh()"><label for="recursion">递归</label>
+        </div>
     </div>
     <div class="grid-box2">
     <div class="scroll-items-wrapper no-wrap">
@@ -201,7 +255,7 @@
             <#if photos??>
             <div class="file-list" data-size="${photos?size?c}">
                 <#list photos as p>
-                <div class="folder-list__item file-item" data-file="${p.fileName}" <@photoAttributes p />>
+                <div class="folder-list__item file-item" data-folder="${p.subFolder}" data-file="${p.fileName}" <@photoAttributes p />>
                     <i class = "fa fa-picture-o folder__icon"></i>
                     <span>${p.fileName}</span>
                 </div>
@@ -216,7 +270,7 @@
                 <img class="thumb-image img-index-0"/>
             </div>
             <form id="exifForm" method="get" action="abcd" onsubmit="return false;">
-                <input id="subFolder" name="subFolder" type="hidden" value="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>${separator}</#if></#list></#if>">
+                <input id="subFolder" name="subFolder" type="hidden">
                 <input id="fileName" name="fileName" type="hidden">
 
                 <div><label for="artist">拍摄者</label><input id="artist" name="artist" onchange="changed()"></div>
