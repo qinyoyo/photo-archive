@@ -93,10 +93,10 @@ window.onload=function(){
             v.ondblclick = function() {
                 videoOverlay(v)
             }
-            const span = v.nextElementSibling
-            if (span && span.tagName.toUpperCase()==='SPAN') {
-                span.style.cursor = 'pointer'
-                span.onclick = function() {
+            const div = v.nextElementSibling
+            if (div && div.tagName.toUpperCase()==='DIV') {
+                div.style.cursor = 'pointer'
+                div.onclick = function() {
                     videoOverlay(v)
                 }
             }
