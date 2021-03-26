@@ -211,7 +211,7 @@ public class ArchiveUtils {
                 acc.add(new Modification(pi,keys));
                 return acc;
         },(acc,pi)->null);
-        Modification.execute(modifications,archiveInfo);
+        Modification.setExifTags(modifications,archiveInfo);
     }
     public static void writeAddress(List<PhotoInfo> list,ArchiveInfo archiveInfo) {
         updateExif(list, archiveInfo, new ArrayList<Key>() {{
@@ -403,7 +403,7 @@ public class ArchiveUtils {
                 else continue;
             }
         }
-        if (!modificationList.isEmpty()) Modification.execute(modificationList,targetRootPath);
+        if (!modificationList.isEmpty()) Modification.setExifTags(modificationList,targetRootPath);
         System.out.println("同步RAW文件数量: "+modified+"; 忽略相同文件数: "+same+"; 匹配失败文件数: "+(targetList.size()-modified-same));
     }
     public static void syncThumbOrientation(ArchiveInfo archiveInfo, String subFolder) {
@@ -424,7 +424,7 @@ public class ArchiveUtils {
 
         }
         if (!modificationList.isEmpty()) {
-            Modification.execute(modificationList,archiveInfo);
+            Modification.setExifTags(modificationList,archiveInfo);
             System.out.println("同步修改缩略图数量: "+modificationList.size());
         } else System.out.println("没有需要同步修改缩略图");
     }

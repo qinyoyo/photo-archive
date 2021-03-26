@@ -270,11 +270,37 @@ public class Modification {
             return header + r + tail;
         }
     }
-    private static int executeExiftool(File xmpDir, File imgDir, Map<String,File> files) {
+    public static int removeExifTags(File file, List<String> tags) {
+        if (tags==null || tags.size()==0) return 0;
+        String [] a = tags.toArray(new String[tags.size()]);
+        return removeExifTags(file,a);
+    }
+    public static int removeExifTags(File file, String ... tags) {
+        if (tags==null || tags.length==0) return 0;
+        if (file==null || !file.exists()) return 0;
+        String [] args = new String [tags.length+1];
+        args[0]="-overwrite_original";
+        for (int i=0;i<tags.length;i++) {
+            args[i+1] = "-"+tags[i]+"=";
+        }
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().execute(imgDir, "-m",
-                    "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
-                    "-tagsfromfile", XMP + File.separator + "%f.xmp");
+            Map<String, List<String>> result = ExifTool.getInstance().execute(file, args);
+            int count = ExifTool.updatesFiles(result);
+            List<String> error = result.get(ExifTool.ERROR);
+            if (error != null && error.size() > 0) {
+                for (String err : error)
+                    System.out.println(err);
+            }
+            return count;
+        } catch (Exception e) {
+            Util.printStackTrace(e);
+            return 0;
+        }
+    }
+
+    private static int executeExiftool(File xmpDir, File imgDir, Map<String,File> files,String ... args) {
+        try {
+            Map<String, List<String>> result = ExifTool.getInstance().execute(imgDir, args);
             int count = ExifTool.updatesFiles(result);
             List<String> error = result.get(ExifTool.ERROR);
             if (error != null && error.size() > 0) {
@@ -292,13 +318,18 @@ public class Modification {
                     e.printStackTrace();
                 }
             }
-            FileUtil.removeFilesInDir(xmpDir, false);
+            if (xmpDir!=null) FileUtil.removeFilesInDir(xmpDir, false);
             FileUtil.removeFilesInDir(imgDir,false);
             return count;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
         }
+    }
+    private static int tagsFromXmpFile(File xmpDir, File imgDir, Map<String,File> files) {
+        return executeExiftool(xmpDir,imgDir,files, "-m",
+                    "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
+                    "-tagsfromfile", XMP + File.separator + "%f.xmp");
     }
     public static boolean removeAction(String path,ArchiveInfo archiveInfo) {
         if (ArchiveUtils.deletePhoto(archiveInfo,path)) {
@@ -327,7 +358,14 @@ public class Modification {
         Path linkPath = Paths.get(targetLink);
         Files.createSymbolicLink(linkPath,srcPath);
     }
-    public static int execute(Map<String,Map<String,Object>> pathMap, String rootPath) {
+
+    /**
+     * 批量设置exif tag
+     * @param pathMap 参数，以文件路径(不包含主目录）作为 键值，值为修改的键值对
+     * @param rootPath 主目录
+     * @return 修改成功的文件数，可能比 pathMap 数量大，因为可能会自动同步修改缩略图
+     */
+    public static int setExifTags(Map<String,Map<String,Object>> pathMap, String rootPath) {
         File imgDir = new File(rootPath,temp_path);
         File xmpDir = new File(imgDir,XMP);
         xmpDir.mkdirs();
@@ -341,6 +379,7 @@ public class Modification {
             if (path.isEmpty() || params ==null || params.isEmpty()) continue;
             File img = new File(rootPath, path);
             if (img.exists() && img.isFile()) {
+                for (String tag : params)
                 String xml = xmlString(params);
                 String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                 try {
@@ -371,15 +410,73 @@ public class Modification {
                 }
             }
             if (count>=1000) {
-                updated += executeExiftool(xmpDir,imgDir,files);
+                updated += tagsFromXmpFile(xmpDir,imgDir,files);
                 files.clear();
                 count=0;
             }
         }
         if (count>0) {
-            updated += executeExiftool(xmpDir,imgDir,files);
+            updated += tagsFromXmpFile(xmpDir,imgDir,files);
         }
         FileUtil.removeFilesInDir(xmpDir,true);
+        FileUtil.removeFilesInDir(imgDir,true);
+        return updated;
+    }
+
+    /**
+     * 批量删除exif tag
+     * @param pathList 文件列表，不包含主目录路径
+     * @param rootPath  主目录
+     * @param tags 需要删除的 tags
+     * @return 执行成功数量
+     */
+    public static int removeTags(List<String> pathList, String rootPath, String ... tags) {
+        File imgDir = new File(rootPath,temp_path);
+        imgDir.mkdirs();
+        FileUtil.removeFilesInDir(imgDir,false);
+        int count = 0, updated = 0;
+        Map<String,File> files = new HashMap<>();
+        String [] args = new String [tags.length];
+        boolean removeOrientation = false;
+        for (int i=0;i<tags.length;i++) {
+            args[i] = "-"+tags[i]+"=";
+            if (!removeOrientation && tags[i].equals(Key.getName(Key.ORIENTATION))) removeOrientation = true;
+        }
+        for (String path : pathList) {
+            if (path==null || path.isEmpty()) continue;
+            File img = new File(rootPath, path);
+            if (img.exists() && img.isFile()) {
+                String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
+                try {
+                    makeLink(img.getCanonicalPath(), new File(imgDir, link).getCanonicalPath());
+                    if (new File(imgDir, link).exists()) {
+                        count++;
+                        files.put(link, img);
+                        if (removeOrientation) {
+                            File thumb = new File(rootPath+File.separator+ArchiveUtils.THUMB, path);
+                            if (thumb.exists() && thumb.isFile()) {
+                                String thumbLink = count + (thumb.getName().lastIndexOf(".") >= 0 ? thumb.getName().substring(thumb.getName().lastIndexOf(".")) : "");
+                                makeLink(thumb.getCanonicalPath(), new File(imgDir, thumbLink).getCanonicalPath());
+                                if (new File(imgDir, thumbLink).exists()) {
+                                    count++;
+                                    files.put(thumbLink, thumb);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if (count>=1000) {
+                updated += executeExiftool(null,imgDir,files, args);
+                files.clear();
+                count=0;
+            }
+        }
+        if (count>0) {
+            updated += executeExiftool(null,imgDir,files, args);
+        }
         FileUtil.removeFilesInDir(imgDir,true);
         return updated;
     }
@@ -393,7 +490,14 @@ public class Modification {
         }
         return nm;
     }
-    public static int execute(List<Modification> list, ArchiveInfo archiveInfo) {
+
+    /**
+     * 批量设置归档目录下的文件的exif tags
+     * @param list 修改配置参数列表
+     * @param archiveInfo 归档信息
+     * @return 修改的文件数
+     */
+    public static int setExifTags(List<Modification> list, ArchiveInfo archiveInfo) {
         int updated = 0;
         String rootPath = archiveInfo.getPath();
         list.stream().filter(m->m.action==Scan).reduce(new HashSet<String>(),(acc,m)-> {
@@ -480,7 +584,7 @@ public class Modification {
             },(acc,m)->null);
 
         if (!exifMap.isEmpty()) {
-            updated += execute(exifMap,archiveInfo.getPath());
+            updated += setExifTags(exifMap,archiveInfo.getPath());
         }
         return updated;
     }

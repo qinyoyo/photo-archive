@@ -14,8 +14,6 @@ import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -294,7 +292,7 @@ public class ArchiveManager {
                     List<Modification> list = Modification.read(rootPath);
                     if (list!=null) {
                         System.out.println("同步修改...");
-                        Modification.execute(list,archived);
+                        Modification.setExifTags(list,archived);
                         Modification.resetSyncAction(rootPath);
                         afterChanged(archived);
                         System.out.println("同步修改完成.");
@@ -511,7 +509,7 @@ public class ArchiveManager {
                 } else break;
             }
             if (modifications.size()>0) {
-                Modification.execute(modifications,path);
+                Modification.setExifTags(modifications,path);
                 System.out.println("更新gps信息文件数量："+modifications.size());
                 return;
             }
@@ -560,7 +558,7 @@ public class ArchiveManager {
             } else System.out.println(p.toString());
         });
         if (!pathMap.isEmpty()) {
-            Modification.execute(pathMap,archiveInfo.getPath());
+            Modification.setExifTags(pathMap,archiveInfo.getPath());
             archiveInfo.saveInfos();
         }
     }

@@ -12,7 +12,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.utils.*;
@@ -234,7 +233,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 }
             }
             if (files.length==1 && list.size()>0) {
-               int count = Modification.execute(list,archiveInfo);
+               int count = Modification.setExifTags(list,archiveInfo);
                if (count>0) {
                    afterChanged();
                    if (photoInfo!=null) return "ok,"+photoInfo.getLastModified();
@@ -244,7 +243,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 new Thread() {
                     @Override
                     public void run() {
-                        if (Modification.execute(list,archiveInfo)>0) {
+                        if (Modification.setExifTags(list,archiveInfo)>0) {
                             archiveInfo.sortInfos();
                             archiveInfo.saveInfos();
                         }
@@ -403,7 +402,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                             put(Modification.end_photo,endPath);
                             put(Modification.include_sub_folder, includeSubFolder!=null && includeSubFolder);
                     }};
-                    Modification.execute(new ArrayList<Modification>(){{
+                    Modification.setExifTags(new ArrayList<Modification>(){{
                         add(new Modification(Modification.Exif,subPath,map));
                     }},archiveInfo);
                     afterChanged();
