@@ -181,6 +181,9 @@
     body {
         max-width: 1080px;
     }
+    .file-list {
+        user-select: none;
+    }
     .file-item.selected {
         background-color: #99bcf1;;
     }
@@ -272,7 +275,6 @@
             <form id="exifForm" method="get" action="abcd" onsubmit="return false;">
                 <input id="subFolder" name="subFolder" type="hidden">
                 <input id="fileName" name="fileName" type="hidden">
-
                 <div><label for="artist">拍摄者</label><input id="artist" name="artist" onchange="changed()"></div>
                 <div><label for="shootTime">拍摄时间</label><input id="shootTime" name="shootTime" type="datetime-local" step="0.001" onchange="changed()"></div>
                 <div><label for="model">设备</label><input id="model" name="model" onchange="changed()"></div>

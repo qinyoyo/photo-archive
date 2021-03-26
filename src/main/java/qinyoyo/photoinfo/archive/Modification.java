@@ -371,7 +371,7 @@ public class Modification {
         xmpDir.mkdirs();
         FileUtil.removeFilesInDir(xmpDir, false);
         FileUtil.removeFilesInDir(imgDir,false);
-        int count = 0, updated = 0;
+        int count = 0, updated = 0, removed = 0;
         Map<String,File> files = new HashMap<>();
         for (String path : pathMap.keySet()) {
             if (path==null || path.isEmpty()) continue;
@@ -379,7 +379,16 @@ public class Modification {
             if (path.isEmpty() || params ==null || params.isEmpty()) continue;
             File img = new File(rootPath, path);
             if (img.exists() && img.isFile()) {
-                for (String tag : params)
+                List<String> removeTags = new ArrayList<>();
+                Set<String> tags = params.keySet();
+                for (String tag : tags) {
+                    if (params.get(tag)==null) {
+                        removeTags.add(tag);
+                        params.remove(tag);
+                    }
+                }
+                if (!removeTags.isEmpty()) removed += removeExifTags(img,removeTags);
+                if (params.isEmpty()) continue;
                 String xml = xmlString(params);
                 String link = count + (img.getName().lastIndexOf(".") >= 0 ? img.getName().substring(img.getName().lastIndexOf(".")) : "");
                 try {
@@ -420,7 +429,7 @@ public class Modification {
         }
         FileUtil.removeFilesInDir(xmpDir,true);
         FileUtil.removeFilesInDir(imgDir,true);
-        return updated;
+        return updated >= removed ? updated : removed;
     }
 
     /**
