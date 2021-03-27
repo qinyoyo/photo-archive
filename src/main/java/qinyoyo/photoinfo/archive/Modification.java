@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.MapTypeAdapter;
@@ -36,6 +37,13 @@ public class Modification {
     int action;
     String path;
     Map<String,Object> params;
+
+    /**
+     * 构建一个修改描述
+     * @param action 修改行为
+     * @param path 目录，不包含根目录
+     * @param params 修改参数
+     */
     public Modification(int action,String path,Map<String,Object> params) {
         this.action = action;
         this.path = path;
@@ -54,6 +62,12 @@ public class Modification {
     public String toString() {
         return new GsonBuilder().create().toJson(this);
     }
+
+    /**
+     * 保存一个修改
+     * @param mod 修改描述
+     * @param rootPath 主目录
+     */
     public static void save(Modification mod,String rootPath) {
         File bak = new File(rootPath, modification_dat +".bak");
         File src = new File(rootPath, modification_dat);
@@ -64,6 +78,12 @@ public class Modification {
         }
         FileUtil.appendToFile(src, mod.toString());
     }
+
+    /**
+     * 读取修改同步文件
+     * @param rootPath 主目录
+     * @return 修改列表
+     */
     public static List<Modification> read(String rootPath) {
         String actions = FileUtil.getFromFile(new File(rootPath, modification_dat +".sync"));
         if (actions==null) return null;
@@ -81,6 +101,12 @@ public class Modification {
         }
         return list;
     }
+
+    /**
+     * 从经纬度的dfm描述获得经纬度值
+     * @param s 描述
+     * @return 经纬度值
+     */
     public static Double fromDFM(String s) {
         try {
             if (s==null) return null;
@@ -101,6 +127,14 @@ public class Modification {
             return null;
         }
     }
+
+    /**
+     * 获得tag键值对
+     * @param pi 照片信息
+     * @param keys 需要描述的tag列表
+     * @param skipNull 是否忽略值为空的字段
+     * @return 键值对
+     */
     public static Map<String,Object> exifMap(PhotoInfo pi, List<Key> keys, boolean skipNull) {
         Map<String,Object> map = new HashMap<>();
         if (pi==null || keys==null || keys.size()==0) return map;
@@ -119,81 +153,28 @@ public class Modification {
                         value = DateUtil.date2String(createTime,"yyyy:MM:dd HH:mm:ss"+(createTime.getTime() % 1000 > 0 ? ".SSS":""));
                     }
                     break;
-                case DOCUMENT_ID:
-                    value = pi.getDocumentId();
-                    break;
-                case IPTCDigest:
-                    value = pi.getDigest();
-                    break;
-                case MODEL:
-                    value = pi.getModel();
-                    break;
-                case LENS_ID:
-                    value = pi.getLens();
-                    break;
-                case GPS_LONGITUDE:
-                    Double longitude = pi.getLongitude();
-                    if (longitude!=null) {
-                        value = String.format("%.7f",longitude);
-                    }
-                    break;
-                case GPS_LATITUDE:
-                    Double latitude = pi.getLatitude();
-                    if (latitude!=null) {
-                        value = String.format("%.7f",latitude);
-                    }
-                    break;
-                case GPS_ALTITUDE:
-                    Double altitude = pi.getAltitude();
-                    if (altitude!=null) {
-                        value = String.format("%.6f",altitude);
-                    }
-                    break;
-                case GPS_DATETIME:
-                    value = pi.getGpsDatetime();
-                    break;
-                case ARTIST:
-                    value = pi.getArtist();
-                    break;
-                case HEADLINE:
-                    value = pi.getHeadline();
-                    break;
-                case DESCRIPTION:
-                    value = pi.getSubTitle();
-                    break;
                 case RATING:
                     if (pi.getRating()!=null) value = String.valueOf(pi.getRating());
                     break;
                 case ORIENTATION:
                     if (pi.getOrientation()!=null) value = Orientation.name(pi.getOrientation());
                     break;
-                case SCENE:
-                    value = pi.getScene();
-                    break;
-                case COUNTRY:
-                    value = pi.getCountry();
-                    break;
-                case COUNTRY_CODE:
-                    value = pi.getCountryCode();
-                    break;
-                case STATE:
-                    value = pi.getProvince();
-                    break;
-                case CITY:
-                    value = pi.getCity();
-                    break;
-                case LOCATION:
-                    value = pi.getLocation();
-                    break;
-                case SUBJECT_CODE:
-                    value = pi.getSubjectCode();
-                    break;
                 default:
+                    value = pi.getFieldByTag(key);
             }
-            if (!skipNull || value!=null)  map.put(Key.getName(key),value);
+            if (value!=null && value instanceof Double) value = String.format("%.6f",(Double)value);
+            if (!skipNull || !Util.isEmpty(value))  {
+                map.put(Key.getName(key),value);
+            }
         }
         return map;
     }
+
+    /**
+     * 删除照片字段值与tag简直相同的简直
+     * @param p 照片
+     * @param attrs 键值对
+     */
     public static void deleteSameProperties(PhotoInfo p, Map<String, Object> attrs) {
         if (p==null || attrs==null) return;
         List<Key> keys = new ArrayList<>();
@@ -209,6 +190,11 @@ public class Modification {
         }
     }
 
+    /**
+     * 将tag键值对转换为xml串
+     * @param map tag键值对
+     * @return xml串
+     */
     public static String xmlString(Map<String,Object> map) {
         if (map==null || map.isEmpty()) return "";
         StringBuilder sb=new StringBuilder();
@@ -270,12 +256,12 @@ public class Modification {
             return header + r + tail;
         }
     }
-    public static int removeExifTags(File file, List<String> tags) {
+    private static int removeExifTags(File file, List<String> tags) {
         if (tags==null || tags.size()==0) return 0;
         String [] a = tags.toArray(new String[tags.size()]);
         return removeExifTags(file,a);
     }
-    public static int removeExifTags(File file, String ... tags) {
+    private static int removeExifTags(File file, String ... tags) {
         if (tags==null || tags.length==0) return 0;
         if (file==null || !file.exists()) return 0;
         String [] args = new String [tags.length+1];
@@ -331,12 +317,26 @@ public class Modification {
                     "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                     "-tagsfromfile", XMP + File.separator + "%f.xmp");
     }
+
+    /**
+     * 删除一个文件
+     * @param path 文件
+     * @param archiveInfo 归档信息
+     * @return
+     */
     public static boolean removeAction(String path,ArchiveInfo archiveInfo) {
         if (ArchiveUtils.deletePhoto(archiveInfo,path)) {
             return true;
         }
         return false;
     }
+
+    /**
+     * 重新扫描一个子目录
+     * @param path 子目录
+     * @param archiveInfo 归档信息
+     * @return 是否成功
+     */
     public static boolean scanAction(String path, ArchiveInfo archiveInfo) {
         String rootPath = archiveInfo.getPath();
         File dir = new File(rootPath, path);
@@ -353,6 +353,12 @@ public class Modification {
         return false;
     }
 
+    /**
+     * 创建一个链接文件
+     * @param source  源文件路径
+     * @param targetLink 链接文件路径
+     * @throws IOException 异常
+     */
     public static void makeLink(String source,String targetLink) throws IOException {
         Path srcPath = Paths.get(source);
         Path linkPath = Paths.get(targetLink);
@@ -433,23 +439,56 @@ public class Modification {
     }
 
     /**
+     * 批量删除tags
+     * @param photoList 归档图片列表
+     * @param archiveInfo 归档管理文件
+     * @param tags 需要删除的 exif tag
+     * @return
+     */
+    public static int removeTags(@NonNull List<PhotoInfo> photoList, @NonNull ArchiveInfo archiveInfo, @NonNull List<String> tags) {
+        String rootPath=archiveInfo.getPath();
+        List<String> pathList = new ArrayList<>();
+        photoList.stream().forEach(p->{
+            if (p.getSubFolder().isEmpty()) pathList.add(p.getFileName());
+            else pathList.add(p.getSubFolder()+File.separator+p.getFileName());
+        });
+        int count = removeTags(pathList, rootPath,tags);
+        if (count>0) {
+            List<String> fields = new ArrayList<>();
+            for (String field: PhotoInfo.FIELD_TAG.keySet()) {
+                Key key = PhotoInfo.FIELD_TAG.get(field);
+                if (tags.contains(Key.getName(key))) fields.add(field);
+            }
+            for (PhotoInfo p : photoList) {
+                for (String field: fields) {
+                    try {
+                        Util.setPrivateField(p,field,null);
+                    } catch (Exception e) {
+                        Util.printStackTrace(e);
+                    }
+                }
+            }
+        }
+        return count;
+    }
+    /**
      * 批量删除exif tag
      * @param pathList 文件列表，不包含主目录路径
      * @param rootPath  主目录
      * @param tags 需要删除的 tags
      * @return 执行成功数量
      */
-    public static int removeTags(List<String> pathList, String rootPath, String ... tags) {
+    public static int removeTags(List<String> pathList, String rootPath, List<String> tags) {
         File imgDir = new File(rootPath,temp_path);
         imgDir.mkdirs();
         FileUtil.removeFilesInDir(imgDir,false);
         int count = 0, updated = 0;
         Map<String,File> files = new HashMap<>();
-        String [] args = new String [tags.length];
+        String [] args = new String [tags.size()];
         boolean removeOrientation = false;
-        for (int i=0;i<tags.length;i++) {
-            args[i] = "-"+tags[i]+"=";
-            if (!removeOrientation && tags[i].equals(Key.getName(Key.ORIENTATION))) removeOrientation = true;
+        for (int i=0;i<tags.size();i++) {
+            args[i] = "-"+tags.get(i)+"=";
+            if (!removeOrientation && tags.get(i).equals(Key.getName(Key.ORIENTATION))) removeOrientation = true;
         }
         for (String path : pathList) {
             if (path==null || path.isEmpty()) continue;
@@ -488,16 +527,6 @@ public class Modification {
         }
         FileUtil.removeFilesInDir(imgDir,true);
         return updated;
-    }
-    private static Map<String,Object> reduceParams(ArchiveInfo archiveInfo,String filePath, Map<String,Object>params) {
-        File img = new File(archiveInfo.getPath(), filePath);
-        Map<String,Object> nm = new HashMap<>();
-        if (img.exists() && img.isFile()) {
-            PhotoInfo info = archiveInfo.find(img);
-            nm.putAll(params);
-            if (info != null) deleteSameProperties(info, nm);
-        }
-        return nm;
     }
 
     /**
@@ -597,6 +626,11 @@ public class Modification {
         }
         return updated;
     }
+
+    /**
+     * 删除修改同步文件
+     * @param rootPath
+     */
     public static void resetSyncAction(String rootPath) {
         new File(rootPath, modification_dat +".sync").delete();
     }

@@ -15,6 +15,7 @@ import javax.servlet.http.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -151,5 +152,29 @@ public class Util {
                 }
             }
         }
+    }
+    /**
+     * 设置对象属性
+     * @param obj  对象
+     * @param fieldName 属性名
+     * @param value  属性值
+     */
+    static public void setPrivateField(Object obj, String fieldName,Object value) throws NoSuchFieldException, IllegalAccessException {
+        Class<?> clazz = obj.getClass();
+        Field field = clazz.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(obj, value);
+    }
+    /**
+     * 获得对象属性
+     * @param obj   对象
+     * @param fieldName  属性名
+     * @return 返回对象的私有属性值
+     */
+    static public Object getPrivateField(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        Class<?> clazz = obj.getClass();
+        Field field = clazz.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.get(obj);
     }
 }

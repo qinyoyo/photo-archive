@@ -7,8 +7,6 @@
         debug: false,
         htmlEditable: false,
         favoriteFilter: false,
-        rangeExif : null,
-        rangeExifNote: null,
         loopTimer:  3456,
         musicIndex: 0,
         unlocked: false,
@@ -1032,7 +1030,6 @@
         document.querySelector('body').className = bodyClass
 
         const imageEditable = document.querySelector('body.image-editable')
-        if (!imageEditable) rangeExif = null
 
         const body = document.querySelector('body')
         body.style.overflow = 'hidden'
@@ -1087,41 +1084,6 @@
             button.onclick = function(event) {
                 floatButtonClick(event,onclick)
             }
-        }
-
-        if (rangeExif) {
-            createButton({
-                className: 'close',
-                title: '范围开始',
-                iconClass: 'fa fa-angle-left',
-                onclick: function (){
-                    if (transformObject) {
-                        const e = transformObject.indexImg()
-                        if (e) rangeExif.start = decodeURI(img.getAttribute('src'))
-                        if (rangeExif.start) {
-                            let pos = rangeExif.start.indexOf('?')
-                            if (pos>=0) rangeExif.start = rangeExif.start.substring(0,pos)
-                            let needResumeLoop = isLooping()
-                            if (needResumeLoop) {
-                                pauseLoop()
-                            }
-                            window.input({
-                                title: '批量设置 ' + rangeExif.note +' 起点',
-                                label: rangeExif.note,
-                                defaultValue: e.getAttribute('data-'+rangeExif.exif),
-                                callback: function(exif) {
-                                    rangeExif.value = exif
-                                    if (needResumeLoop) resumeLoop(true)
-                                },
-                                oncancel: function() {
-                                    rangeExif.start = null
-                                    if (needResumeLoop) resumeLoop(true)
-                                }
-                            })
-                        }
-                    }
-                }
-            })
         }
 
         createButton({
@@ -1212,41 +1174,6 @@
                 downloadImg(img)
             }
         })
-        if (rangeExif) {
-            createButton({
-                className: 'close',
-                title: '范围结束',
-                iconClass: 'fa fa-angle-right',
-                onclick: function (){
-                    if (rangeExif.start && transformObject) {
-                        rangeExif.end = decodeURI(img.getAttribute('src'))
-                        if (rangeExif.end) {
-                            let pos = rangeExif.end.indexOf('?')
-                            if (pos>=0) rangeExif.end = rangeExif.end.substring(0,pos)
-                            let msg = (rangeExif.value ? '批量设置 '+ rangeExif.note +'=' + rangeExif.value : '批量删除 '+ rangeExif.note) + ' ?\n' +
-                                '['+ rangeExif.start + ' 至 ' + rangeExif.end + ']'
-                            let needResumeLoop = isLooping()
-                            if (needResumeLoop) pauseLoop()
-                            if (confirm(msg)) {
-                                let url = '/range?type=' + encodeURI(rangeExif.exif) +'&value=' + encodeURI(rangeExif.value)
-                                     +'&start=' + encodeURI(rangeExif.start) +'&end=' + encodeURI(rangeExif.end)
-                                     +'&includeSubFolder=' + rangeExif.includeSubFolder
-                                     +'&path=' + encodeURI(document.getElementById('app').getAttribute('data-folder'))
-                                rangeExif.value = null
-                                rangeExif.start = null
-                                rangeExif.end = null
-                                Ajax.get(url, function (responseText) {
-                                    if ("ok" == responseText) {
-                                        toast('已提交后台执行')
-                                    } else toast(responseText)
-                                })
-                            }
-                            if (needResumeLoop) resumeLoop(true)
-                        }
-                    }
-                }
-            })
-        }
 
         if (!window.sessionOptions.mobile){
             floatButtons.onmouseenter=function (event){
@@ -1281,19 +1208,12 @@
 
         transformObject = new initTransformImage(img, index, initialThumb)
     }
-    let rangeExif = null
     /*****************  入口函数  *********************
      *  selector : 一个缩略图 img 元素                *
      *      条件 ： src 以 .thumb/ 开头               *
      *             类 img-index-xx, xx为序号          *
      *************************************************/
     window.TransformImage =function(selector){
-        rangeExif = window.sessionOptions.unlocked && window.sessionOptions.rangeExif ?
-            {
-                exif: window.sessionOptions.rangeExif,
-                note: window.sessionOptions.rangeExifNote,
-                includeSubFolder: false
-            } : null
         let imgIndex = 0
         document.querySelectorAll(selector).forEach(function (img){
             let pos=img.className.indexOf('img-index-')
@@ -1320,12 +1240,6 @@
         else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
     }
     window.AutoLoopPlayImage =function(starterIndex){
-        rangeExif = window.sessionOptions.rangeExif ?
-            {
-                exif: window.sessionOptions.rangeExif,
-                note: window.sessionOptions.rangeExifNote,
-                includeSubFolder: true
-            } : null
         starterIndex = starterIndex ? starterIndex : 0
         let firstImg = document.querySelector('.img-index-'+starterIndex)
         if (firstImg) {

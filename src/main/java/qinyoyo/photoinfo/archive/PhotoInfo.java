@@ -58,6 +58,57 @@ public class PhotoInfo implements Serializable,Cloneable {
     private Double altitude;
     private String gpsDatetime;
 
+    public static final Map<String,Key> FIELD_TAG = new HashMap<String,Key>() {{
+        put("shootTime",Key.DATETIMEORIGINAL);
+        put("createTime",Key.CREATEDATE);
+        put("model",Key.MODEL);
+        put("lens",Key.LENS_ID);
+        put("digest",Key.IPTCDigest);
+        put("documentId",Key.DOCUMENT_ID);
+        put("country",Key.COUNTRY);
+        put("countryCode",Key.COUNTRY_CODE);
+        put("province",Key.STATE);
+        put("city",Key.CITY);
+        put("location",Key.LOCATION);
+        put("subjectCode",Key.SUBJECT_CODE);
+        put("scene",Key.SCENE);
+        put("artist",Key.ARTIST);
+        put("rating",Key.RATING.RATING);
+        put("width",Key.IMAGE_WIDTH);
+        put("height",Key.IMAGE_HEIGHT);
+        put("orientation",Key.ORIENTATION);
+        put("headline",Key.HEADLINE);
+        put("subTitle",Key.DESCRIPTION);
+        put("longitude",Key.GPS_LONGITUDE);
+        put("latitude",Key.GPS_LATITUDE);
+        put("altitude",Key.GPS_ALTITUDE);
+        put("gpsDatetime",Key.GPS_DATETIME);
+    }};
+    public void setFieldByTag(Key tag,Object value) {
+        for (String field : FIELD_TAG.keySet()) {
+            if (FIELD_TAG.get(field).equals(tag)) {
+                try {
+                    Util.setPrivateField(this,field,value);
+                } catch (Exception e) {
+                    Util.printStackTrace(e);
+                }
+                return;
+            }
+        }
+    }
+    public Object getFieldByTag(Key tag) {
+        for (String field : FIELD_TAG.keySet()) {
+            if (FIELD_TAG.get(field).equals(tag)) {
+                try {
+                    return Util.getPrivateField(this,field);
+                } catch (Exception e) {
+                    Util.printStackTrace(e);
+                }
+                return null;
+            }
+        }
+        return null;
+    }
     String lengString(long l) {
         String s = String.valueOf(l);
         String r = "";

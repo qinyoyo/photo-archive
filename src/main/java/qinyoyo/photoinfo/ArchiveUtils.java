@@ -294,30 +294,11 @@ public class ArchiveUtils {
             }
         }
     }
-    public static List<Key> differentOf(PhotoInfo p1, PhotoInfo p2) {
+    public static List<Key> differentOf(PhotoInfo p1, PhotoInfo p2,List<Key> range) {
         List<Key> diff = new ArrayList<>();
-        if(!equals(p1.getOrientation(),p2.getOrientation())) diff.add(Key.ORIENTATION);
-        if(!equals(p1.getRating(),p2.getRating())) diff.add(Key.RATING);
-        if(!equals(p1.getCountry(),p2.getCountry())) diff.add(Key.COUNTRY);
-        if(!equals(p1.getCountryCode(),p2.getCountryCode())) diff.add(Key.COUNTRY_CODE);
-        if(!equals(p1.getProvince(),p2.getProvince())) diff.add(Key.STATE);
-        if(!equals(p1.getCity(),p2.getCity())) diff.add(Key.CITY);
-        if(!equals(p1.getLocation(),p2.getLocation())) diff.add(Key.LOCATION);
-        if(!equals(p1.getSubjectCode(),p2.getSubjectCode())) diff.add(Key.SUBJECT_CODE);
-        if(!equals(p1.getShootTime(),p2.getShootTime())) diff.add(Key.DATETIMEORIGINAL);
-        //(!equals(p1.getCreateTime(),p2.getCreateTime())) diff.add(Key.CREATEDATE);
-        //(!equals(p1.getDocumentId(),p2.getDocumentId())) diff.add(Key.DOCUMENT_ID);
-        //(!equals(p1.getDigest(),p2.getDigest())) diff.add(Key.IPTCDigest);
-        if(!equals(p1.getModel(),p2.getModel())) diff.add(Key.MODEL);
-        if(!equals(p1.getLens(),p2.getLens())) diff.add(Key.LENS_ID);
-        if(!equals(p1.getLongitude(),p2.getLongitude())) diff.add(Key.GPS_LONGITUDE);
-        if(!equals(p1.getLatitude(),p2.getLatitude())) diff.add(Key.GPS_LATITUDE);
-        if(!equals(p1.getAltitude(),p2.getAltitude())) diff.add(Key.GPS_ALTITUDE);
-        if(!equals(p1.getGpsDatetime(),p2.getGpsDatetime())) diff.add(Key.GPS_DATETIME);
-        if(!equals(p1.getArtist(),p2.getArtist())) diff.add(Key.ARTIST);
-        if(!equals(p1.getHeadline(),p2.getHeadline())) diff.add(Key.HEADLINE);
-        if(!equals(p1.getSubTitle(),p2.getSubTitle())) diff.add(Key.DESCRIPTION);
-        if(!equals(p1.getScene(),p2.getScene())) diff.add(Key.SCENE);
+        for (Key k : range) {
+            if(!equals(p1.getFieldByTag(k),p2.getFieldByTag(k))) diff.add(k);
+        }
         return diff;
     }
     private static void deleteFile(PhotoInfo pi,String rootPath) {

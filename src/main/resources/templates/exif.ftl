@@ -92,7 +92,6 @@
             thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
                 + (lastModified ? '?click=' + lastModified : ''))
             thumbDom.setAttribute('title', selectedDom.getAttribute('title'))
-            document.querySelector('.scroll-from-wrapper').style.display = 'block'
             for (let i = 0; i < dataKeys.length; i++) {
                 let v = selectedDom.getAttribute(dataKeys[i])
                 if (v && nameKeys[i] === 'shootTime') v = v.replace(' ', 'T')
@@ -104,30 +103,43 @@
                 }
                 document.getElementById(nameKeys[i]).value = (v ? v : '')
             }
-            if (files.length>1) {
-                document.getElementById('shootTime').value = ''
+            if (files.length>1 || files.length==0) {
+                document.querySelectorAll('form input[type="checkbox"]').forEach(function(e){
+                    e.checked = false
+                })
+                document.querySelectorAll('.tag-value').forEach(function(e){
+                    e.setAttribute('disabled', 'disabled')
+                })
+            } else {
+                document.querySelectorAll('form input[type="checkbox"]').forEach(function(e){
+                    e.checked = true
+                })
+                document.querySelectorAll('.tag-value').forEach(function(e){
+                    e.removeAttribute('disabled')
+                })
             }
             document.getElementById('submit').setAttribute('disabled', 'disabled')
         }
     }
 
-    function changed() {
+    function changed(dom) {
         document.getElementById('submit').removeAttribute('disabled')
+        //dom.querySelector('+input').checked = true
+    }
+    function toggleSelection(dom) {
+        let e = document.getElementById(dom.value)
+        if (dom.checked) e.removeAttribute('disabled')
+        else e.setAttribute('disabled', 'disabled')
     }
     function save() {
         const form = document.getElementById('exifForm')
         let url = '/exifSave'
-        let data = new FormData()
-        form.querySelectorAll('input,select').forEach(function(e) {
-            const name = e.getAttribute('name')
-            let value = e.value
-            if ( name && value) {
-                if (name==='gpsDatetime') {
-                    value=value.substring(0,4)+':'+value.substring(5,7)+':'+value.substring(8,10)+' '+value.substring(11,19)+'Z'
-                }
-                data.append(name, value)
-            } else if (name==='subFolder') data.append(name, '')
-        })
+        let data = new FormData(form)
+        let value = data.get('gpsDatetime')
+        if (value) {
+            value=value.substring(0,4)+':'+value.substring(5,7)+':'+value.substring(8,10)+' '+value.substring(11,19)+'Z'
+            data.set('gpsDatetime',value)
+        }
         Ajax.post(url,data,function(msg) {
             if (msg && msg.indexOf('ok')==0) {
                 document.getElementById('submit').setAttribute('disabled','disabled')
@@ -193,7 +205,7 @@
         margin: 10px 0;
     }
     .thumb-image {
-        height: 200px;
+        max-height: 200px;
         max-width: 100%;
     }
     .scroll-items {
@@ -205,8 +217,14 @@
         text-align: right;
         display: inline-block;
     }
-    form input, form select {
-        width: calc(100% - 80px);
+    form input[type="checkbox"] {
+        width:16px;
+        right: 0px;
+        position: absolute;
+        margin-top:8px;
+    }
+    .tag-value {
+        width: calc(100% - 100px);
         margin-left: 5px;
         border-width: 1px;
         border-top-style: hidden;
@@ -217,6 +235,9 @@
     input:invalid
     {
         color: red;
+    }
+    input[type="datetime-local"]::-webkit-clear-button {
+        visibility: visible;
     }
 </style>
 <#assign path = '' />
@@ -267,29 +288,82 @@
             </#if>
         </div>
     </div>
-    <div class="scroll-from-wrapper no-wrap" style="display:none">
+    <div class="scroll-from-wrapper no-wrap">
         <div class="scroll-items">
             <div class="thumb-image-wrapper">
                 <img class="thumb-image img-index-0"/>
             </div>
-            <form id="exifForm" method="get" action="abcd" onsubmit="return false;">
+            <form id="exifForm" class="tag-editor" onsubmit="return false;">
                 <input id="subFolder" name="subFolder" type="hidden">
                 <input id="fileName" name="fileName" type="hidden">
-                <div><label for="artist">拍摄者</label><input id="artist" name="artist" onchange="changed()"></div>
-                <div><label for="shootTime">拍摄时间</label><input id="shootTime" name="shootTime" type="datetime-local" step="0.001" onchange="changed()"></div>
-                <div><label for="model">设备</label><input id="model" name="model" onchange="changed()"></div>
-                <div><label for="lens">镜头</label><input id="lens" name="lens" onchange="changed()"></div>
-                <div><label for="subjectCode">POI</label><input id="subjectCode" name="subjectCode" onchange="changed()"></div>
-                <div><label for="country">国家</label><input id="country" name="country" onchange="changed()"></div>
-                <div><label for="countryCode">国家代码</label><input id="countryCode" name="countryCode" maxlength="2" onchange="changed()"></div>
-                <div><label for="province">省/州</label><input id="province" name="province"  maxlength="4" onchange="changed()"></div>
-                <div><label for="city">城市</label><input id="city" name="city" onchange="changed()"></div>
-                <div><label for="location">地址</label><input id="location" name="location" onchange="changed()"></div>
-                <div><label for="headline">标题</label><input id="headline" name="headline" onchange="changed()"></div>
-                <div><label for="subTitle">题注</label><input id="subTitle" name="subTitle" onchange="changed()"></div>
-                <div><label for="scene">场景</label><input id="scene" name="scene" onchange="changed()"></div>
-                <div><label for="rating">星级</label>
-                    <select id="rating" name="rating" onchange="changed()">
+                <div style="position: relative">
+                    <label for="artist">拍摄者</label>
+                    <input class="tag-value" id="artist" name="artist" onchange="changed(this)">
+                    <input type="checkbox" value="artist" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="shootTime">拍摄时间</label>
+                    <input class="tag-value" id="shootTime" name="shootTime" type="datetime-local" step="0.001" onchange="changed(this)">
+                    <input type="checkbox" value="shootTime" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="model">设备</label>
+                    <input class="tag-value" id="model" name="model" onchange="changed(this)">
+                    <input type="checkbox" value="model" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="lens">镜头</label>
+                    <input class="tag-value" id="lens" name="lens" onchange="changed(this)">
+                    <input type="checkbox" value="lens" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="subjectCode">POI</label>
+                    <input class="tag-value" id="subjectCode" name="subjectCode" onchange="changed(this)">
+                    <input type="checkbox" value="subjectCode" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="country">国家</label>
+                    <input class="tag-value" id="country" name="country" onchange="changed(this)">
+                    <input type="checkbox" value="country" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="countryCode">国家代码</label>
+                    <input class="tag-value" id="countryCode" name="countryCode" maxlength="2" onchange="changed(this)">
+                    <input type="checkbox" value="countryCode" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="province">省/州</label>
+                    <input class="tag-value" id="province" name="province"  maxlength="4" onchange="changed(this)">
+                    <input type="checkbox" value="province" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="city">城市</label>
+                    <input class="tag-value" id="city" name="city" onchange="changed(this)">
+                    <input type="checkbox" value="city" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="location">地址</label>
+                    <input class="tag-value" id="location" name="location" onchange="changed(this)">
+                    <input type="checkbox" value="location" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="headline">标题</label>
+                    <input class="tag-value" id="headline" name="headline" onchange="changed(this)">
+                    <input type="checkbox" value="headline" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="subTitle">题注</label>
+                    <input class="tag-value" id="subTitle" name="subTitle" onchange="changed(this)">
+                    <input type="checkbox" value="subTitle" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="scene">场景</label>
+                    <input class="tag-value" id="scene" name="scene" onchange="changed(this)">
+                    <input type="checkbox" value="scene" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="rating">星级</label>
+                    <select class="tag-value" id="rating" name="rating" onchange="changed(this)">
                         <option value="">无</option>
                         <option value="1">☆</option>
                         <option value="2">☆☆</option>
@@ -297,9 +371,11 @@
                         <option value="4">☆☆☆☆</option>
                         <option value="5">☆☆☆☆☆(收藏)</option>
                     </select>
+                    <input type="checkbox" value="rating" name="selectedTags" checked onclick="toggleSelection(this)">
                 </div>
-                <div><label for="orientation">方向</label>
-                    <select id="orientation" name="orientation" onchange="changed()">
+                <div style="position: relative">
+                    <label for="orientation">方向</label>
+                    <select class="tag-value" id="orientation" name="orientation" onchange="changed(this)">
                         <option value="">默认</option>
                         <option value="1">水平</option>
                         <option value="2">水平翻转</option>
@@ -310,11 +386,28 @@
                         <option value="7">水平翻转逆旋转90度</option>
                         <option value="8">逆时针旋转270度</option>
                     </select>
+                    <input type="checkbox" value="orientation" name="selectedTags" checked onclick="toggleSelection(this)">
                 </div>
-                <div><label for="longitude">经度</label><input id="longitude" name="longitude" type="number" min="-180" max="180" step="0.000001" onchange="changed()"></div>
-                <div><label for="latitude">纬度</label><input id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.000001" onchange="changed()"></div>
-                <div><label for="altitude">海拔</label><input id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1" onchange="changed()"></div>
-                <div><label for="gpsDatetime">GPS时间</label><input id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed()"></div>
+                <div style="position: relative">
+                    <label for="longitude">经度</label>
+                    <input class="tag-value" id="longitude" name="longitude" type="number" min="-180" max="180" step="0.000001" onchange="changed(this)">
+                    <input type="checkbox" value="longitude" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="latitude">纬度</label>
+                    <input class="tag-value" id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.000001" onchange="changed(this)">
+                    <input type="checkbox" value="latitude" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="altitude">海拔</label>
+                    <input class="tag-value" id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1" onchange="changed(this)">
+                    <input type="checkbox" value="altitude" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
+                <div style="position: relative">
+                    <label for="gpsDatetime">GPS时间</label>
+                    <input class="tag-value" id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed(this)">
+                    <input type="checkbox" value="gpsDatetime" name="selectedTags" checked onclick="toggleSelection(this)">
+                </div>
                 <div style="text-align: center">
                     <button id="submit" class="dialog__button" onclick="save()">保存</button>
                 </div>

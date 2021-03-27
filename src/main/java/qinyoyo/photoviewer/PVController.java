@@ -210,40 +210,75 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @ResponseBody
     @RequestMapping(value = "/exifSave")
-    public String exifSave(PhotoInfo p1, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String exifSave(PhotoInfo p1, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
 /*        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             return "请先解锁!!!";
         }*/
-        if (p1!=null) {
+        if (p1!=null && !Util.isEmpty(selectedTags)) {
+            String [] tags = selectedTags.split(",");
+            List<Key> selectedKey = new ArrayList<>();
+            for (String tag : tags) {
+                if (PhotoInfo.FIELD_TAG.containsKey(tag)) {
+                    selectedKey.add(PhotoInfo.FIELD_TAG.get(tag));
+                }
+            }
+            if (selectedKey.isEmpty()) return "没有需要修改的标签";
+            List<String> removeTags = new ArrayList<>();
+            Iterator<Key> iter = selectedKey.iterator();
+            while (iter.hasNext()) {
+                Key key = iter.next();
+                Object obj = p1.getFieldByTag(key);
+                if (Util.isEmpty(obj)) {
+                    iter.remove();
+                    removeTags.add(Key.getName(key));
+                }
+            }
+            // removeTags不排除已经为空的字段，因为多选操作各个文件不一样
             PhotoInfo photoInfo = null;
             String [] subFolders = p1.getSubFolder().split(","),
                     files = p1.getFileName().split(",");
-            List<Modification> list=new ArrayList<>();
-            for (int i=0;i<files.length;i++) {
-                PhotoInfo p0 = archiveInfo.find(subFolders[i], files[i]);
-                if (p0 != null) {
-                    List<Key> keys = ArchiveUtils.differentOf(p0, p1);
-                    if (keys != null && !keys.isEmpty()) {
-                        Map<String, Object> params = Modification.exifMap(p1, keys, false);
-                        if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
-                        String fullPath = p0.getSubFolder() + (p0.getSubFolder().isEmpty() ? "" : File.separator) + p0.getFileName();
-                        list.add(new Modification(Modification.Exif, fullPath, params));
+            List<PhotoInfo> photoList = new ArrayList<>();
+            for (int i=0;i< files.length;i++) {
+                PhotoInfo p = archiveInfo.find(subFolders[i],files[i]);
+                if (p!=null) photoList.add(p);
+            }
+            List<Modification> modifications=new ArrayList<>();
+            if (!selectedKey.isEmpty()) {
+                for (int i=0;i<files.length;i++) {
+                    PhotoInfo p0 = archiveInfo.find(subFolders[i], files[i]);
+                    if (p0 != null) {
+                        List<Key> keys = ArchiveUtils.differentOf(p0, p1,selectedKey);
+                        if (keys != null && !keys.isEmpty()) {
+                            Map<String, Object> params = Modification.exifMap(p1, keys, true);
+                            if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
+                            String fullPath = subFolders[i].isEmpty()?files[i] : (subFolders[i]+File.separator+files[i]);
+                            modifications.add(new Modification(Modification.Exif, fullPath, params));
+                        }
                     }
                 }
             }
-            if (files.length==1 && list.size()>0) {
-               int count = Modification.setExifTags(list,archiveInfo);
+            if (files.length==1) {
+                int count = 0;
+                if (!removeTags.isEmpty()) {
+                    count += Modification.removeTags(photoList,archiveInfo,removeTags);
+                }
+               if (!modifications.isEmpty()) count += Modification.setExifTags(modifications,archiveInfo);
                if (count>0) {
                    afterChanged();
                    if (photoInfo!=null) return "ok,"+photoInfo.getLastModified();
                    else return "ok";
                 } else return "修改失败";
-            } else if (list.size()>0) {
+            } else  {
                 new Thread() {
                     @Override
                     public void run() {
-                        if (Modification.setExifTags(list,archiveInfo)>0) {
+                        int count = 0;
+                        if (!removeTags.isEmpty()) {
+                            count += Modification.removeTags(photoList,archiveInfo,removeTags);
+                        }
+                        if (!modifications.isEmpty()) count += Modification.setExifTags(modifications,archiveInfo);
+                        if (count>0) {
                             archiveInfo.sortInfos();
                             archiveInfo.saveInfos();
                         }
@@ -379,40 +414,6 @@ public class PVController implements ApplicationRunner , ErrorController {
         return "ok";
     }
 
-    @ResponseBody
-    @RequestMapping(value = "range")
-    public String range(String path, String value, String type, String start,String end, Boolean includeSubFolder,HttpServletRequest request) {
-        SessionOptions options = SessionOptions.getSessionOptions(request);
-        if (!options.isUnlocked()) {
-            return "请先解锁!!!";
-        }
-        final String subPath=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
-        if (type==null) return "error";
-        Optional<Key> k = Key.findKeyWithName(type);
-        if (k.isPresent()) {
-            final Key key = k.get();
-            new Thread() {
-                @Override
-                public void run() {
-                    String startPath = start.indexOf("?") > 0 ? start.substring(0,start.indexOf("?")) : start;
-                    String endPath = end.indexOf("?") > 0 ? end.substring(0,end.indexOf("?")) : end;
-                    Map<String, Object> map = new HashMap<String, Object>() {{
-                            put(Key.getName(key), value);
-                            put(Modification.start_photo,startPath);
-                            put(Modification.end_photo,endPath);
-                            put(Modification.include_sub_folder, includeSubFolder!=null && includeSubFolder);
-                    }};
-                    Modification.setExifTags(new ArrayList<Modification>(){{
-                        add(new Modification(Modification.Exif,subPath,map));
-                    }},archiveInfo);
-                    afterChanged();
-                    Modification.save(new Modification(Modification.Exif, subPath, map), rootPath);
-                }
-            }.start();
-            return "ok";
-        }
-        return "error";
-    }
     @ResponseBody
     @RequestMapping(value = "stdout")
     public String stdout(HttpServletRequest request) {
