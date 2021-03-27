@@ -188,11 +188,11 @@ public class PVController implements ApplicationRunner , ErrorController {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
-/*        SessionOptions options = SessionOptions.getSessionOptions(request);
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             model.addAttribute("message","请先解锁!!!");
             return "message";
-        }*/
+        }
         String subFolder=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         commonAttribute(model,request);
         Map<String, Object> res = getFolderPathAttributes(path, false);
@@ -211,10 +211,10 @@ public class PVController implements ApplicationRunner , ErrorController {
     @ResponseBody
     @RequestMapping(value = "/exifSave")
     public String exifSave(PhotoInfo p1, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
-/*        SessionOptions options = SessionOptions.getSessionOptions(request);
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             return "请先解锁!!!";
-        }*/
+        }
         if (p1!=null && !Util.isEmpty(selectedTags)) {
             String [] tags = selectedTags.split(",");
             List<Key> selectedKey = new ArrayList<>();
