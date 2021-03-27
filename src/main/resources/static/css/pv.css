@@ -211,16 +211,25 @@ img[data-rating="5"] + .img-favorite-state {
     .grid-box {
         grid-template-columns: repeat(3, 1fr);
     }
-    .video-list.grid-box, .audio-list.grid-box {
+    .video-list.grid-box {
+        grid-template-columns: 100%;
+    }
+    video {
+        max-height: 360px;
+    }
+    .audio-list.grid-box {
         grid-template-columns: 50% 50%;
     }
-    audio, video {
+    audio {
         max-height: 120px;
     }
 }
 @media screen and (min-aspect-ratio: 13/9) {
     .grid-box {
         grid-template-columns: repeat(5, 1fr);
+    }
+    .video-list.grid-box {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

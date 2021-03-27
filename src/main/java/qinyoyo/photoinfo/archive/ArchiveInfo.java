@@ -97,10 +97,10 @@ public class ArchiveInfo {
                     if (orientation==null) orientation = Orientation.NONE.getValue();
                 }
                 pi.readProperties(path);
-                File thumb = new File(pi.fullThumbPath(path));
                 sortInfos();
-                if (!thumb.exists()) {
-                    System.out.println("创建缩略图 "+thumb.getPath() + " ...");
+                String thumbPath = pi.fullThumbPath(path);
+                if (thumbPath!=null && !new File(thumbPath).exists()) {
+                    System.out.println("创建缩略图 "+thumbPath + " ...");
                     createThumbFiles(pi);
                 }
                 System.out.println("成功扫描文件 "+p);
@@ -115,27 +115,26 @@ public class ArchiveInfo {
                 if (list!=null && list.size()>0) {
                     infos.addAll(list);
                     for (int i = 0; i < list.size(); i++) {
-                        File thumb = new File(list.get(i).fullThumbPath(path));
-                        addFilesPath.add(list.get(i).fullThumbPath(path));
-                        if (!thumb.exists()) {
-                            System.out.println("创建缩略图 "+thumb.getPath() + " ...");
-                            createThumbFiles(list.get(i));
+                        String thumbPath = list.get(i).fullThumbPath(path);
+                        if (thumbPath!=null) {
+                            addFilesPath.add(thumbPath);
+                            if (!new File(thumbPath).exists()) {
+                                System.out.println("创建缩略图 " + thumbPath + " ...");
+                                createThumbFiles(list.get(i));
+                            }
                         }
                     }
                 }
                 sortInfos();
                 existedList.stream().filter(pi->{
-                    try {
-                        return !addFilesPath.contains(pi.fullThumbPath(path));
-                    } catch (IOException e) {
-                        return false;
+                    String thumbPath = pi.fullThumbPath(path);
+                    if (thumbPath==null) return false;
+                    else {
+                        return !addFilesPath.contains(thumbPath);
                     }
                 }).forEach(pi->{
-                    try {
-                        new File(pi.fullThumbPath(path)).delete();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    String thumbPath = pi.fullThumbPath(path);
+                    if (thumbPath!=null) new File(thumbPath).delete();
                 });
                 System.out.println("成功扫描文件数: "+list.size());
             }
@@ -227,21 +226,23 @@ public class ArchiveInfo {
     public void createThumbFiles(PhotoInfo p) {
         try {
             String thumbPath = p.fullThumbPath(getPath());
-            File thumbFile = new File(thumbPath);
-            String imgPath = p.fullPath(getPath());
-            File imgFile = new File(imgPath);
+            if (thumbPath!=null) {
+                File thumbFile = new File(thumbPath);
+                String imgPath = p.fullPath(getPath());
+                File imgFile = new File(imgPath);
 
-            if (!imgFile.exists() || p.getMimeType()==null) return;
-            if (thumbFile.exists()) return;
-            thumbFile.getParentFile().mkdirs();
-            if (p.getMimeType().contains("image/")) {
-                ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
-            } else if (ExifTool.FFMPEG!=null && p.getMimeType().contains("video/")) {
-                CommandRunner.run(ExifTool.FFMPEG,"-i", imgPath, "-y", "-f", "image2",
-                        // "-t","0.0001",
-                        "-frames:v", "1", "-ss", ArchiveUtils.VIDEO_CAPTURE_AT,
-                        // "-s", size,
-                        thumbPath);
+                if (!imgFile.exists() || p.getMimeType() == null) return;
+                if (thumbFile.exists()) return;
+                thumbFile.getParentFile().mkdirs();
+                if (p.getMimeType().contains("image/")) {
+                    ImageUtil.compressImage(imgPath, thumbPath, 300, 200, p.getOrientation());
+                } else if (ExifTool.FFMPEG != null && p.getMimeType().contains("video/")) {
+                    CommandRunner.run(ExifTool.FFMPEG, "-i", imgPath, "-y", "-f", "image2",
+                            // "-t","0.0001",
+                            "-frames:v", "1", "-ss", ArchiveUtils.VIDEO_CAPTURE_AT,
+                            // "-s", size,
+                            thumbPath);
+                }
             }
         } catch (IOException e){ Util.printStackTrace(e);}
     }
@@ -336,13 +337,18 @@ public class ArchiveInfo {
         try {
             target.getParentFile().mkdirs();
             Files.move(new File(pi.fullPath(sourceRootPath)).toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            File sourceThumb = new File(pi.fullThumbPath(sourceRootPath));
-            if (sourceThumb.exists()) {
-                try {
-                    String fullP = path + File.separator + ArchiveUtils.THUMB + target.getCanonicalPath().substring(path.length());
-                    File targetThumb = new File(fullP);
-                    Files.move(sourceThumb.toPath(), targetThumb.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception e){ Util.printStackTrace(e);}
+            String thumbPath=pi.fullThumbPath(sourceRootPath);
+            if (thumbPath!=null) {
+                File sourceThumb = new File(thumbPath);
+                if (sourceThumb.exists()) {
+                    try {
+                        String fullP = path + File.separator + ArchiveUtils.THUMB + target.getCanonicalPath().substring(path.length());
+                        File targetThumb = new File(fullP);
+                        Files.move(sourceThumb.toPath(), targetThumb.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception e) {
+                        Util.printStackTrace(e);
+                    }
+                }
             }
             int index1 = path.equals(sourceRootPath) ? infos.indexOf(pi) : -1;
             int index2 = indexOf(target);

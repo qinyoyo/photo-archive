@@ -13,6 +13,7 @@
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
+    <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
     <title>Photo Viewer</title>
 </head>
 <script>
@@ -180,11 +181,46 @@
         document.querySelectorAll('.scroll-items-wrapper').forEach(function(v){
             v.style.height = (window.innerHeight - 66) +'px'
         })
+        let point = null
         const fileItems = document.querySelectorAll('.file-item')
         if (fileItems.length>0) fileItems.forEach(function(v) {
+            if (!point) {
+                let long = v.getAttribute('data-gpslongitude'),
+                    lat = v.getAttribute('data-gpslatitude')
+                if (long && lat) point = new BMapGL.Point(long, lat)
+            }
             v.onclick = function(event) {
                 selectFile(v,event)
             }
+        })
+        const map = new BMapGL.Map('baiduMap')
+        map.centerAndZoom(point?point:'重庆市', 12)
+        map.enableScrollWheelZoom(true)
+        map.addControl(new BMapGL.ZoomControl())
+        map.addControl(new BMapGL.LocationControl())
+        const geoc = new BMapGL.Geocoder()
+        const lonDom = document.getElementById('longitude'),
+            latDom=document.getElementById('latitude'),
+            countryDom=document.getElementById('country'),
+            countryCodeDom=document.getElementById('countryCode'),
+            provinceDom=document.getElementById('province'),
+            cityDom=document.getElementById('city'),
+            locationDom=document.getElementById('location'),
+            subjectCodeDom=document.getElementById('subjectCode')
+        map.addEventListener('click', function(e) {
+            lonDom.value = e.latlng.lng.toFixed(6)
+            latDom.value = e.latlng.lat.toFixed(6)
+            geoc.getLocation(e.latlng, function(rs){
+                const addComp = rs.addressComponents
+                countryDom.value='中国'
+                countryCodeDom.value='CN'
+                provinceDom.value = addComp.province
+                cityDom.value = addComp.city + addComp.district
+                locationDom.value = addComp.street + addComp.streetNumber
+                if (rs.surroundingPois && rs.surroundingPois.length>0) {
+                    subjectCodeDom.value = rs.surroundingPois[0].title
+                }
+            })
         })
         TransformImage('.thumb-image')
     }
@@ -238,6 +274,11 @@
     }
     input[type="datetime-local"]::-webkit-clear-button {
         visibility: visible;
+    }
+    #baiduMap {
+        margin-top:10px;
+        width:100%;
+        height: 300px;
     }
 </style>
 <#assign path = '' />
@@ -412,6 +453,7 @@
                     <button id="submit" class="dialog__button" onclick="save()">保存</button>
                 </div>
             </form>
+            <div id="baiduMap"></div>
         </div>
     </div>
     </div>

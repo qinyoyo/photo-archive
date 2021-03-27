@@ -575,16 +575,20 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
     }
 
-    public String fullThumbPath(String root) throws IOException {
-        if (mimeType==null || (!mimeType.contains("image/") && !mimeType.contains("video/"))) throw new IOException("not supported type");
+    public String fullThumbPath(String root) {
+        if (mimeType==null || (!mimeType.contains("image/") && !mimeType.contains("video/"))) return null;
         String sub = getSubFolder();
         if (sub == null || sub.isEmpty()) sub =ArchiveUtils.THUMB;
         else {
             if (sub.startsWith(ArchiveUtils.DELETED+File.separator)) sub=sub.substring(8);
             sub = ArchiveUtils.THUMB+File.separator + sub;
         }
-        return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
-    }
+        try {
+            return new File(new File(root, sub), getFileName()).getCanonicalPath() + (mimeType.contains("video/") ? ".jpg" : "");
+        } catch (Exception e) {
+            return null;
+        }
+        }
 
     public boolean modifyOrientation(String root, Integer newRating, Integer ... operations) {
         if (mimeType==null || !mimeType.contains("image/")) return false;
@@ -610,7 +614,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                 if (newOrientation!=null) orientation = newOrientation;
                 if (newRating!=null) rating = newRating;
                 String thumbPath = fullThumbPath(root);
-                if (!Orientation.setOrientationAndRating(new File(thumbPath), newOrientation, newRating)) {
+                if (thumbPath!=null && !Orientation.setOrientationAndRating(new File(thumbPath), newOrientation, newRating)) {
                     System.out.println("Orientation and rating of thumbnail error: "+thumbPath);
                 }
                 getFileProperties(new File(imgPath));
@@ -620,9 +624,8 @@ public class PhotoInfo implements Serializable,Cloneable {
         return false;
     }
     public boolean delete(String rootPath) {
-        try {
-            new File(fullThumbPath(rootPath)).delete();
-        } catch (Exception e){ Util.printStackTrace(e);}
+        String thumbPath = fullThumbPath(rootPath);
+        if (thumbPath!=null) new File(thumbPath).delete();
         return (new File(fullPath(rootPath)).delete());
     }
 

@@ -309,12 +309,15 @@ public class ArchiveUtils {
             File source = new File(pi.fullPath(rootPath));
             if (source.exists())
                 Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            File sourceThumb = new File(pi.fullThumbPath(rootPath));
-            if (sourceThumb.exists()) {
-                targetDir = new File(rootPath + File.separator + DELETED + File.separator + THUMB, pi.getSubFolder());
-                targetDir.mkdirs();
-                target = new File(targetDir, pi.getFileName());
-                Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            String thumbPath = pi.fullThumbPath(rootPath);
+            if (thumbPath!=null) {
+                File sourceThumb = new File(thumbPath);
+                if (sourceThumb.exists()) {
+                    targetDir = new File(rootPath + File.separator + DELETED + File.separator + THUMB, pi.getSubFolder());
+                    targetDir.mkdirs();
+                    target = new File(targetDir, pi.getFileName());
+                    Files.move(sourceThumb.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
             }
         } catch (Exception e){ Util.printStackTrace(e);}
 
@@ -393,16 +396,13 @@ public class ArchiveUtils {
         List<Modification> modificationList = new ArrayList<>();
         for (PhotoInfo pi : infos) {
             if (pi.getMimeType()==null || !pi.getMimeType().contains("image")) continue;
-            try {
-                String thumbPath = pi.fullThumbPath(root);
-                if (new File(thumbPath).exists()) {
-                    Map<String, Object> params = new HashMap<>();
-                    params.put(Key.getName(Key.ORIENTATION), Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
-                    modificationList.add(new Modification(Modification.Exif,
-                            thumbPath.substring(root.length() + 1), params));
-                }
-            } catch (Exception e){ Util.printStackTrace(e);}
-
+            String thumbPath = pi.fullThumbPath(root);
+            if (thumbPath!=null && new File(thumbPath).exists()) {
+                Map<String, Object> params = new HashMap<>();
+                params.put(Key.getName(Key.ORIENTATION), Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
+                modificationList.add(new Modification(Modification.Exif,
+                        thumbPath.substring(root.length() + 1), params));
+            }
         }
         if (!modificationList.isEmpty()) {
             Modification.setExifTags(modificationList,archiveInfo);
