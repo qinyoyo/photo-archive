@@ -14,12 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import qinyoyo.photoinfo.archive.*;
 import qinyoyo.utils.*;
 import qinyoyo.photoinfo.ArchiveUtils;
-import qinyoyo.photoinfo.archive.Modification;
-import qinyoyo.photoinfo.archive.ArchiveInfo;
-import qinyoyo.photoinfo.archive.Orientation;
-import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
@@ -31,6 +28,7 @@ import java.io.FileFilter;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Controller
 public class PVController implements ApplicationRunner , ErrorController {
@@ -188,11 +186,11 @@ public class PVController implements ApplicationRunner , ErrorController {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
-/*        SessionOptions options = SessionOptions.getSessionOptions(request);
+        SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             model.addAttribute("message","请先解锁!!!");
             return "message";
-        }*/
+        }
         String subFolder=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
         commonAttribute(model,request);
         Map<String, Object> res = getFolderPathAttributes(path, false);
@@ -205,16 +203,22 @@ public class PVController implements ApplicationRunner , ErrorController {
                  (incSub && p.getSubFolder().startsWith(subFolder+File.separator))   )
             ).collect(Collectors.toList());
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
+        model.addAttribute("countries", TimeZoneTable.countryTimeZones);
         return "exif";
     }
-
+    @ResponseBody
+    @RequestMapping(value = "position")
+    public String scan(double lng,double lat, boolean towgs84, HttpServletRequest request) {
+        PositionUtil.LatLng p1 = towgs84 ? PositionUtil.bd09_To_Gps84(lat,lng) : PositionUtil.gps84_To_Bd09(lat,lng);
+        return String.format("%.6f,%.6f",p1.longitude,p1.latitude);
+    }
     @ResponseBody
     @RequestMapping(value = "/exifSave")
     public String exifSave(PhotoInfo p1, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
-/*        if (!options.isUnlocked()) {
+        if (!options.isUnlocked()) {
             return "请先解锁!!!";
-        }*/
+        }
         if (p1!=null && !Util.isEmpty(selectedTags)) {
             String [] tags = selectedTags.split(",");
             List<Key> selectedKey = new ArrayList<>();
@@ -246,8 +250,12 @@ public class PVController implements ApplicationRunner , ErrorController {
             List<Modification> modifications=new ArrayList<>();
             if (!selectedKey.isEmpty()) {
                 for (int i=0;i<files.length;i++) {
-                    PhotoInfo p0 = archiveInfo.find(subFolders[i], files[i]);
-                    if (p0 != null) {
+                    int index = i;
+                    Optional<PhotoInfo> op0 = photoList.stream().filter(p ->
+                            p.getSubFolder().equals(subFolders[index]) && p.getFileName().equals(files[index]))
+                            .findFirst();
+                    if (op0.isPresent()) {
+                        PhotoInfo p0 = op0.get();
                         List<Key> keys = ArchiveUtils.differentOf(p0, p1,selectedKey);
                         if (keys != null && !keys.isEmpty()) {
                             Map<String, Object> params = Modification.exifMap(p1, keys, true);
@@ -268,7 +276,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                    afterChanged();
                    if (photoInfo!=null) return "ok,"+photoInfo.getLastModified();
                    else return "ok";
-                } else return "修改失败";
+                } else return "不需要修改";
             } else  {
                 new Thread() {
                     @Override

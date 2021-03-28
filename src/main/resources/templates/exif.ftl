@@ -13,7 +13,13 @@
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
+    <script type="text/javascript" src="/static/js/bd_wgs84.js"></script>
+<#--
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=c87baf255d37dae4db646bfd3cf5bd0c&plugin=AMap.Geocoder"></script>
+    <script type="text/javascript" src="/static/js/amap.js"></script>
+    -->
     <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
+    <script type="text/javascript" src="/static/js/bmap.js"></script>
     <title>Photo Viewer</title>
 </head>
 <script>
@@ -104,19 +110,9 @@
                 }
                 document.getElementById(nameKeys[i]).value = (v ? v : '')
             }
-            if (files.length>1 || files.length==0) {
+            if (files.length == 1) {
                 document.querySelectorAll('form input[type="checkbox"]').forEach(function(e){
                     e.checked = false
-                })
-                document.querySelectorAll('.tag-value').forEach(function(e){
-                    e.setAttribute('disabled', 'disabled')
-                })
-            } else {
-                document.querySelectorAll('form input[type="checkbox"]').forEach(function(e){
-                    e.checked = true
-                })
-                document.querySelectorAll('.tag-value').forEach(function(e){
-                    e.removeAttribute('disabled')
                 })
             }
             document.getElementById('submit').setAttribute('disabled', 'disabled')
@@ -125,12 +121,15 @@
 
     function changed(dom) {
         document.getElementById('submit').removeAttribute('disabled')
-        //dom.querySelector('+input').checked = true
+        dom.nextElementSibling.checked = true
+        if (dom.id=='country') {
+            document.getElementById('countryCode').value
+                = dom.options[dom.selectedIndex].getAttribute('data-code')
+            document.getElementById('countryCode').nextElementSibling.checked = true
+        }
     }
-    function toggleSelection(dom) {
-        let e = document.getElementById(dom.value)
-        if (dom.checked) e.removeAttribute('disabled')
-        else e.setAttribute('disabled', 'disabled')
+    function countryToggle(dom) {
+        document.getElementById('countryCode').nextElementSibling.checked = dom.checked
     }
     function save() {
         const form = document.getElementById('exifForm')
@@ -163,6 +162,57 @@
         })
     }
 
+    function showMap() {
+        document.querySelector('.map-wrapper').style.display = 'block'
+        document.querySelector('#app').style.display = 'none'
+        let lon = document.getElementById('longitude').value,
+            lat = document.getElementById('latitude').value
+        if (lon && lat) {
+            setTimeout(function(){
+                setMarker({lon:parseFloat(lon),lat:parseFloat(lat)})
+            },100)
+
+        }
+
+    }
+    function hideMap() {
+        document.querySelector('.map-wrapper').style.display = 'none'
+        document.querySelector('#app').style.display = 'block'
+    }
+    function selectAddress() {
+        document.getElementById('submit').removeAttribute('disabled')
+        if (mapPoint.longitude) {
+            let e = document.getElementById('longitude')
+            e.value = mapPoint.longitude.toFixed(6)
+            e.nextElementSibling.checked=true
+        }
+        if (mapPoint.latitude) {
+            let e = document.getElementById('latitude')
+            e.value = mapPoint.latitude.toFixed(6)
+            e.nextElementSibling.checked=true
+        }
+        if (mapPoint.province) {
+            let e = document.getElementById('province')
+            e.value = mapPoint.province
+            e.nextElementSibling.checked=true
+        }
+        if (mapPoint.city) {
+            let e = document.getElementById('city')
+            e.value = mapPoint.city
+            e.nextElementSibling.checked=true
+        }
+        if (mapPoint.location) {
+            let e = document.getElementById('location')
+            e.value = mapPoint.location
+            e.nextElementSibling.checked=true
+        }
+        if (mapPoint.subjectCode) {
+            let e = document.getElementById('subjectCode')
+            e.value = mapPoint.subjectCode
+            e.nextElementSibling.checked=true
+        }
+        hideMap()
+     }
     window.onload=function(){
         if (window.innerWidth < window.innerHeight) {
             removeClass(document.querySelector('.grid-box2'),'grid-box2')
@@ -185,43 +235,20 @@
         const fileItems = document.querySelectorAll('.file-item')
         if (fileItems.length>0) fileItems.forEach(function(v) {
             if (!point) {
-                let long = v.getAttribute('data-gpslongitude'),
+                let lon = v.getAttribute('data-gpslongitude'),
                     lat = v.getAttribute('data-gpslatitude')
-                if (long && lat) point = new BMapGL.Point(long, lat)
+                if (lon && lat) {
+                    point = {lon:parseFloat(lon),lat:parseFloat(lat)}
+                }
             }
             v.onclick = function(event) {
                 selectFile(v,event)
             }
         })
-        const map = new BMapGL.Map('baiduMap')
-        map.centerAndZoom(point?point:'重庆市', 12)
-        map.enableScrollWheelZoom(true)
-        map.addControl(new BMapGL.ZoomControl())
-        map.addControl(new BMapGL.LocationControl())
-        const geoc = new BMapGL.Geocoder()
-        const lonDom = document.getElementById('longitude'),
-            latDom=document.getElementById('latitude'),
-            countryDom=document.getElementById('country'),
-            countryCodeDom=document.getElementById('countryCode'),
-            provinceDom=document.getElementById('province'),
-            cityDom=document.getElementById('city'),
-            locationDom=document.getElementById('location'),
-            subjectCodeDom=document.getElementById('subjectCode')
-        map.addEventListener('click', function(e) {
-            lonDom.value = e.latlng.lng.toFixed(6)
-            latDom.value = e.latlng.lat.toFixed(6)
-            geoc.getLocation(e.latlng, function(rs){
-                const addComp = rs.addressComponents
-                countryDom.value='中国'
-                countryCodeDom.value='CN'
-                provinceDom.value = addComp.province
-                cityDom.value = addComp.city + addComp.district
-                locationDom.value = addComp.street + addComp.streetNumber
-                if (rs.surroundingPois && rs.surroundingPois.length>0) {
-                    subjectCodeDom.value = rs.surroundingPois[0].title
-                }
-            })
-        })
+        initMap('mapContainer',point)
+        document.getElementById('findAddress').onclick = function() {
+            getPoint(document.getElementById('address').value)
+        }
         TransformImage('.thumb-image')
     }
 </script>
@@ -275,10 +302,26 @@
     input[type="datetime-local"]::-webkit-clear-button {
         visibility: visible;
     }
-    #baiduMap {
+    .map-wrapper {
+        width:100%;
+        height:100%;
+        left:0;
+        top:0;
+        position: fixed;
+        z-index: 9999;
+        background: #fff;
+    }
+    .map-wrapper i {
+        cursor: pointer;
+    }
+    #mapContainer {
         margin-top:10px;
         width:100%;
-        height: 300px;
+        height: calc(100% - 50px);
+    }
+    #address {
+        width: calc(100% - 100px);
+        margin:0 5px;
     }
 </style>
 <#assign path = '' />
@@ -340,67 +383,69 @@
                 <div style="position: relative">
                     <label for="artist">拍摄者</label>
                     <input class="tag-value" id="artist" name="artist" onchange="changed(this)">
-                    <input type="checkbox" value="artist" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="artist" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="shootTime">拍摄时间</label>
                     <input class="tag-value" id="shootTime" name="shootTime" type="datetime-local" step="0.001" onchange="changed(this)">
-                    <input type="checkbox" value="shootTime" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="shootTime" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="model">设备</label>
                     <input class="tag-value" id="model" name="model" onchange="changed(this)">
-                    <input type="checkbox" value="model" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="model" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="lens">镜头</label>
                     <input class="tag-value" id="lens" name="lens" onchange="changed(this)">
-                    <input type="checkbox" value="lens" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="lens" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="subjectCode">POI</label>
                     <input class="tag-value" id="subjectCode" name="subjectCode" onchange="changed(this)">
-                    <input type="checkbox" value="subjectCode" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="subjectCode" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="country">国家</label>
-                    <input class="tag-value" id="country" name="country" onchange="changed(this)">
-                    <input type="checkbox" value="country" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <select class="tag-value" id="country" name="country" onchange="changed(this)">
+                        <option data-code="" value="">未知</option>
+                        <#list countries as c>
+                            <option data-code="${c[0]}" value="<#if c[0]=='CN'>${c[2]}<#else>${c[1]}</#if>">${c[2]}/${c[1]}</option>
+                        </#list>
+                    </select>
+                    <input type="checkbox" value="country" name="selectedTags" onclick="countryToggle(this)">
                 </div>
-                <div style="position: relative">
-                    <label for="countryCode">国家代码</label>
-                    <input class="tag-value" id="countryCode" name="countryCode" maxlength="2" onchange="changed(this)">
-                    <input type="checkbox" value="countryCode" name="selectedTags" checked onclick="toggleSelection(this)">
-                </div>
+                <input type="hidden" id="countryCode" name="countryCode">
+                <input type="checkbox" value="countryCode" name="selectedTags" style="display:none">
                 <div style="position: relative">
                     <label for="province">省/州</label>
                     <input class="tag-value" id="province" name="province"  maxlength="4" onchange="changed(this)">
-                    <input type="checkbox" value="province" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="province" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="city">城市</label>
                     <input class="tag-value" id="city" name="city" onchange="changed(this)">
-                    <input type="checkbox" value="city" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="city" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="location">地址</label>
                     <input class="tag-value" id="location" name="location" onchange="changed(this)">
-                    <input type="checkbox" value="location" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="location" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="headline">标题</label>
                     <input class="tag-value" id="headline" name="headline" onchange="changed(this)">
-                    <input type="checkbox" value="headline" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="headline" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="subTitle">题注</label>
                     <input class="tag-value" id="subTitle" name="subTitle" onchange="changed(this)">
-                    <input type="checkbox" value="subTitle" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="subTitle" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="scene">场景</label>
                     <input class="tag-value" id="scene" name="scene" onchange="changed(this)">
-                    <input type="checkbox" value="scene" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="scene" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="rating">星级</label>
@@ -412,7 +457,7 @@
                         <option value="4">☆☆☆☆</option>
                         <option value="5">☆☆☆☆☆(收藏)</option>
                     </select>
-                    <input type="checkbox" value="rating" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="rating" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="orientation">方向</label>
@@ -427,36 +472,45 @@
                         <option value="7">水平翻转逆旋转90度</option>
                         <option value="8">逆时针旋转270度</option>
                     </select>
-                    <input type="checkbox" value="orientation" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="orientation" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="longitude">经度</label>
                     <input class="tag-value" id="longitude" name="longitude" type="number" min="-180" max="180" step="0.000001" onchange="changed(this)">
-                    <input type="checkbox" value="longitude" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="longitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="latitude">纬度</label>
                     <input class="tag-value" id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.000001" onchange="changed(this)">
-                    <input type="checkbox" value="latitude" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="latitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="altitude">海拔</label>
                     <input class="tag-value" id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1" onchange="changed(this)">
-                    <input type="checkbox" value="altitude" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="altitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="gpsDatetime">GPS时间</label>
                     <input class="tag-value" id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed(this)">
-                    <input type="checkbox" value="gpsDatetime" name="selectedTags" checked onclick="toggleSelection(this)">
+                    <input type="checkbox" value="gpsDatetime" name="selectedTags" >
                 </div>
                 <div style="text-align: center">
                     <button id="submit" class="dialog__button" onclick="save()">保存</button>
+                    <button class="dialog__button" onclick="showMap()">地图选点</button>
                 </div>
             </form>
-            <div id="baiduMap"></div>
         </div>
     </div>
     </div>
+</div>
+<div class="map-wrapper" style="display: none">
+    <div>
+        <input id="address" >
+        <i class="fa fa-search" id="findAddress"></i>
+        <i class="fa fa-check" style="margin-left:5px;" onclick="selectAddress()"></i>
+        <i class="fa fa-close" style="margin: 0 5px;" onclick="hideMap()"></i>
+    </div>
+    <div id="mapContainer"></div>
 </div>
 </body>
 </html>

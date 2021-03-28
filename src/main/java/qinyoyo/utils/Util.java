@@ -16,6 +16,8 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
+import java.text.CollationKey;
+import java.text.Collator;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -176,5 +178,11 @@ public class Util {
         Field field = clazz.getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(obj);
+    }
+    static public int chineseCompare(String c1,String c2) {
+        Collator cmp = Collator.getInstance(java.util.Locale.CHINA);
+        CollationKey ck1 = cmp.getCollationKey(c1);
+        CollationKey ck2 = cmp.getCollationKey(c2);
+        return cmp.compare(ck1.getSourceString(), ck2.getSourceString());
     }
 }

@@ -37,7 +37,7 @@
         else setFullscreen(element);
     }
     window.Ajax = {
-        get: function (url, callback) {
+        get: function (url, callback, sync) {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 // readyState == 4说明请求已完成
@@ -45,17 +45,17 @@
                     if (typeof callback==='function') callback.call(this, xhr.responseText);
                 }
             };
-            xhr.open('GET', url, true);
+            xhr.open('GET', url, sync? false : true);
             xhr.send();
         },
-        post: function (url, data, callback) {
+        post: function (url, data, callback, sync) {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
                     if (typeof callback==='function') callback.call(this, xhr.responseText);
                 }
             };
-            xhr.open("post", url, true);
+            xhr.open("post", url, sync? false : true);
             xhr.send(data);
         }
     }
