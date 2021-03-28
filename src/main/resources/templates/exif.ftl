@@ -35,9 +35,9 @@
           'longitude','latitude','altitude','gpsDatetime'
         ]
     let selectedDom = null
-    function refresh() {
+    function refresh(path) {
         const e = document.getElementById('recursion')
-        const curPath = document.getElementById('app').getAttribute('data-folder')
+        const curPath = path ? path : document.getElementById('app').getAttribute('data-folder')
         window.location.href = '/exif?path=' + (curPath ? encodeURI(curPath) : '') + '&recursion='+(e.checked ? 'true':'false')
     }
     function selectFile(dom,event) {
@@ -214,23 +214,14 @@
         hideMap()
      }
     window.onload=function(){
-        if (window.innerWidth < window.innerHeight) {
-            removeClass(document.querySelector('.grid-box2'),'grid-box2')
-            document.querySelector('.scroll-items-wrapper').style.maxHeight = (window.innerHeight/2 - 33) +'px'
-            document.querySelector('.scroll-items-wrapper').style.overflow = 'auto'
-        } else document.querySelectorAll('.scroll-items-wrapper, .scroll-from-wrapper').forEach(function(v){
-            v.style.height = (window.innerHeight - 66) +'px'
-        })
+        document.getElementById('app').style.height = (window.innerHeight - 20) +'px'
         document.querySelectorAll('.folder-item').forEach(function(d) {
-            let path = d.getAttribute('data-folder')
-            const url = path ? '/exif?path=' + encodeURI(path) : '/exif'
+            const path = d.getAttribute('data-folder')
             d.onclick=function () {
-                window.location.href = url
+                refresh(path)
             }
         });
-        document.querySelectorAll('.scroll-items-wrapper').forEach(function(v){
-            v.style.height = (window.innerHeight - 66) +'px'
-        })
+
         let point = null
         const fileItems = document.querySelectorAll('.file-item')
         if (fileItems.length>0) fileItems.forEach(function(v) {
@@ -255,6 +246,37 @@
 <style>
     body {
         max-width: 1080px;
+    }
+    .exif-box {
+        height: calc(100% - 50px);
+    }
+    /*竖屏, 如果宽高比最大1:1的话，显示这个内容*/
+    @media screen and (max-aspect-ratio: 1/1) {
+        .exif-box {
+            width: 100%;
+        }
+        .scroll-items-wrapper {
+            max-height: calc(50% - 33px);
+            overflow: auto;
+        }
+        .scroll-from-wrapper {
+            padding-bottom: 10px;
+        }
+    }
+    /*横屏, 如果宽高最小为1:1的话，显示这个内容*/
+    @media screen and (min-aspect-ratio: 1/1) {
+        .exif-box {
+            display: grid;
+            grid-auto-flow: row;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 5px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .scroll-items-wrapper, .scroll-from-wrapper {
+            height: calc(100% - 66px);
+        }
     }
     .file-list {
         user-select: none;
@@ -311,7 +333,7 @@
         z-index: 9999;
         background: #fff;
     }
-    .map-wrapper i {
+    i {
         cursor: pointer;
     }
     #mapContainer {
@@ -344,9 +366,10 @@
         </div>
         <div class="folder-head__right">
             <input type="checkbox" id="recursion"<#if recursion?? && recursion> checked</#if> onclick="refresh()"><label for="recursion">递归</label>
+            <i class="fa fa-close" onclick="window.location.href = '/?path=' + encodeURI('<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>')"></i>
         </div>
     </div>
-    <div class="grid-box2">
+    <div class="exif-box">
     <div class="scroll-items-wrapper no-wrap">
         <div class="scroll-items">
             <#if subDirectories??>
