@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.core.env.Environment;
+import qinyoyo.PhotoArchiveApplication;
 import qinyoyo.photoinfo.exiftool.Key;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,8 +18,6 @@ public class SessionOptions {
     public boolean debug;
     private boolean htmlEditable;
     private boolean favoriteFilter;
-    private String rangeExif;
-    private String rangeExifNote;
     private int loopTimer;
     private int musicIndex;
     private boolean unlocked;
@@ -29,24 +28,14 @@ public class SessionOptions {
         debug = false;
         htmlEditable = false;
         favoriteFilter = false;
-        rangeExif = Key.getName(Key.SUBJECT_CODE);
-        rangeExifNote = Key.getNotes(Key.SUBJECT_CODE);
         loopTimer = 5000;
         musicIndex = 0;
-        unlocked = false;
+        unlocked = PhotoArchiveApplication.ideMode;
         playBackMusic = true;
         mobile = false;
         supportOrientation = false;
     }
-    public void setRangeTag(Key key) {
-        if (key==null) {
-            rangeExif = null;
-            rangeExifNote = "未设置";
-        } else {
-            rangeExif = Key.getName(key);
-            rangeExifNote = Key.getNotes(key);
-        }
-    }
+
     @Override
     public String toString() {
         return new GsonBuilder().create().toJson(this);

@@ -1,0 +1,94 @@
+body {
+    max-width: 1080px;
+}
+.exif-box {
+    height: calc(100% - 50px);
+}
+/*竖屏, 如果宽高比最大1:1的话，显示这个内容*/
+@media screen and (max-aspect-ratio: 1/1) {
+    .exif-box {
+        width: 100%;
+    }
+    .scroll-items-wrapper {
+        max-height: calc(50% - 33px);
+        overflow: auto;
+    }
+    .scroll-from-wrapper {
+        padding-bottom: 10px;
+    }
+}
+/*横屏, 如果宽高最小为1:1的话，显示这个内容*/
+@media screen and (min-aspect-ratio: 1/1) {
+    .exif-box {
+        display: grid;
+        grid-auto-flow: row;
+        grid-template-columns: repeat(2, 1fr);
+        grid-gap: 5px;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    .scroll-items-wrapper, .scroll-from-wrapper {
+        height: calc(100% - 66px);
+    }
+}
+.file-list {
+    user-select: none;
+}
+.file-item.selected {
+    background-color: #99bcf1;;
+}
+.thumb-image-wrapper {
+    text-align: center;
+    vertical-align: middle;
+    margin: 10px 0;
+}
+.thumb-image {
+    max-height: 200px;
+    max-width: 100%;
+}
+.scroll-items {
+    max-height:100%;
+    overflow: auto;
+}
+form label {
+    width:64px;
+    text-align: right;
+    display: inline-block;
+}
+form input[type="checkbox"] {
+    width:16px;
+    right: 0px;
+    position: absolute;
+    margin-top:8px;
+}
+.tag-value {
+    width: calc(100% - 100px);
+    margin-left: 5px;
+    border-width: 1px;
+    border-top-style: hidden;
+    border-right-style: hidden;
+    border-bottom-style: inset;
+    border-left-style: hidden;
+}
+input:invalid
+{
+    color: red;
+}
+input[type="datetime-local"]::-webkit-clear-button {
+    visibility: visible;
+}
+.map-wrapper {
+    width:100%;
+}
+i {
+    cursor: pointer;
+}
+.disabled {
+    color: grey;
+    cursor: initial;
+}
+#mapContainer {
+    width:100%;
+    height: 100%;
+}

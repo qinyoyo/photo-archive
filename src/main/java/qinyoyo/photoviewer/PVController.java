@@ -62,21 +62,12 @@ public class PVController implements ApplicationRunner , ErrorController {
 
     @ResponseBody
     @RequestMapping(value = "login")
-    public String login(Model model,HttpServletRequest request, String password, String exifTag,
-                   Boolean debug, Boolean htmlEditable ) {
+    public String login(Model model,HttpServletRequest request, String password, Boolean debug, Boolean htmlEditable ) {
         if (password!=null && password.equals(unlockPassword)) {
             SessionOptions options = SessionOptions.getSessionOptions(request);
             options.setUnlocked(true);
             if (debug!=null) options.setDebug(debug);
             if (htmlEditable!=null) options.setHtmlEditable(htmlEditable);
-            if (exifTag==null || exifTag.isEmpty()) {
-                options.setRangeTag(Key.SUBJECT_CODE);
-            }
-            else {
-                Optional<Key> ok = Key.findKeyWithName(exifTag);
-                if (ok.isPresent()) options.setRangeTag( ok.get());
-                else options.setRangeExif(null);
-            }
             return "ok";
         } else {
             return "error";
@@ -180,8 +171,28 @@ public class PVController implements ApplicationRunner , ErrorController {
         setBackgroundMusic(request,model,path);
         return "index";
     }
+
+    @RequestMapping(value = "/step")
+    public String stepInMap(Model model, HttpServletRequest request, String path) {
+        if (!isReady) {
+            model.addAttribute("message","Not ready!!!");
+            return "message";
+        }
+        String subFolder=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
+        commonAttribute(model,request);
+        Map<String, Object> res = getFolderPathAttributes(path, false);
+        model.addAllAttributes(res);
+        List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p ->
+                p.getMimeType()!=null && p.getMimeType().contains("image") &&
+                        p.getLongitude()!=null && p.getLatitude()!=null &&
+                        (subFolder.equals(p.getSubFolder()) || p.getSubFolder().startsWith(subFolder+File.separator))
+        ).collect(Collectors.toList());
+        if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
+        return "step";
+    }
+
     @RequestMapping(value = "/exif")
-    public String exifEdit(Model model, HttpServletRequest request, HttpServletResponse response, String path, Boolean recursion) {
+    public String exifEdit(Model model, HttpServletRequest request, String path, Boolean recursion) {
         if (!isReady) {
             model.addAttribute("message","Not ready!!!");
             return "message";
@@ -539,14 +550,6 @@ public class PVController implements ApplicationRunner , ErrorController {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         model.addAttribute("sessionOptions",options);
         if (noVideoThumb) model.addAttribute("noVideoThumb",true);
-        List<Map<String,Object>> editableExifTag = new ArrayList<>();
-        for (Key k : ArchiveUtils.MODIFIABLE_KEYS) {
-            Map<String,Object> map = new HashMap<>();
-            map.put("name",Key.getName(k));
-            map.put("note",Key.getNotes(k));
-            editableExifTag.add(map);
-        }
-        model.addAttribute("editableExifTag",editableExifTag);
     }
 
     public Map<String,Object> getFolderPathAttributes(String path, boolean just4ResourceList) {

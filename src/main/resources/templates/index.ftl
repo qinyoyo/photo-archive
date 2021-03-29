@@ -107,6 +107,12 @@
             window.location.href = '/?path=' + (path ? encodeURI(path) : '') + '&newStep=' + encodeURI(name)
             return
         }
+        e = document.getElementById('mapView')
+        if (e && e.checked) {
+            const path = e.getAttribute('data-folder')
+            window.location.href = '/step?path=' + (path ? encodeURI(path) : '')
+            return
+        }
         e = document.getElementById('exif')
         if (e && e.checked) {
             const path = e.getAttribute('data-folder')
@@ -133,7 +139,6 @@
             const url = '/login?password='+password
                         +'&debug=' + (document.getElementById('debug').checked ? 'true' : 'false')
                         +'&htmlEditable=' + (document.getElementById('htmlEditable').checked ? 'true' : 'false')
-                        +'&exifTag=' + encodeURI(document.getElementById('exifTag').value)
             Ajax.get(url, function(txt) {
                     if (txt=='ok') {
                         window.location.reload()
@@ -316,6 +321,9 @@
                 <input type="radio" name="action" id="loopTimer" onclick="radioClick(this)"><label for="loopTimer">循环时长设置为</label>
                 <input type="number" min="1000" max="20000" step="250" style="width:80px" id="loopTimerValue"><label for="loopTimerValue">毫秒</label>
             </div>
+            <div>
+                <input type="radio" name="action" id="mapView" data-folder="${path}" onclick="radioClick(this)"><label for="mapView">地图浏览</label>
+            </div>
             <#if sessionOptions.unlocked>
                 <#if !htmls?? && sessionOptions.htmlEditable>
                 <div>
@@ -345,14 +353,6 @@
                     <div><label for="password">解锁密码</label><input type="text" style="width:160px" id="password"></div>
                     <div><input type="checkbox" id="debug"><label for="debug">打开调试</label></div>
                     <div><input type="checkbox" id="htmlEditable"><label for="htmlEditable">允许编辑游记</label></div>
-                    <div>
-                        <label for="exifTag">批量编辑标签</label>
-                        <select id="exifTag" value="${editableExifTag[0].name}">
-                            <#list editableExifTag as tag>
-                                <option value="${tag.name}">${tag.note}</option>
-                            </#list>
-                        </select>
-                    </div>
                 </div>
             </#if>
             <div style="text-align: center">
