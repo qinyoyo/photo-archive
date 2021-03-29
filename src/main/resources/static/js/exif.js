@@ -139,7 +139,8 @@ let mapObject = null
 function showMap() {
     document.querySelector('.map-wrapper').style.display = 'block'
     document.querySelector('#app').style.display = 'none'
-    if (!mapObject) mapObject = initMap('mapContainer',point, exifControl(), true).addEventListener('click',clickMap)
+    if (!mapObject) mapObject = initMap('mapContainer',point, exifControl(), true)
+    mapObject.addEventListener('click',clickMap)
     let lon = document.getElementById('longitude').value,
         lat = document.getElementById('latitude').value
     if (lon && lat) {

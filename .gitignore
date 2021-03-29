@@ -20,7 +20,7 @@ target/
 *.pptx
 *.ppt
 *.exe
-.iml
+*.iml
 
 
 

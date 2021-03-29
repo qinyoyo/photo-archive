@@ -48,64 +48,72 @@ let mapObject = null
 let stepIcon=null, stepIcon0 = null, stepIcon1 = null
 function showMap() {
     if (stepIcon==null) {
-        stepIcon = new BMapGL.Icon("/static/image/step.png", new BMapGL.Size(24, 24), {
+        stepIcon = new BMapGL.Icon("/static/image/step.png", new BMapGL.Size(32, 32), {
             // 指定定位位置。
             // 当标注显示在地图上时，其所指向的地理位置距离图标左上
             // 角各偏移10像素和25像素。您可以看到在本例中该位置即是
             // 图标中央下端的尖角位置。
-            anchor: new BMapGL.Size(0, 1)
+            anchor: new BMapGL.Size(15, 28)
         })
-        stepIcon0 = new BMapGL.Icon("/static/image/step0.png", new BMapGL.Size(24, 24), {
-            anchor: new BMapGL.Size(0, 1)
+        stepIcon0 = new BMapGL.Icon("/static/image/step0.png", new BMapGL.Size(32, 32), {
+            anchor: new BMapGL.Size(15, 28)
         })
-        stepIcon1 = new BMapGL.Icon("/static/image/step1.png", new BMapGL.Size(24, 24), {
-            anchor: new BMapGL.Size(0, 1)
+        stepIcon1 = new BMapGL.Icon("/static/image/step1.png", new BMapGL.Size(32, 32), {
+            anchor: new BMapGL.Size(15, 28)
         })
     }
     if (!mapObject) mapObject = initMap('mapContainer',null, stepControl())
+    mapObject.addEventListener('click',clickStepMap)
     const selected = document.querySelectorAll('.photo-item.selected img')
     if (selected.length>0) {
         markerList.forEach(function(mk){
             removeMarker(mk)
         })
-
+        const wrapper = document.querySelector('.map-wrapper')
+        const width = wrapper.clientWidth, height = wrapper.clientHeight
         markerList = []
-        let minLon = 1000, maxLon = -1000, minLat = 1000, maxLat = -1000
         const img = document.querySelector('.img-on-the-map img')
         selected.forEach(function (i) {
             let lon = parseFloat(i.getAttribute('data-gpslongitude'))
             let lat = parseFloat(i.getAttribute('data-gpslatitude'))
-            if (lon<minLon)  minLon = lon
-            if (lon>maxLon)  maxLon = lon
-            if (lat<minLat)  minLat = lat
-            if (lat>maxLat)  maxLat = lat
             let mk = placeMarker({lon:lon, lat:lat}, false, {icon: stepIcon})
             if (mk) {
                 markerList.push(mk)
                 mk.addEventListener("click", function(e){
-                    img.setAttribute('src',i.getAttribute('src'))
-                    img.className = i.className
-                    img.parentElement.style.left = e.clientX + 'px'
-                    img.parentElement.style.top = e.clientY + 'px'
-                    img.parentElement.style.display = 'block'
-                    img.nextElementSibling.onclick = function() {
-                        img.parentElement.style.display = 'none'
-                        markerList.splice(markerList.indexOf(mk))
-                        removeMarker(mk)
+                    img.onload = function() {
+                        img.className = i.className
+                        let x = e.clientX + img.naturalWidth <= width ? e.clientX : width - img.naturalWidth
+                        let y = e.clientY + img.naturalHeight <= height ? e.clientY : height - img.naturalHeight
+                        img.parentElement.style.left = x + 'px'
+                        img.parentElement.style.width = img.naturalWidth + 'px'
+                        img.parentElement.style.top = y + 'px'
+                        img.parentElement.style.height = img.naturalHeight + 'px'
+                        img.parentElement.style.display = 'block'
+                        let index = markerList.indexOf(mk)
+                        if (index<markerList.length-1) {
+                            let next = markerList[index+1]
+                            if (getDistance(mk.getPosition(),next.getPosition())<20) {
+                                img.nextElementSibling.style.display='block'
+                                img.nextElementSibling.onclick = function() {
+                                    next.dispatchEvent(e, true);
+                                }
+                            }  else img.nextElementSibling.style.display='none'
+                        } else img.nextElementSibling.style.display='none'
                     }
+                    img.setAttribute('src',i.getAttribute('src'))
                 });
 
             }
         })
+        document.querySelector('.map-wrapper').style.display='block'
+        document.querySelector('#app').style.display='none'
         if (markerList.length>0) {
             markerList[0].setIcon(stepIcon0)
             markerList[markerList.length-1].setIcon(stepIcon1)
+            setTimeout(function(){
+                mapObject.setCenter(markerList[0].getPosition())
+            },1000)
         }
-        document.querySelector('.map-wrapper').style.display='block'
-        document.querySelector('#app').style.display='none'
-        setTimeout(function(){
-            setCenter({lon: (minLon+maxLon)/2, lat:(minLat+maxLat)/2})
-        },1000)
     }
 }
 let pointList=[]

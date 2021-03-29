@@ -14,7 +14,9 @@ function setCenter(wgs84, notTrans) {
         map.setCenter(bdPosition(wgs84, notTrans))
     }
 }
-
+function getDistance(start,end) {
+    return map.getDistance(start,end)
+}
 function placeMarker(wgs84, notTrans, markerOptions) {
     if (map) {
         const pos = bdPosition(wgs84, notTrans)
@@ -67,7 +69,25 @@ function getAddress(latlng) {
 function clickMap(e) {
     getAddress(e.latlng)
 }
-
+function clickStepMap(e) {
+    let geocoder =  new BMapGL.Geocoder()
+    geocoder.getLocation(e.latlng, function(rs){
+        if (rs.address) {
+            let info = rs.address
+            let title = ''
+            if (rs.surroundingPois && rs.surroundingPois.length > 0) {
+                title = rs.surroundingPois[0].title
+            }
+            var opts = {
+                width: 400,     // 信息窗口宽度
+                height: 50,    // 信息窗口高度
+                title: title  // 信息窗口标题
+            }
+            var infoWindow = new BMapGL.InfoWindow(info, opts);  // 创建信息窗口对象
+            map.openInfoWindow(infoWindow, e.latlng);
+        }
+    })
+}
 function stepControl() {
     //定义一个控件类
     function MyControl() {
@@ -177,7 +197,7 @@ function initMap(divId, wgs84, myCtrl, useCityControl) {
         pos = new BMapGL.Point(loc.lon, loc.lat)
     } else pos = new BMapGL.Point(106.637110, 29.718058)
 
-    map.centerAndZoom(pos, 12)
+    map.centerAndZoom(pos, 16)
     map.enableScrollWheelZoom(true)
 
     if (useCityControl){

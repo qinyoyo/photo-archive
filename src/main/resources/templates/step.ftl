@@ -102,7 +102,7 @@
 </div>
 <div class="img-on-the-map" style="display:none">
     <img id="img-on-the-map"></img>
-    <i class="fa fa-close" style="position:absolute; left:0; top:0"></i>
+    <i class="fa fa-ellipsis-h" style="position:absolute; left:0; top:0"></i>
 </div>
 </body>
 </html>
