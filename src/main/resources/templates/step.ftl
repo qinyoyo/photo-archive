@@ -29,23 +29,19 @@
         height: 100%;
         display:block;
     }
-    .img-on-the-map {
-        position: fixed;
-        z-index: 10000;
-        background: #fff;
+    .img-info-window-container {
         user-select: none;
+        overflow: hidden;
+        margin-bottom: 10px;
+        text-align: center;
     }
-    .img-on-the-map img {
-        width:100%;
-        height:100%;
+    .img-info-window-container img {
+        max-width: 100%;
+        max-height: 100%;
     }
 </style>
 <body>
 <div class="map-wrapper" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>">
-    <div class="img-on-the-map" style="display:none">
-        <img id="img-on-the-map"></img>
-        <i class="fa fa-ellipsis-h" style="position:absolute; left:0; top:0"></i>
-    </div>
     <div id="mapContainer"></div>
 </div>
 </body>
@@ -82,6 +78,8 @@
         pointDataList.push({
             src: '/.thumb${fileUrl(p)}?click=${p.lastModified?c}',
             address: '${p.formattedAddress(false)}',
+            prev: -1,
+            next: -1,
             <#if p.shootTime??>
             shootTime: '${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm')}',
             </#if>
@@ -94,13 +92,16 @@
         })
         <#if p_index==0>
         setTimeout(function(){
-            setCenter({
-                lon:${statics['java.lang.String'].format('%.6f',p.longitude)},
-                lat:${statics['java.lang.String'].format('%.6f',p.latitude)}
-            },'wgs84')
+            setCenter(pointDataList[0].marker.getPosition())
         },100)
         </#if>
         </#list>
+        for (let i=1;i<pointDataList.length;i++) {
+            if (getDistance(pointDataList[i-1].marker.getPosition(),pointDataList[i].marker.getPosition())<50) {
+                pointDataList[i].prev = i-1
+                pointDataList[i-1].next = i
+            }
+        }
         </#if>
         return pointDataList
     }

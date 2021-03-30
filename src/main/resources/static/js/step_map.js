@@ -38,77 +38,73 @@ function stepControl() {
         offsetY:5
     })
 }
-
-function showMap() {
-    if (!getMap()) {
-        initMap('mapContainer',null, stepControl()).disableDoubleClickZoom()
-        mapEventListener('dblclick',clickStepMap)
+function loadMarkerData() {
+    const setImg = function(img,index) {
+        if (data[index].className) img.className = data[index].className
+        img.setAttribute('data-index', index)
+        img.setAttribute('data-prev', data[index].prev)
+        img.setAttribute('data-next', data[index].next)
+        img.setAttribute('src',data[index].src)
+        img.setAttribute('title',(data[index].shootTime ? data[index].shootTime + '\n': '')+data[index].address)
+    }
+    const clickImgOn = function(img,x, width) {
+        if (x>width/2){
+            let next = parseInt(img.getAttribute('data-next'))
+            if (next>=0) setImg(img,next)
+        } else if (x<width/2) {
+            let prev = parseInt(img.getAttribute('data-prev'))
+            if (prev>=0) setImg(img,prev)
+        }
     }
     const data = getPointData()
-/*    const wrapper = document.querySelector('.map-wrapper')
-    const width = wrapper.clientWidth, height = wrapper.clientHeight
-    const img = document.querySelector('.img-on-the-map img')*/
     for (let index=0; index<data.length;index++) {
         if (data[index].marker) {
             data[index].marker.addEventListener("click", function(e){
                 e.domEvent.stopPropagation()
+                let infoWindow = null
                 let div = document.createElement('div')
-                div.style.marginBottom = '10px'
+                div.className = 'img-info-window-container'
                 let img = document.createElement('img')
-                if (data[index].className) img.className = data[index].className
-                img.style.width='100%'
-                img.style.height='100%'
-                img.style.marginLeft ='8px'
                 div.appendChild(img)
-                img.onload = function() {
-                    showInfoWindow({
-                        width:0,
-                        height:0,
-                        title:data[index].shootTime,
-                        info: div,
-                        point: data[index].marker.getPosition(),
-                        enableAutoPan: true
-                    }).disableCloseOnClick()
+                div.onclick = function(event) {
+                    clickImgOn(img,event.offsetX,div.clientWidth)
                 }
-
-/*                img.onload = function() {
-                    if (data[index].className) img.className = data[index].className
-                    let x = e.clientX, y=e.clientY
-                    if (!x) {
-                        if (e.domEvent.changedTouches.length > 0) {
-                            x = e.domEvent.changedTouches[0].clientX
-                            y = e.domEvent.changedTouches[0].clientY
-                        } else if (e.domEvent.touches.length>0) {
-                            x = e.domEvent.touches[0].clientX
-                            y = e.domEvent.touches[0].clientY
-                        } else {
-                            x=0
-                            y=0
+                div.ontouchend = function(event) {
+                    if (event.changedTouches.length > 0) {
+                        let currentTarget = div
+                        let left = 0
+                        while (currentTarget !== null) {
+                            left += currentTarget.offsetLeft
+                            currentTarget = currentTarget.offsetParent
                         }
+                        clickImgOn(img,event.changedTouches[0].pageX - left, div.clientWidth)
                     }
-                    if (x + img.naturalWidth > width) x = width - img.naturalWidth
-                    if (y + img.naturalHeight > height) y = height - img.naturalHeight
-                    img.parentElement.style.left = x + 'px'
-                    img.parentElement.style.width = img.naturalWidth + 'px'
-                    img.parentElement.style.top = y + 'px'
-                    img.parentElement.style.height = img.naturalHeight + 'px'
-                    img.parentElement.style.display = 'block'
-                    if (index < data.length-1) {
-                        let next = data[index+1].marker
-                        if (getDistance(data[index].marker.getPosition(),next.getPosition())<20) {
-                            img.nextElementSibling.style.display='block'
-                            img.nextElementSibling.onclick = function() {
-                                next.dispatchEvent(e, true);
-                            }
-                        }  else img.nextElementSibling.style.display='none'
-                    } else img.nextElementSibling.style.display='none'
-                }*/
-                img.setAttribute('src',data[index].src)
-                img.setAttribute('title',(data[index].shootTime ? data[index].shootTime + '\n': '')+data[index].address)
+                }
+                img.onload = function() {
+                    const dat = data[parseInt(img.getAttribute('data-index'))]
+                    if (!infoWindow) {
+                        infoWindow = showInfoWindow({
+                            width: img.naturalWidth,
+                            height: img.naturalHeight+20,
+                            title:dat.shootTime,
+                            info: div,
+                            point: dat.marker.getPosition(),
+                            enableAutoPan: true
+                        })
+                        infoWindow.disableCloseOnClick()
+                    } else {
+                        infoWindow.setWidth(img.naturalWidth)
+                        infoWindow.setHeight(img.naturalHeight + 20)
+                        infoWindow.setTitle(dat.shootTime)
+                        infoWindow.redraw()
+                    }
+                }
+                setImg(img,index)
             });
         }
     }
 }
+
 let polyline = null
 function showLine() {
     if (!polyline) {
@@ -128,9 +124,7 @@ function hideMap() {
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
     document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
-    document.querySelector('.img-on-the-map').onclick = function(e) {
-        e.stopPropagation()
-        this.style.display = 'none'
-    }
-    showMap()
+    initMap('mapContainer',null, stepControl()).disableDoubleClickZoom()
+    mapEventListener('dblclick',clickStepMap)
+    setTimeout(loadMarkerData,100)
 }
