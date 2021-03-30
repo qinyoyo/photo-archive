@@ -9,9 +9,26 @@ const dataKeys = ['data-artist','data-datetimeoriginal','data-model','data-Lensi
         'longitude','latitude','altitude','gpsDatetime'
     ]
 let selectedDom = null
+let mapPoint = {}
+let marker = null
+function placeSelectionMarkerOnMap(point,type) {
+    if (getMap()){
+        if (marker) removeMarker(marker)
+        const pos=getPosition(point,type)
+        marker=placeMarker(pos)
+        setCenter(pos)
+        removeClass(document.getElementById('addressSelected'),'disabled')
+    }
+}
 function refresh(path) {
     const e = document.getElementById('recursion')
     window.location.href = '/exif?path=' + encodeURI(path) + '&recursion='+(e.checked ? 'true':'false')
+}
+function toggleSaveState(enable) {
+    if (enable && document.getElementById('fileName').value &&
+        document.querySelectorAll('input[name="selectedTags"]:checked').length>0 )
+        document.getElementById('submit').removeAttribute('disabled')
+    else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
 function selectFile(dom,event) {
     const fileItems = document.querySelectorAll('.file-item')
@@ -88,18 +105,18 @@ function selectFile(dom,event) {
                 e.checked = false
             })
         }
-        document.getElementById('submit').setAttribute('disabled', 'disabled')
+        toggleSaveState(false)
     }
 }
 
 function changed(dom) {
-    document.getElementById('submit').removeAttribute('disabled')
     dom.nextElementSibling.checked = true
     if (dom.id=='country') {
         document.getElementById('countryCode').value
             = dom.options[dom.selectedIndex].getAttribute('data-code')
         document.getElementById('countryCode').nextElementSibling.checked = true
     }
+    toggleSaveState(true)
 }
 function countryToggle(dom) {
     document.getElementById('countryCode').nextElementSibling.checked = dom.checked
@@ -113,9 +130,9 @@ function save() {
         value=value.substring(0,4)+':'+value.substring(5,7)+':'+value.substring(8,10)+' '+value.substring(11,19)+'Z'
         data.set('gpsDatetime',value)
     }
+    toggleSaveState(false)
     Ajax.post(url,data,function(msg) {
         if (msg && msg.indexOf('ok')==0) {
-            document.getElementById('submit').setAttribute('disabled','disabled')
             if (selectedDom) for (let i=0;i<dataKeys.length;i++) {
                 let val=data.get(nameKeys[i])
                 selectedDom.setAttribute(dataKeys[i],val?val:'')
@@ -130,26 +147,98 @@ function save() {
                 document.querySelector('.thumb-image').setAttribute('data-src','/' + curPath + (curPath?'/':'') + file
                     +'?click='+pp[1])
             }
+        } else {
+            toggleSaveState(true)
+            message(msg)
+        }
+    })
+}
 
-        } else message(msg)
+function clickExifMap(e) {
+    deoCoderGetAddress(e.latlng, '', function(add) {
+        placeSelectionMarkerOnMap(e.latlng)
+        mapPoint = add
+        document.getElementById("address").value = (mapPoint.subjectCode ? mapPoint.subjectCode + ':' : '') + mapPoint.address
+        if (add.address && add.address.search(/[\u4e00-\u9fa5]/) < 0) {
+            let aa = add.address.split(',')
+            let country = aa[aa.length - 1].trim()
+            if (country === 'Scotland' ||country == 'Northern Ireland') {
+                mapPoint.country = 'England'
+                mapPoint.countryCode = 'GB'
+            } else {
+                const options = document.getElementById('country').options
+                for (let i=0;i<options.length;i++){
+                    if (options[i].value==country){
+                        mapPoint.country=country
+                        mapPoint.countryCode=options[i].getAttribute('data-code')
+                        return
+                    }
+                }
+                console.log('国家地区检索失败: '+ add.address)
+            }
+        } else if (add.address) {
+            mapPoint.country = '中国'
+            mapPoint.countryCode = 'CN'
+        }
+    })
+}
+function exifControl() {
+    var div = document.createElement('div');
+    var search = document.createElement('input')
+    search.id = 'address'
+    search.className = 'tag-value'
+    search.style.width = '300px'
+    search.onkeypress = function (e) {
+        if (e.key == 'Enter') addressSearch(this.value)
+    }
+    div.appendChild(search)
+
+    var btnSearch = document.createElement('i')
+    btnSearch.className = 'fa fa-search'
+    btnSearch.style.marginLeft = '5px';
+    btnSearch.onclick = function() {
+        addressSearch(search.value)
+    }
+    div.appendChild(btnSearch)
+
+    var btnOk = document.createElement('i')
+    btnOk.id = 'addressSelected'
+    btnOk.className = 'fa fa-check disabled'
+    btnOk.onclick = function() {
+        if (btnOk.className.indexOf('disabled')<0) selectAddress()
+    }
+    btnOk.style.marginLeft = '15px';
+    btnOk.style.marginRight = '15px';
+    div.appendChild(btnOk)
+
+    var btnHide = document.createElement('i')
+    btnHide.className = 'fa fa-close'
+    btnHide.onclick = hideMap
+    btnHide.style.margin = '0 5px';
+    div.appendChild(btnHide)
+    return createUserControl({
+        element: div,
+        position: 'RT',
+        offsetX: 5,
+        offsetY:5
     })
 }
 let point = null
-let mapObject = null
 function showMap() {
-    document.querySelector('.map-wrapper').style.display = 'block'
-    document.querySelector('#app').style.display = 'none'
-    if (!mapObject) mapObject = initMap('mapContainer',point, exifControl(), true)
-    mapObject.addEventListener('click',clickMap)
-    let lon = document.getElementById('longitude').value,
-        lat = document.getElementById('latitude').value
-    if (lon && lat) {
-        setTimeout(function(){
-            selectionPointMarker({lon:parseFloat(lon),lat:parseFloat(lat)})
+    if (!getMap()){
+        initMap('mapContainer',point, exifControl(),true)
+        mapEventListener('click',clickExifMap)
+    }
+    document.querySelector('.map-wrapper').style.display='block'
+    document.querySelector('#app').style.display='none'
+    let lon=document.getElementById('longitude').value,lat=document.getElementById('latitude').value
+    if (lon&&lat){
+        setTimeout(function (){
+            placeSelectionMarkerOnMap({lon:parseFloat(lon),lat:parseFloat(lat)},'wgs84')
             addClass(document.getElementById('addressSelected'),'disabled')
+            document.getElementById("address").value=formattedAddress(document.getElementById('province').value,document.getElementById('city').value,document.getElementById('location').value,document.getElementById('subjectCode').value)
         },100)
     }
-
 }
 function hideMap() {
     document.querySelector('.map-wrapper').style.display = 'none'
@@ -168,7 +257,6 @@ function setAddressValue(field) {
     }
 }
 function selectAddress() {
-    document.getElementById('submit').removeAttribute('disabled')
     setAddressValue('longitude')
     setAddressValue('latitude')
     setAddressValue('province')
@@ -178,6 +266,7 @@ function selectAddress() {
     setAddressValue('country')
     setAddressValue('countryCode')
     hideMap()
+    toggleSaveState(true)
 }
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
@@ -189,7 +278,6 @@ window.onload=function(){
             refresh(path)
         }
     });
-
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {

@@ -195,7 +195,7 @@
                     <input type="checkbox" value="gpsDatetime" name="selectedTags" >
                 </div>
                 <div style="text-align: center">
-                    <button id="submit" class="dialog__button" onclick="save()">保存</button>
+                    <button id="submit" class="dialog__button" disabled="disabled" onclick="save()">保存</button>
                     <button class="dialog__button" onclick="showMap()">地图选点</button>
                 </div>
             </form>

@@ -1,98 +1,140 @@
-let mapPoint = {}
-let map = null
-let marker = null
 
-function removeMarker(mk) {
-    if (map && mk) map.removeOverlay(mk)
+let baiduMap = null
+function getMap() {
+    return baiduMap
 }
-function bdPosition(wgs84, notTrans) {
-    let  loc = notTrans ? wgs84 : wgs84tobd09(wgs84)
-    return new BMapGL.Point(loc.lon, loc.lat);
+function getPosition(point,type) {
+    if (type=='wgs84') {
+        let  loc = wgs84tobd09(point)
+        return new BMapGL.Point(loc.lon, loc.lat)
+    }  else if (type=='bd09') return new BMapGL.Point(point.lon, point.lat)
+    else return point
 }
-function setCenter(wgs84, notTrans) {
-    if (map) {
-        map.setCenter(bdPosition(wgs84, notTrans))
+function makeIcon(options) {
+    return new BMapGL.Icon(options.url, new BMapGL.Size(options.width, options.height), {
+        // 指定定位位置。
+        // 当标注显示在地图上时，其所指向的地理位置距离图标左上
+        // 角各偏移10像素和25像素。您可以看到在本例中该位置即是
+        // 图标中央下端的尖角位置。
+        anchor: new BMapGL.Size(options.pointX, options.pointY)
+    })
+}
+function setCenter(point, type) {
+    if (baiduMap) {
+        const pos = getPosition(point,type)
+        baiduMap.setCenter(pos)
     }
 }
-function getDistance(start,end) {
-    return map.getDistance(start,end)
+function drawPolyline(points,options) {
+    if (baiduMap){
+        let p=new BMapGL.Polyline(points,options);
+        baiduMap.addOverlay(p)
+        return p
+    } else return null
 }
-function placeMarker(wgs84, notTrans, markerOptions) {
-    if (map) {
-        const pos = bdPosition(wgs84, notTrans)
+function removePolyline(p) {
+    if (baiduMap){
+        baiduMap.removeOverlay(p)
+    }
+}
+function getDistance(start,end,type) {
+    if (baiduMap){
+        const p0=getPosition(start),p1=getPosition(end)
+        return baiduMap.getDistance(p0,p1)
+    } else return 0
+}
+function placeMarker(point,type,markerOptions) {
+    if (baiduMap) {
+        const pos = getPosition(point, type)
         const mk = new BMapGL.Marker(pos, markerOptions)
-        map.addOverlay(mk)
+        baiduMap.addOverlay(mk)
         return mk
     } else return null
 }
-function selectionPointMarker(wgs84,notTrans) {
-    removeMarker(marker)
-    marker = placeMarker(wgs84,notTrans)
-    map.setCenter(bdPosition(wgs84, notTrans))
-    removeClass(document.getElementById('addressSelected'),'disabled')
+function removeMarker(mk) {
+    if (baiduMap && mk) baiduMap.removeOverlay(mk)
 }
-function getPoint(address) {
-    var local = new BMapGL.LocalSearch(map, {
-        renderOptions:{map: map}
-    });
-    local.search(address);
-}
-function getAddress(latlng) {
-    mapPoint={}
-    let loc={lon:latlng.lng, lat:latlng.lat}
 
-    selectionPointMarker(loc,true)
-    let wgs84 = bd09towgs84(loc)
-    mapPoint.longitude = wgs84.lon
-    mapPoint.latitude = wgs84.lat
+function addressSearch(address,callback) {
+    if (baiduMap){
+        var local=new BMapGL.LocalSearch(baiduMap,{
+            renderOptions:{map: baiduMap}
+        });
+        local.search(address);
+    }
+}
+function formattedAddress(province,city,location,subjectCode) {
+    let cc = province.search(/[\u4e00-\u9fa5]/)
+    let s = subjectCode ? subjectCode : ''
+    let a = ''
+    if (cc>=0) {
+        let aa = []
+        if (province) aa.push(province)
+        if (city) aa.push(city)
+        if (location) aa.push(location)
+        a=aa.join('')
+    } else {
+        let aa = []
+        if (location) aa.push(location)
+        if (city) aa.push(city)
+        if (province) aa.push(province)
+        a=aa.join(',')
+    }
+    if (s && a) return s+':'+a
+    else return s+a
+}
+function deoCoderGetAddress(point, type, callback) {
+    let add = {}
+    let wgs84 = (type=='wgs84' ? point : (type=='bd09' ? bd09towgs84(point) : bd09towgs84({lon:point.lng, lat:point.lat})))
+    add.longitude = wgs84.lon
+    add.latitude = wgs84.lat
     let geocoder =  new BMapGL.Geocoder()
-    geocoder.getLocation(latlng, function(rs){
+    geocoder.getLocation(getPosition(point,type), function(rs){
         const addComp = rs.addressComponents
-        mapPoint.province = addComp.province
-        if (rs.surroundingPois && rs.surroundingPois.length>0) {
-            mapPoint.subjectCode = rs.surroundingPois[0].title
-            document.getElementById("address").value = mapPoint.subjectCode + ':' + rs.address
-        } else document.getElementById("address").value = rs.address
-        let cc = mapPoint.province.search(/[\u4e00-\u9fa5]/)
+        add.address = rs.address
+        add.province = addComp.province
+        if (rs.surroundingPois && rs.surroundingPois.length>0) add.subjectCode = rs.surroundingPois[0].title
+        let cc = add.province.search(/[\u4e00-\u9fa5]/)
         if (cc>=0) {
-            mapPoint.city = addComp.city + addComp.district
-            mapPoint.location = addComp.street + addComp.streetNumber
-            mapPoint.country = '中国'
-            mapPoint.countryCode = 'CN'
-
+            add.city = addComp.city + addComp.district
+            add.location = addComp.street + addComp.streetNumber
+            add.country = '中国'
+            add.countryCode = 'CN'
         } else {
-            mapPoint.city = (addComp.district + ' ' +addComp.city).trim()
-            mapPoint.location = (addComp.streetNumber + ' ' + addComp.street).trim()
+            add.city = (addComp.district + ' ' +addComp.city).trim()
+            add.location = (addComp.streetNumber + ' ' + addComp.street).trim()
         }
+        if (typeof callback === 'function') callback(add)
     })
 }
-function clickMap(e) {
-    getAddress(e.latlng)
-}
-function clickStepMap(e) {
-    let geocoder =  new BMapGL.Geocoder()
-    geocoder.getLocation(e.latlng, function(rs){
-        if (rs.address) {
-            let info = rs.address
-            let title = ''
-            if (rs.surroundingPois && rs.surroundingPois.length > 0) {
-                title = rs.surroundingPois[0].title
-            }
-            var opts = {
-                width: 400,     // 信息窗口宽度
-                height: 50,    // 信息窗口高度
-                title: title  // 信息窗口标题
-            }
-            var infoWindow = new BMapGL.InfoWindow(info, opts);  // 创建信息窗口对象
-            map.openInfoWindow(infoWindow, e.latlng);
+
+function showInfoWindow({width, height, title, info, point, type, enableAutoPan}) {
+    if (baiduMap){
+        let pos = getPosition(point,type)
+        var opts={
+            width: width,
+            height: height,
+            enableAutoPan: enableAutoPan,
+            title: title
         }
-    })
+        var infoWindow=new BMapGL.InfoWindow(info,opts);  // 创建信息窗口对象
+        baiduMap.openInfoWindow(infoWindow,pos);
+        return infoWindow
+    }
 }
-function stepControl() {
+function mapEventListener(event,listener) {
+    if (baiduMap) {
+        baiduMap.addEventListener(event,listener)
+    }
+}
+function createUserControl({element, position, offsetX, offsetY}) {
     //定义一个控件类
     function MyControl() {
-        this.defaultAnchor = BMAP_ANCHOR_TOP_RIGHT;
-        this.defaultOffset = new BMapGL.Size(5, 5)
+        if (position=='RT') this.defaultAnchor = BMAP_ANCHOR_TOP_RIGHT
+        else if (position=='LT') this.defaultAnchor = BMAP_ANCHOR_TOP_LEFT
+        else if (position=='LB') this.defaultAnchor = BMAP_ANCHOR_BOTTOM_LEFT
+        else if (position=='RB') this.defaultAnchor = BMAP_ANCHOR_BOTTOM_RIGHT
+        this.defaultOffset = new BMapGL.Size(offsetX, offsetY)
     }
     //通过JavaScript的prototype属性继承于BMap.Control
     MyControl.prototype = new BMapGL.Control();
@@ -106,22 +148,7 @@ function stepControl() {
         div.style.borderRadius = "5px";
         div.style.backgroundColor = "white";
         div.style.boxShadow = "0 2px 6px 0 rgba(27, 142, 236, 0.5)";
-
-
-        var btnOk = document.createElement('i')
-        btnOk.id = 'showLine'
-        btnOk.className = 'fa fa-line-chart'
-        btnOk.onclick = showLine
-        btnOk.style.marginLeft = '15px';
-        btnOk.style.marginRight = '15px';
-        div.appendChild(btnOk)
-
-        var btnHide = document.createElement('i')
-        btnHide.className = 'fa fa-close'
-        btnHide.onclick = hideMap
-        btnHide.style.margin = '0 5px';
-        div.appendChild(btnHide)
-
+        div.appendChild(element)
         map.getContainer().appendChild(div);
         return div;
     }
@@ -130,84 +157,20 @@ function stepControl() {
     return myCtrl;
 }
 
-function exifControl() {
-    //定义一个控件类
-    function MyControl() {
-        this.defaultAnchor = BMAP_ANCHOR_TOP_RIGHT;
-        this.defaultOffset = new BMapGL.Size(5, 5)
-    }
-    //通过JavaScript的prototype属性继承于BMap.Control
-    MyControl.prototype = new BMapGL.Control();
 
-    //自定义控件必须实现自己的initialize方法，并且将控件的DOM元素返回
-    //在本方法中创建个div元素作为控件的容器，并将其添加到地图容器中
-    MyControl.prototype.initialize = function(map) {
-        //创建一个dom元素
-        var div = document.createElement('div');
-        div.style.padding = "7px 5px";
-        div.style.borderRadius = "5px";
-        div.style.backgroundColor = "white";
-        div.style.boxShadow = "0 2px 6px 0 rgba(27, 142, 236, 0.5)";
-
-        var search = document.createElement('input')
-        search.id = 'address'
-        search.className = 'tag-value'
-        search.style.width = '300px'
-        search.onkeypress = function (e) {
-            if (e.key == 'Enter') getPoint(this.value)
-        }
-        div.appendChild(search)
-
-        var btnSearch = document.createElement('i')
-        btnSearch.className = 'fa fa-search'
-        btnSearch.style.marginLeft = '5px';
-        btnSearch.onclick = function() {
-            getPoint(search.value)
-        }
-        div.appendChild(btnSearch)
-
-        var btnOk = document.createElement('i')
-        btnOk.id = 'addressSelected'
-        btnOk.className = 'fa fa-check disabled'
-        btnOk.onclick = function() {
-            if (btnOk.className.indexOf('disabled')<0) selectAddress()
-        }
-        btnOk.style.marginLeft = '15px';
-        btnOk.style.marginRight = '15px';
-        div.appendChild(btnOk)
-
-        var btnHide = document.createElement('i')
-        btnHide.className = 'fa fa-close'
-        btnHide.onclick = hideMap
-        btnHide.style.margin = '0 5px';
-        div.appendChild(btnHide)
-
-        map.getContainer().appendChild(div);
-        return div;
-    }
-
-    var myCtrl = new MyControl();
-    return myCtrl;
-}
 function initMap(divId, wgs84, myCtrl, useCityControl) {
-    map = new BMapGL.Map(divId)
-    let pos
-    if (wgs84) {
-        let  loc = wgs84tobd09(wgs84)
-        pos = new BMapGL.Point(loc.lon, loc.lat)
-    } else pos = new BMapGL.Point(106.637110, 29.718058)
-
-    map.centerAndZoom(pos, 16)
-    map.enableScrollWheelZoom(true)
-
+    baiduMap = new BMapGL.Map(divId)
+    let pos = (wgs84 ?getPosition(wgs84,'wgs84') : new BMapGL.Point(106.59462970758844, 29.573881471271264))
+    baiduMap.enableScrollWheelZoom(true)
     if (useCityControl){
         var cityControl=new BMapGL.CityListControl({
             anchor:BMAP_ANCHOR_TOP_LEFT,offset:new BMapGL.Size(10,5)
         });
-        map.addControl(cityControl);
+        baiduMap.addControl(cityControl);
     }
-    map.addControl(new BMapGL.ZoomControl())
-    map.addControl(new BMapGL.LocationControl())
-    if (myCtrl) map.addControl(myCtrl)
-    return map
+    baiduMap.addControl(new BMapGL.ZoomControl())
+    baiduMap.addControl(new BMapGL.LocationControl())
+    if (myCtrl) baiduMap.addControl(myCtrl)
+    baiduMap.centerAndZoom(pos, 16)
+    return baiduMap
 }
