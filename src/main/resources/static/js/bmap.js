@@ -127,6 +127,11 @@ function mapEventListener(event,listener) {
         baiduMap.addEventListener(event,listener)
     }
 }
+function removeEventListener(event,listener) {
+    if (baiduMap) {
+        baiduMap.removeEventListener(event,listener)
+    }
+}
 function createUserControl({element, position, offsetX, offsetY}) {
     //定义一个控件类
     function MyControl() {
@@ -164,7 +169,7 @@ function initMap(divId, wgs84, myCtrl, useCityControl) {
     baiduMap.enableScrollWheelZoom(true)
     if (useCityControl){
         var cityControl=new BMapGL.CityListControl({
-            anchor:BMAP_ANCHOR_TOP_LEFT,offset:new BMapGL.Size(10,5)
+            anchor:BMAP_ANCHOR_BOTTOM_LEFT,offset:new BMapGL.Size(5,10)
         });
         baiduMap.addControl(cityControl);
     }

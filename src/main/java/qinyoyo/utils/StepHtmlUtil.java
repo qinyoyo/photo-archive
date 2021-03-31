@@ -21,7 +21,8 @@ public class StepHtmlUtil {
             "  <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n" +
             "  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n";
     public static final String STANDARD_LINK = "\n  <link rel=\"stylesheet\" href=\"/static/font-awesome-4.7.0/css/font-awesome.min.css\">\n" +
-            "  <link rel=\"stylesheet\" href=\"/static/css/transform_image.css\">\n";
+            "  <link rel=\"stylesheet\" href=\"/static/css/transform_image.css\">\n" +
+            "  <link rel=\"stylesheet\" href=\"/static/css/common.css\">\n";
     public static final String STANDARD_SCRIPT = "\n  <script type=\"text/javascript\" src=\"/static/js/ajax.js\"></script>\n" +
             "  <script type=\"text/javascript\" src=\"/static/js/alloy_finger.js\"></script>\n" +
             "  <script type=\"text/javascript\" src=\"/static/js/transform_image.js\"></script>\n";
@@ -32,6 +33,7 @@ public class StepHtmlUtil {
                 (e.attr("href").endsWith("/font-awesome.min.css") ||
                 e.attr("href").endsWith("/font-awesome.css") ||
                 e.attr("href").endsWith("/step.css") ||
+                e.attr("href").endsWith("/common.css") ||
                 e.attr("href").endsWith("/transform_image.css"))) return true;
         else if (e.is("script") && e.hasAttr("src") &&
                 (e.attr("src").endsWith("/ajax.js") ||

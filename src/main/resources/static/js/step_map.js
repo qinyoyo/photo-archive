@@ -82,11 +82,14 @@ function loadMarkerData() {
                 }
                 img.onload = function() {
                     const dat = data[parseInt(img.getAttribute('data-index'))]
+                    let title = dat.shootTime ? dat.shootTime : '时间未知'
+                    if (dat.prev>=0) title = '<' + title
+                    if (dat.next>=0) title = title + '>'
                     if (!infoWindow) {
                         infoWindow = showInfoWindow({
                             width: img.naturalWidth,
-                            height: img.naturalHeight+20,
-                            title:dat.shootTime,
+                            height: img.naturalHeight+10,
+                            title: title,
                             info: div,
                             point: dat.marker.getPosition(),
                             enableAutoPan: true
@@ -94,8 +97,8 @@ function loadMarkerData() {
                         infoWindow.disableCloseOnClick()
                     } else {
                         infoWindow.setWidth(img.naturalWidth)
-                        infoWindow.setHeight(img.naturalHeight + 20)
-                        infoWindow.setTitle(dat.shootTime)
+                        infoWindow.setHeight(img.naturalHeight + 10)
+                        infoWindow.setTitle(title)
                         infoWindow.redraw()
                     }
                 }
@@ -121,10 +124,16 @@ function showLine() {
 function hideMap() {
     return2view()
 }
+function mapLoaded() {
+    removeEventListener('tilesloaded',mapLoaded)
+    loadMarkerData()
+    hideWaiting()
+}
 window.onload=function(){
+    showWaiting()
     document.querySelector('.map-wrapper').style.width = '100%'
     document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
-    initMap('mapContainer',null, stepControl()).disableDoubleClickZoom()
+    initMap('mapContainer',firstPoint, stepControl()).disableDoubleClickZoom()
     mapEventListener('dblclick',clickStepMap)
-    setTimeout(loadMarkerData,100)
+    mapEventListener('tilesloaded', mapLoaded)
 }

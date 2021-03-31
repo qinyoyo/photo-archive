@@ -60,34 +60,6 @@
         else if (ua.indexOf("chrome") > -1 && ua.indexOf("safari") > -1) return 'chrome'
     }
 
-    window.toast  = function(msg,delay,onclose) {  // 显示提示信息，自动关闭
-        if (typeof msg != 'string') return
-        document.querySelectorAll('.tran-img__toast').forEach(function(e) { e.remove(); })
-        let toast = document.createElement("div")
-        toast.className = 'tran-img__toast'
-        toast.style.zIndex = "9999"
-        toast.style.display = 'hide'
-        toast.style.padding = '5px'
-        let span = document.createElement("span")
-        span.innerHTML = msg.replace(/\n/g,'<br>')
-        toast.appendChild(span)
-        document.querySelector('body').appendChild(toast)
-        const w = 10 + span.offsetWidth, h = 10 + span.offsetHeight
-        toast.style.left = (window.innerWidth - w)/2  + 'px'
-        toast.style.top = (window.innerHeight - h)/2  + 'px'
-        toast.style.display = 'block'
-        const remove = function() {
-            toast.remove()
-            if (typeof onclose === 'function') onclose.call()
-        }
-        let toastTimer = setTimeout(remove,delay ? delay : 1000)
-        toast.onclick = function() {
-            if (toastTimer) {
-                clearTimeout(toastTimer)
-                toastTimer = null
-            } else remove()
-        }
-    }
     window.macPlayOSBackMusic = function() {
         if (navigator.userAgent.toLowerCase().indexOf('mac os') >= 0) {
             const playBkMusic = function () {
@@ -278,7 +250,6 @@
         let   realSizeScale = 1
         const container = img.parentNode
         const wrapper = document.querySelector('.tran-img__wrapper')
-        const waitingIcon = document.querySelector('.tran-img__waiting')
         let   scaleValue = 1
         let   isReady = false
         let   translateXChanged = false, translateYChanged = false
@@ -375,11 +346,11 @@
         }
         const changeImage = function({src, fromLeft, orientation, rating, title }) {
             isReady = false
-            waitingIcon.style.display = 'block'
+            showWaiting()
             const loadImg = new Image()
             loadImg.onload = function() {
                 preLoadImageBy(index + loopDirection)  // 预加载文件
-                waitingIcon.style.display = 'none'
+                hideWaiting()
 
                 const step = pageW / 10
                 let newLeft = 0, left = (fromLeft ? -(pageW + 10) : pageW + 10)
@@ -439,7 +410,7 @@
             }
             loadImg.onerror = function() {
                 preLoadImageBy(index + loopDirection)  // 预加载文件
-                waitingIcon.style.display = 'none'
+                hideWaiting()
                 toast('加载失败')
                 img.setAttribute('src', src)
                 img.setAttribute('alt', src)
@@ -1043,14 +1014,6 @@
         img.className = 'center-transform'
         img.style.zIndex = "6004"
 
-        let waitingIcon = document.createElement("button")
-        waitingIcon.className = 'tran-img__waiting'
-        waitingIcon.style.zIndex = '6005'
-
-        let waitingI = document.createElement("i")
-        waitingI.className = 'fa fa-spinner fa-spin animated'
-        waitingIcon.appendChild(waitingI)
-
         let floatButtons = document.createElement("div")
         floatButtons.style.zIndex = "6006"
 
@@ -1195,7 +1158,6 @@
         dialogBody.appendChild(img)
 
         content.appendChild(titleDiv)
-        content.appendChild(waitingIcon)
         content.appendChild(floatButtons)
 
         body.appendChild(wrapper)

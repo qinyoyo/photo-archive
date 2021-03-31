@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/static/css/pv.css">
     <link rel="stylesheet" href="/static/css/transform_image.css">
+    <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/exif.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
@@ -42,7 +43,7 @@
             </#if>
         </div>
         <div class="folder-head__right">
-            <input type="checkbox" id="recursion"<#if recursion?? && recursion> checked</#if> onclick="refresh('<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>${separator}</#if></#list></#if>')"><label for="recursion">递归</label>
+            <input type="checkbox" id="recursion"<#if recursion?? && recursion> checked</#if> data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>${separator}</#if></#list></#if>"><label for="recursion">递归</label>
             <i class="fa fa-close" style="margin-left: 10px;" onclick="window.location.href = '/?path=' + encodeURI('<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>')"></i>
         </div>
     </div>
@@ -195,8 +196,10 @@
                     <input type="checkbox" value="gpsDatetime" name="selectedTags" >
                 </div>
                 <div style="text-align: center">
-                    <button id="submit" class="dialog__button" disabled="disabled" onclick="save()">保存</button>
-                    <button class="dialog__button" onclick="showMap()">地图选点</button>
+                    <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()">复制</button>
+                    <button id="btnPaste" class="exif__button" disabled="disabled" onclick="pasteFields()">粘贴</button>
+                    <button class="exif__button" onclick="showMap()">选点</button>
+                    <button id="submit" class="exif__button" disabled="disabled" onclick="save()">保存</button>
                 </div>
             </form>
         </div>

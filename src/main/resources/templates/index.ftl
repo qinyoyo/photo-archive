@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/static/css/pv.css">
     <link rel="stylesheet" href="/static/css/transform_image.css">
+    <link rel="stylesheet" href="/static/css/common.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>

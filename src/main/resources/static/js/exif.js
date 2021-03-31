@@ -11,6 +11,7 @@ const dataKeys = ['data-artist','data-datetimeoriginal','data-model','data-Lensi
 let selectedDom = null
 let mapPoint = {}
 let marker = null
+let copiedPoint = null
 function placeSelectionMarkerOnMap(point,type) {
     if (getMap()){
         if (marker) removeMarker(marker)
@@ -24,9 +25,34 @@ function refresh(path) {
     const e = document.getElementById('recursion')
     window.location.href = '/exif?path=' + encodeURI(path) + '&recursion='+(e.checked ? 'true':'false')
 }
+function copyFields(){
+    copiedPoint = {}
+    document.getElementById('btnPaste').setAttribute('disabled', 'disabled')
+    document.querySelectorAll('input[name="selectedTags"]:checked').forEach(function(e){
+        let field = e.value
+        copiedPoint[field] = document.getElementById(field).value
+        document.getElementById('btnPaste').removeAttribute('disabled')
+    })
+}
+function pasteFields(){
+    if (copiedPoint) {
+        Object.keys(copiedPoint).forEach(function(field) {
+            document.getElementById(field).value = copiedPoint[field]
+            document.getElementById(field).nextElementSibling.checked = true
+        })
+        toggleSaveState(true)
+    }
+}
 function toggleSaveState(enable) {
-    if (enable && document.getElementById('fileName').value &&
-        document.querySelectorAll('input[name="selectedTags"]:checked').length>0 )
+    if (copiedPoint && Object.keys(copiedPoint).length>0) document.getElementById('btnPaste').removeAttribute('disabled')
+    else document.getElementById('btnPaste').setAttribute('disabled', 'disabled')
+
+    const selectedTag = (document.querySelectorAll('input[name="selectedTags"]:checked').length>0)
+
+    if (selectedTag) document.getElementById('btnCopy').removeAttribute('disabled')
+    else document.getElementById('btnCopy').setAttribute('disabled', 'disabled')
+
+    if (enable && document.getElementById('fileName').value && selectedTag)
         document.getElementById('submit').removeAttribute('disabled')
     else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
@@ -46,22 +72,22 @@ function selectFile(dom,event) {
             addClass(dom,'selected')
             selectedDom = dom
         }
-    } else if (event.shiftKey) {
+    } else if (event.shiftKey || (event.target && event.target.tagName == 'I')) {
         selectedDom = dom
-        let start = -1, end = -1, index = -1
+        let start = -1, index = -1
         for (let i=0;i<fileItems.length;i++) {
-            if (fileItems[i]===dom) index = i;
+            if (fileItems[i]===dom) index = i
             if (fileItems[i].className.indexOf('selected')>=0) {
-                if (start==-1) start=i;
-                else end=i;
+                start=i
             }
+            if (start>=0 && index>=0) break
         }
         if (index<start) {
             for (let i=index;i<start;i++) {
                 addClass(fileItems[i],'selected')
             }
-        } else if (index>end) {
-            for (let i=end+1;i<=index;i++) {
+        } else if (index>start && start>=0) {
+            for (let i=start+1;i<=index;i++) {
                 addClass(fileItems[i],'selected')
             }
         }
@@ -149,7 +175,7 @@ function save() {
             }
         } else {
             toggleSaveState(true)
-            message(msg)
+            toast(msg)
         }
     })
 }
@@ -187,7 +213,7 @@ function exifControl() {
     var search = document.createElement('input')
     search.id = 'address'
     search.className = 'tag-value'
-    search.style.width = '300px'
+    search.style.width = '200px'
     search.onkeypress = function (e) {
         if (e.key == 'Enter') addressSearch(this.value)
     }
@@ -270,9 +296,9 @@ function selectAddress() {
 }
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
-    document.querySelector('.map-wrapper').style.height = (window.innerHeight - 20) + 'px'
-    document.getElementById('app').style.height = (window.innerHeight - 20) +'px'
-    document.querySelectorAll('.folder-item').forEach(function(d) {
+    document.querySelector('.map-wrapper').style.height = (window.innerHeight) + 'px'
+    document.getElementById('app').style.height = (window.innerHeight -20) +'px'
+    document.querySelectorAll('.folder-item, #recursion').forEach(function(d) {
         const path = d.getAttribute('data-folder')
         d.onclick=function () {
             refresh(path)
@@ -289,6 +315,11 @@ window.onload=function(){
         }
         v.onclick = function(event) {
             selectFile(v,event)
+        }
+    })
+    document.querySelectorAll('input[name="selectedTags"]').forEach(function(e){
+        e.onclick=function() {
+            toggleSaveState(true)
         }
     })
     TransformImage('.thumb-image')

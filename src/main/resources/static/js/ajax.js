@@ -140,6 +140,34 @@
             callback: function() {}
         })
     }
+    window.toast  = function(msg,delay,onclose) {  // 显示提示信息，自动关闭
+        if (typeof msg != 'string') return
+        document.querySelectorAll('.message__toast').forEach(function(e) { e.remove(); })
+        let toastDiv = document.createElement("div")
+        toastDiv.className = 'message__toast'
+        toastDiv.style.zIndex = "99999"
+        toastDiv.style.display = 'hide'
+        toastDiv.style.padding = '5px'
+        let span = document.createElement("span")
+        span.innerHTML = msg.replace(/\n/g,'<br>')
+        toastDiv.appendChild(span)
+        document.querySelector('body').appendChild(toastDiv)
+        const w = 10 + span.offsetWidth, h = 10 + span.offsetHeight
+        toastDiv.style.left = (window.innerWidth - w)/2  + 'px'
+        toastDiv.style.top = (window.innerHeight - h)/2  + 'px'
+        toastDiv.style.display = 'block'
+        const remove = function() {
+            toastDiv.remove()
+            if (typeof onclose === 'function') onclose.call()
+        }
+        let toastTimer = setTimeout(remove,delay ? delay : 1000)
+        toastDiv.onclick = function() {
+            if (toastTimer) {
+                clearTimeout(toastTimer)
+                toastTimer = null
+            } else remove()
+        }
+    }
     window.input = function(options) {
         let dlgOptions = {
             title: options.title,
@@ -194,5 +222,18 @@
                 dom.className = ac.join(' ')
             }
         }
+    }
+    window.showWaiting = function(id) {
+        let waitingIcon = document.createElement("button")
+        waitingIcon.className = 'waiting-icon__wrapper'
+        waitingIcon.style.zIndex = '99999'
+        waitingIcon.id = id ? id : 'waiting_icon_overlay'
+        let waitingI = document.createElement("i")
+        waitingI.className = 'fa fa-spinner fa-spin animated'
+        waitingIcon.appendChild(waitingI)
+        document.querySelector('body').appendChild(waitingIcon)
+    }
+    window.hideWaiting = function(id) {
+        document.getElementById( id ? id : 'waiting_icon_overlay').remove()
     }
 })();
