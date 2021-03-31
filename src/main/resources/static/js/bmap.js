@@ -3,12 +3,8 @@ let baiduMap = null
 function getMap() {
     return baiduMap
 }
-function getPosition(point,type) {
-    if (type=='wgs84') {
-        let  loc = wgs84tobd09(point)
-        return new BMapGL.Point(loc.lon, loc.lat)
-    }  else if (type=='bd09') return new BMapGL.Point(point.lon, point.lat)
-    else return point
+function getPosition(point) {
+    return point
 }
 function makeIcon(options) {
     return new BMapGL.Icon(options.url, new BMapGL.Size(options.width, options.height), {
@@ -19,9 +15,9 @@ function makeIcon(options) {
         anchor: new BMapGL.Size(options.pointX, options.pointY)
     })
 }
-function setCenter(point, type) {
+function setCenter(point) {
     if (baiduMap) {
-        const pos = getPosition(point,type)
+        const pos = getPosition(point)
         baiduMap.setCenter(pos)
     }
 }
@@ -37,15 +33,15 @@ function removePolyline(p) {
         baiduMap.removeOverlay(p)
     }
 }
-function getDistance(start,end,type) {
+function getDistance(start,end) {
     if (baiduMap){
         const p0=getPosition(start),p1=getPosition(end)
         return baiduMap.getDistance(p0,p1)
     } else return 0
 }
-function placeMarker(point,type,markerOptions) {
+function placeMarker(point,markerOptions) {
     if (baiduMap) {
-        const pos = getPosition(point, type)
+        const pos = getPosition(point)
         const mk = new BMapGL.Marker(pos, markerOptions)
         baiduMap.addOverlay(mk)
         return mk
@@ -83,13 +79,13 @@ function formattedAddress(province,city,location,subjectCode) {
     if (s && a) return s+':'+a
     else return s+a
 }
-function deoCoderGetAddress(point, type, callback) {
+function deoCoderGetAddress(point, callback) {
     let add = {}
-    let wgs84 = (type=='wgs84' ? point : (type=='bd09' ? bd09towgs84(point) : bd09towgs84({lon:point.lng, lat:point.lat})))
-    add.longitude = wgs84.lon
-    add.latitude = wgs84.lat
+    add.type = 'bd09'
+    add.longitude = point.lng
+    add.latitude = point.lat
     let geocoder =  new BMapGL.Geocoder()
-    geocoder.getLocation(getPosition(point,type), function(rs){
+    geocoder.getLocation(getPosition(point), function(rs){
         const addComp = rs.addressComponents
         add.address = rs.address
         add.province = addComp.province
@@ -108,9 +104,9 @@ function deoCoderGetAddress(point, type, callback) {
     })
 }
 
-function showInfoWindow({width, height, title, info, point, type, enableAutoPan}) {
+function showInfoWindow({width, height, title, info, point, enableAutoPan}) {
     if (baiduMap){
-        let pos = getPosition(point,type)
+        let pos = getPosition(point)
         var opts={
             width: width,
             height: height,
@@ -163,9 +159,9 @@ function createUserControl({element, position, offsetX, offsetY}) {
 }
 
 
-function initMap(divId, wgs84, myCtrl, useCityControl) {
+function initMap(divId, point, myCtrl, useCityControl) {
     baiduMap = new BMapGL.Map(divId)
-    let pos = (wgs84 ?getPosition(wgs84,'wgs84') : new BMapGL.Point(106.59462970758844, 29.573881471271264))
+    let pos = (point ?getPosition(point) : new BMapGL.Point(106.59462970758844, 29.573881471271264))
     baiduMap.enableScrollWheelZoom(true)
     if (useCityControl){
         var cityControl=new BMapGL.CityListControl({

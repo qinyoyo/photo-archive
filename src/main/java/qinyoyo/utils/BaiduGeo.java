@@ -114,7 +114,7 @@ public class BaiduGeo {
         }
         return false;
     }
-    private static final String address = "http://api.map.baidu.com/reverse_geocoding/v3/?ak=%s&output=json&coordtype=wgs84ll&extensions_poi=1&poi_types=旅游景点&extensions_town=true&location=%.6f,%.6f";
+    private static final String address = "http://api.map.baidu.com/reverse_geocoding/v3/?ak=%s&output=json&coordtype=wgs84ll&extensions_poi=1&poi_types=旅游景点&extensions_town=true&location=%.7f,%.7f";
     private static final String defaultAK = "0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o";
 
     public static Info getGeoInfo(double longitude, double latitude, String ak) throws IOException {

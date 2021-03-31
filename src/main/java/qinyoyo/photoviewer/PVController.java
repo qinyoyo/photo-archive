@@ -28,7 +28,6 @@ import java.io.FileFilter;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Controller
 public class PVController implements ApplicationRunner , ErrorController {
@@ -172,6 +171,12 @@ public class PVController implements ApplicationRunner , ErrorController {
         return "index";
     }
 
+    String pointType() {
+        String mapType = env.getProperty("photo.map");
+        if (mapType==null || mapType.equals("bmap")) return "bd09";
+        else return "gcj02";
+    }
+
     @RequestMapping(value = "/step")
     public String stepInMap(Model model, HttpServletRequest request, String path) {
         if (!isReady) {
@@ -188,6 +193,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                         (subFolder.equals(p.getSubFolder()) || p.getSubFolder().startsWith(subFolder+File.separator))
         ).collect(Collectors.toList());
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
+        model.addAttribute("CLIENT_POINT_TYPE", pointType());
         return "step";
     }
 
@@ -215,22 +221,36 @@ public class PVController implements ApplicationRunner , ErrorController {
             ).collect(Collectors.toList());
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
         model.addAttribute("countries", TimeZoneTable.countryTimeZones);
+        String mapType = env.getProperty("photo.map");
+        model.addAttribute("CLIENT_POINT_TYPE", pointType());
         return "exif";
     }
     @ResponseBody
     @RequestMapping(value = "position")
     public String scan(double lng,double lat, boolean towgs84, HttpServletRequest request) {
-        PositionUtil.LatLng p1 = towgs84 ? PositionUtil.bd09_To_Gps84(lat,lng) : PositionUtil.gps84_To_Bd09(lat,lng);
-        return String.format("%.6f,%.6f",p1.longitude,p1.latitude);
+        PositionUtil.LatLng p1 = towgs84 ? PositionUtil.bd09ToWgs84(lat,lng) : PositionUtil.wgs84ToBd09(lat,lng);
+        return String.format("%.7f,%.7f",p1.longitude,p1.latitude);
     }
     @ResponseBody
     @RequestMapping(value = "/exifSave")
-    public String exifSave(PhotoInfo p1, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String exifSave(PhotoInfo p1, String type, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             return "请先解锁!!!";
         }
         if (p1!=null && !Util.isEmpty(selectedTags)) {
+            if (PositionUtil.BD09.equals(type) || PositionUtil.GCJ02.equals(type) ) {
+                PositionUtil.LatLng latLng = PositionUtil.BD09.equals(type) ?
+                        PositionUtil.bd09ToWgs84(p1.getLatitude(), p1.getLongitude()) :
+                        PositionUtil.gcj02ToWgs84(p1.getLatitude(), p1.getLongitude());
+                if (latLng!=null) {
+                    p1.setLatitude(latLng.latitude);
+                    p1.setLongitude(latLng.longitude);
+                } else {
+                    p1.setLatitude(null);
+                    p1.setLongitude(null);
+                }
+            }
             String [] tags = selectedTags.split(",");
             List<Key> selectedKey = new ArrayList<>();
             for (String tag : tags) {

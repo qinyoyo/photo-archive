@@ -12,10 +12,10 @@ let selectedDom = null
 let mapPoint = {}
 let marker = null
 let copiedPoint = null
-function placeSelectionMarkerOnMap(point,type) {
+function placeSelectionMarkerOnMap(point) {
     if (getMap()){
         if (marker) removeMarker(marker)
-        const pos=getPosition(point,type)
+        const pos=getPosition(point)
         marker=placeMarker(pos)
         setCenter(pos)
         removeClass(document.getElementById('addressSelected'),'disabled')
@@ -181,7 +181,7 @@ function save() {
 }
 
 function clickExifMap(e) {
-    deoCoderGetAddress(e.latlng, '', function(add) {
+    deoCoderGetAddress(e.latlng, function(add) {
         placeSelectionMarkerOnMap(e.latlng)
         mapPoint = add
         document.getElementById("address").value = (mapPoint.subjectCode ? mapPoint.subjectCode + ':' : '') + mapPoint.address
@@ -257,10 +257,10 @@ function showMap() {
     }
     document.querySelector('.map-wrapper').style.display='block'
     document.querySelector('#app').style.display='none'
-    let lon=document.getElementById('longitude').value,lat=document.getElementById('latitude').value
-    if (lon&&lat){
+    let lng=document.getElementById('longitude').value,lat=document.getElementById('latitude').value
+    if (lng&&lat){
         setTimeout(function (){
-            placeSelectionMarkerOnMap({lon:parseFloat(lon),lat:parseFloat(lat)},'wgs84')
+            placeSelectionMarkerOnMap({lng:parseFloat(lng),lat:parseFloat(lat)})
             addClass(document.getElementById('addressSelected'),'disabled')
             document.getElementById("address").value=formattedAddress(document.getElementById('province').value,document.getElementById('city').value,document.getElementById('location').value,document.getElementById('subjectCode').value)
         },100)
@@ -273,7 +273,7 @@ function hideMap() {
 function setAddressValue(field) {
     let e = document.getElementById(field)
     if (mapPoint[field]) {
-        if (field==='longitude' || field==='latitude') e.value = mapPoint[field].toFixed(6)
+        if (field==='longitude' || field==='latitude') e.value = mapPoint[field].toFixed(7)
         else e.value = mapPoint[field]
         e.nextElementSibling.checked=true
     }
@@ -307,10 +307,10 @@ window.onload=function(){
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {
-            let lon = v.getAttribute('data-gpslongitude'),
+            let lng = v.getAttribute('data-gpslongitude'),
                 lat = v.getAttribute('data-gpslatitude')
-            if (lon && lat) {
-                point = {lon:parseFloat(lon),lat:parseFloat(lat)}
+            if (lng && lat) {
+                point = {lng:parseFloat(lng),lat:parseFloat(lat)}
             }
         }
         v.onclick = function(event) {

@@ -15,7 +15,6 @@
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
-    <script type="text/javascript" src="/static/js/bd_wgs84.js"></script>
     <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
     <script type="text/javascript" src="/static/js/bmap.js"></script>
     <title>Photo Viewer</title>
@@ -81,6 +80,7 @@
             <form id="exifForm" class="tag-editor" onsubmit="return false;">
                 <input id="subFolder" name="subFolder" type="hidden">
                 <input id="fileName" name="fileName" type="hidden">
+                <input id="type" name="type" type="hidden" value="${CLIENT_POINT_TYPE}">
                 <div style="position: relative">
                     <label for="artist">拍摄者</label>
                     <input class="tag-value" id="artist" name="artist" onchange="changed(this)">
@@ -177,12 +177,12 @@
                 </div>
                 <div style="position: relative">
                     <label for="longitude">经度</label>
-                    <input class="tag-value" id="longitude" name="longitude" type="number" min="-180" max="180" step="0.000001" onchange="changed(this)">
+                    <input class="tag-value" id="longitude" name="longitude" type="number" min="-180" max="180" step="0.0000001" onchange="changed(this)">
                     <input type="checkbox" value="longitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="latitude">纬度</label>
-                    <input class="tag-value" id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.000001" onchange="changed(this)">
+                    <input class="tag-value" id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.0000001" onchange="changed(this)">
                     <input type="checkbox" value="latitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">

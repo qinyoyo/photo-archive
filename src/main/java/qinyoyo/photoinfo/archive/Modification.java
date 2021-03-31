@@ -162,7 +162,7 @@ public class Modification {
                 default:
                     value = pi.getFieldByTag(key);
             }
-            if (value!=null && value instanceof Double) value = String.format("%.6f",(Double)value);
+            if (value!=null && value instanceof Double) value = String.format("%.7f",(Double)value);
             if (!skipNull || !Util.isEmpty(value))  {
                 map.put(Key.getName(key),value);
             }
@@ -237,7 +237,7 @@ public class Modification {
                     sb.append("\t<").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">")
                             .append(altitude>0.0 ? 1 : 0)
                             .append("</").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">\n");
-                    value = String.format("%.6f",Math.abs(altitude));
+                    value = String.format("%.7f",Math.abs(altitude));
                 } else if (key.equals(Key.getName((Key.ARTIST)))) {
                     sb.append("<IPTC:By-line>")
                             .append(value.toString())

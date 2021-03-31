@@ -3,7 +3,7 @@ function refresh(path) {
     window.location.href = '/step?path=' + encodeURI(path)
 }
 function clickStepMap(e) {
-    deoCoderGetAddress(e.latlng, '', function(add) {
+    deoCoderGetAddress(e.latlng, function(add) {
         if (add && add.address) {
             showInfoWindow({
                 width: 0,

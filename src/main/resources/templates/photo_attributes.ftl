@@ -97,11 +97,19 @@
     <#if p.location??>
         data-sub-location="${p.location}"
     </#if>
-    <#if p.longitude??>
-        data-gpslongitude="${statics['java.lang.String'].format('%.6f',p.longitude)}"
-    </#if>
-    <#if p.latitude??>
-        data-gpslatitude="${statics['java.lang.String'].format('%.6f',p.latitude)}"
+    <#if CLIENT_POINT_TYPE??>
+        <#if p.longitude?? && p.latitude??>
+        <#assign photoPointTemp = p.getPointMap(CLIENT_POINT_TYPE) />
+        data-gpslongitude="${photoPointTemp.lng}"
+        data-gpslatitude="${photoPointTemp.lat}"
+        </#if>
+    <#else>
+        <#if p.longitude??>
+        data-gpslongitude="${statics['java.lang.String'].format('%.7f',p.longitude)}"
+        </#if>
+        <#if p.latitude??>
+        data-gpslatitude="${statics['java.lang.String'].format('%.7f',p.latitude)}"
+        </#if>
     </#if>
     <#if p.altitude??>
         data-gpsaltitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"

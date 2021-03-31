@@ -6,10 +6,7 @@ import org.jsoup.nodes.Document;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
-import qinyoyo.utils.DateUtil;
-import qinyoyo.utils.FileUtil;
-import qinyoyo.utils.StepHtmlUtil;
-import qinyoyo.utils.Util;
+import qinyoyo.utils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -216,7 +213,7 @@ public class PhotoInfo implements Serializable,Cloneable {
             sb.append("\"").append(k).append("\"").append(": ");
             Object o = attributes.get(k);
             if (o instanceof String) sb.append("\"").append(o).append("\"");
-            else if (o instanceof Double) sb.append(String.format("%.6f",(Double)o));
+            else if (o instanceof Double) sb.append(String.format("%.7f",(Double)o));
             else sb.append(o.toString());
             if (i < size-1) sb.append(",\n");
         }
@@ -678,5 +675,21 @@ public class PhotoInfo implements Serializable,Cloneable {
             }
         }
         return TimeZone.getDefault();
+    }
+    public PositionUtil.LatLng getPoint(String type) {
+        if (latitude!=null && longitude!=null) {
+            if (PositionUtil.BD09.equals(type)) return PositionUtil.wgs84ToBd09(latitude,longitude);
+            else if (PositionUtil.GCJ02.equals(type)) return PositionUtil.wgs84ToGcj02(latitude,longitude);
+            else return new PositionUtil.LatLng(latitude,longitude,PositionUtil.WGS84);
+        } else return null;
+    }
+    public Map<String,String> getPointMap(String type) {
+        Map<String,String> map = new HashMap<>();
+        PositionUtil.LatLng latLng = getPoint(type);
+        if (latLng!=null) {
+            map.put("lng",String.format("%.7f",latLng.longitude));
+            map.put("lat",String.format("%.7f",latLng.latitude));
+        }
+        return map;
     }
 }

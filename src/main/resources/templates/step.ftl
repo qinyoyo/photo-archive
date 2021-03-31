@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/static/css/common.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
-    <script type="text/javascript" src="/static/js/bd_wgs84.js"></script>
     <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
     <script type="text/javascript" src="/static/js/bmap.js"></script>
     <script type="text/javascript" src="/static/js/step_map.js"></script>
@@ -59,7 +58,7 @@
         window.location.href = '/?path=' + encodeURI('<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>')
     }
     const pointDataList = []
-    const firstPoint = <#if photos??>{lon:${statics['java.lang.String'].format('%.6f',photos[0].longitude)}, lat:${statics['java.lang.String'].format('%.6f',photos[0].latitude)}}<#else>null</#if>
+    const firstPoint = <#if photos??><#assign photoPointTemp = photos[0].getPointMap(CLIENT_POINT_TYPE) />{lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}<#else>null</#if>
     function getPointData() {
         <#if photos??>
         const stepIcon = makeIcon({
@@ -84,6 +83,7 @@
             pointY: 28
         })
         <#list photos as p>
+        <#assign photoPointTemp = p.getPointMap(CLIENT_POINT_TYPE) />
         pointDataList.push({
             src: '/.thumb${fileUrl(p)}?click=${p.lastModified?c}',
             address: '${p.formattedAddress(false)}',
@@ -92,12 +92,12 @@
             <#if p.shootTime??>
             shootTime: '${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm')}',
             </#if>
-            longitude: ${statics['java.lang.String'].format('%.6f',p.longitude)},
-            latitude: ${statics['java.lang.String'].format('%.6f',p.latitude)},
+            longitude: ${photoPointTemp.lng},
+            latitude: ${photoPointTemp.lat},
             <#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation>
             className: 'orientation-${p.orientation}',
             </#if>
-            marker: placeMarker({lon:${statics['java.lang.String'].format('%.6f',p.longitude)}, lat:${statics['java.lang.String'].format('%.6f',p.latitude)}}, 'wgs84',{icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>})
+            marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>})
         })
         </#list>
         for (let i=1;i<pointDataList.length;i++) {
