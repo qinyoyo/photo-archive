@@ -165,7 +165,6 @@ function initMap(divId, point, myCtrl, useCityControl) {
     baiduMap = new BMapGL.Map(divId)
     let pos = (point ?getPosition(point) : new BMapGL.Point(106.59462970758844, 29.573881471271264))
     baiduMap.enableScrollWheelZoom(true)
-    baiduMap.enableRotateGestures = false
     if (useCityControl){
         var cityControl=new BMapGL.CityListControl({
             anchor:BMAP_ANCHOR_BOTTOM_LEFT,offset:new BMapGL.Size(5,10)

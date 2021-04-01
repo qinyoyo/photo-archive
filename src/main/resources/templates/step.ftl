@@ -8,11 +8,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/transform_image.css">
     <link rel="stylesheet" href="/static/css/common.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
     <script type="text/javascript" src="/static/js/bmap.js"></script>
     <script type="text/javascript" src="/static/js/step_map.js"></script>
+    <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
+    <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <title>Photo Viewer</title>
 </head>
 <style>
@@ -93,10 +96,10 @@
         </#if>
         pointDataList.push({
             <#if p.shootTime??>
-            shootTime: '${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm')}',
+            shootTime: '${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}',
             </#if>
-            src: '/.thumb${fileUrl(p)}?click=${p.lastModified?c}',
-            address: '${p.formattedAddress(false)}',
+            src: '${fileUrl(p)}?click=${p.lastModified?c}',
+            title: '<#if p.shootTime??>${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}\n</#if>${p.formattedAddress(false)}',
             <#if p_index gt 0>
             prev: (distance < distanceLimit ? ${(p_index-1)?c} : -1),
             <#else>
@@ -105,7 +108,10 @@
             next: -1,
             longitude: ${photoPointTemp.lng}, latitude: ${photoPointTemp.lat},
             <#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation>
-            className: 'orientation-${p.orientation}',
+            orientation: ${p.orientation},
+            </#if>
+            <#if p.rating??>
+            rating: ${p.rating},
             </#if>
             <#if p_index gt 0>
             marker: (distance < distanceLimit ? pointDataList[${(p_index-1)?c}].marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>}))

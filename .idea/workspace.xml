@@ -24,12 +24,10 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/image/step.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/image/step.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/image/step0.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/image/step0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/image/step1.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/image/step1.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/bmap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/bmap.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/step.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/step.ftl" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -185,6 +183,7 @@
       <workItem from="1617159570289" duration="17187000" />
       <workItem from="1617193474174" duration="6841000" />
       <workItem from="1617239186265" duration="9407000" />
+      <workItem from="1617260541389" duration="11285000" />
     </task>
     <servers />
   </component>
@@ -305,6 +304,18 @@
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java</url>
           <line>395</line>
           <option name="timeStamp" value="110" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
+          <line>1006</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="111" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
+          <line>1114</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="112" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

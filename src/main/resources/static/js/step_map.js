@@ -44,19 +44,38 @@ function loadMarkerData() {
         img.setAttribute('data-index', index)
         img.setAttribute('data-prev', data[index].prev)
         img.setAttribute('data-next', data[index].next)
-        img.setAttribute('src',data[index].src)
-        img.setAttribute('title',(data[index].shootTime ? data[index].shootTime + '\n': '')+data[index].address)
-    }
-    const clickImgOn = function(img,x, width) {
-        if (x>width/2){
-            let next = parseInt(img.getAttribute('data-next'))
-            if (next>=0) setImg(img,next)
-        } else if (x<width/2) {
-            let prev = parseInt(img.getAttribute('data-prev'))
-            if (prev>=0) setImg(img,prev)
-        }
+        img.setAttribute('src','/.thumb'+data[index].src)
+        img.setAttribute('data-src',data[index].src)
+        if (data[index].orientation) addClass(img,'orientation-'+data[index].orientation)
+        img.setAttribute('title',data[index].title)
     }
     const data = getPointData()
+    const clickImgOn = function(img,x, width) {
+        if (x>2*width/3){
+            let next = parseInt(img.getAttribute('data-next'))
+            if (next>=0) setImg(img,next)
+        } else if (x<width/3) {
+            let prev = parseInt(img.getAttribute('data-prev'))
+            if (prev>=0) setImg(img,prev)
+        } else {
+            let index = parseInt(img.getAttribute('data-index'))
+            let start = index, end = index
+            while (start>0 && data[start-1].next == start) start--
+            while (end<data.length-1 && data[end+1].prev == end) end++
+            addImageDialog(index - start, function(i) {
+                if (i == -1) return end - start + 1
+                else return {
+                    src: data[start + i].src,
+                    orientation: data[start + i].orientation,
+                    rating: data[start + i].rating,
+                    title: data[start + i].title,
+                    imgIndex: i
+                }
+            },{
+                loop: end > start
+            })
+        }
+    }
     for (let index=0; index<data.length;index++) {
         if (data[index].marker) {
             data[index].marker.addEventListener("click", function(e){
@@ -64,12 +83,17 @@ function loadMarkerData() {
                 let infoWindow = null
                 let div = document.createElement('div')
                 div.className = 'img-info-window-container'
+                div.style.cursor = 'pointer'
                 let img = document.createElement('img')
                 div.appendChild(img)
                 div.onclick = function(event) {
+                    event.preventDefault()
+                    event.stopPropagation()
                     clickImgOn(img,event.offsetX,div.clientWidth)
                 }
-                div.ontouchend = function(event) {
+                div.ontouchstart = function(event) {
+                    event.preventDefault()
+                    event.stopPropagation()
                     if (event.changedTouches.length > 0) {
                         let currentTarget = div
                         let left = 0

@@ -199,18 +199,20 @@
 
 
     /********* 初始化 图像变换 *************/
-    const initTransformImage = function (img, index, initialThumb) {
+    const initTransformImage = function (img, index, getDataObject) {
         let removedIndexList = []
         let loopDirection = 1
-        const totalImages = document.querySelectorAll('img[class*="img-index-"]').length
-        // if (totalImages<=1) window.sessionOptions.loopTimer = 0
+        const totalImages = typeof getDataObject === 'function' ? getDataObject(-1) : Math.max(document.querySelectorAll('*[class*="img-index-"]').length,(getDataObject?1:0))
         const srcByIndex = function (imgIndex) {
+            if (imgIndex < 0) return totalImages
+            else if (imgIndex >= totalImages) return {src: null, imgIndex:imgIndex}
+            else if (typeof getDataObject==='function') return getDataObject(imgIndex)
             while (removedIndexList.indexOf(imgIndex)>=0) {
                 imgIndex = imgIndex + loopDirection
             }
             if (imgIndex>=0 && imgIndex < totalImages) {
                 let thumb = document.querySelector('.img-index-' + imgIndex)
-                if (!thumb && totalImages==1) thumb = initialThumb
+                if (!thumb && totalImages==1) thumb = getDataObject
                 if (thumb) {
                     let title = thumb.getAttribute('title')
                     let src = thumb.getAttribute('data-src')
@@ -990,7 +992,19 @@
             transformObject.resize()
         }
     }
-    const addImageDialog = function(index, initialThumb) {
+
+
+    /**
+     * 打开图像浏览窗口
+     * @param index 初始显示图片的索引值
+     * @param getDataObject 图像资源信息的获取对象
+     *                      1 一个class包含 img-index-xxx 的dom对象，可能是缩略图，使用属性
+     *                        data-src/src, data-orientation, data-rating, title传递参数
+     *                      2 一个回调函数，入参 为 index , 出参为 { src, orientation, rating, title, imgIndex }，
+     *                        入参 index = -1时，返回循环图像总数
+     * @param buttonOptions 显示哪些按钮
+     */
+    window.addImageDialog = function(index, getDataObject, buttonOptions) {
         removeImageDialog()
         addModel()
 
@@ -999,8 +1013,6 @@
             bodyClass = bodyClass + ' transform_image_show'
         } else if (!bodyClass) bodyClass = 'transform_image_show'
         document.querySelector('body').className = bodyClass
-
-        const imageEditable = document.querySelector('body.image-editable')
 
         const body = document.querySelector('body')
         body.style.overflow = 'hidden'
@@ -1064,7 +1076,7 @@
             }
         })
 
-        if (imageEditable && window.sessionOptions.unlocked) createButton({
+        if (buttonOptions && buttonOptions.favorite) createButton({
             className:'favorite',
             title: '收藏',
             iconClass:'fa fa-heart-o',
@@ -1073,7 +1085,7 @@
             }
         })
 
-        if (imageEditable) createButton({
+        if (buttonOptions && buttonOptions.info) createButton({
             className:'close',
             title: '图像信息',
             iconClass:'fa fa-info-circle',
@@ -1083,7 +1095,7 @@
         })
 
         const bkMusic = document.querySelector('.background-music')
-        if (imageEditable && bkMusic) {
+        if (bkMusic && buttonOptions && buttonOptions.music) {
             createButton({
                 className:'music',
                 title: '切换背景音乐',
@@ -1096,7 +1108,7 @@
                 bkMusic.src = '/music?click='+new Date().getTime()
             }
         }
-        if (window.sessionOptions.loopTimer) {
+        if (window.sessionOptions.loopTimer && buttonOptions && buttonOptions.loop) {
             createButton({
                 className:'play',
                 title: '自动播放/暂停',
@@ -1108,7 +1120,7 @@
             })
         } else stopLoop()
 
-        if (fullScreenElement() !==0 ) {
+        if (fullScreenElement() !==0 && buttonOptions && buttonOptions.fullScreen ) {
             createButton({
                 className:'close',
                 title: '全屏/取消',
@@ -1118,7 +1130,7 @@
                 }
             })
         }
-        if (imageEditable && window.sessionOptions.unlocked) {
+        if (buttonOptions && buttonOptions.remove) {
             createButton({
                 className:'remove',
                 title: '删除图像',
@@ -1128,15 +1140,13 @@
                 }
             })
         }
-
-        createButton({
-            className:'close',
-            title: '下载图片',
-            iconClass:'fa fa-arrow-circle-down',
-            onclick:function (){
-                downloadImg(img)
-            }
-        })
+        if (buttonOptions && buttonOptions.download){
+            createButton({
+                className:'close',title:'下载图片',iconClass:'fa fa-arrow-circle-down',onclick:function (){
+                    downloadImg(img)
+                }
+            })
+        }
 
         if (!window.sessionOptions.mobile){
             floatButtons.onmouseenter=function (event){
@@ -1168,14 +1178,28 @@
             body.appendChild(window.debugElement)
         }
 
-        transformObject = new initTransformImage(img, index, initialThumb)
+        transformObject = new initTransformImage(img, index, getDataObject)
     }
+
+    const defaultButtonOptions = function() {
+        const imageEditable = document.querySelector('body.image-editable')
+        return {
+            favorite: imageEditable && window.sessionOptions.unlocked,
+            info: imageEditable,
+            music: imageEditable,
+            loop: window.sessionOptions.loopTimer,
+            fullScreen: true,
+            remove: imageEditable && window.sessionOptions.unlocked
+        }
+    }
+
     /*****************  入口函数  *********************
      *  selector : 一个缩略图 img 元素                *
      *      条件 ： src 以 .thumb/ 开头               *
      *             类 img-index-xx, xx为序号          *
      *************************************************/
     window.TransformImage =function(selector){
+        const buttonOptions = defaultButtonOptions()
         let imgIndex = 0
         document.querySelectorAll(selector).forEach(function (img){
             let pos=img.className.indexOf('img-index-')
@@ -1185,7 +1209,7 @@
             img.onclick=function (event){
                 event.stopPropagation()
                 window.onresize = resizeEvent
-                addImageDialog(index==NaN?0:index, img)
+                addImageDialog(index==NaN?0:index, img, buttonOptions)
             }
         });
         if (imgIndex>1 && window.sessionOptions.loopTimer===3456) {
@@ -1202,16 +1226,17 @@
         else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
     }
     window.AutoLoopPlayImage =function(starterIndex){
+        const buttonOptions = defaultButtonOptions()
         starterIndex = starterIndex ? starterIndex : 0
         let firstImg = document.querySelector('.img-index-'+starterIndex)
         if (firstImg) {
             window.onresize = resizeEvent
-            addImageDialog(starterIndex, firstImg)
+            addImageDialog(starterIndex, firstImg, buttonOptions)
         } else if (starterIndex) {
             firstImg = document.querySelector('.img-index-0')
             if (firstImg) {
                 window.onresize = resizeEvent
-                addImageDialog(0, firstImg)
+                addImageDialog(0, firstImg, buttonOptions)
             }
         }
     }

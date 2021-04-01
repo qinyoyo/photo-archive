@@ -303,7 +303,11 @@ window.onload=function(){
         d.onclick=function () {
             refresh(path)
         }
-    });
+    })
+    document.querySelector('.thumb-image').onclick = function() {
+        addImageDialog(0, this)
+    }
+
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {
@@ -322,5 +326,4 @@ window.onload=function(){
             toggleSaveState(true)
         }
     })
-    TransformImage('.thumb-image')
 }
