@@ -39,11 +39,13 @@ function getDistance(start,end) {
         return baiduMap.getDistance(p0,p1)
     } else return 0
 }
+let totalMarkers = 0
 function placeMarker(point,markerOptions) {
     if (baiduMap) {
         const pos = getPosition(point)
         const mk = new BMapGL.Marker(pos, markerOptions)
         baiduMap.addOverlay(mk)
+        totalMarkers ++
         return mk
     } else return null
 }
@@ -163,6 +165,7 @@ function initMap(divId, point, myCtrl, useCityControl) {
     baiduMap = new BMapGL.Map(divId)
     let pos = (point ?getPosition(point) : new BMapGL.Point(106.59462970758844, 29.573881471271264))
     baiduMap.enableScrollWheelZoom(true)
+    baiduMap.enableRotateGestures = false
     if (useCityControl){
         var cityControl=new BMapGL.CityListControl({
             anchor:BMAP_ANCHOR_BOTTOM_LEFT,offset:new BMapGL.Size(5,10)

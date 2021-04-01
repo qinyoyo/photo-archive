@@ -57,55 +57,63 @@
     function return2view() {
         window.location.href = '/?path=' + encodeURI('<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>')
     }
+    const distanceLimit = 10
     const pointDataList = []
     const firstPoint = <#if photos??><#assign photoPointTemp = photos[0].getPointMap(CLIENT_POINT_TYPE) />{lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}<#else>null</#if>
+    console.log(firstPoint)
     function getPointData() {
         <#if photos??>
         const stepIcon = makeIcon({
             url: "/static/image/step.png",
-            width: 32,
-            height: 32,
-            pointX: 15,
-            pointY: 28
+            width: 18,
+            height: 27,
+            pointX: 9,
+            pointY: 26
         })
         const stepIcon0 = makeIcon({
             url: "/static/image/step0.png",
-            width: 32,
-            height: 32,
-            pointX: 15,
-            pointY: 28
+            width: 18,
+            height: 27,
+            pointX: 9,
+            pointY: 26
         })
         const stepIcon1 = makeIcon({
             url: "/static/image/step1.png",
-            width: 32,
-            height: 32,
-            pointX: 15,
-            pointY: 28
+            width: 18,
+            height: 27,
+            pointX: 9,
+            pointY: 26
         })
+        let distance = 1000
         <#list photos as p>
         <#assign photoPointTemp = p.getPointMap(CLIENT_POINT_TYPE) />
+        <#if p_index gt 0>
+        distance = getDistance({lng: pointDataList[${(p_index-1)?c}].longitude,lat:pointDataList[${(p_index-1)?c}].latitude},{lng: ${photoPointTemp.lng},lat: ${photoPointTemp.lat}})
+        if (distance < distanceLimit) pointDataList[${(p_index-1)?c}].next = ${p_index?c}
+        </#if>
         pointDataList.push({
-            src: '/.thumb${fileUrl(p)}?click=${p.lastModified?c}',
-            address: '${p.formattedAddress(false)}',
-            prev: -1,
-            next: -1,
             <#if p.shootTime??>
             shootTime: '${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm')}',
             </#if>
-            longitude: ${photoPointTemp.lng},
-            latitude: ${photoPointTemp.lat},
+            src: '/.thumb${fileUrl(p)}?click=${p.lastModified?c}',
+            address: '${p.formattedAddress(false)}',
+            <#if p_index gt 0>
+            prev: (distance < distanceLimit ? ${(p_index-1)?c} : -1),
+            <#else>
+            prev: -1,
+            </#if>
+            next: -1,
+            longitude: ${photoPointTemp.lng}, latitude: ${photoPointTemp.lat},
             <#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation>
             className: 'orientation-${p.orientation}',
             </#if>
+            <#if p_index gt 0>
+            marker: (distance < distanceLimit ? pointDataList[${(p_index-1)?c}].marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>}))
+            <#else>
             marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>})
+            </#if>
         })
         </#list>
-        for (let i=1;i<pointDataList.length;i++) {
-            if (getDistance(pointDataList[i-1].marker.getPosition(),pointDataList[i].marker.getPosition())<10) {
-                pointDataList[i].prev = i-1
-                pointDataList[i-1].next = i
-            }
-        }
         </#if>
         return pointDataList
     }

@@ -133,7 +133,7 @@ window.onload=function(){
     showWaiting()
     document.querySelector('.map-wrapper').style.width = '100%'
     document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
-    initMap('mapContainer',firstPoint, stepControl()).disableDoubleClickZoom()
-    mapEventListener('dblclick',clickStepMap)
+    initMap('mapContainer',firstPoint, stepControl(), true)
+    mapEventListener('click',clickStepMap)
     mapEventListener('tilesloaded', mapLoaded)
 }

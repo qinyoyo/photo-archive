@@ -190,7 +190,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p ->
                 p.getMimeType()!=null && p.getMimeType().contains("image") &&
                         p.getLongitude()!=null && p.getLatitude()!=null &&
-                        (subFolder.equals(p.getSubFolder()) || p.getSubFolder().startsWith(subFolder+File.separator))
+                        (subFolder.isEmpty() || subFolder.equals(p.getSubFolder()) || p.getSubFolder().startsWith(subFolder+File.separator))
         ).collect(Collectors.toList());
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
         model.addAttribute("CLIENT_POINT_TYPE", pointType());
@@ -239,7 +239,8 @@ public class PVController implements ApplicationRunner , ErrorController {
             return "请先解锁!!!";
         }
         if (p1!=null && !Util.isEmpty(selectedTags)) {
-            if (PositionUtil.BD09.equals(type) || PositionUtil.GCJ02.equals(type) ) {
+            if (p1.getLatitude()!=null && p1.getLongitude()!=null &&
+                    (PositionUtil.BD09.equals(type) || PositionUtil.GCJ02.equals(type)) ) {
                 PositionUtil.LatLng latLng = PositionUtil.BD09.equals(type) ?
                         PositionUtil.bd09ToWgs84(p1.getLatitude(), p1.getLongitude()) :
                         PositionUtil.gcj02ToWgs84(p1.getLatitude(), p1.getLongitude());
