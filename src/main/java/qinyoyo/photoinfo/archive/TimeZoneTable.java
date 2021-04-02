@@ -1,6 +1,8 @@
 package qinyoyo.photoinfo.archive;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Qinyoyo on 2021/3/23.
@@ -256,6 +258,17 @@ public class TimeZoneTable {
         add(new String[]{"CF","Central African Republic","中非共和国","Africa/Bangui"});
         add(new String[]{"NR","Nauru","瑙鲁","Pacific/Nauru"});
     }};
+    public static String standCountryName(String country, boolean seekCountryCode) {
+        if (country==null) return null;
+        String c=country.toUpperCase();
+        if (c.equals("CN") || c.equals("CHINA") || c.equals("中国")) return seekCountryCode ? "CN" : "中国";
+        else if (country.equals("SCOTLAND") ||country.equals("NORTHERN IRELAND")) return seekCountryCode ? "GB" : "England";
+        for (int i=0;i<countryTimeZones.size();i++) {
+            String [] params = countryTimeZones.get(i);
+            if (c.equals(params[0]) || c.equals(params[1].toUpperCase()) || c.equals(params[2])) return params[seekCountryCode ? 0 : 1];
+        }
+        return null;
+    }
     public static TimeZone getTimeZone(String country, String state,String city,Double longitude ) {
         if (country==null || country.trim().isEmpty()) {
             if (longitude!=null) return getTimeZone(longitude);
@@ -374,5 +387,37 @@ public class TimeZoneTable {
             if (c.equals(params[0]) || c.equals(params[1].toUpperCase()) || c.equals(params[2])) return params[3];
         }
         return null;
+    }
+    public static boolean hasChinese(String value) {
+        if (value == null) return false;
+        String regex = "[\u4e00-\u9fa5]";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher match = pattern.matcher(value);
+        return match.find();
+    }
+    public static boolean isEmpty(Object o) {
+        return o==null || o.toString().trim().isEmpty();
+    }
+    public static String joinAll(String separator, String ... ss) {
+        if (ss==null || ss.length==0) return "";
+        String a = (ss[0]==null ? "" : ss[0]);
+        for (int i=1;i<ss.length;i++) {
+            if (isEmpty(ss[i])) continue;
+            else if (isEmpty(a)) a =  ss[i];
+            else a = a + separator + ss[i];
+        }
+        return a;
+    }
+    public static String formatAddress(String country, String province, String city,String location, String poi) {
+        boolean cc = hasChinese(country) || hasChinese(province) || hasChinese(city) || hasChinese(location);
+        if (cc) {
+            String address = joinAll("", country , province, city!=null && city.equals(province) ?"":city, location);
+            if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(",",address, poi);
+            else return address;
+        } else {
+            String address = joinAll(",",location, city!=null && city.equals(province) ?"":city, province, country);
+            if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(",",poi, address);
+            else return address;
+        }
     }
 }

@@ -58,21 +58,7 @@ function toggleSaveState(enable) {
 }
 function selectFile(dom,event) {
     const fileItems = document.querySelectorAll('.file-item')
-    if (event.ctrlKey) {
-        if (dom.className.indexOf('selected')>=0) {
-            removeClass(dom,'selected')
-            fileItems.forEach(function(i) {
-                if (i.className.indexOf('selected')>=0) {
-                    selectedDom = i
-                    return
-                }
-            })
-        }
-        else {
-            addClass(dom,'selected')
-            selectedDom = dom
-        }
-    } else if (event.shiftKey || (event.target && event.target.tagName == 'I')) {
+    if (event.shiftKey || (event.target && event.target.tagName == 'I')) {
         selectedDom = dom
         let start = -1, index = -1
         for (let i=0;i<fileItems.length;i++) {
@@ -90,6 +76,20 @@ function selectFile(dom,event) {
             for (let i=start+1;i<=index;i++) {
                 addClass(fileItems[i],'selected')
             }
+        }
+    } else if (event.ctrlKey || window.sessionOptions.mobile) {
+        if (dom.className.indexOf('selected')>=0) {
+            removeClass(dom,'selected')
+            fileItems.forEach(function(i) {
+                if (i.className.indexOf('selected')>=0) {
+                    selectedDom = i
+                    return
+                }
+            })
+        }
+        else {
+            addClass(dom,'selected')
+            selectedDom = dom
         }
     } else {
         selectedDom = dom

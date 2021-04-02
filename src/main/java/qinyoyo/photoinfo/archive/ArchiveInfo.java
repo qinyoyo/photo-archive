@@ -212,7 +212,7 @@ public class ArchiveInfo {
         }
         return removed;
     }
-    public void sortInfos() {
+    public synchronized void sortInfos() {
     	ArchiveUtils.defaultSort(infos);
     }
     public List<PhotoInfo> subFolderInfos(String subFolder) {
@@ -365,7 +365,7 @@ public class ArchiveInfo {
             return false;
         }
     }
-    public void saveInfos() {
+    public synchronized void saveInfos() {
     	if (infos==null) return;
         File bak = new File(path, ArchiveUtils.ARCHIVE_FILE+".bak");
         bak.delete();

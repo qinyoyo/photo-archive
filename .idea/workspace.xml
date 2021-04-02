@@ -24,11 +24,14 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/bmap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/bmap.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/TimeZoneTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/TimeZoneTable.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/step.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/step.ftl" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -63,7 +66,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main/java/qinyoyo/utils" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -77,6 +80,7 @@
       <recent name="qinyoyo.photoviewer" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\J2EE\photo-archive\src\main\java\qinyoyo\photoinfo" />
       <recent name="E:\J2EE\photo-archive\src\main\java\qinyoyo\utils" />
       <recent name="E:\J2EE\photo-archive\src\main\resources\static\image" />
     </key>
@@ -105,6 +109,10 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Node.js.map.js" />
+      <item itemvalue="Spring Boot.PhotoArchiveApplication" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Node.js.map.js" />
@@ -184,6 +192,8 @@
       <workItem from="1617193474174" duration="6841000" />
       <workItem from="1617239186265" duration="9407000" />
       <workItem from="1617260541389" duration="11285000" />
+      <workItem from="1617328581026" duration="7674000" />
+      <workItem from="1617342183256" duration="3955000" />
     </task>
     <servers />
   </component>
@@ -305,16 +315,32 @@
           <line>395</line>
           <option name="timeStamp" value="110" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
+          <line>353</line>
+          <option name="timeStamp" value="113" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
+          <line>354</line>
+          <option name="timeStamp" value="114" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
+          <line>525</line>
+          <properties>
+            <option name="lambda-ordinal" value="-1" />
+          </properties>
+          <option name="timeStamp" value="116" />
+        </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
           <line>1006</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="111" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
           <line>1114</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="112" />
         </line-breakpoint>
       </breakpoints>

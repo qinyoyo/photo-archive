@@ -4,6 +4,7 @@ import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.GpxUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
+import qinyoyo.photoinfo.archive.TimeZoneTable;
 import qinyoyo.photoinfo.exiftool.Key;
 
 import java.io.File;
@@ -181,7 +182,13 @@ public class BaiduGeo {
                                 failed++;
                                 continue;
                             }
-                            boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) || ArchiveUtils.hasChinese(city);
+                            if (countryCode==null || !countryCode.matches("[A-Z]{2}")) {
+                                countryCode = TimeZoneTable.standCountryName(country,true);
+                            } else {
+                                String ctr = TimeZoneTable.standCountryName(countryCode,false);
+                                if (!Util.isEmpty(ctr)) country = ctr;
+                            }
+                            boolean cc = TimeZoneTable.hasChinese(country) || TimeZoneTable.hasChinese(province) || TimeZoneTable.hasChinese(city);
                             p.setCountryCode(countryCode);
                             p.setCountry(trunc(country, Key.COUNTRY));
                             p.setProvince(trunc(province, Key.STATE));

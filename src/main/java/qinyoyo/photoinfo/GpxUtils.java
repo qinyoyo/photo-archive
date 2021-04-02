@@ -7,9 +7,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import qinyoyo.photoinfo.archive.TimeZoneTable;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.BaiduGeo;
 import qinyoyo.utils.DateUtil;
+import qinyoyo.utils.Util;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -181,6 +184,12 @@ public class GpxUtils {
                                                 if (desc.length > 2) city = desc[2];
                                                 if (desc.length > 3) location = desc[3];
                                                 if (desc.length > 4) countryCode = desc[4];
+                                                if (countryCode==null || !countryCode.matches("[A-Z]{2}")) {
+                                                    countryCode = TimeZoneTable.standCountryName(country,true);
+                                                } else {
+                                                    String ctr = TimeZoneTable.standCountryName(countryCode,false);
+                                                    if (!Util.isEmpty(ctr)) country = ctr;
+                                                }
                                             }
                                         }
                                         if (dt != null) {

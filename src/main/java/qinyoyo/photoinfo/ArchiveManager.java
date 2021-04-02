@@ -349,8 +349,11 @@ public class ArchiveManager {
                     break;
                 case "1":
                     path = chooseFolder("选择图像目录",fileFilter);
+                    String incSub = getInputString("是否搜索子目录", "yes");
                     if (path==null) break;
-                    done = writeGpxFile(photoInfoListIn(path,false,null),new File(path,".archive.gpx")) > 0;
+                    List<PhotoInfo> photoInfos = photoInfoListIn(path,Util.boolValue(incSub),null);
+                    formatCountry(photoInfos,path);
+                    done = writeGpxFile(photoInfos,new File(path,".archive.gpx")) > 0;
                     break;
                 case "2":
                     path = chooseFolder("选择图像目录",fileFilter);
@@ -447,14 +450,16 @@ public class ArchiveManager {
             } else System.out.println("格式错误，请重新输入");
         }
     }
-
     private static int writeGpxFile(List<PhotoInfo> list,File file) {
+        return writeGpxFile(list,file,null);
+    }
+    private static int writeGpxFile(List<PhotoInfo> list,File file, String title) {
         if (list!=null && list.size()>0) {
             list = list.stream().filter(p->p.getShootTime()!=null && p.getLatitude()!=null && p.getLongitude()!=null).collect(Collectors.toList());
             System.out.println("检索地址信息...");
             BaiduGeo.seekAddressInfo(list.stream().filter(p->p.getCountry() == null || p.getCountry().trim().isEmpty()).collect(Collectors.toList()),null);
             if (list!=null && list.size()>0) {
-                String title = getInputString("设置默认标题", "");
+                if (title==null) getInputString("设置默认标题", "");
                 int count = GpxUtils.writeGpxInfo(file,list,title);
                 if (count>0) System.out.println("写入 "+count + " 条GPS记录到 "+file.getAbsolutePath());
                 else System.out.println("写入地理信息数据失败");
@@ -494,6 +499,7 @@ public class ArchiveManager {
                     state = firstPoint.get(Key.getName(Key.STATE)),
                     city = firstPoint.get(Key.getName(Key.CITY)),
                     lon = firstPoint.get(Key.getName(Key.GPS_LONGITUDE));
+            if (Util.isEmpty(cty)) cty = firstPoint.get(Key.getName(Key.COUNTRY));
             TimeZone defaultZone = TimeZoneTable.getTimeZone(cty==null?null:(String)cty,state==null?null:(String)state,
                     city==null?null:(String)city,lon==null?null:(Double)lon);
             TimeZone zone = inputTimeZone("拍摄时区",defaultZone==null?"GMT+8:00":defaultZone.getID());
@@ -519,43 +525,26 @@ public class ArchiveManager {
     private static void addGpsDatetime(ArchiveInfo archiveInfo) {
         List<PhotoInfo> list=archiveInfo.getInfos().stream().filter(p->p.getShootTime()!=null &&
                 p.getMimeType()!=null && p.getMimeType().contains("image") &&
-                p.getGpsDatetime()==null && p.getLongitude()!=null).collect(Collectors.toList());
+                (Util.isEmpty(p.getGpsDatetime()) || Util.isEmpty(p.getCountryCode())) && p.getLongitude()!=null && p.getLatitude()!=null).collect(Collectors.toList());
         Map<String,Map<String,Object>> pathMap = new HashMap<>();
+        formatCountry(list,archiveInfo.getPath());
         list.forEach(p->{
-            //String ctr = p.getCountryCode();
-            //if (ctr==null || ctr.trim().isEmpty()) ctr=p.getCountry();
-            String ctr=p.getCountryCode(), dir=p.getSubFolder();
-            if (Util.isEmpty(ctr)) {
-                ctr="CN";
-                if (dir.contains("俄罗斯")) ctr = "RU";
-                else if (dir.contains("Hongkong")) ctr = "CN";
-                else if (dir.contains("巴厘岛")) ctr = "ID";
-                else if (dir.contains("French")) ctr = "FR";
-                else if (dir.contains("German")) ctr = "DE";
-                else if (dir.contains("HK")) ctr = "CN";
-                else if (dir.contains("Italy")) ctr = "IT";
-                else if (dir.contains("Swissland")) ctr = "CH";
-                else if (dir.contains("201207 Canada")) ctr = "CA";
-                else if (dir.contains("Greece")) ctr = "GR";
-                else if (dir.contains("柬埔寨")) ctr = "CM";
-                else if (dir.contains("南非")) ctr = "ZA";
-                else if (dir.contains("温哥华")) ctr = "CA";
-                else if (dir.contains("201707 美加")) ctr = "US";
-                else if (dir.contains("Canada")) ctr = "CA";
-                else if (dir.contains("Australia")) ctr = "AU";
+            Map<String,Object> map = new HashMap<>();
+            map.put(Key.getName(Key.COUNTRY_CODE),p.getCountryCode());
+            map.put(Key.getName(Key.COUNTRY),p.getCountry());
+            if (Util.isEmpty(p.getGpsDatetime())) {
+                String ctr = p.getCountryCode();
+                if (ctr==null) ctr = p.getCountry();
+                TimeZone zone = TimeZoneTable.getTimeZone(ctr,p.getProvince(),p.getCity(),p.getLongitude());
+                if (zone!=null) {
+                    String fmt = "yyyy:MM:dd HH:mm:ss";
+                    String s= DateUtil.date2String(p.getShootTime(),fmt);
+                    Date gpsDt = DateUtil.string2Date(s,fmt,zone);
+                    p.setGpsDatetime(DateUtil.date2String(gpsDt,fmt,TimeZone.getTimeZone("UTC"))+"Z");
+                    map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
+                }
             }
-
-            TimeZone zone = TimeZoneTable.getTimeZone(ctr,p.getProvince(),p.getCity(),p.getLongitude());
-            if (zone!=null) {
-                String fmt = "yyyy:MM:dd HH:mm:ss";
-                String s= DateUtil.date2String(p.getShootTime(),fmt);
-                Date gpsDt = DateUtil.string2Date(s,fmt,zone);
-                p.setGpsDatetime(DateUtil.date2String(gpsDt,fmt,TimeZone.getTimeZone("UTC"))+"Z");
-                Map<String,Object> map = new HashMap<>();
-                map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
-                if (Util.isEmpty(p.getCountryCode())) map.put(Key.getName(Key.COUNTRY_CODE),ctr);
-                pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
-            } else System.out.println(p.toString());
+            pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
         });
         if (!pathMap.isEmpty()) {
             Modification.setExifTags(pathMap,archiveInfo.getPath());
@@ -585,5 +574,53 @@ public class ArchiveManager {
             if (archived!=null) return archiveWithArchivedInfo(archived);
         }
         return false;
+    }
+    static public void getRawGpx() {
+        String root = "E:\\Photo\\RAW\\";
+        for (int i=2010;i<2022;i++) {
+            String path = root + i;
+            List<PhotoInfo> photoInfos = photoInfoListIn(path, true, null);
+            formatCountry(photoInfos,path);
+            File [] dirs = new File(path).listFiles(f->f.isDirectory());
+            for (File f: dirs) {
+                try {
+                    writeGpxFile(photoInfos.stream().filter(p->p.getSubFolder().startsWith(f.getName())).collect(Collectors.toList()),
+                            new File(f, ".archive.gpx"), "");
+                } catch (Exception e) {}
+            }
+        }
+    }
+    static String getCountryCodeByPathName(String dir) {
+        String ctr="CN";
+        if (dir.contains("俄罗斯")) ctr = "RU";
+        else if (dir.contains("Hongkong")) ctr = "CN";
+        else if (dir.contains("巴厘岛")) ctr = "ID";
+        else if (dir.contains("French")) ctr = "FR";
+        else if (dir.contains("German")) ctr = "DE";
+        else if (dir.contains("HK")) ctr = "CN";
+        else if (dir.contains("Italy")) ctr = "IT";
+        else if (dir.contains("Swissland")) ctr = "CH";
+        else if (dir.contains("201207 Canada")) ctr = "CA";
+        else if (dir.contains("Greece")) ctr = "GR";
+        else if (dir.contains("柬埔寨")) ctr = "CM";
+        else if (dir.contains("南非")) ctr = "ZA";
+        else if (dir.contains("温哥华")) ctr = "CA";
+        else if (dir.contains("201707 美加")) ctr = "US";
+        else if (dir.contains("Canada")) ctr = "CA";
+        else if (dir.contains("Australia")) ctr = "AU";
+        return ctr;
+    }
+    static void formatCountry(List<PhotoInfo> photoInfos,String root) {
+        photoInfos.forEach(p->{
+            if (Util.isEmpty(p.getCountryCode()) && Util.isEmpty(p.getCountry())) {
+                String code = getCountryCodeByPathName(p.fullPath(root));
+                p.setCountryCode(code);
+                p.setCountry(TimeZoneTable.standCountryName(code,false));
+            } else if (Util.isEmpty(p.getCountryCode())) {
+                p.setCountryCode(TimeZoneTable.standCountryName(p.getCountry(),true));
+            } else if (Util.isEmpty(p.getCountry())) {
+                p.setCountry(TimeZoneTable.standCountryName(p.getCountryCode(),false));
+            }
+        });
     }
 }

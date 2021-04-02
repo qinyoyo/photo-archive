@@ -152,17 +152,7 @@ public class PhotoInfo implements Serializable,Cloneable {
     public String formattedAddress(boolean useCountryName) {
         String poi = subjectCode;
         if (poi==null || poi.isEmpty()) poi=ArchiveUtils.poiFromPath(subFolder);
-        if (allNull(country,province,city,location)) return poi==null ? "" : poi;
-        boolean cc = ArchiveUtils.hasChinese(country) || ArchiveUtils.hasChinese(province) ||ArchiveUtils.hasChinese(city) ||ArchiveUtils.hasChinese(location);
-        if (cc) {
-            String address = ArchiveUtils.join(null,useCountryName ? country : "", province, ArchiveUtils.equals(province,city)?"":city, location);
-            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : address + "," + poi;
-            else return address;
-        } else {
-            String address = ArchiveUtils.join(",",location, city, ArchiveUtils.equals(province,city)?"":province, useCountryName ? country : "");
-            if (poi!=null && !poi.isEmpty() && !address.contains(poi)) return address.isEmpty() ? poi : poi + "," + address;
-            else return address;
-        }
+        return TimeZoneTable.formatAddress(useCountryName ? country : "",province,city,location,poi);
     }
     @Override
     public String toString() {

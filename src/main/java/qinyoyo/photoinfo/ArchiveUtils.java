@@ -177,14 +177,6 @@ public class ArchiveUtils {
         return false;
     }
 
-
-    public static boolean hasChinese(String value) {
-        if (value == null) return false;
-        String regex = "[\u4e00-\u9fa5]";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher match = pattern.matcher(value);
-        return match.find();
-    }
     public static boolean startWithLetter(String value) {
         if (value == null || value.isEmpty()) return false;
         char ch = value.charAt(0);
