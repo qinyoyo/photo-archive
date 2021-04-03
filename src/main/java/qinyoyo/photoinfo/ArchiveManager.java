@@ -515,14 +515,17 @@ public class ArchiveManager {
     }
     private static void writeGpxInfo(List<PhotoInfo> list,String path,TreeMap<Long, Map<String,Object>> gpxPoints) {
         if (list!=null && list.size()>0) {
-            Map<String, Object> firstPoint = gpxPoints.get(gpxPoints.keySet().iterator().next());
-            Object cty = firstPoint.get(Key.getName(Key.COUNTRY_CODE)),
-                    state = firstPoint.get(Key.getName(Key.STATE)),
-                    city = firstPoint.get(Key.getName(Key.CITY)),
-                    lon = firstPoint.get(Key.getName(Key.GPS_LONGITUDE));
-            if (Util.isEmpty(cty)) cty = firstPoint.get(Key.getName(Key.COUNTRY));
-            TimeZone defaultZone = TimeZoneTable.getTimeZone(cty==null?null:(String)cty,state==null?null:(String)state,
-                    city==null?null:(String)city,lon==null?null:(Double)lon);
+            TimeZone defaultZone = list.get(0).getTimeZone();
+            if (defaultZone==null) {
+                Map<String, Object> firstPoint = gpxPoints.get(gpxPoints.keySet().iterator().next());
+                Object cty = firstPoint.get(Key.getName(Key.COUNTRY_CODE)),
+                        state = firstPoint.get(Key.getName(Key.STATE)),
+                        city = firstPoint.get(Key.getName(Key.CITY)),
+                        lon = firstPoint.get(Key.getName(Key.GPS_LONGITUDE));
+                if (Util.isEmpty(cty)) cty = firstPoint.get(Key.getName(Key.COUNTRY));
+                defaultZone = TimeZoneTable.getTimeZone(cty == null ? null : (String) cty, state == null ? null : (String) state,
+                        city == null ? null : (String) city, lon == null ? null : (Double) lon);
+            }
             TimeZone zone = inputTimeZone("拍摄时区",defaultZone==null?"GMT+8:00":defaultZone.getID());
             int timeAdjust = TimeZone.getDefault().getRawOffset() - zone.getRawOffset();
             if (zone.hasSameRules(TimeZone.getDefault())) zone=null;
@@ -543,7 +546,11 @@ public class ArchiveManager {
                     if (!Util.isEmpty(pi.getGpsDatetime())) map.remove(Key.getName(Key.GPS_DATETIME));
                     if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.getName(Key.HEADLINE));
                     if (!Util.isEmpty(pi.getArtist())) map.remove(Key.getName(Key.ARTIST));
-                    if (!map.isEmpty()) modifications.put(pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),map);
+                    if (!map.isEmpty()) {
+                        map.put(Key.getName(Key.GPS_DATETIME),DateUtil.date2String(new Date(dt),"yyyy:MM:dd HH:mm:ss",TimeZone.getTimeZone("UTC"))+"Z");
+                        modifications.put(pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),map);
+                        pi.setPropertiesBy(map);
+                    }
                 }
             }
             if (modifications.size()>0) {
