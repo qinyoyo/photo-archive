@@ -316,7 +316,7 @@ public class ArchiveManager {
                             p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null &&
                                     (p.getLongitude()==null || p.getLatitude()==null))
                             .collect(Collectors.toList());
-                    writeGpxInfo(photoInfos,path,gpxPoints);
+                    writeGpxInfo(photoInfos,archived.getPath(),gpxPoints);
                     afterChanged(archived);
                     done = true;
                     break;
@@ -544,7 +544,7 @@ public class ArchiveManager {
                     if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.getName(Key.HEADLINE));
                     if (!Util.isEmpty(pi.getArtist())) map.remove(Key.getName(Key.ARTIST));
                     if (!map.isEmpty()) modifications.put(pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),map);
-                } else break;
+                }
             }
             if (modifications.size()>0) {
                 Modification.setExifTags(modifications,path);
