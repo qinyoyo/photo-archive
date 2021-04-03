@@ -383,7 +383,7 @@ public class ArchiveUtils {
         System.out.println("同步RAW文件数量: "+modified+"; 忽略相同文件数: "+same+"; 匹配失败文件数: "+(targetList.size()-modified-same));
     }
     public static void syncThumbOrientation(ArchiveInfo archiveInfo, String subFolder) {
-        List<PhotoInfo> infos = archiveInfo.subFolderInfos(subFolder);
+        List<PhotoInfo> infos = archiveInfo.subFolderInfos(subFolder,true);
         String root = archiveInfo.getPath();
         List<Modification> modificationList = new ArrayList<>();
         for (PhotoInfo pi : infos) {

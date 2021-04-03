@@ -76,7 +76,7 @@ public class EditorController implements ApplicationRunner {
         try {
 
             if (folder.endsWith(".web")) folder = new File(folder).getParent();
-            Optional<PhotoInfo> photoInfo = pvController.getArchiveInfo().subFolderInfos(folder).stream().filter(pi ->
+            Optional<PhotoInfo> photoInfo = pvController.getArchiveInfo().subFolderInfos(folder,true).stream().filter(pi ->
                     pi.getMimeType() != null && pi.getMimeType().contains("image") && pi.getShootTime() != null).findFirst();
             Map<String, Object> pa = pvController.getPathAttributesByDate(DateUtil.date2String(photoInfo.isPresent() ? photoInfo.get().getShootTime() : new Date(),"yyyy-MM-dd"), options.isFavoriteFilter());
 

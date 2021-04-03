@@ -215,12 +215,13 @@ public class ArchiveInfo {
     public synchronized void sortInfos() {
     	ArchiveUtils.defaultSort(infos);
     }
-    public List<PhotoInfo> subFolderInfos(String subFolder) {
-        if (subFolder==null || subFolder.isEmpty()) return infos;
+    public List<PhotoInfo> subFolderInfos(String subFolder,boolean incSubFolder) {
         final String standardFubFolder = ArchiveUtils.formatterSubFolder(subFolder, path);
+        if (standardFubFolder.isEmpty() && incSubFolder) return infos;
         return infos.stream().filter(p->{
             String sub = p.getSubFolder();
-            return standardFubFolder.equals(sub) || sub.startsWith(standardFubFolder+File.separator);
+            return standardFubFolder.equals(sub) ||
+                   (incSubFolder && sub.startsWith(standardFubFolder+File.separator));
         }).collect(Collectors.toList());
     }
     public void createThumbFiles(PhotoInfo p) {
@@ -247,7 +248,7 @@ public class ArchiveInfo {
         } catch (IOException e){ Util.printStackTrace(e);}
     }
     public void createThumbFiles(String subFolder) {
-        List<PhotoInfo> list = subFolderInfos(subFolder);
+        List<PhotoInfo> list = subFolderInfos(subFolder,true);
         if (list!=null && list.size()>0) {
             System.out.println("重建缩略图数量 :"+list.size() + " ...");
             for (PhotoInfo p : list) {
