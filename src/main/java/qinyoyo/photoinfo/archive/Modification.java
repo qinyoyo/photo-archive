@@ -386,13 +386,10 @@ public class Modification {
             File img = new File(rootPath, path);
             if (img.exists() && img.isFile()) {
                 List<String> removeTags = new ArrayList<>();
-                Set<String> tags = params.keySet();
-                for (String tag : tags) {
-                    if (params.get(tag)==null) {
-                        removeTags.add(tag);
-                        params.remove(tag);
-                    }
+                for (String tag : params.keySet()) {
+                    if (params.get(tag)==null) removeTags.add(tag);
                 }
+                for (String tag: removeTags) params.remove(tag);
                 if (!removeTags.isEmpty()) removed += removeExifTags(img,removeTags);
                 if (params.isEmpty()) continue;
                 String xml = xmlString(params);

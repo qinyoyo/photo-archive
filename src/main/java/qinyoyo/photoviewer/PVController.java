@@ -298,6 +298,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                     }
                 }
             }
+            modifications.forEach(m->Modification.save(m,rootPath));
             if (files.length==1) {
                 int count = 0;
                 if (!removeTags.isEmpty()) {

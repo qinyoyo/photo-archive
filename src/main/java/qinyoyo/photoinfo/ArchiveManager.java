@@ -250,10 +250,11 @@ public class ArchiveManager {
                     }
                     break;
                 case "6":
-                    path = inputSubFolder("选择需要重新命名的目录(不含子目录)",rootPath);
+                    path = inputSubFolder("选择需要重新命名的目录",rootPath);
                     if (path==null) break;
+                    String incSub = getInputString("是否搜索子目录", "yes");
                     final String temPath = path;
-                    if (rename(archived.getInfos().stream().filter(p->p.getSubFolder().equals(temPath)).collect(Collectors.toList()), archived.getPath())) {
+                    if (rename(archived.subFolderInfos(path,Util.boolValue(incSub)), archived.getPath())) {
                         done = true;
                         afterChanged(archived);
                     }
@@ -304,7 +305,7 @@ public class ArchiveManager {
                 case "b":
                     path = inputSubFolder("选择需要归档的目录",rootPath);
                     if (path==null) break;
-                    String incSub = getInputString("是否搜索子目录", "yes");
+                    incSub = getInputString("是否搜索子目录", "yes");
                     done = writeGpxFile(archived,path, Util.boolValue(incSub))>0;
                     break;
                 case "c":
@@ -343,7 +344,7 @@ public class ArchiveManager {
         boolean shutdown = false;
         String menuString =
                 "\n——————————————————————————————\n" +
-                "未归档图像文件处理(不包含子目录下图像)\n" +
+                "未归档图像文件处理\n" +
                 "1 根据图像文件获得gpx地理信息\n" +
                 "2 校正图像拍摄时间\n" +
                 "3 根据gpx文件写入地理信息\n" +
@@ -373,7 +374,8 @@ public class ArchiveManager {
                 case "2":
                     path = chooseFolder("选择图像目录",fileFilter);
                     if (path==null) break;
-                    changeDateTime(path);
+                    incSub = getInputString("是否搜索子目录", "yes");
+                    changeDateTime(path, Util.boolValue(incSub));
                     done = true;
                     break;
                 case "3":
@@ -391,7 +393,8 @@ public class ArchiveManager {
                 case "4":
                     path = chooseFolder("选择图像目录",fileFilter);
                     if (path==null) break;
-                    done = rename(photoInfoListIn(path,false,null),path);
+                    incSub = getInputString("是否搜索子目录", "yes");
+                    done = rename(photoInfoListIn(path,Util.boolValue(incSub),null),path);
                     break;
                 case "5":
                     path = chooseFolder("选择需要删除子空白目录的主目录",null);
@@ -452,7 +455,7 @@ public class ArchiveManager {
         }
     }
 
-    private static void changeDateTime(String path) {
+    private static void changeDateTime(String path, boolean incSub) {
         while(true) {
             String zs = getInputString("时间调整值[+/-]HH[:mm[:ss]]", "0");
             if (zs.equals("0")) return;
@@ -462,7 +465,9 @@ public class ArchiveManager {
                 String jj = (m.group(1) != null && m.group(1).equals("-") ? "-" : "+");
                 try {
                     System.out.println("调整拍摄时间...");
-                    Map<String, List<String>> result = ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-AllDates" + jj + "=" + m.group(2));
+                    Map<String, List<String>> result = incSub ?
+                            ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-r", "-AllDates" + jj + "=" + m.group(2)) :
+                            ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-AllDates" + jj + "=" + m.group(2));
                     for (String k : result.keySet()) {
                         for (String s : result.get(k)) {
                             System.out.println(s);
