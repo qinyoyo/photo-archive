@@ -99,7 +99,7 @@
             shootTime: '${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}',
             </#if>
             src: '${fileUrl(p)}?click=${p.lastModified?c}',
-            title: '<#if p.shootTime??>${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}\n</#if>${p.formattedAddress(false)}',
+            title: '<#if p.shootTime??>${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}\n</#if>${p.formattedAddress(false)?replace('"','\\"')?replace("'","\\'")}',
             <#if p_index gt 0>
             prev: (distance < distanceLimit ? ${(p_index-1)?c} : -1),
             <#else>

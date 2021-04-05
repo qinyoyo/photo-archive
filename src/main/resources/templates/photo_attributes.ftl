@@ -65,22 +65,22 @@
         data-createdate="${statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss')}"
     </#if>
     <#if p.headline??>
-        data-headline="${p.headline}"
+        data-headline="${p.headline?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.subTitle??>
-        data-caption-abstract="${p.subTitle}"
+        data-caption-abstract="${p.subTitle?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.artist??>
-        data-artist="${p.artist}"
+        data-artist="${p.artist?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.model??>
-        data-model="${p.model}"
+        data-model="${p.model?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.lens??>
-        data-Lensid="${p.lens}"
+        data-Lensid="${p.lens?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.subjectCode??>
-        data-subjectCode="${p.subjectCode}"
+        data-subjectCode="${p.subjectCode?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.country??>
         data-country-primarylocationname="${p.country}"
@@ -89,13 +89,13 @@
         data-country-code="${p.countryCode}"
     </#if>
     <#if p.province??>
-        data-province-state="${p.province}"
+        data-province-state="${p.province?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.city??>
-        data-city="${p.city}"
+        data-city="${p.city?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.location??>
-        data-sub-location="${p.location}"
+        data-sub-location="${p.location?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if CLIENT_POINT_TYPE??>
         <#if p.longitude?? && p.latitude??>
@@ -117,5 +117,5 @@
     <#if p.gpsDatetime??>
         data-gpsdatetime="${p.gpsDatetime}"
     </#if>
-    title="${photoTitle(p)}"
+    title="${photoTitle(p)?replace('"','&#34;')?replace("'","&#39;")}"
 </#macro>
