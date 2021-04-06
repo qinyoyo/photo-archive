@@ -314,9 +314,9 @@ public class ArchiveManager {
                     if (subPath == null) break;
                     boolean incSubF = Util.boolValue(getInputString("是否包含子目录", "yes"));
                     List<PhotoInfo> photoInfos = archived.subFolderInfos(subPath,incSubF).stream().filter(p->
-                            p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null &&
-                                    (p.getLongitude()==null || p.getLatitude()==null))
-                            .collect(Collectors.toList());
+                            p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null
+                            && (p.getLongitude()==null || p.getLatitude()==null)
+                    ).collect(Collectors.toList());
                     writeGpxInfo(photoInfos,archived.getPath(),gpxPoints);
                     afterChanged(archived);
                     done = true;
@@ -384,9 +384,9 @@ public class ArchiveManager {
                     if (path == null) break;
                     incSub = getInputString("是否搜索子目录(确保所有照片拍摄时区相同)", "yes");
                     List<PhotoInfo> list = photoInfoListIn(path,Util.boolValue(incSub),null).stream().filter(p->
-                            p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null &&
-                                    (p.getLongitude()==null || p.getLatitude()==null))
-                            .collect(Collectors.toList());
+                            p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null
+                                  &&  (p.getLongitude()==null || p.getLatitude()==null)
+                           ).collect(Collectors.toList());
                     writeGpxInfo(list,path,gpxPoints);
                     done = true;
                     break;
@@ -548,6 +548,7 @@ public class ArchiveManager {
                     if (!Util.isEmpty(pi.getLocation())) map.remove(Key.getName(Key.LOCATION));
                     if (!Util.isEmpty(pi.getLongitude())) map.remove(Key.getName(Key.GPS_LONGITUDE));
                     if (!Util.isEmpty(pi.getLatitude())) map.remove(Key.getName(Key.GPS_LATITUDE));
+                    if (!Util.isEmpty(pi.getAltitude())) map.remove(Key.getName(Key.GPS_ALTITUDE));
                     if (!Util.isEmpty(pi.getGpsDatetime())) map.remove(Key.getName(Key.GPS_DATETIME));
                     if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.getName(Key.HEADLINE));
                     if (!Util.isEmpty(pi.getArtist())) map.remove(Key.getName(Key.ARTIST));

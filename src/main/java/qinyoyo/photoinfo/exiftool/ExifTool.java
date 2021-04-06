@@ -163,16 +163,17 @@ public class ExifTool {
         }
         return 0;
     }
-    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
+    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal, boolean notUsePrintConv) {
         try {
             if (attrs == null || attrs.size() == 0) return false;
-            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0)];
+            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0) + (notUsePrintConv ? 1:0)];
             int i = 0;
             for (Key key : attrs.keySet()) {
                 Object v = attrs.get(key);
                 argsList[i++] = "-" + Key.getName(key) + "=" + (v == null ? "" : v.toString());
             }
-            if (overwriteOriginal) argsList[attrs.size()] = "-overwrite_original";
+            if (overwriteOriginal) argsList[i++] = "-overwrite_original";
+            if (notUsePrintConv) argsList[i] = "-n";
             Map<String, List<String>> result = execute(dir, argsList);
             return updatesFiles(result)==1;
         } catch (Exception e){ Util.printStackTrace(e);}
@@ -194,14 +195,14 @@ public class ExifTool {
             Map<String, Object> oneResult = new HashMap<>();
             for (int i=0;i< keys.length; i++) {
                 String value = lineSeparated.get(i+(dir.isDirectory()?1:0)).trim();
-                if (!value.isEmpty() && !value.equals("-")) oneResult.put(Key.getName(keys[i]),Key.parse(keys[i], value));
+                if (!value.isEmpty() && !value.equals("-")) oneResult.put(Key.getName(keys[i]),value);
             }
             queryResult.put(dir.isDirectory() ? lineSeparated.get(0) : dir.getName(),oneResult);
         }
         String error=sb.toString();
         if (error!=null && !error.isEmpty()) {
             Map<String, Object> emap = new HashMap<>();
-        	emap.put(Key.getName(Key.DESCRIPTION), Key.parse(Key.DESCRIPTION,error));
+        	emap.put(Key.getName(Key.DESCRIPTION), error);
         	queryResult.put(ERROR, emap);
         }
         return queryResult;

@@ -218,26 +218,34 @@ public class Modification {
                             .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">\n");
                 } else if (key.equals(Key.getName((Key.GPS_LONGITUDE)))) {
                     double longitude = Double.parseDouble(value.toString());
-                    String SN = (longitude < 0 ? "S" : "N");
+                    String EW = (longitude < 0 ? "W" : "E");
+                    sb.append("\t<").append(Key.getName(Key.GPS_LONGITUDE_REF)).append(">")
+                            .append(longitude < 0 ? "West" : "East")
+                            .append("</").append(Key.getName(Key.GPS_LONGITUDE_REF)).append(">\n");
                     double lon = Math.abs(longitude);
-                    int du = (int)lon;
+/*                    int du = (int)lon;
                     int fen = (int)((lon - du) * 60.0);
                     double m = ((lon - du)*60.0 - fen)*60.0;
-                    value = String.format("%d,%d,%.6f%s",du, fen, m, SN);
+                    value = String.format("%d,%d,%.6f%s",du, fen, m, EW);*/
+                    value = String.format("%.7f",longitude);
                 } else if (key.equals(Key.getName((Key.GPS_LATITUDE)))) {
                     double latitude = Double.parseDouble(value.toString());
-                    String EW = (latitude < 0 ? "W" : "E");
+                    sb.append("\t<").append(Key.getName(Key.GPS_LATITUDE_REF)).append(">")
+                            .append(latitude < 0 ? "South" : "North")
+                            .append("</").append(Key.getName(Key.GPS_LATITUDE_REF)).append(">\n");
+                    String SN = (latitude < 0 ? "S" : "N");
                     double lat = Math.abs(latitude);
-                    int du = (int)lat;
+/*                    int du = (int)lat;
                     int fen = (int)((lat - du) * 60.0);
                     double m = ((lat - du)*60.0 - fen)*60.0;
-                    value = String.format("%d,%d,%.6f%s",du, fen, m, EW);
+                    value = String.format("%d,%d,%.6f%s",du, fen, m, SN);*/
+                    value = String.format("%.7f",latitude);
                 } else if (key.equals(Key.getName((Key.GPS_ALTITUDE)))) {
                     double altitude = Double.parseDouble(value.toString());
                     sb.append("\t<").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">")
-                            .append(altitude>0.0 ? 1 : 0)
+                            .append(altitude>0.0 ? "Above Sea Level" : "Below Sea Level")
                             .append("</").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">\n");
-                    value = String.format("%.7f",Math.abs(altitude));
+                    value = String.format("%.7f",altitude);
                 } else if (key.equals(Key.getName((Key.ARTIST)))) {
                     sb.append("<IPTC:By-line>")
                             .append(value.toString())

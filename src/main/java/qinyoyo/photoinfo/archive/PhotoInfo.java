@@ -399,20 +399,30 @@ public class PhotoInfo implements Serializable,Cloneable {
                 }
                 else if (k.equals(Key.getName(Key.GPS_LONGITUDE))) {
                     longitude=Modification.fromDFM(s);
+                    Object ref = attrs.get(Key.getName(Key.GPS_LONGITUDE_REF));
+                    if (ref!=null) {
+                        boolean west = ref.toString().toLowerCase().startsWith("w");
+                        if ((west && longitude > 0) || (!west && longitude < 0)) longitude = -longitude;
+                    }
                 }
                 else if (k.equals(Key.getName(Key.GPS_LATITUDE))) {
                     latitude=Modification.fromDFM(s);
+                    Object ref = attrs.get(Key.getName(Key.GPS_LATITUDE_REF));
+                    if (ref!=null) {
+                        boolean south = ref.toString().toLowerCase().startsWith("s");
+                        if ((south && latitude > 0) || (!south && latitude < 0)) latitude = -latitude;
+                    }
                 }
                 else if (k.equals(Key.getName(Key.GPS_ALTITUDE))) {
-                    if (s==null) latitude=null;
+                    if (s==null) altitude=null;
                     else {
                         String[] vv = s.split(" ");
                         altitude = Double.parseDouble(vv[0]);
-                        if (v.toString().toLowerCase().contains("below")) altitude = -altitude;
-                        else {
-                            Object ref = attrs.get(Key.getName(Key.GPS_ALTITUDE_REF));
-                            if (ref!=null && ref.toString().equals("0")) altitude = -altitude;
-                        }
+                        Object ref = attrs.get(Key.getName(Key.GPS_ALTITUDE_REF));
+                        if (ref!=null) {
+                            boolean below = ref.toString().toLowerCase().equals("1") || ref.toString().toLowerCase().contains("below");
+                            if (below) altitude = -altitude;
+                        } else if (v.toString().toLowerCase().contains("below")) altitude = -altitude;
                     }
                 }
                 if (k.equals(Key.getName(Key.GPS_DATETIME))) {

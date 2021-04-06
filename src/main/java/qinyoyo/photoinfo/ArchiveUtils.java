@@ -23,9 +23,9 @@ public class ArchiveUtils {
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,Key.SUB_SEC_TIME_CREATE,
             Key.MODEL, Key.LENS_ID, Key.ORIENTATION, Key.IMAGE_WIDTH, Key.IMAGE_HEIGHT,
             Key.DOCUMENT_ID, Key.IPTCDigest,
-            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME,
+            Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_LONGITUDE_REF, Key.GPS_LATITUDE_REF, Key.GPS_ALTITUDE_REF, Key.GPS_DATETIME,
             Key.MIME_TYPE, Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
-            Key.COUNTRY,Key.COUNTRY_CODE,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE};
+            Key.COUNTRY,Key.COUNTRY_CODE,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE };
     public static final Key[] MODIFIABLE_KEYS = new Key[]{
             Key.SUBJECT_CODE, Key.ORIENTATION,
             Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,
@@ -601,6 +601,8 @@ public class ArchiveUtils {
     }
     public static List<PhotoInfo> seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder, List<String> exifToolArgs) {
         List<PhotoInfo> infoList = new ArrayList<>();
+        if (exifToolArgs==null) exifToolArgs=new ArrayList<>();
+        if (!exifToolArgs.contains("-n")) exifToolArgs.add("-n");
         if (!dir.isDirectory() || !dir.exists()) return infoList;
         File [] files = dir.listFiles(new FileFilter() {
             @Override

@@ -82,7 +82,11 @@ public enum Orientation {
     }
     public static int value(String name) {
         if (name==null) return NONE.value;
-        else if (name.equals(M_H.name)) return M_H.value;
+        try {
+            int i = Integer.parseInt(name);
+            if (i>=NONE.value && i<=R270.value) return i;
+        } catch (Exception e){}
+        if (name.equals(M_H.name)) return M_H.value;
         else if (name.equals(R180.name)) return R180.value;
         else if (name.equals(M_V.name)) return M_V.value;
         else if (name.equals(M_H_R270.name)) return M_H_R270.value;
@@ -90,13 +94,7 @@ public enum Orientation {
         else if (name.equals(M_H_R90.name)) return M_H_R90.value;
         else if (name.equals(R270.name)) return R270.value;
         else if (name.equals(NONE.name)) return NONE.value;
-        else {
-            try {
-                int i = Integer.parseInt(name);
-                if (i>=NONE.value && i<=R270.value) return i;
-            } catch (Exception e){}
-        }
-        return NONE.value;
+        else return NONE.value;
     }
     public static int add(int ori0, int ori1) {
         if (ori0 < M_H.value || ori0 > R270.value) return ori1;
@@ -125,13 +123,13 @@ public enum Orientation {
     }
     public static boolean setOrientationAndRating(File imgFile, Integer orientation, Integer rating) {
         Map<Key, Object> attrs = new HashMap<>();
-        if (orientation!=null) attrs.put(Key.ORIENTATION, Orientation.name(orientation));
+        if (orientation!=null) attrs.put(Key.ORIENTATION, orientation);
         if (rating!=null) attrs.put(Key.RATING, rating);
-        return ExifTool.getInstance().modifyAttributes(imgFile,attrs, true);
+        return ExifTool.getInstance().modifyAttributes(imgFile,attrs, true, true);
     }
     public static Integer getOrientation(File imgFile) {
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().execute(imgFile, "-T", "-orientation");
+            Map<String, List<String>> result = ExifTool.getInstance().execute(imgFile, "-T", "-n","-orientation");
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList==null || msgList.size()==0) return null;
             return value(msgList.get(0));
