@@ -174,7 +174,7 @@ public class ArchiveManager {
                         "a 执行 .modification.dat.sync\n" +
                         "b 生成 gpx 归档文件\n" +
                         "c 根据 gpx 写入地理数据\n" +
-                        "d 生成gpsDatetime\n" +
+                        "d 删除gpsDatetime\n" +
                         "0 下一个操作之后关机\n" +
                         "s 启动浏览服务\n" +
                         "q 退出\n请选择一个操作";
@@ -322,7 +322,7 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "d":
-                    addGpsDatetime(archived);
+                    removeGpsDatetime(archived);
                     done = true;
                     break;
                 default:
@@ -567,33 +567,28 @@ public class ArchiveManager {
         }
         System.out.println("没有需要修改的图像文件");
     }
-    private static void addGpsDatetime(ArchiveInfo archiveInfo) {
-        List<PhotoInfo> list=archiveInfo.getInfos().stream().filter(p->p.getShootTime()!=null &&
-                p.getMimeType()!=null && p.getMimeType().contains("image") &&
-                (Util.isEmpty(p.getGpsDatetime()) || Util.isEmpty(p.getCountryCode())) && p.getLongitude()!=null && p.getLatitude()!=null).collect(Collectors.toList());
+    private static void removeGpsDatetime(ArchiveInfo archiveInfo) {
+        List<PhotoInfo> list=archiveInfo.getInfos().stream().filter(p->
+                p.getMimeType()!=null && p.getMimeType().contains("image")
+                && p.getLongitude()!=null && p.getLatitude()!=null).collect(Collectors.toList());
         Map<String,Map<String,Object>> pathMap = new HashMap<>();
         formatCountry(list,archiveInfo.getPath());
         list.forEach(p->{
             Map<String,Object> map = new HashMap<>();
-            map.put(Key.getName(Key.COUNTRY_CODE),p.getCountryCode());
-            map.put(Key.getName(Key.COUNTRY),p.getCountry());
-            if (Util.isEmpty(p.getGpsDatetime())) {
-                String ctr = p.getCountryCode();
-                if (ctr==null) ctr = p.getCountry();
-                TimeZone zone = TimeZoneTable.getTimeZone(ctr,p.getProvince(),p.getCity(),p.getLongitude());
-                if (zone!=null) {
-                    String fmt = "yyyy:MM:dd HH:mm:ss";
-                    String s= DateUtil.date2String(p.getShootTime(),fmt);
-                    Date gpsDt = DateUtil.string2Date(s,fmt,zone);
-                    p.setGpsDatetime(DateUtil.date2String(gpsDt,fmt,TimeZone.getTimeZone("UTC"))+"Z");
-                    map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
-                }
+            p.setGpsDatetime(null);
+            map.put(Key.getName(Key.GPS_DATETIME),null);
+            if (p.getCountryCode()!=null) {
+                if ((p.getCountryCode().equals("US") || p.getCountryCode().equals("CA")) && p.getLongitude()>0) p.setLongitude(-p.getLongitude());
+                if (p.getCountryCode().equals("AU") && p.getLatitude()>0) p.setLatitude(-p.getLatitude());
             }
+            map.put(Key.getName(Key.GPS_LATITUDE),p.getLatitude());
+            map.put(Key.getName(Key.GPS_LONGITUDE),p.getLongitude());
+            map.put(Key.getName(Key.GPS_ALTITUDE),p.getAltitude());
             pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
         });
+        archiveInfo.saveInfos();
         if (!pathMap.isEmpty()) {
             Modification.setExifTags(pathMap,archiveInfo.getPath());
-            archiveInfo.saveInfos();
         }
     }
     public static boolean archive() {
