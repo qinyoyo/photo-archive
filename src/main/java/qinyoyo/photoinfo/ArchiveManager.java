@@ -575,18 +575,12 @@ public class ArchiveManager {
         formatCountry(list,archiveInfo.getPath());
         list.forEach(p->{
             Map<String,Object> map = new HashMap<>();
-            p.setGpsDatetime(null);
-            map.put(Key.getName(Key.GPS_DATETIME),null);
-            if (p.getCountryCode()!=null) {
-                if ((p.getCountryCode().equals("US") || p.getCountryCode().equals("CA")) && p.getLongitude()>0) p.setLongitude(-p.getLongitude());
-                if (p.getCountryCode().equals("AU") && p.getLatitude()>0) p.setLatitude(-p.getLatitude());
-            }
+            map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
             map.put(Key.getName(Key.GPS_LATITUDE),p.getLatitude());
             map.put(Key.getName(Key.GPS_LONGITUDE),p.getLongitude());
             map.put(Key.getName(Key.GPS_ALTITUDE),p.getAltitude());
             pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
         });
-        archiveInfo.saveInfos();
         if (!pathMap.isEmpty()) {
             Modification.setExifTags(pathMap,archiveInfo.getPath());
         }

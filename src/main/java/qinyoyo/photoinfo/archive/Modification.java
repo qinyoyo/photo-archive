@@ -246,13 +246,23 @@ public class Modification {
                             .append(altitude>0.0 ? "Above Sea Level" : "Below Sea Level")
                             .append("</").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">\n");
                     value = String.format("%.7f",altitude);
+                } else if (key.equals(Key.getName((Key.GPS_DATETIME))) && value!=null) {
+                    String dt =value.toString();
+                    sb.append("\t<").append(Key.getName(Key.GPS_DATESTAMP)).append(">")
+                            .append(dt.substring(0,10))
+                            .append("</").append(Key.getName(Key.GPS_DATESTAMP)).append(">\n");
+                    sb.append("\t<").append(Key.getName(Key.GPS_TIMESTAMP)).append(">")
+                            .append(dt.substring(11,19))
+                            .append("</").append(Key.getName(Key.GPS_TIMESTAMP)).append(">\n");
+                    value = null;
                 } else if (key.equals(Key.getName((Key.ARTIST)))) {
                     sb.append("<IPTC:By-line>")
                             .append(value.toString())
                             .append("</IPTC:By-line>\n");
                 }
             }
-            sb.append("\t<").append(key).append(">").append(value == null ? "" : value.toString()).append("</").append(key).append(">\n");
+            if (!key.equals(Key.getName((Key.GPS_DATETIME))))
+               sb.append("\t<").append(key).append(">").append(value == null ? "" : value.toString()).append("</").append(key).append(">\n");
         }
         String r = sb.toString();
         if (r.isEmpty()) return r;
