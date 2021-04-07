@@ -313,11 +313,12 @@ public class ArchiveManager {
                     String subPath = inputSubFolder("选择图像子目录(确保所有照片拍摄时区相同)",rootPath);
                     if (subPath == null) break;
                     boolean incSubF = Util.boolValue(getInputString("是否包含子目录", "yes"));
+                    boolean ignoreExisted = Util.boolValue(getInputString("是否保留已有属性", "yes"));
                     List<PhotoInfo> photoInfos = archived.subFolderInfos(subPath,incSubF).stream().filter(p->
                             p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null
-                            && (p.getLongitude()==null || p.getLatitude()==null)
+                            && (!ignoreExisted || p.getLongitude()==null || p.getLatitude()==null)
                     ).collect(Collectors.toList());
-                    writeGpxInfo(photoInfos,archived.getPath(),gpxPoints);
+                    writeGpxInfo(photoInfos,archived.getPath(),gpxPoints, ignoreExisted);
                     afterChanged(archived);
                     done = true;
                     break;
@@ -383,11 +384,12 @@ public class ArchiveManager {
                     path = chooseFolder("选择图像目录",fileFilter);
                     if (path == null) break;
                     incSub = getInputString("是否搜索子目录(确保所有照片拍摄时区相同)", "yes");
+                    boolean ignoreExisted = Util.boolValue(getInputString("是否保留已有属性", "yes"));
                     List<PhotoInfo> list = photoInfoListIn(path,Util.boolValue(incSub),null).stream().filter(p->
                             p.getMimeType()!=null && p.getMimeType().contains("image") && p.getShootTime()!=null
-                                  &&  (p.getLongitude()==null || p.getLatitude()==null)
+                                  &&  (!ignoreExisted || p.getLongitude()==null || p.getLatitude()==null)
                            ).collect(Collectors.toList());
-                    writeGpxInfo(list,path,gpxPoints);
+                    writeGpxInfo(list,path,gpxPoints,ignoreExisted);
                     done = true;
                     break;
                 case "4":
@@ -518,7 +520,7 @@ public class ArchiveManager {
         if (prev == -1) return null;
         else return gpxPoints.get(prev);
     }
-    private static void writeGpxInfo(List<PhotoInfo> list,String path,TreeMap<Long, Map<String,Object>> gpxPoints) {
+    private static void writeGpxInfo(List<PhotoInfo> list,String path,TreeMap<Long, Map<String,Object>> gpxPoints, boolean ignoreExisted) {
         if (list!=null && list.size()>0) {
             TimeZone defaultZone = list.get(0).getTimeZone();
             if (defaultZone==null) {
@@ -542,16 +544,18 @@ public class ArchiveManager {
                 if (params!=null && !params.isEmpty()) {
                     Map<String,Object> map = new HashMap<>();
                     map.putAll(params);
-                    if (!Util.isEmpty(pi.getSubjectCode())) map.remove(Key.getName(Key.SUBJECT_CODE));
-                    if (!Util.isEmpty(pi.getProvince())) map.remove(Key.getName(Key.STATE));
-                    if (!Util.isEmpty(pi.getCity())) map.remove(Key.getName(Key.CITY));
-                    if (!Util.isEmpty(pi.getLocation())) map.remove(Key.getName(Key.LOCATION));
-                    if (!Util.isEmpty(pi.getLongitude())) map.remove(Key.getName(Key.GPS_LONGITUDE));
-                    if (!Util.isEmpty(pi.getLatitude())) map.remove(Key.getName(Key.GPS_LATITUDE));
-                    if (!Util.isEmpty(pi.getAltitude())) map.remove(Key.getName(Key.GPS_ALTITUDE));
-                    if (!Util.isEmpty(pi.getGpsDatetime())) map.remove(Key.getName(Key.GPS_DATETIME));
-                    if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.getName(Key.HEADLINE));
-                    if (!Util.isEmpty(pi.getArtist())) map.remove(Key.getName(Key.ARTIST));
+                    if (ignoreExisted) {
+                        if (!Util.isEmpty(pi.getSubjectCode())) map.remove(Key.getName(Key.SUBJECT_CODE));
+                        if (!Util.isEmpty(pi.getProvince())) map.remove(Key.getName(Key.STATE));
+                        if (!Util.isEmpty(pi.getCity())) map.remove(Key.getName(Key.CITY));
+                        if (!Util.isEmpty(pi.getLocation())) map.remove(Key.getName(Key.LOCATION));
+                        if (!Util.isEmpty(pi.getLongitude())) map.remove(Key.getName(Key.GPS_LONGITUDE));
+                        if (!Util.isEmpty(pi.getLatitude())) map.remove(Key.getName(Key.GPS_LATITUDE));
+                        if (!Util.isEmpty(pi.getAltitude())) map.remove(Key.getName(Key.GPS_ALTITUDE));
+                        if (!Util.isEmpty(pi.getGpsDatetime())) map.remove(Key.getName(Key.GPS_DATETIME));
+                        if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.getName(Key.HEADLINE));
+                        if (!Util.isEmpty(pi.getArtist())) map.remove(Key.getName(Key.ARTIST));
+                    }
                     if (!map.isEmpty()) {
                         map.put(Key.getName(Key.GPS_DATETIME),DateUtil.date2String(new Date(dt),"yyyy:MM:dd HH:mm:ss",TimeZone.getTimeZone("UTC"))+"Z");
                         modifications.put(pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),map);

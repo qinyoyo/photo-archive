@@ -1,6 +1,9 @@
 package qinyoyo.photoinfo.exiftool;
 
+import qinyoyo.utils.DateUtil;
+
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -135,6 +138,8 @@ public enum Key {
             return (T) Double.valueOf(value);
         } else if (String.class.isAssignableFrom(type)) {
             return (T) value;
+        } else if (Date.class.isAssignableFrom(type)) {
+            return (T) DateUtil.string2Date(value);
         }
 
         throw new UnsupportedOperationException(String.format("Parsing not implemented for ExifTool name %s with class %s.", key.name, type));

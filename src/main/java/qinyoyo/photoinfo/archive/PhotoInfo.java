@@ -11,6 +11,7 @@ import qinyoyo.utils.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -82,10 +83,21 @@ public class PhotoInfo implements Serializable,Cloneable {
         put("gpsDatetime",Key.GPS_DATETIME);
     }};
     public void setFieldByTag(Key tag,Object value) {
-        for (String field : FIELD_TAG.keySet()) {
-            if (FIELD_TAG.get(field).equals(tag)) {
+        for (String fieldName : FIELD_TAG.keySet()) {
+            if (FIELD_TAG.get(fieldName).equals(tag)) {
                 try {
-                    Util.setPrivateField(this,field,value);
+                    Class<?> clazz = this.getClass();
+                    Field field = clazz.getDeclaredField(fieldName);
+                    if (value==null || field.getType().getClass().isAssignableFrom(value.getClass())) {
+                        field.setAccessible(true);
+                        field.set(this, value);
+                        return;
+                    } else {
+                        Object v = Key.parse(tag, value.toString());
+                        field.setAccessible(true);
+                        field.set(this, v);
+                        return;
+                    }
                 } catch (Exception e) {
                     Util.printStackTrace(e);
                 }
