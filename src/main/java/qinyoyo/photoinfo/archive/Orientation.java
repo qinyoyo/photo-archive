@@ -125,11 +125,11 @@ public enum Orientation {
         Map<Key, Object> attrs = new HashMap<>();
         if (orientation!=null) attrs.put(Key.ORIENTATION, orientation);
         if (rating!=null) attrs.put(Key.RATING, rating);
-        return ExifTool.getInstance().modifyAttributes(imgFile,attrs, true, true);
+        return ExifTool.getInstance().modifyAttributes(imgFile,attrs, true);
     }
     public static Integer getOrientation(File imgFile) {
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().execute(imgFile, "-T", "-n","-orientation");
+            Map<String, List<String>> result = ExifTool.getInstance().execute(imgFile, "-T", "-orientation");
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList==null || msgList.size()==0) return null;
             return value(msgList.get(0));

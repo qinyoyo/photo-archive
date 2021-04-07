@@ -43,9 +43,6 @@ public class SupportFileType {
                 "DIVX",
                 "DJVU", "DJV",
                 "DNG",
-                "DOC", "DOT",
-                "DOCX", "DOCM",
-                "DOTX", "DOTM",
                 "DPX",
                 "DR4",
                 "DSS", "DS2",
@@ -57,7 +54,6 @@ public class SupportFileType {
                 "EPS", "EPSF", "PS",
                 "EPUB",
                 "ERF",
-                "EXE", "DLL",
                 "EXIF",
                 "EXR",
                 "EXV",
@@ -148,11 +144,6 @@ public class SupportFileType {
                 "PMP",
                 "PNG", "JNG", "MNG",
                 "PPM", "PBM", "PGM",
-                "PPT", "PPS", "POT",
-                "POTX", "POTM",
-                "PPAX", "PPAM",
-                "PPSX", "PPSM",
-                "PPTX", "PPTM",
                 "PSD", "PSB", "PSDT",
                 "PSP", "PSPIMAGE",
                 "QTIF", "QTI", "QIF",
@@ -194,11 +185,7 @@ public class SupportFileType {
                 "WTV",
                 "WV",
                 "X3F",
-                "XCF",
-                "XLS", "XLT",
-                "XLSX", "XLSM", "XLSB",
-                "XLTX", "XLTM",
-                "XMP"
+                "XCF"
         };
         for (String s : ss) add(s);
     }};

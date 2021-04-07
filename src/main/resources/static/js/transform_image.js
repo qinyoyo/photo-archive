@@ -916,7 +916,10 @@
             if (needResumeLoop) pauseLoop()
             if (confirm("确定要从磁盘删除该图像？")) {
                 const imgIndex = index
-                let url = '/remove?path=' + encodeURI(img.getAttribute('src'))
+                let fn = img.getAttribute('src')
+                let pos = fn.indexOf('?')
+                if (pos>=0) fn = fn.substring(0,pos)
+                let url = '/remove?path=' + encodeURI(fn)
                 Ajax.get(url, function (responseText) {
                     if ("ok" == responseText) {
                         removedIndexList.push(imgIndex)

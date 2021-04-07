@@ -2,14 +2,12 @@ package qinyoyo.photoinfo.archive;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.jsoup.nodes.Document;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.text.ParseException;
@@ -54,9 +52,10 @@ public class PhotoInfo implements Serializable,Cloneable {
     private Double longitude;
     private Double latitude;
     private Double altitude;
-    private String gpsDatetime;
+    private Date   gpsDatetime;
 
     public static final Map<String,Key> FIELD_TAG = new HashMap<String,Key>() {{
+        put("mimeType",Key.MIME_TYPE);
         put("shootTime",Key.DATETIMEORIGINAL);
         put("createTime",Key.CREATEDATE);
         put("model",Key.MODEL);
@@ -88,7 +87,7 @@ public class PhotoInfo implements Serializable,Cloneable {
                 try {
                     Class<?> clazz = this.getClass();
                     Field field = clazz.getDeclaredField(fieldName);
-                    if (value==null || field.getType().getClass().isAssignableFrom(value.getClass())) {
+                    if (value==null || field.getType().isAssignableFrom(value.getClass())) {
                         field.setAccessible(true);
                         field.set(this, value);
                         return;
@@ -361,127 +360,36 @@ public class PhotoInfo implements Serializable,Cloneable {
             throw new RuntimeException(e.getMessage());
         }
     }
-    private boolean emptyValue(Object v) {
-        return v==null || v.toString().isEmpty() || v.toString().equals("-");
-    }
-    public void setPropertiesBy(Map<String, Object> attrs) {
+    public void setPropertiesBy(Map<Key, Object> attrs) {
         if (attrs==null) return;
-        for (String k : attrs.keySet()) {
-            Object v=attrs.get(k);
-            String s = emptyValue(v)?null : v.toString();
-            Date dt=null;
-            try {
-                if (k.equals(Key.getName(Key.DATETIMEORIGINAL))) {
-                    if (s==null) shootTime=null;
-                    else if (!s.startsWith("0000")) {
-                        Object subSec = attrs.get(Key.SUB_SEC_TIME_ORIGINAL);
-                        shootTime = DateUtil.string2Date(v.toString()+(
-                                    emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
-                            ));
-                    }
-                }
-                else if (k.equals(Key.getName(Key.CREATEDATE))) {
-                    if (s==null) createTime=null;
-                    else if (!s.startsWith("0000")) {
-                        Object subSec = attrs.get(Key.SUB_SEC_TIME_CREATE);
-                        createTime = DateUtil.string2Date(v.toString()+(
-                                emptyValue(subSec)?"":"."+(subSec.toString()+"00").substring(0,3)
-                                ));
-                    }
-                }
-                else if (k.equals(Key.getName(Key.IMAGE_WIDTH))) {
-                    if (s==null) width=null;
-                    else width = Integer.parseInt(s);
-                }
-                else if (k.equals(Key.getName(Key.IMAGE_HEIGHT))) {
-                    if (s==null) height=null;
-                    else height = Integer.parseInt(s);
-                }
-                else if (k.equals(Key.getName(Key.DOCUMENT_ID))) {
-                    documentId = s;
-                }
-                else if (k.equals(Key.getName(Key.IPTCDigest))) {
-                    digest = s;
-                }
-                else if (k.equals(Key.getName(Key.MODEL))) {
-                    model = s;
-                }
-                else if (k.equals(Key.getName(Key.LENS_ID))) {
-                    lens = s;
-                }
-                else if (k.equals(Key.getName(Key.GPS_LONGITUDE))) {
-                    longitude=Modification.fromDFM(s);
-                    Object ref = attrs.get(Key.getName(Key.GPS_LONGITUDE_REF));
-                    if (ref!=null) {
-                        boolean west = ref.toString().toLowerCase().startsWith("w");
-                        if ((west && longitude > 0) || (!west && longitude < 0)) longitude = -longitude;
-                    }
-                }
-                else if (k.equals(Key.getName(Key.GPS_LATITUDE))) {
-                    latitude=Modification.fromDFM(s);
-                    Object ref = attrs.get(Key.getName(Key.GPS_LATITUDE_REF));
-                    if (ref!=null) {
-                        boolean south = ref.toString().toLowerCase().startsWith("s");
-                        if ((south && latitude > 0) || (!south && latitude < 0)) latitude = -latitude;
-                    }
-                }
-                else if (k.equals(Key.getName(Key.GPS_ALTITUDE))) {
-                    if (s==null) altitude=null;
-                    else {
-                        String[] vv = s.split(" ");
-                        altitude = Double.parseDouble(vv[0]);
-                        Object ref = attrs.get(Key.getName(Key.GPS_ALTITUDE_REF));
-                        if (ref!=null) {
-                            boolean below = ref.toString().toLowerCase().equals("1") || ref.toString().toLowerCase().contains("below");
-                            if (below) altitude = -altitude;
-                        } else if (v.toString().toLowerCase().contains("below")) altitude = -altitude;
-                    }
-                }
-                if (k.equals(Key.getName(Key.GPS_DATETIME))) {
-                    gpsDatetime = s;
-                }
-                else if (k.equals(Key.getName(Key.MIME_TYPE))) {
-                    mimeType = s;
-                }
-                else if (k.equals(Key.getName(Key.ARTIST))) {
-                    artist = s;
-                }
-                else if (k.equals(Key.getName(Key.HEADLINE))) {
-                    headline = s;
-                }
-                else if (k.equals(Key.getName(Key.DESCRIPTION))) {
-                    subTitle = s;
-                }
-                else if (k.equals(Key.getName(Key.RATING))) {
-                    if (s==null) rating=null;
-                    else  rating = Integer.parseInt(s);
-                }
-                else if (k.equals(Key.getName(Key.ORIENTATION))) {
-                    if (s==null) rating=null;
-                    else orientation = Orientation.value(s);
-                }
-                else if (k.equals(Key.getName(Key.SCENE))) {
-                    scene = s;
-                }
-                else if (k.equals(Key.getName(Key.COUNTRY))) {
-                    country = s;
-                }
-                else if (k.equals(Key.getName(Key.COUNTRY_CODE))) {
-                    countryCode = s;
-                }
-                else if (k.equals(Key.getName(Key.STATE))) {
-                    province = s;
-                }
-                else if (k.equals(Key.getName(Key.CITY))) {
-                    city = s;
-                }
-                else if (k.equals(Key.getName(Key.LOCATION))) {
-                    location = s;
-                }
-                else if (k.equals(Key.getName(Key.SUBJECT_CODE))) {
-                    subjectCode = s;
-                }
-            } catch (Exception e){ Util.printStackTrace(e);}
+        for (Key k : attrs.keySet()) {
+            Object v = attrs.get(k);
+            setFieldByTag(k, v);
+        }
+        Object extObj = attrs.get(Key.SUB_SEC_TIME_ORIGINAL);
+        if (extObj!=null && shootTime!=null) {
+           int ms = Integer.parseInt(extObj.toString());
+           shootTime.setTime(shootTime.getTime() + ms);
+        }
+        extObj = attrs.get(Key.SUB_SEC_TIME_CREATE);
+        if (extObj!=null && createTime!=null) {
+            int ms = Integer.parseInt(extObj.toString());
+            createTime.setTime(createTime.getTime() + ms);
+        }
+        extObj = attrs.get(Key.GPS_LONGITUDE_REF);
+        if (extObj!=null && longitude!=null) {
+            boolean west = extObj.toString().toLowerCase().startsWith("w");
+            if ((west && longitude > 0) || (!west && longitude < 0)) longitude = -longitude;
+        }
+        extObj = attrs.get(Key.GPS_LATITUDE_REF);
+        if (extObj!=null && latitude!=null) {
+            boolean south = extObj.toString().toLowerCase().startsWith("s");
+            if ((south && latitude > 0) || (!south && latitude < 0)) latitude = -latitude;
+        }
+        extObj = attrs.get(Key.GPS_ALTITUDE_REF);
+        if (extObj!=null && altitude!=null) {
+            boolean below = ((Integer)extObj) == 1;
+            altitude = below ? -Math.abs(altitude) : Math.abs(altitude);
         }
     }
 
@@ -490,7 +398,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         if (f.exists() && SupportFileType.isSupport(f.getName())) {
             try {
                 setFile(rootPath,f);
-                Map<String, Map<String, Object>>  fileInfos = ExifTool.getInstance().query(f, null, ArchiveUtils.NEED_KEYS);
+                Map<String, Map<Key, Object>>  fileInfos = ExifTool.getInstance().query(f, null, ArchiveUtils.NEED_KEYS);
                 if (fileInfos!=null) {
                     setPropertiesBy(fileInfos.get(f.getName()));
                     if (getShootTime()==null && getCreateTime()!=null && getMimeType()!=null && !getMimeType().toLowerCase().startsWith("image"))
@@ -658,32 +566,25 @@ public class PhotoInfo implements Serializable,Cloneable {
             return -1;
         else return nameCompare(p);
     }
-    public Date convertGpsDateTime() {
-        if (gpsDatetime!=null) {
-            return DateUtil.string2DateByZone(gpsDatetime,TimeZone.getTimeZone("UTC"));
-        } else return null;
-    }
+
     public TimeZone getTimeZone() {
         String ctr = countryCode;
         if (ctr==null || ctr.trim().isEmpty()) ctr=country;
         TimeZone zone = TimeZoneTable.getTimeZone(ctr,province,city,longitude);
         if (zone!=null) return zone;
-        if (shootTime!=null) {
-            Date gpsDt = convertGpsDateTime();
-            if (gpsDt!=null) {
-                String fmt = "yyyy-MM-dd HH:mm:ss";
-                SimpleDateFormat sdf = new SimpleDateFormat(fmt);
-                String s=sdf.format(shootTime);
-                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-                try {
-                    long delta = (sdf.parse(s).getTime() - gpsDt.getTime())/1000/60;
-                    long hour = delta / 60, minute = delta % 60;
-                    if (minute > 30) hour += (hour>=0?1:-1);
-                    if (hour>=-12 && hour<=12) {
-                        return TimeZone.getTimeZone("GMT"+(hour>0?"+":"")+hour);
-                    }
-                } catch (ParseException e) {
+        if (shootTime!=null && gpsDatetime!=null) {
+            String fmt = "yyyy-MM-dd HH:mm:ss";
+            SimpleDateFormat sdf = new SimpleDateFormat(fmt);
+            String s=sdf.format(shootTime);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            try {
+                long delta = (sdf.parse(s).getTime() - gpsDatetime.getTime())/1000/60;
+                long hour = delta / 60, minute = delta % 60;
+                if (minute > 30) hour += (hour>=0?1:-1);
+                if (hour>=-12 && hour<=12) {
+                    return TimeZone.getTimeZone("GMT"+(hour>0?"+":"")+hour);
                 }
+            } catch (ParseException e) {
             }
         }
         return TimeZone.getDefault();

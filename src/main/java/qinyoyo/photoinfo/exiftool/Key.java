@@ -16,9 +16,10 @@ public enum Key {
     ARTIST("IFD0:Artist", String.class,"创作者"),
     COLOR_SPACE("ColorSpace", Integer.class),
     CONTRAST("Contrast", Integer.class),
-    CREATEDATE("CreateDate", String.class, "创建时间"),
-    SUB_SEC_TIME_CREATE("SubSecTimeDigitized",String.class,"创建时间毫秒值"),
-    DATETIMEORIGINAL("DateTimeOriginal", String.class, "拍摄时间"),
+    CREATEDATE("CreateDate", Date.class, "创建时间"),
+    SUB_SEC_TIME_CREATE("SubSecTimeDigitized",Integer.class,"创建时间毫秒值"),
+    DATETIMEORIGINAL("DateTimeOriginal", Date.class, "拍摄时间"),
+    SUB_SEC_TIME_ORIGINAL("SubSecTimeOriginal", Integer.class,"连拍毫秒值"),
 
     DIGITAL_ZOOM_RATIO("DigitalZoomRatio", Double.class),
     EXIF_VERSION("ExifVersion", String.class),
@@ -34,7 +35,7 @@ public enum Key {
     FOCAL_LENGTH("FocalLength", Double.class),
     FOCAL_LENGTH_35MM("FocalLengthIn35mmFormat", Integer.class),
 
-    GPS_ALTITUDE("GPSAltitude", String.class,"海拔"),
+    GPS_ALTITUDE("GPSAltitude", Double.class,"海拔"),
     GPS_ALTITUDE_REF("GPSAltitudeRef", Integer.class),
     GPS_BEARING("GPSDestBearing", Double.class),
     GPS_BEARING_REF("GPSDestBearingRef", String.class),
@@ -45,7 +46,7 @@ public enum Key {
     GPS_PROCESS_METHOD("GPSProcessingMethod", String.class),
     GPS_SPEED("GPSSpeed", Double.class),
     GPS_SPEED_REF("GPSSpeedRef", String.class),
-    GPS_DATETIME("GPSDatetime", String.class),
+    GPS_DATETIME("GPSDatetime", Date.class),
     GPS_DATESTAMP("GPSDateStamp", String.class),
     GPS_TIMESTAMP("GPSTimeStamp", String.class),
 
@@ -69,7 +70,7 @@ public enum Key {
     MODIFYDATE("ModifyDate", String.class, "called DateTime by the EXIF spec"),
     OFFSETTIME("OffsetTime", String.class, "time zone for ModifyDate"),
     OFFSETTIMEORIGINAL("OffsetTimeOriginal", String.class, "time zone for DateTimeOriginal"),
-    ORIENTATION("Orientation", String.class,"拍摄方向"),
+    ORIENTATION("Orientation", Integer.class,"拍摄方向"),
     OWNER_NAME("OwnerName", String.class),
     RATING("xmp:Rating", Integer.class),
     RATING_PERCENT("RatingPercent", Integer.class),
@@ -80,7 +81,7 @@ public enum Key {
     SHUTTER_SPEED("ShutterSpeedValue", Double.class),
     SOFTWARE("Software", String.class),
     SUBJECT("XPSubject", String.class),
-    SUB_SEC_TIME_ORIGINAL("SubSecTimeOriginal", Integer.class,"连拍毫秒值"),
+
 
     WHITE_BALANCE("WhiteBalance", Integer.class),
     X_RESOLUTION("XResolution", Double.class),
@@ -108,6 +109,11 @@ public enum Key {
     public final Class<?> clazz;
     public final String name;
     public final int maxLength;
+
+    @Override public String toString() { return name; }
+    public boolean equals(Key k) {
+        return k!=null && name.equals(k.name);
+    }
 
     Key(String name, Class<?> clazz) {
         this(name, clazz, "",0);

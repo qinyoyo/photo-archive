@@ -1,6 +1,7 @@
 package qinyoyo.photoinfo.exiftool;
 
 import javafx.util.Pair;
+import qinyoyo.photoinfo.archive.SupportFileType;
 import qinyoyo.utils.Util;
 
 import java.io.*;
@@ -95,12 +96,14 @@ public class ExifTool {
      * @return 标签值，key为文件名，值为标签及值的map
      * @throws IOException io异常
      */
-    public Map<String,Map<String, Object>> query(File dir, List<String> args, Key ... keys) throws IOException {
+    public Map<String,Map<Key, Object>> query(File dir, List<String> args, Key ... keys) throws IOException {
         // exiftool.exe -T -charset filename="" -c "%+.7f" -filename -SubSecDateTimeOriginal -DateTimeOriginal -Make -Model -LensID -GPSLongitude -GPSLatitude -GPSAltitude
-
+        if (dir==null || !dir.exists()) return null;
+        if (!dir.isDirectory() && !SupportFileType.isSupport(dir.getName())) return null;
         List<String> argsList = new ArrayList<>();
         argsList.add(EXIFTOOL);
 
+        argsList.add("-n");
         argsList.add("-T");
 
         argsList.add("-charset");
@@ -134,7 +137,7 @@ public class ExifTool {
     public Map<String,List<String>> execute(File dir, String ... options) throws IOException {
         List<String> argsList = new ArrayList<>();
         argsList.add(EXIFTOOL);
-
+        argsList.add("-n");
         argsList.add("-charset");
         argsList.add("filename=\"\"");
 
@@ -163,24 +166,24 @@ public class ExifTool {
         }
         return 0;
     }
-    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal, boolean notUsePrintConv) {
+    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
         try {
             if (attrs == null || attrs.size() == 0) return false;
-            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0) + (notUsePrintConv ? 1:0)];
+            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0)];
             int i = 0;
             for (Key key : attrs.keySet()) {
                 Object v = attrs.get(key);
                 argsList[i++] = "-" + Key.getName(key) + "=" + (v == null ? "" : v.toString());
             }
             if (overwriteOriginal) argsList[i++] = "-overwrite_original";
-            if (notUsePrintConv) argsList[i] = "-n";
             Map<String, List<String>> result = execute(dir, argsList);
             return updatesFiles(result)==1;
         } catch (Exception e){ Util.printStackTrace(e);}
         return false;
     }
-    private Map<String,Map<String, Object>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
-        Map<String,Map<String, Object>> queryResult = new HashMap<>();
+    private Map<String,Map<Key, Object>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
+        if (!dir.isDirectory() && !SupportFileType.isSupport(dir.getName())) return null;
+        Map<String,Map<Key, Object>> queryResult = new HashMap<>();
         if (stdErr.size() > 0) {
            throw new RuntimeException(String.join("\n", stdErr));
         }
@@ -192,52 +195,24 @@ public class ExifTool {
             	sb.append(line).append("\n");
                 continue;
             }
-            Map<String, Object> oneResult = new HashMap<>();
+            Map<Key, Object> oneResult = new HashMap<>();
             for (int i=0;i< keys.length; i++) {
-                String value = lineSeparated.get(i+(dir.isDirectory()?1:0)).trim();
-                if (!value.isEmpty() && !value.equals("-")) oneResult.put(Key.getName(keys[i]),value);
+                if (dir.isDirectory() && !SupportFileType.isSupport(lineSeparated.get(0))) continue;
+                String value = lineSeparated.get(i + (dir.isDirectory() ? 1 : 0)).trim();
+                try {
+                    if (!value.isEmpty() && !value.equals("-")) oneResult.put(keys[i], Key.parse(keys[i], value));
+                } catch (Exception e) {
+                    System.out.println(keys[i] + " :error data format "+ value);
+                }
             }
             queryResult.put(dir.isDirectory() ? lineSeparated.get(0) : dir.getName(),oneResult);
         }
         String error=sb.toString();
         if (error!=null && !error.isEmpty()) {
-            Map<String, Object> emap = new HashMap<>();
-        	emap.put(Key.getName(Key.DESCRIPTION), error);
+            Map<Key, Object> emap = new HashMap<>();
+        	emap.put(Key.DESCRIPTION, error);
         	queryResult.put(ERROR, emap);
         }
         return queryResult;
     }
-
-    public interface FileActionListener {
-        boolean accept(File dir);
-        void before(File dir);
-        void after(File dir);
-    }
-    public static void dirAction(File dir, List<String> args, boolean recursive, FileActionListener listener) {
-        if (args==null || args.isEmpty()) return;
-        if (dir == null || !dir.exists()) return;
-        if (listener==null || listener.accept(dir)) {
-            try {
-                System.out.println(dir.getCanonicalPath());
-                if (listener!=null) listener.after(dir);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        if (dir.isDirectory() && recursive) {
-            File[] subDirs = dir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    if (pathname.getName().startsWith(".")) return false;
-                    return pathname.isDirectory();
-                }
-            });
-            if (subDirs!=null) {
-	            for (File d : subDirs) {
-	                dirAction(d, args, recursive, listener);
-	            }
-            }
-        }
-    }
-
 }

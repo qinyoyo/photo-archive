@@ -2,12 +2,15 @@ package qinyoyo.photoinfo.archive;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import qinyoyo.photoinfo.ArchiveUtils;
-import qinyoyo.photoinfo.MapTypeAdapter;
 import qinyoyo.utils.DateUtil;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
@@ -25,6 +28,72 @@ import java.util.*;
 @Getter
 @Setter
 public class Modification {
+
+    public static class ModificationTypeAdapter extends TypeAdapter<Object> {
+        @Override
+        public Object read(JsonReader in) throws IOException {
+            JsonToken token = in.peek();
+            switch (token) {
+                case BEGIN_ARRAY:
+                    List<Object> list = new ArrayList<Object>();
+                    in.beginArray();
+                    while (in.hasNext()) {
+                        list.add(read(in));
+                    }
+                    in.endArray();
+                    return list;
+                case BEGIN_OBJECT:
+                    Map<Key, Object> map = new HashMap<>();
+                    in.beginObject();
+                    while (in.hasNext()) {
+                        Optional<Key> key = Key.findKeyWithName(in.nextName());
+                        Object v = read(in);
+                        if (key.isPresent()) map.put(key.get(), v==null?null:Key.parse(key.get(),v.toString()));
+                    }
+                    in.endObject();
+                    return map;
+
+                case STRING:
+                    return in.nextString();
+
+                case NUMBER:
+                    /**
+                     * 改写数字的处理逻辑，将数字值分为整型与浮点型。
+                     */
+                    double dbNum = in.nextDouble();
+
+                    // 数字超过long的最大值，返回浮点类型
+                    if (dbNum > Long.MAX_VALUE) {
+                        return dbNum;
+                    }
+
+                    // 判断数字是否为整数值
+                    long lngNum = (long) dbNum;
+                    if (dbNum == lngNum) {
+                        return lngNum;
+                    } else {
+                        return dbNum;
+                    }
+
+                case BOOLEAN:
+                    return in.nextBoolean();
+
+                case NULL:
+                    in.nextNull();
+                    return null;
+
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        @Override
+        public void write(JsonWriter out, Object value) throws IOException {
+            // 序列化无需实现
+        }
+
+    }
+
     public static final int Exif        = 1;
     public static final int Remove      = 2;
     public static final int Scan        = 3;
@@ -36,7 +105,7 @@ public class Modification {
     public static final String include_sub_folder = "--include-sub-folder--";
     int action;
     String path;
-    Map<String,Object> params;
+    Map<Key,Object> params;
 
     /**
      * 构建一个修改描述
@@ -44,7 +113,7 @@ public class Modification {
      * @param path 目录，不包含根目录
      * @param params 修改参数
      */
-    public Modification(int action,String path,Map<String,Object> params) {
+    public Modification(int action,String path,Map<Key,Object> params) {
         this.action = action;
         this.path = path;
         this.params = params;
@@ -89,11 +158,11 @@ public class Modification {
         if (actions==null) return null;
         String [] aa = actions.split("\n");
         List<Modification> list=new ArrayList<>();
+        Gson gson=new GsonBuilder()
+                .registerTypeAdapter(new TypeToken<Map<Key, Object>>() {}.getType(), new ModificationTypeAdapter())
+                .create();
         for (String s: aa) {
             s=s.trim();
-            Gson gson=new GsonBuilder()
-                    .registerTypeAdapter(new TypeToken<Map<String, Object>>() {}.getType(), new MapTypeAdapter())
-                    .create();
             try {
                 Modification m = gson.fromJson(s,Modification.class);
                 list.add(m);
@@ -135,37 +204,12 @@ public class Modification {
      * @param skipNull 是否忽略值为空的字段
      * @return 键值对
      */
-    public static Map<String,Object> exifMap(PhotoInfo pi, List<Key> keys, boolean skipNull) {
-        Map<String,Object> map = new HashMap<>();
+    public static Map<Key,Object> exifMap(PhotoInfo pi, List<Key> keys, boolean skipNull) {
+        Map<Key,Object> map = new HashMap<>();
         if (pi==null || keys==null || keys.size()==0) return map;
         for (Key key : keys) {
-            Object value = null;
-            switch (key) {
-                case DATETIMEORIGINAL:
-                    Date shootTime = pi.getShootTime();
-                    if (shootTime!=null) {
-                        value = DateUtil.date2String(shootTime,"yyyy:MM:dd HH:mm:ss"+(shootTime.getTime() % 1000 > 0 ? ".SSS":""));
-                    }
-                    break;
-                case CREATEDATE:
-                    Date createTime = pi.getCreateTime();
-                    if (createTime!=null) {
-                        value = DateUtil.date2String(createTime,"yyyy:MM:dd HH:mm:ss"+(createTime.getTime() % 1000 > 0 ? ".SSS":""));
-                    }
-                    break;
-                case RATING:
-                    if (pi.getRating()!=null) value = String.valueOf(pi.getRating());
-                    break;
-                case ORIENTATION:
-                    if (pi.getOrientation()!=null) value = Orientation.name(pi.getOrientation());
-                    break;
-                default:
-                    value = pi.getFieldByTag(key);
-            }
-            if (value!=null && value instanceof Double) value = String.format("%.7f",(Double)value);
-            if (!skipNull || !Util.isEmpty(value))  {
-                map.put(Key.getName(key),value);
-            }
+            Object value = pi.getFieldByTag(key);
+            if (!skipNull || !Util.isEmpty(value))   map.put(key,value);
         }
         return map;
     }
@@ -175,15 +219,12 @@ public class Modification {
      * @param p 照片
      * @param attrs 键值对
      */
-    public static void deleteSameProperties(PhotoInfo p, Map<String, Object> attrs) {
+    public static void deleteSameProperties(PhotoInfo p, Map<Key, Object> attrs) {
         if (p==null || attrs==null) return;
         List<Key> keys = new ArrayList<>();
-        for (String k : attrs.keySet()) {
-            Optional<Key> key = Key.findKeyWithName(k);
-            if (key.isPresent()) keys.add(key.get());
-        }
-        Map<String,Object> values = exifMap(p,keys,false);
-        for (String k : values.keySet()) {
+        for (Key key : attrs.keySet()) keys.add(key);
+        Map<Key,Object> values = exifMap(p,keys,false);
+        for (Key k : values.keySet()) {
             Object v1 = attrs.get(k);
             Object v2 = values.get(k);
             if (ArchiveUtils.equals(v1,v2)) attrs.remove(k);
@@ -195,73 +236,67 @@ public class Modification {
      * @param map tag键值对
      * @return xml串
      */
-    public static String xmlString(Map<String,Object> map) {
+    public static String xmlString(Map<Key,Object> map) {
         if (map==null || map.isEmpty()) return "";
         StringBuilder sb=new StringBuilder();
-        for (String key : map.keySet()) {
-            if (key.equals(start_photo) || key.equals(end_photo)) continue;
+        for (Key key : map.keySet()) {
             Object value = map.get(key);
-            if (value!=null && !value.toString().isEmpty()) {
-                if (key.equals(Key.getName((Key.DATETIMEORIGINAL))) && value.toString().indexOf(".")>0) {
-                    String dt = value.toString();
-                    int pos = dt.indexOf(".");
-                    value = dt.substring(0,pos);
-                    sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
-                            .append(dt.substring(pos+1))
-                            .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">\n");
-                } else if (key.equals(Key.getName((Key.CREATEDATE)))  && value.toString().indexOf(".")>0) {
-                    String dt = value.toString();
-                    int pos = dt.indexOf(".");
-                    value = dt.substring(0,pos);
-                    sb.append("\t<").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">")
-                            .append(dt.substring(pos+1))
-                            .append("</").append(Key.getName(Key.SUB_SEC_TIME_ORIGINAL)).append(">\n");
-                } else if (key.equals(Key.getName((Key.GPS_LONGITUDE)))) {
-                    double longitude = Double.parseDouble(value.toString());
-                    String EW = (longitude < 0 ? "W" : "E");
-                    sb.append("\t<").append(Key.getName(Key.GPS_LONGITUDE_REF)).append(">")
-                            .append(longitude < 0 ? "West" : "East")
-                            .append("</").append(Key.getName(Key.GPS_LONGITUDE_REF)).append(">\n");
-                    double lon = Math.abs(longitude);
-/*                    int du = (int)lon;
-                    int fen = (int)((lon - du) * 60.0);
-                    double m = ((lon - du)*60.0 - fen)*60.0;
-                    value = String.format("%d,%d,%.6f%s",du, fen, m, EW);*/
-                    value = String.format("%.7f",longitude);
-                } else if (key.equals(Key.getName((Key.GPS_LATITUDE)))) {
-                    double latitude = Double.parseDouble(value.toString());
-                    sb.append("\t<").append(Key.getName(Key.GPS_LATITUDE_REF)).append(">")
-                            .append(latitude < 0 ? "South" : "North")
-                            .append("</").append(Key.getName(Key.GPS_LATITUDE_REF)).append(">\n");
-                    String SN = (latitude < 0 ? "S" : "N");
-                    double lat = Math.abs(latitude);
-/*                    int du = (int)lat;
-                    int fen = (int)((lat - du) * 60.0);
-                    double m = ((lat - du)*60.0 - fen)*60.0;
-                    value = String.format("%d,%d,%.6f%s",du, fen, m, SN);*/
-                    value = String.format("%.7f",latitude);
-                } else if (key.equals(Key.getName((Key.GPS_ALTITUDE)))) {
-                    double altitude = Double.parseDouble(value.toString());
-                    sb.append("\t<").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">")
-                            .append(altitude>0.0 ? "Above Sea Level" : "Below Sea Level")
-                            .append("</").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">\n");
-                    value = String.format("%.7f",altitude);
-                } else if (key.equals(Key.getName((Key.GPS_DATETIME))) && value!=null) {
-                    String dt =value.toString();
-                    sb.append("\t<").append(Key.getName(Key.GPS_DATESTAMP)).append(">")
-                            .append(dt.substring(0,10))
-                            .append("</").append(Key.getName(Key.GPS_DATESTAMP)).append(">\n");
-                    sb.append("\t<").append(Key.getName(Key.GPS_TIMESTAMP)).append(">")
-                            .append(dt.substring(11,19))
-                            .append("</").append(Key.getName(Key.GPS_TIMESTAMP)).append(">\n");
-                    value = null;
-                } else if (key.equals(Key.getName((Key.ARTIST)))) {
-                    sb.append("<IPTC:By-line>")
-                            .append(value.toString())
-                            .append("</IPTC:By-line>\n");
+            if (!Util.isEmpty(value)) {
+                switch (key) {
+                    case DATETIMEORIGINAL:
+                    case CREATEDATE:
+                        if (value instanceof Date) {
+                            Date dt = (Date)value ;
+                            long  ms = (dt.getTime() % 1000);
+                            String subName = key.equals(Key.DATETIMEORIGINAL) ? Key.getName(Key.SUB_SEC_TIME_ORIGINAL) : Key.getName(Key.SUB_SEC_TIME_ORIGINAL);
+                            sb.append("\t<").append(subName).append(">")
+                                    .append(ms)
+                                    .append("</").append(subName).append(">\n");
+                            value = DateUtil.date2String(dt);
+                        }
+                        break;
+                    case GPS_LONGITUDE:
+                        double longitude = Double.parseDouble(value.toString());
+                        sb.append("\t<").append(Key.getName(Key.GPS_LONGITUDE_REF)).append(">")
+                                .append(longitude < 0 ? "West" : "East")
+                                .append("</").append(Key.getName(Key.GPS_LONGITUDE_REF)).append(">\n");
+                        value = String.format("%.7f", longitude);
+                        break;
+                    case GPS_LATITUDE:
+                        double latitude = Double.parseDouble(value.toString());
+                        sb.append("\t<").append(Key.getName(Key.GPS_LATITUDE_REF)).append(">")
+                                .append(latitude < 0 ? "South" : "North")
+                                .append("</").append(Key.getName(Key.GPS_LATITUDE_REF)).append(">\n");
+                        value = String.format("%.7f", latitude);
+                        break;
+                    case GPS_ALTITUDE:
+                        double altitude = Double.parseDouble(value.toString());
+                        sb.append("\t<").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">")
+                                .append(altitude > 0.0 ? "Above Sea Level" : "Below Sea Level")
+                                .append("</").append(Key.getName(Key.GPS_ALTITUDE_REF)).append(">\n");
+                        value = String.format("%.7f", altitude);
+                        break;
+                    case GPS_DATETIME:
+                        if (value instanceof Date) {
+                            Date dt = (Date)value;
+                            sb.append("\t<").append(Key.getName(Key.GPS_DATESTAMP)).append(">")
+                                    .append(DateUtil.date2String(dt,"yyyy:MM:dd", TimeZone.getTimeZone("UTC")))
+                                    .append("</").append(Key.getName(Key.GPS_DATESTAMP)).append(">\n");
+                            sb.append("\t<").append(Key.getName(Key.GPS_TIMESTAMP)).append(">")
+                                    .append(DateUtil.date2String(dt,"hh:mm:ss", TimeZone.getTimeZone("UTC")))
+                                    .append("</").append(Key.getName(Key.GPS_TIMESTAMP)).append(">\n");
+                            continue;
+                        }
+                        break;
+                    case ARTIST:
+                        sb.append("<IPTC:By-line>")
+                                .append(value.toString())
+                                .append("</IPTC:By-line>\n");
+                        break;
+                    default: value = value.toString();
                 }
             }
-            if (!key.equals(Key.getName((Key.GPS_DATETIME))))
+            if (!key.equals(Key.GPS_DATETIME))
                sb.append("\t<").append(key).append(">").append(value == null ? "" : value.toString()).append("</").append(key).append(">\n");
         }
         String r = sb.toString();
@@ -274,18 +309,18 @@ public class Modification {
             return header + r + tail;
         }
     }
-    private static int removeExifTags(File file, List<String> tags) {
+    private static int removeExifTags(File file, List<Key> tags) {
         if (tags==null || tags.size()==0) return 0;
-        String [] a = tags.toArray(new String[tags.size()]);
+        Key [] a = tags.toArray(new Key[tags.size()]);
         return removeExifTags(file,a);
     }
-    private static int removeExifTags(File file, String ... tags) {
+    private static int removeExifTags(File file, Key ... tags) {
         if (tags==null || tags.length==0) return 0;
         if (file==null || !file.exists()) return 0;
         String [] args = new String [tags.length+1];
         args[0]="-overwrite_original";
         for (int i=0;i<tags.length;i++) {
-            args[i+1] = "-"+tags[i]+"=";
+            args[i+1] = "-"+Key.getName(tags[i])+"=";
         }
         try {
             Map<String, List<String>> result = ExifTool.getInstance().execute(file, args);
@@ -389,7 +424,7 @@ public class Modification {
      * @param rootPath 主目录
      * @return 修改成功的文件数，可能比 pathMap 数量大，因为可能会自动同步修改缩略图
      */
-    public static int setExifTags(Map<String,Map<String,Object>> pathMap, String rootPath) {
+    public static int setExifTags(Map<String,Map<Key,Object>> pathMap, String rootPath) {
         File imgDir = new File(rootPath,temp_path);
         File xmpDir = new File(imgDir,XMP);
         xmpDir.mkdirs();
@@ -399,15 +434,15 @@ public class Modification {
         Map<String,File> files = new HashMap<>();
         for (String path : pathMap.keySet()) {
             if (path==null || path.isEmpty()) continue;
-            Map<String,Object> params = pathMap.get(path);
+            Map<Key,Object> params = pathMap.get(path);
             if (path.isEmpty() || params ==null || params.isEmpty()) continue;
             File img = new File(rootPath, path);
             if (img.exists() && img.isFile()) {
-                List<String> removeTags = new ArrayList<>();
-                for (String tag : params.keySet()) {
+                List<Key> removeTags = new ArrayList<>();
+                for (Key tag : params.keySet()) {
                     if (params.get(tag)==null) removeTags.add(tag);
                 }
-                for (String tag: removeTags) params.remove(tag);
+                for (Key tag: removeTags) params.remove(tag);
                 if (!removeTags.isEmpty()) removed += removeExifTags(img,removeTags);
                 if (params.isEmpty()) continue;
                 String xml = xmlString(params);
@@ -419,15 +454,15 @@ public class Modification {
                         FileUtil.writeToFile(xmpFile, xml, "UTF-8");
                         count++;
                         files.put(link, img);
-                        if (params.containsKey(Key.getName(Key.ORIENTATION))) {
+                        if (params.containsKey(Key.ORIENTATION)) {
                             File thumb = new File(rootPath+File.separator+ArchiveUtils.THUMB, path);
                             if (thumb.exists() && thumb.isFile()) {
                                 String thumbLink = count + (thumb.getName().lastIndexOf(".") >= 0 ? thumb.getName().substring(thumb.getName().lastIndexOf(".")) : "");
                                 makeLink(thumb.getCanonicalPath(), new File(imgDir, thumbLink).getCanonicalPath());
                                 if (new File(imgDir, thumbLink).exists()) {
                                     File thumbXmpFile = new File(xmpDir, count + ".xmp");
-                                    Map<String,Object> thumbParams = new HashMap<>();
-                                    thumbParams.put(Key.getName(Key.ORIENTATION),params.get(Key.getName(Key.ORIENTATION)));
+                                    Map<Key,Object> thumbParams = new HashMap<>();
+                                    thumbParams.put(Key.ORIENTATION,params.get(Key.ORIENTATION));
                                     FileUtil.writeToFile(thumbXmpFile, xmlString(thumbParams), "UTF-8");
                                     count++;
                                     files.put(thumbLink, thumb);
@@ -460,7 +495,7 @@ public class Modification {
      * @param tags 需要删除的 exif tag
      * @return
      */
-    public static int removeTags(@NonNull List<PhotoInfo> photoList, @NonNull ArchiveInfo archiveInfo, @NonNull List<String> tags) {
+    public static int removeTags(@NonNull List<PhotoInfo> photoList, @NonNull ArchiveInfo archiveInfo, @NonNull List<Key> tags) {
         String rootPath=archiveInfo.getPath();
         List<String> pathList = new ArrayList<>();
         photoList.stream().forEach(p->{
@@ -493,7 +528,7 @@ public class Modification {
      * @param tags 需要删除的 tags
      * @return 执行成功数量
      */
-    public static int removeTags(List<String> pathList, String rootPath, List<String> tags) {
+    public static int removeTags(List<String> pathList, String rootPath, List<Key> tags) {
         File imgDir = new File(rootPath,temp_path);
         imgDir.mkdirs();
         FileUtil.removeFilesInDir(imgDir,false);
@@ -502,8 +537,8 @@ public class Modification {
         String [] args = new String [tags.size()];
         boolean removeOrientation = false;
         for (int i=0;i<tags.size();i++) {
-            args[i] = "-"+tags.get(i)+"=";
-            if (!removeOrientation && tags.get(i).equals(Key.getName(Key.ORIENTATION))) removeOrientation = true;
+            args[i] = "-"+Key.getName(tags.get(i))+"=";
+            if (!removeOrientation && tags.get(i).equals(Key.ORIENTATION)) removeOrientation = true;
         }
         for (String path : pathList) {
             if (path==null || path.isEmpty()) continue;
@@ -566,7 +601,7 @@ public class Modification {
         for (String path:removedPaths) {
             if (removeAction(path, archiveInfo)) updated++;
         }
-        Map<String,Map<String,Object>> exifMap = new HashMap<>();
+        Map<String,Map<Key,Object>> exifMap = new HashMap<>();
         list.stream().filter(m->m.action==Exif && !removedPaths.contains(m.path))
             .reduce(exifMap,(acc,m)->{
                 if (m.path==null || m.params==null || m.params.isEmpty()) return acc;
@@ -587,7 +622,7 @@ public class Modification {
                         if (includeSubFolder && !info.getSubFolder().equals(filePath) && !info.getSubFolder().startsWith(filePath+File.separator)) continue;
                         File img = new File(info.fullPath(archiveInfo.getPath()));
                         if (img.exists() && img.isFile()) {
-                            Map<String,Object> nm = new HashMap<>();
+                            Map<Key,Object> nm = new HashMap<>();
                             nm.putAll(m.params);
                             if (nm.containsKey(Key.getName(Key.DATETIMEORIGINAL))) {  // 批量修改时间，加1秒
                                 Object v = nm.get(Key.getName(Key.DATETIMEORIGINAL));
@@ -595,7 +630,7 @@ public class Modification {
                                     Date dt = DateUtil.string2Date(v.toString());
                                     if (dt==null) continue;
                                     dt = new Date(dt.getTime() + (i-pos0)*1000);
-                                    nm.put(Key.getName(Key.DATETIMEORIGINAL), DateUtil.date2String(dt));
+                                    nm.put(Key.DATETIMEORIGINAL, DateUtil.date2String(dt));
                                 }
                             }
                             deleteSameProperties(info, nm);
@@ -614,7 +649,7 @@ public class Modification {
                 } else {
                     File img = new File(archiveInfo.getPath(), filePath);
                     if (img.exists() && img.isFile()) {
-                        Map<String,Object> nm = new HashMap<>();
+                        Map<Key,Object> nm = new HashMap<>();
                         PhotoInfo info = archiveInfo.find(img);
                         nm.putAll(m.params);
                         if (info != null) {

@@ -33,11 +33,8 @@ public class GpxUtils {
             return DateUtil.date2String(dt,"yyyy-MM-dd HH:mm:ss",utc);
         }
     }
-    private static String formatUtcDt(String dt) {
-        if (dt!=null && dt.matches("(\\d{4}).(\\d{2}).(\\d{2}).(\\d{2})\\:(\\d{2})\\:(\\d{2}).*")) {
-            return dt.substring(0,4) + "-" + dt.substring(5,7) + "-" + dt.substring(8,10) + " " + dt.substring(11,19);
-        }
-        return null;
+    private static String formatUtcDt(Date dt) {
+        return DateUtil.date2String(dt,"yyyy-MM-dd HH:mm:ss",TimeZone.getTimeZone("UTC"));
     }
     private static String nullUseEmpty(String s) {
         return s==null?"":s;
@@ -45,6 +42,7 @@ public class GpxUtils {
     public static int writeGpxInfo(File file, List<PhotoInfo> list, String title) {
         Document dom;
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        Set<Long> wrote = new HashSet<>();
         try {
             int count = 0;
             DocumentBuilder db = dbf.newDocumentBuilder();
@@ -62,10 +60,10 @@ public class GpxUtils {
             meta.appendChild(dom.createElement("author")).setTextContent("qinyoyo");
             meta.appendChild(dom.createElement("copyright")).setTextContent("reserved");
 
-            String dt = formatUtcDt(list.get(0).getGpsDatetime());
-            if (dt==null) dt = utcTimeString(list.get(0).getShootTime(),list.get(0).getTimeZone());
+            Date dt = list.get(0).getGpsDatetime();
+            if (dt==null) dt = list.get(0).getShootTime();
 
-            meta.appendChild(dom.createElement("time")).setTextContent(dt);
+            if (dt!=null)  meta.appendChild(dom.createElement("time")).setTextContent(formatUtcDt(dt));
 
             rootEle.appendChild(meta);
             Element trk = dom.createElement("trk");
@@ -73,13 +71,14 @@ public class GpxUtils {
             if (title!=null) trk.appendChild(dom.createElement("name")).setTextContent(title);
             Element trkseg = dom.createElement("trkseg");
             for (PhotoInfo pi: list) {
+                dt = pi.getGpsDatetime();
+                if (dt==null) dt = list.get(0).getShootTime();
+                if (dt==null || wrote.contains(dt.getTime())) continue;
                 Element trkpt = dom.createElement("trkpt");
+                trkpt.appendChild(dom.createElement("time")).setTextContent(formatUtcDt(dt));
                 if (pi.getLatitude()!=null) trkpt.setAttribute("lat",String.format("%.7f",pi.getLatitude()));
                 if (pi.getLongitude()!=null) trkpt.setAttribute("lon",String.format("%.7f",pi.getLongitude()));
                 if (pi.getAltitude()!=null) trkpt.appendChild(dom.createElement("ele")).setTextContent(String.format("%.7f",pi.getAltitude()));
-                dt = formatUtcDt(pi.getGpsDatetime());
-                if (dt!=null) trkpt.appendChild(dom.createElement("time")).setTextContent(dt);
-                else if (pi.getShootTime()!=null) trkpt.appendChild(dom.createElement("time")).setTextContent(utcTimeString(pi.getShootTime(),pi.getTimeZone()));
                 if (pi.getSubjectCode()!=null) trkpt.appendChild(dom.createElement("step")).setTextContent(pi.getSubjectCode());
                 if (pi.getCountry()!=null || pi.getProvince()!=null || pi.getCity()!=null || pi.getLocation()!=null) {
                     String desc = String.format("%s|%s|%s|%s|%s",nullUseEmpty(pi.getCountry()),
@@ -87,6 +86,7 @@ public class GpxUtils {
                     trkpt.appendChild(dom.createElement("desc")).setTextContent(desc);
                 }
                 trkseg.appendChild(trkpt);
+                wrote.add(dt.getTime());
                 count++;
             }
             trk.appendChild(trkseg);
@@ -108,15 +108,15 @@ public class GpxUtils {
         }
         return 0;
     }
-    public static TreeMap<Long, Map<String,Object>> readGpxInfo(File[] files,String defTitle) {
-        TreeMap<Long, Map<String,Object>> result = new TreeMap<>();
+    public static TreeMap<Long, Map<Key,Object>> readGpxInfo(File[] files,String defTitle) {
+        TreeMap<Long, Map<Key,Object>> result = new TreeMap<>();
         for (File f: files) {
             result.putAll(readGpxInfo(f, defTitle));
         }
         return result;
     }
-    public static TreeMap<Long, Map<String,Object>> readGpxInfo(File file,String defTitle) {
-        TreeMap<Long, Map<String,Object>> result = new TreeMap<>();
+    public static TreeMap<Long, Map<Key,Object>> readGpxInfo(File file,String defTitle) {
+        TreeMap<Long, Map<Key,Object>> result = new TreeMap<>();
         if (!file.exists()) return result;
         if (file.isDirectory()) {
             File [] files = file.listFiles(f->f.isDirectory() || f.getName().endsWith(".gpx"));
@@ -158,7 +158,8 @@ public class GpxUtils {
                             Node trkpt = trkptList.item(k);
                             double lat = 2000, lon = 2000;
                             Double ele=null;
-                            String dt=null, step=null, country=null, province=null, city=null, location=null, countryCode=null;
+                            String step=null, country=null, province=null, city=null, location=null, countryCode=null;
+                            Date dt=null;
                             if (trkpt.getNodeName().equals("trkpt")) {
                                 try {
                                     NamedNodeMap attrs = trkpt.getAttributes();
@@ -174,7 +175,7 @@ public class GpxUtils {
                                             Node value = ptValue.item(m);
                                             if (value.getNodeName().equals("step")) step = value.getTextContent();
                                             else if (value.getNodeName().equals("time"))
-                                                dt = formatUtcDt(value.getTextContent());
+                                                dt = DateUtil.string2DateByZone(value.getTextContent(),TimeZone.getTimeZone("UTC"));
                                             else if (value.getNodeName().equals("ele"))
                                                 ele = Double.parseDouble(value.getTextContent());
                                             else if (value.getNodeName().equals("desc")) {
@@ -193,23 +194,21 @@ public class GpxUtils {
                                             }
                                         }
                                         if (dt != null) {
-                                            Map<String, Object> map = new HashMap<>();
-                                            if (title!=null && !title.isEmpty()) map.put(Key.getName(Key.HEADLINE),title);
-                                            if (author!=null && !author.isEmpty()) map.put(Key.getName(Key.ARTIST),author);
-                                            map.put(Key.getName(Key.GPS_LATITUDE), lat);
-                                            map.put(Key.getName(Key.GPS_LONGITUDE), lon);
-                                            if (ele != null) map.put(Key.getName(Key.GPS_ALTITUDE), ele);
-                                            if (step != null) map.put(Key.getName(Key.SUBJECT_CODE), step);
-                                            if (country != null) map.put(Key.getName(Key.COUNTRY), country);
-                                            if (countryCode != null) map.put(Key.getName(Key.COUNTRY_CODE), countryCode);
-                                            if (province != null) map.put(Key.getName(Key.STATE), province);
-                                            if (city != null) map.put(Key.getName(Key.CITY), city);
-                                            if (location != null) map.put(Key.getName(Key.LOCATION), location);
+                                            Map<Key, Object> map = new HashMap<>();
+                                            if (title!=null && !title.isEmpty()) map.put(Key.HEADLINE,title);
+                                            if (author!=null && !author.isEmpty()) map.put(Key.ARTIST,author);
+                                            map.put(Key.GPS_LATITUDE, lat);
+                                            map.put(Key.GPS_LONGITUDE, lon);
+                                            if (ele != null) map.put(Key.GPS_ALTITUDE, ele);
+                                            if (step != null) map.put(Key.SUBJECT_CODE, step);
+                                            if (country != null) map.put(Key.COUNTRY, country);
+                                            if (countryCode != null) map.put(Key.COUNTRY_CODE, countryCode);
+                                            if (province != null) map.put(Key.STATE, province);
+                                            if (city != null) map.put(Key.CITY, city);
+                                            if (location != null) map.put(Key.LOCATION, location);
                                             BaiduGeo.setGeoInfoIntoDatabase(lon,lat,country,countryCode,province,city,location,step);
-                                            map.put(Key.getName(Key.GPS_DATETIME), dt.substring(0,4)+":"+dt.substring(5,7)+":" + dt.substring(8) +"Z");
-                                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                                            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-                                            result.put(sdf.parse(dt).getTime(), map);
+                                            map.put(Key.GPS_DATETIME, dt);
+                                            result.put(dt.getTime(), map);
                                         }
                                     }
                                 } catch (Exception e1) { e1.printStackTrace();}

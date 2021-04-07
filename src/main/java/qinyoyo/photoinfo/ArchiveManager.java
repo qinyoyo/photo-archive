@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class ArchiveManager {
     static Map<String, Object> env = null;
     static String currentPath = ".";
-    static TreeMap<Long, Map<String,Object>> gpxPoints = null;
+    static TreeMap<Long, Map<Key,Object>> gpxPoints = null;
     private static String getInputString(String message, String def) {
         String input=def;
         Scanner in = new Scanner(System.in);
@@ -506,7 +506,7 @@ public class ArchiveManager {
         File gpx = new File(archiveInfo.getPath(),(subPath.isEmpty() ? "" : subPath + File.separator) + ".archive.gpx");
         return writeGpxFile(list,gpx);
     }
-    private static Map<String,Object> seekGpxPoints(TreeMap<Long, Map<String,Object>> gpxPoints, long dtValue) {
+    private static Map<Key,Object> seekGpxPoints(TreeMap<Long, Map<Key,Object>> gpxPoints, long dtValue) {
         long prev = -1;
         Iterator<Long> iterator = gpxPoints.keySet().iterator();
         while (iterator.hasNext()) {
@@ -520,16 +520,16 @@ public class ArchiveManager {
         if (prev == -1) return null;
         else return gpxPoints.get(prev);
     }
-    private static void writeGpxInfo(List<PhotoInfo> list,String path,TreeMap<Long, Map<String,Object>> gpxPoints, boolean ignoreExisted) {
+    private static void writeGpxInfo(List<PhotoInfo> list,String path,TreeMap<Long, Map<Key,Object>> gpxPoints, boolean ignoreExisted) {
         if (list!=null && list.size()>0) {
             TimeZone defaultZone = list.get(0).getTimeZone();
             if (defaultZone==null) {
-                Map<String, Object> firstPoint = gpxPoints.get(gpxPoints.keySet().iterator().next());
-                Object cty = firstPoint.get(Key.getName(Key.COUNTRY_CODE)),
-                        state = firstPoint.get(Key.getName(Key.STATE)),
-                        city = firstPoint.get(Key.getName(Key.CITY)),
-                        lon = firstPoint.get(Key.getName(Key.GPS_LONGITUDE));
-                if (Util.isEmpty(cty)) cty = firstPoint.get(Key.getName(Key.COUNTRY));
+                Map<Key, Object> firstPoint = gpxPoints.get(gpxPoints.keySet().iterator().next());
+                Object cty = firstPoint.get(Key.COUNTRY_CODE),
+                        state = firstPoint.get(Key.STATE),
+                        city = firstPoint.get(Key.CITY),
+                        lon = firstPoint.get(Key.GPS_LONGITUDE);
+                if (Util.isEmpty(cty)) cty = firstPoint.get(Key.COUNTRY);
                 defaultZone = TimeZoneTable.getTimeZone(cty == null ? null : (String) cty, state == null ? null : (String) state,
                         city == null ? null : (String) city, lon == null ? null : (Double) lon);
             }
@@ -537,27 +537,27 @@ public class ArchiveManager {
             int timeAdjust = TimeZone.getDefault().getRawOffset() - zone.getRawOffset();
             if (zone.hasSameRules(TimeZone.getDefault())) zone=null;
             System.out.println("图像检索处理中...");
-            Map<String,Map<String,Object>> modifications = new HashMap<>();
+            Map<String,Map<Key,Object>> modifications = new HashMap<>();
             for (PhotoInfo pi : list) {
                 long dt = pi.getShootTime().getTime() + timeAdjust;
-                Map<String,Object> params = seekGpxPoints(gpxPoints,dt);
+                Map<Key,Object> params = seekGpxPoints(gpxPoints,dt);
                 if (params!=null && !params.isEmpty()) {
-                    Map<String,Object> map = new HashMap<>();
+                    Map<Key,Object> map = new HashMap<>();
                     map.putAll(params);
                     if (ignoreExisted) {
-                        if (!Util.isEmpty(pi.getSubjectCode())) map.remove(Key.getName(Key.SUBJECT_CODE));
-                        if (!Util.isEmpty(pi.getProvince())) map.remove(Key.getName(Key.STATE));
-                        if (!Util.isEmpty(pi.getCity())) map.remove(Key.getName(Key.CITY));
-                        if (!Util.isEmpty(pi.getLocation())) map.remove(Key.getName(Key.LOCATION));
-                        if (!Util.isEmpty(pi.getLongitude())) map.remove(Key.getName(Key.GPS_LONGITUDE));
-                        if (!Util.isEmpty(pi.getLatitude())) map.remove(Key.getName(Key.GPS_LATITUDE));
-                        if (!Util.isEmpty(pi.getAltitude())) map.remove(Key.getName(Key.GPS_ALTITUDE));
-                        if (!Util.isEmpty(pi.getGpsDatetime())) map.remove(Key.getName(Key.GPS_DATETIME));
-                        if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.getName(Key.HEADLINE));
-                        if (!Util.isEmpty(pi.getArtist())) map.remove(Key.getName(Key.ARTIST));
+                        if (!Util.isEmpty(pi.getSubjectCode())) map.remove(Key.SUBJECT_CODE);
+                        if (!Util.isEmpty(pi.getProvince())) map.remove(Key.STATE);
+                        if (!Util.isEmpty(pi.getCity())) map.remove(Key.CITY);
+                        if (!Util.isEmpty(pi.getLocation())) map.remove(Key.LOCATION);
+                        if (!Util.isEmpty(pi.getLongitude())) map.remove(Key.GPS_LONGITUDE);
+                        if (!Util.isEmpty(pi.getLatitude())) map.remove(Key.GPS_LATITUDE);
+                        if (!Util.isEmpty(pi.getAltitude())) map.remove(Key.GPS_ALTITUDE);
+                        if (!Util.isEmpty(pi.getGpsDatetime())) map.remove(Key.GPS_DATETIME);
+                        if (!Util.isEmpty(pi.getHeadline())) map.remove(Key.HEADLINE);
+                        if (!Util.isEmpty(pi.getArtist())) map.remove(Key.ARTIST);
                     }
                     if (!map.isEmpty()) {
-                        map.put(Key.getName(Key.GPS_DATETIME),DateUtil.date2String(new Date(dt),"yyyy:MM:dd HH:mm:ss",TimeZone.getTimeZone("UTC"))+"Z");
+                        map.put(Key.GPS_DATETIME,new Date(dt));
                         modifications.put(pi.getSubFolder() + (pi.getSubFolder().isEmpty() ? "" : File.separator) + pi.getFileName(),map);
                         pi.setPropertiesBy(map);
                     }
@@ -575,14 +575,14 @@ public class ArchiveManager {
         List<PhotoInfo> list=archiveInfo.getInfos().stream().filter(p->
                 p.getMimeType()!=null && p.getMimeType().contains("image")
                 && p.getLongitude()!=null && p.getLatitude()!=null).collect(Collectors.toList());
-        Map<String,Map<String,Object>> pathMap = new HashMap<>();
+        Map<String,Map<Key,Object>> pathMap = new HashMap<>();
         formatCountry(list,archiveInfo.getPath());
         list.forEach(p->{
-            Map<String,Object> map = new HashMap<>();
-            map.put(Key.getName(Key.GPS_DATETIME),p.getGpsDatetime());
-            map.put(Key.getName(Key.GPS_LATITUDE),p.getLatitude());
-            map.put(Key.getName(Key.GPS_LONGITUDE),p.getLongitude());
-            map.put(Key.getName(Key.GPS_ALTITUDE),p.getAltitude());
+            Map<Key,Object> map = new HashMap<>();
+            map.put(Key.GPS_DATETIME,p.getGpsDatetime());
+            map.put(Key.GPS_LATITUDE,p.getLatitude());
+            map.put(Key.GPS_LONGITUDE,p.getLongitude());
+            map.put(Key.GPS_ALTITUDE,p.getAltitude());
             pathMap.put(p.getSubFolder().isEmpty() ? p.getFileName() : (p.getSubFolder()+File.separator+p.getFileName()),map);
         });
         if (!pathMap.isEmpty()) {

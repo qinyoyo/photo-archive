@@ -115,7 +115,7 @@
         data-gpsaltitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"
     </#if>
     <#if p.gpsDatetime??>
-        data-gpsdatetime="${p.gpsDatetime}"
+        data-gpsdatetime="${statics['qinyoyo.utils.DateUtil'].date2StringByZoneId(p.gpsDatetime,'yyyy-MM-dd HH:mm:ss','UTC')}"
     </#if>
     title="${photoTitle(p)?replace('"','&#34;')?replace("'","&#39;")}"
 </#macro>

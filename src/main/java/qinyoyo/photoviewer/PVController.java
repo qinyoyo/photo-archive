@@ -260,14 +260,14 @@ public class PVController implements ApplicationRunner , ErrorController {
                 }
             }
             if (selectedKey.isEmpty()) return "没有需要修改的标签";
-            List<String> removeTags = new ArrayList<>();
+            List<Key> removeTags = new ArrayList<>();
             Iterator<Key> iter = selectedKey.iterator();
             while (iter.hasNext()) {
                 Key key = iter.next();
                 Object obj = p1.getFieldByTag(key);
                 if (Util.isEmpty(obj)) {
                     iter.remove();
-                    removeTags.add(Key.getName(key));
+                    removeTags.add(key);
                 }
             }
             // removeTags不排除已经为空的字段，因为多选操作各个文件不一样
@@ -290,7 +290,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                         PhotoInfo p0 = op0.get();
                         List<Key> keys = ArchiveUtils.differentOf(p0, p1,selectedKey);
                         if (keys != null && !keys.isEmpty()) {
-                            Map<String, Object> params = Modification.exifMap(p1, keys, true);
+                            Map<Key, Object> params = Modification.exifMap(p1, keys, true);
                             if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
                             String fullPath = subFolders[i].isEmpty()?files[i] : (subFolders[i]+File.separator+files[i]);
                             modifications.add(new Modification(Modification.Exif, fullPath, params));
@@ -423,9 +423,9 @@ public class PVController implements ApplicationRunner , ErrorController {
         PhotoInfo pi = archiveInfo.find(new File(rootPath + File.separator + path));
         if (pi==null) return "error";
         if (pi.modifyOrientation(rootPath, rating, orientations)) {
-            Map<String,Object> map = new HashMap<>();
-            if (rating!=null) map.put(Key.getName(Key.RATING),rating);
-            if (orientations!=null) map.put(Key.getName(Key.ORIENTATION),
+            Map<Key,Object> map = new HashMap<>();
+            if (rating!=null) map.put(Key.RATING,rating);
+            if (orientations!=null) map.put(Key.ORIENTATION,
                     Orientation.name(pi.getOrientation()==null? Orientation.NONE.getValue() : pi.getOrientation()));
             Modification.save(new Modification(Modification.Exif,path,map),rootPath);
             afterChanged();

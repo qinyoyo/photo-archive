@@ -10,6 +10,9 @@ public class DateUtil {
     public static String date2String(Date dt,String fmt) {
         return date2String(dt,fmt,null);
     }
+    public static String date2StringByZoneId(Date dt,String fmt, String zoneId) {
+        return date2String(dt,fmt,TimeZone.getTimeZone(zoneId));
+    }
     public static String date2String(Date dt,String fmt, TimeZone zone) {
         if (dt == null) return null;
         SimpleDateFormat sdf = new SimpleDateFormat(fmt==null?"yyyy-MM-dd HH:mm:ss":fmt);

@@ -354,7 +354,7 @@ public class ArchiveUtils {
     public static void syncExifAttributesByTime(List<PhotoInfo> sourceList, List<PhotoInfo> targetList, String targetRootPath) {
         Iterator<PhotoInfo> iter = sourceList.iterator();
         int index = 0;
-        Map<String,Map<String,Object>> modificationList = new HashMap<>();
+        Map<String,Map<Key,Object>> modificationList = new HashMap<>();
         int modified = 0, same = 0;
         while (iter.hasNext()) {
             PhotoInfo srcPi = iter.next();
@@ -368,7 +368,7 @@ public class ArchiveUtils {
                 else if (pc > 0) break;
                 else if (equals(tarPi.getModel(),srcPi.getModel())){
                     index++;
-                    Map<String, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS), true);
+                    Map<Key, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS), true);
                     Modification.deleteSameProperties(tarPi,params);
                     if (!params.isEmpty()) {
                         modified ++;
@@ -390,8 +390,8 @@ public class ArchiveUtils {
             if (pi.getMimeType()==null || !pi.getMimeType().contains("image")) continue;
             String thumbPath = pi.fullThumbPath(root);
             if (thumbPath!=null && new File(thumbPath).exists()) {
-                Map<String, Object> params = new HashMap<>();
-                params.put(Key.getName(Key.ORIENTATION), Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
+                Map<Key, Object> params = new HashMap<>();
+                params.put(Key.ORIENTATION, Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
                 modificationList.add(new Modification(Modification.Exif,
                         thumbPath.substring(root.length() + 1), params));
             }
@@ -602,7 +602,6 @@ public class ArchiveUtils {
     public static List<PhotoInfo> seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder, List<String> exifToolArgs) {
         List<PhotoInfo> infoList = new ArrayList<>();
         if (exifToolArgs==null) exifToolArgs=new ArrayList<>();
-        if (!exifToolArgs.contains("-n")) exifToolArgs.add("-n");
         if (!dir.isDirectory() || !dir.exists()) return infoList;
         File [] files = dir.listFiles(new FileFilter() {
             @Override
@@ -615,7 +614,7 @@ public class ArchiveUtils {
             for (File f : files) f.delete();
         }
         System.out.println("批量搜索 "+dir.getAbsolutePath());
-        Map<String, Map<String, Object>> fileInfos = null;
+        Map<String, Map<Key, Object>> fileInfos = null;
 
         int count = 0;
         try {
