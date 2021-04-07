@@ -366,7 +366,7 @@ public class Modification {
         }
     }
     private static int tagsFromXmpFile(File xmpDir, File imgDir, Map<String,File> files) {
-        return executeExiftool(xmpDir,imgDir,files, "-m",
+        return executeExiftool(xmpDir,imgDir,files, "-n","-m",
                     "-charset", "IPTC=UTF8", "-charset", "EXIF=UTF8",
                     "-tagsfromfile", XMP + File.separator + "%f.xmp");
     }

@@ -129,7 +129,7 @@ public enum Orientation {
     }
     public static Integer getOrientation(File imgFile) {
         try {
-            Map<String, List<String>> result = ExifTool.getInstance().execute(imgFile, "-T", "-orientation");
+            Map<String, List<String>> result = ExifTool.getInstance().execute(imgFile, "-n","-T", "-orientation");
             List<String> msgList = result.get(ExifTool.RESULT);
             if (msgList==null || msgList.size()==0) return null;
             return value(msgList.get(0));

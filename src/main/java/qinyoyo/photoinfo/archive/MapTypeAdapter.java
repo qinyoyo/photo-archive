@@ -1,4 +1,4 @@
-package qinyoyo.photoinfo;
+package qinyoyo.photoinfo.archive;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.internal.LinkedTreeMap;

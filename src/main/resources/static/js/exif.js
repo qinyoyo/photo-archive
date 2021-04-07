@@ -56,6 +56,61 @@ function toggleSaveState(enable) {
         document.getElementById('submit').removeAttribute('disabled')
     else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
+function afterSelection() {
+    let folders = [], files=[]
+    document.querySelectorAll('.file-item.selected').forEach(function (i) {
+        folders.push(i.getAttribute('data-folder'))
+        files.push(i.getAttribute('data-file'))
+    })
+    document.getElementById('subFolder').value = folders.join(',')
+    document.getElementById('fileName').value = files.join(',')
+    if (selectedDom) {
+        const file = selectedDom.getAttribute('data-file')
+        const lastModified = selectedDom.getAttribute('data-lastmodified')
+        const curPath = selectedDom.getAttribute('data-folder').replace(/\\/g, '/')
+        const thumbDom = document.querySelector('.thumb-image')
+        thumbDom.setAttribute('src', '/.thumb/' + curPath + (curPath ? '/' : '') + file
+            + (lastModified ? '?click=' + lastModified : ''))
+        thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
+            + (lastModified ? '?click=' + lastModified : ''))
+        thumbDom.setAttribute('title', selectedDom.getAttribute('title'))
+        for (let i = 0; i < dataKeys.length; i++) {
+            let v = selectedDom.getAttribute(dataKeys[i])
+            if (v && (nameKeys[i] === 'shootTime' || nameKeys[i] === 'gpsDatetime')) v = v.replace(' ', 'T')
+            else if (v && nameKeys[i] === 'orientation') {
+                if (v && parseInt(v) > 1 && !sessionOptions.supportOrientation) {
+                    document.querySelector('.thumb-image').className = "thumb-image img-index-0 orientation-" + v
+                } else document.querySelector('.thumb-image').className = "thumb-image img-index-0"
+            }
+            document.getElementById(nameKeys[i]).value = (v ? v : '')
+        }
+        if (files.length == 1) {
+            document.querySelectorAll('form input[type="checkbox"]').forEach(function(e){
+                e.checked = false
+            })
+        }
+        toggleSaveState(false)
+    }
+}
+function moveSelection(up) {
+    const fileItems = document.querySelectorAll('.file-item')
+    let start = -1, end = -1
+    for (let i=0;i<fileItems.length;i++) {
+        if (fileItems[i].className.indexOf('selected')>=0) {
+            if (start==-1) start = i;
+            end = i;
+        }
+    }
+    let index = up ? start - 1 : end + 1
+    if (index>=0 && index<fileItems.length) {
+        selectedDom = fileItems[index]
+        fileItems.forEach(function (i) {
+            if (i == selectedDom) addClass(i, 'selected')
+            else removeClass(i, 'selected')
+        })
+    }
+    afterSelection()
+}
 function selectFile(dom,event) {
     const fileItems = document.querySelectorAll('.file-item')
     if (event.shiftKey || (event.target && event.target.tagName == 'I')) {
@@ -98,41 +153,7 @@ function selectFile(dom,event) {
             else removeClass(i, 'selected')
         })
     }
-    let folders = [], files=[]
-    document.querySelectorAll('.file-item.selected').forEach(function (i) {
-        folders.push(i.getAttribute('data-folder'))
-        files.push(i.getAttribute('data-file'))
-    })
-    document.getElementById('subFolder').value = folders.join(',')
-    document.getElementById('fileName').value = files.join(',')
-    if (selectedDom) {
-        const file = selectedDom.getAttribute('data-file')
-        const lastModified = selectedDom.getAttribute('data-lastmodified')
-        const curPath = selectedDom.getAttribute('data-folder').replace(/\\/g, '/')
-        const thumbDom = document.querySelector('.thumb-image')
-        thumbDom.setAttribute('src', '/.thumb/' + curPath + (curPath ? '/' : '') + file
-            + (lastModified ? '?click=' + lastModified : ''))
-        thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
-            + (lastModified ? '?click=' + lastModified : ''))
-        thumbDom.setAttribute('title', selectedDom.getAttribute('title'))
-        for (let i = 0; i < dataKeys.length; i++) {
-            let v = selectedDom.getAttribute(dataKeys[i])
-            if (v && nameKeys[i] === 'shootTime') v = v.replace(' ', 'T')
-            else if (v && nameKeys[i] === 'gpsDatetime' && v.length == 20) v = v.substring(0, 4) + '-' + v.substring(5, 7) + '-' + v.substring(8, 10) + 'T' + v.substring(11, 19)
-            else if (v && nameKeys[i] === 'orientation') {
-                if (v && parseInt(v) > 1 && !sessionOptions.supportOrientation) {
-                    document.querySelector('.thumb-image').className = "thumb-image img-index-0 orientation-" + v
-                } else document.querySelector('.thumb-image').className = "thumb-image img-index-0"
-            }
-            document.getElementById(nameKeys[i]).value = (v ? v : '')
-        }
-        if (files.length == 1) {
-            document.querySelectorAll('form input[type="checkbox"]').forEach(function(e){
-                e.checked = false
-            })
-        }
-        toggleSaveState(false)
-    }
+    afterSelection()
 }
 
 function changed(dom) {
@@ -151,11 +172,6 @@ function save() {
     const form = document.getElementById('exifForm')
     let url = '/exifSave'
     let data = new FormData(form)
-    let value = data.get('gpsDatetime')
-    if (value) {
-        value=value.substring(0,4)+':'+value.substring(5,7)+':'+value.substring(8,10)+' '+value.substring(11,19)+'Z'
-        data.set('gpsDatetime',value)
-    }
     toggleSaveState(false)
     Ajax.post(url,data,function(msg) {
         if (msg && msg.indexOf('ok')==0) {
@@ -307,7 +323,13 @@ window.onload=function(){
     document.querySelector('.thumb-image').onclick = function() {
         addImageDialog(0, this)
     }
-
+    document.querySelector('.file-list').onkeydown = function (event) {
+        if (event.code=='ArrowUp' || event.code=='Numpad8'){
+            moveSelection(true)
+        } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
+            moveSelection(false)
+        }
+    }
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {

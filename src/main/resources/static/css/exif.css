@@ -102,3 +102,6 @@ i {
     cursor: pointer;
     min-width: 60px;
 }
+div:focus {
+    outline: none;
+}

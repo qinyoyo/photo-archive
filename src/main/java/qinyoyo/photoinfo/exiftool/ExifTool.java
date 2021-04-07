@@ -134,10 +134,40 @@ public class ExifTool {
         return processQueryResult(dir, stdOut, stdErr, keys);
     }
 
+    /**
+     * 修改或删除指定tags
+     * @param dir 目录或一个文件
+     * @param attrs 指定修改的tag，如果置为null，则删除
+     * @param overwriteOriginal 是否直接覆盖源文件，不备份
+     * @return 是否成功
+     */
+    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
+        try {
+            if (attrs == null || attrs.size() == 0) return false;
+            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0) + 1];
+            int i = 0;
+            argsList[i++] = "-n";
+            for (Key key : attrs.keySet()) {
+                Object v = attrs.get(key);
+                argsList[i++] = "-" + Key.getName(key) + "=" + (v == null ? "" : v.toString());
+            }
+            if (overwriteOriginal) argsList[i++] = "-overwrite_original";
+            Map<String, List<String>> result = execute(dir, argsList);
+            return updatesFiles(result)==1;
+        } catch (Exception e){ Util.printStackTrace(e);}
+        return false;
+    }
+
+    /**
+     * 执行一个exiftool命令
+     * @param dir 文件或目录
+     * @param options 命令参数(如果关闭pringConv，需要指定-n参数)
+     * @return 执行结果
+     * @throws IOException 异常
+     */
     public Map<String,List<String>> execute(File dir, String ... options) throws IOException {
         List<String> argsList = new ArrayList<>();
         argsList.add(EXIFTOOL);
-        argsList.add("-n");
         argsList.add("-charset");
         argsList.add("filename=\"\"");
 
@@ -154,6 +184,12 @@ public class ExifTool {
             if (stdErr!=null && stdErr.size()>0) put(ERROR,stdErr);
         }};
     }
+
+    /**
+     * 获取修改完成的文件数
+     * @param result 结果参数
+     * @return 修改文件数
+     */
     public static int updatesFiles(Map<String, List<String>> result) {
         if (result==null) return 0;
         List<String> msgList = result.get(ExifTool.RESULT);
@@ -166,21 +202,7 @@ public class ExifTool {
         }
         return 0;
     }
-    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
-        try {
-            if (attrs == null || attrs.size() == 0) return false;
-            String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0)];
-            int i = 0;
-            for (Key key : attrs.keySet()) {
-                Object v = attrs.get(key);
-                argsList[i++] = "-" + Key.getName(key) + "=" + (v == null ? "" : v.toString());
-            }
-            if (overwriteOriginal) argsList[i++] = "-overwrite_original";
-            Map<String, List<String>> result = execute(dir, argsList);
-            return updatesFiles(result)==1;
-        } catch (Exception e){ Util.printStackTrace(e);}
-        return false;
-    }
+
     private Map<String,Map<Key, Object>> processQueryResult(File dir, List<String> stdOut, List<String> stdErr, Key ... keys) {
         if (!dir.isDirectory() && !SupportFileType.isSupport(dir.getName())) return null;
         Map<String,Map<Key, Object>> queryResult = new HashMap<>();

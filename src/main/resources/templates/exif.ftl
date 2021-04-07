@@ -61,7 +61,7 @@
             </div>
             </#if>
             <#if photos??>
-            <div class="file-list" data-size="${photos?size?c}">
+            <div class="file-list" data-size="${photos?size?c}" tabindex="0">
                 <#list photos as p>
                 <div class="folder-list__item file-item" data-folder="${p.subFolder}" data-file="${p.fileName}" <@photoAttributes p />>
                     <i class = "fa fa-picture-o folder__icon"></i>
