@@ -193,6 +193,7 @@ public class ExifTool {
     public static int updatesFiles(Map<String, List<String>> result) {
         if (result==null) return 0;
         List<String> msgList = result.get(ExifTool.RESULT);
+        if (msgList == null || msgList.size() == 0) msgList = result.get(ExifTool.ERROR);
         if (msgList == null || msgList.size() == 0) return 0;
         for (String msg : msgList) {
             msg = msg.toLowerCase();
@@ -212,7 +213,7 @@ public class ExifTool {
         StringBuilder sb=new StringBuilder();
         for (String line : stdOut) {
             if (line.endsWith("\t")) line = line+"-";
-            List<String> lineSeparated = Arrays.asList(line.split("\t"));
+            List<String> lineSeparated = Arrays.asList(line.split("\t",-1));
             if (lineSeparated.size() < keys.length + 1) {
             	sb.append(line).append("\n");
                 continue;

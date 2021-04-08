@@ -138,7 +138,7 @@ public class FolderInfo {
 			if (path.indexOf("扫描")>=0) continue;
 			if (path.startsWith("\\")) path=path.substring(1);
 			if (path.endsWith("\\")) path=path.substring(0,path.length()-1);
-			String [] ff = path.split("\\\\");
+			String [] ff = path.split("\\\\",-1);
 			if (pathYear==null || !pathYear.equals(ff[0])) {
 				pathYear=ff[0];
 				Date dt0=null,dt1=null;
@@ -147,7 +147,7 @@ public class FolderInfo {
 						dt0 = new SimpleDateFormat("yyyy-MM-dd").parse(ff[0] + "-01-01");
 						dt1 = new SimpleDateFormat("yyyy-MM-dd").parse(ff[0] + "-12-31");
 					} else {
-						String [] yy = ff[0].split("-");
+						String [] yy = ff[0].split("-",-1);
 						if (yy.length==2) {
 							dt0 = new SimpleDateFormat("yyyy-MM-dd").parse(yy[0].trim() + "-01-01");
 							dt1 = new SimpleDateFormat("yyyy-MM-dd").parse(yy[1].trim() + "-12-31");

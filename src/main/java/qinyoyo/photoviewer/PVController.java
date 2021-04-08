@@ -260,20 +260,9 @@ public class PVController implements ApplicationRunner , ErrorController {
                 }
             }
             if (selectedKey.isEmpty()) return "没有需要修改的标签";
-            List<Key> removeTags = new ArrayList<>();
-            Iterator<Key> iter = selectedKey.iterator();
-            while (iter.hasNext()) {
-                Key key = iter.next();
-                Object obj = p1.getFieldByTag(key);
-                if (Util.isEmpty(obj)) {
-                    iter.remove();
-                    removeTags.add(key);
-                }
-            }
-            // removeTags不排除已经为空的字段，因为多选操作各个文件不一样
             PhotoInfo photoInfo = null;
-            String [] subFolders = p1.getSubFolder().split(","),
-                    files = p1.getFileName().split(",");
+            String [] subFolders = p1.getSubFolder().split(",",-1),
+                    files = p1.getFileName().split(",",-1);
             List<PhotoInfo> photoList = new ArrayList<>();
             for (int i=0;i< files.length;i++) {
                 PhotoInfo p = archiveInfo.find(subFolders[i],files[i]);
@@ -290,7 +279,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                         PhotoInfo p0 = op0.get();
                         List<Key> keys = ArchiveUtils.differentOf(p0, p1,selectedKey);
                         if (keys != null && !keys.isEmpty()) {
-                            Map<Key, Object> params = Modification.exifMap(p1, keys, true);
+                            Map<Key, Object> params = Modification.exifMap(p1, keys, false);
                             if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
                             String fullPath = subFolders[i].isEmpty()?files[i] : (subFolders[i]+File.separator+files[i]);
                             modifications.add(new Modification(Modification.Exif, fullPath, params));
@@ -298,13 +287,9 @@ public class PVController implements ApplicationRunner , ErrorController {
                     }
                 }
             }
-            modifications.forEach(m->Modification.save(m,rootPath));
+            if (modifications.isEmpty()) return "没有需要修改的对象";
             if (files.length==1) {
-                int count = 0;
-                if (!removeTags.isEmpty()) {
-                    count += Modification.removeTags(photoList,archiveInfo,removeTags);
-                }
-               if (!modifications.isEmpty()) count += Modification.setExifTags(modifications,archiveInfo);
+                int count =  Modification.setExifTags(modifications,archiveInfo,true);
                if (count>0) {
                    afterChanged();
                    if (photoInfo!=null) return "ok,"+photoInfo.getLastModified();
@@ -314,11 +299,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 new Thread() {
                     @Override
                     public void run() {
-                        int count = 0;
-                        if (!removeTags.isEmpty()) {
-                            count += Modification.removeTags(photoList,archiveInfo,removeTags);
-                        }
-                        if (!modifications.isEmpty()) count += Modification.setExifTags(modifications,archiveInfo);
+                        int count = Modification.setExifTags(modifications,archiveInfo,true);
                         if (count>0) {
                             archiveInfo.sortInfos();
                             archiveInfo.saveInfos();
@@ -403,8 +384,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (!options.isUnlocked()) {
             return "请先解锁!!!";
         }
-        if (Modification.removeAction(path,archiveInfo)) {
-            Modification.save(new Modification(Modification.Remove,path,null),rootPath);
+        if (Modification.removeAction(path,archiveInfo,true)) {
             return "ok";
         }
         else return "error";
@@ -425,8 +405,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (pi.modifyOrientation(rootPath, rating, orientations)) {
             Map<Key,Object> map = new HashMap<>();
             if (rating!=null) map.put(Key.RATING,rating);
-            if (orientations!=null) map.put(Key.ORIENTATION,
-                    Orientation.name(pi.getOrientation()==null? Orientation.NONE.getValue() : pi.getOrientation()));
+            if (orientations!=null) map.put(Key.ORIENTATION,pi.getOrientation());
             Modification.save(new Modification(Modification.Exif,path,map),rootPath);
             afterChanged();
             return "ok,"+
@@ -448,8 +427,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         new Thread() {
             @Override
             public void run() {
-                if (Modification.scanAction(path,archiveInfo))
-                        Modification.save(new Modification(Modification.Scan,path,null),rootPath);
+                Modification.scanAction(path,archiveInfo,true);
             }
         }.start();
         return "ok";
@@ -741,11 +719,9 @@ public class PVController implements ApplicationRunner , ErrorController {
         rootPath = env.getProperty("photo.root-path");
         if (rootPath==null) rootPath = SpringContextUtil.getProjectHomeDirection();
 
-
         new Thread() {
             @Override
             public void run() {
-
                 archiveInfo = new ArchiveInfo(rootPath);
                 rootPath = archiveInfo.getPath();  // 标准化
                 System.out.println("归档主目录为 : "+rootPath);

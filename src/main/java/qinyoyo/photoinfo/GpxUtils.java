@@ -179,7 +179,7 @@ public class GpxUtils {
                                             else if (value.getNodeName().equals("ele"))
                                                 ele = Double.parseDouble(value.getTextContent());
                                             else if (value.getNodeName().equals("desc")) {
-                                                String[] desc = value.getTextContent().split("\\|");
+                                                String[] desc = value.getTextContent().split("\\|",-1);
                                                 if (desc.length > 0) country = desc[0];
                                                 if (desc.length > 1) province = desc[1];
                                                 if (desc.length > 2) city = desc[2];

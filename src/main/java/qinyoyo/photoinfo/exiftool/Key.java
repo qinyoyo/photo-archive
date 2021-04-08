@@ -14,6 +14,7 @@ public enum Key {
 
     APERTURE("ApertureValue", Double.class),
     ARTIST("IFD0:Artist", String.class,"创作者"),
+    BY_LINE("IPTC:By-line",String.class),
     COLOR_SPACE("ColorSpace", Integer.class),
     CONTRAST("Contrast", Integer.class),
     CREATEDATE("CreateDate", Date.class, "创建时间"),

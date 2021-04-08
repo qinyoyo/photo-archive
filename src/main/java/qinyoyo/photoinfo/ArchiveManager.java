@@ -216,11 +216,11 @@ public class ArchiveManager {
                     path = inputSubFolder("选择需要重新扫描的子目录",rootPath);
                     if (path==null) break;
                     if (!path.isEmpty()) {
-                        if (Modification.scanAction(path, archived))
-                            Modification.save(new Modification(Modification.Scan, path, null), archived.getPath());
-                        System.out.println("完成目录重新扫描 " + path);
-                        afterChanged(archived);
-                        done = true;
+                        if (Modification.scanAction(path, archived,true)) {
+                            System.out.println("完成目录重新扫描 " + path);
+                            afterChanged(archived);
+                            done = true;
+                        } else System.out.println("目录重新扫描失败 " + path);
                     }
                     break;
                 case "5":
@@ -295,7 +295,7 @@ public class ArchiveManager {
                     List<Modification> list = Modification.read(rootPath);
                     if (list!=null) {
                         System.out.println("同步修改...");
-                        Modification.setExifTags(list,archived);
+                        Modification.setExifTags(list,archived,false);
                         Modification.resetSyncAction(rootPath);
                         afterChanged(archived);
                         System.out.println("同步修改完成.");

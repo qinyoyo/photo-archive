@@ -28,10 +28,14 @@ public class ArchiveUtils {
             Key.COUNTRY,Key.COUNTRY_CODE,Key.STATE,Key.CITY,Key.LOCATION,Key.SUBJECT_CODE };
     public static final Key[] MODIFIABLE_KEYS = new Key[]{
             Key.SUBJECT_CODE, Key.ORIENTATION,
-            Key.DATETIMEORIGINAL,Key.SUB_SEC_TIME_ORIGINAL,Key.CREATEDATE,
+            Key.DATETIMEORIGINAL,Key.CREATEDATE,
             Key.ARTIST, Key.HEADLINE,Key.DESCRIPTION,Key.RATING,Key.SCENE,
             Key.COUNTRY,Key.COUNTRY_CODE, Key.STATE,Key.CITY,Key.LOCATION,
             Key.GPS_LONGITUDE, Key.GPS_LATITUDE, Key.GPS_ALTITUDE, Key.GPS_DATETIME
+    };
+    public static final Key[] MODIFIABLE_KEYS_EXT = new Key[]{
+            Key.SUB_SEC_TIME_ORIGINAL,Key.SUB_SEC_TIME_CREATE, Key.BY_LINE,
+            Key.GPS_LONGITUDE_REF, Key.GPS_LATITUDE_REF, Key.GPS_ALTITUDE_REF, Key.GPS_DATESTAMP, Key.GPS_TIMESTAMP
     };
     public static final String no_shottime_log = ".no_shottime.log";
     public static final String manual_other_bat = ".manual_other.bat";
@@ -171,7 +175,7 @@ public class ArchiveUtils {
 
     public static boolean isInWebFolder(String folder) {
         if (folder != null && !folder.isEmpty()) {
-            String[] dd = folder.split("\\\\|/");
+            String[] dd = folder.split("\\\\|/",-1);
             for (String d : dd) if (d.endsWith(".web")) return true;
         }
         return false;
@@ -203,7 +207,7 @@ public class ArchiveUtils {
                 acc.add(new Modification(pi,keys));
                 return acc;
         },(acc,pi)->null);
-        Modification.setExifTags(modifications,archiveInfo);
+        Modification.setExifTags(modifications,archiveInfo,true);
     }
     public static void writeAddress(List<PhotoInfo> list,ArchiveInfo archiveInfo) {
         updateExif(list, archiveInfo, new ArrayList<Key>() {{
@@ -397,7 +401,7 @@ public class ArchiveUtils {
             }
         }
         if (!modificationList.isEmpty()) {
-            Modification.setExifTags(modificationList,archiveInfo);
+            Modification.setExifTags(modificationList,archiveInfo, false);
             System.out.println("同步修改缩略图数量: "+modificationList.size());
         } else System.out.println("没有需要同步修改缩略图");
     }
@@ -467,7 +471,7 @@ public class ArchiveUtils {
     }
     public static String poiFromPath(String path) {
         if (path==null) return null;
-        String [] dirs = path.split("\\\\|/");
+        String [] dirs = path.split("\\\\|/",-1);
         for (int i=dirs.length-1; i>=0; i--) {
             String d = dirs[i].toLowerCase();
             if (d.equals("l") || d.equals("p") || d.equals("g") || d.equals("jpg") || d.equals("raw") || d.equals("nef")) continue;
