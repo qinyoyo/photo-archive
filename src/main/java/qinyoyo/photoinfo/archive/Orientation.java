@@ -125,7 +125,7 @@ public enum Orientation {
         Map<Key, Object> attrs = new HashMap<>();
         if (orientation!=null) attrs.put(Key.ORIENTATION, orientation);
         if (rating!=null) attrs.put(Key.RATING, rating);
-        return ExifTool.getInstance().modifyAttributes(imgFile,attrs, true);
+        return ExifTool.getInstance().update(imgFile,attrs, true);
     }
     public static Integer getOrientation(File imgFile) {
         try {

@@ -306,6 +306,22 @@ public class Modification {
         }
     }
 
+    private static Set<Key> modifiedTags(Map<String,Map<Key,Object>> exifMap) {
+        Set<Key> result = new LinkedHashSet<>();
+        exifMap.forEach((key,map)->result.addAll(map.keySet()));
+        if (result.contains(Key.DATETIMEORIGINAL)) result.add(Key.SUB_SEC_TIME_ORIGINAL);
+        if (result.contains(Key.CREATEDATE)) result.add(Key.SUB_SEC_TIME_CREATE);
+        if (result.contains(Key.GPS_LONGITUDE)) result.add(Key.GPS_LONGITUDE_REF);
+        if (result.contains(Key.GPS_LATITUDE)) result.add(Key.GPS_LATITUDE_REF);
+        if (result.contains(Key.GPS_ALTITUDE)) result.add(Key.GPS_ALTITUDE_REF);
+        if (result.contains(Key.GPS_DATETIME)) {
+            result.add(Key.GPS_DATESTAMP);
+            result.add(Key.GPS_TIMESTAMP);
+            result.remove(Key.GPS_DATETIME);
+        }
+        if (result.contains(Key.ARTIST)) result.add(Key.BY_LINE);
+        return result;
+    }
     private static String formatValue(Object value) {
         if (Util.isEmpty(value)) return "-";  // delete
         else {
@@ -315,7 +331,8 @@ public class Modification {
             } else if (Double.class.isAssignableFrom(type)) {
                 return String.format("%.7f",(Double)value);
             } else if (String.class.isAssignableFrom(type)) {
-                return (String) value;
+                String s = (String) value;
+                return s.contains(",") ? "\""+s+"\"" : s;
             } else if (Date.class.isAssignableFrom(type)) {
                 return DateUtil.date2String((Date)value);
             } else return value.toString();
@@ -323,24 +340,16 @@ public class Modification {
     }
     private static String csvString(Map<String,Map<Key,Object>> exifMap) {
         if (exifMap==null || exifMap.isEmpty()) return null;
+        Set<Key> selectedKeys = modifiedTags(exifMap);
         StringBuilder sb=new StringBuilder();
         sb.append("SourceFile");
-        for (Key k : ArchiveUtils.MODIFIABLE_KEYS) if (!k.equals(Key.GPS_DATETIME)) sb.append(",").append(Key.getName(k));
-        for (Key k : ArchiveUtils.MODIFIABLE_KEYS_EXT) sb.append(",").append(Key.getName(k));
+        for (Key k : selectedKeys) sb.append(",").append(Key.getName(k));
         sb.append("\n");
         for (String path : exifMap.keySet()) {
             Map<Key,Object> map = exifMap.get(path);
             if (map!=null && !map.isEmpty()) {
                 sb.append(path);
-                for (Key k : ArchiveUtils.MODIFIABLE_KEYS) {
-                    if (!k.equals(Key.GPS_DATETIME)) {
-                        if (map.containsKey(k)) {
-                            Object v = map.get(k);
-                            sb.append(",").append(formatValue(v));
-                        } else sb.append(",");
-                    }
-                }
-                for (Key k : ArchiveUtils.MODIFIABLE_KEYS_EXT) {
+                for (Key k : selectedKeys) {
                     switch (k) {
                         case SUB_SEC_TIME_ORIGINAL:
                             if (map.containsKey(Key.DATETIMEORIGINAL)) {
@@ -383,42 +392,20 @@ public class Modification {
                         case BY_LINE:
                             if (map.containsKey(Key.ARTIST)) {
                                 Object v = map.get(Key.ARTIST);
-                                sb.append(",").append(Util.isEmpty(v)?"-":v.toString());
+                                sb.append(",").append(formatValue(v));
                             } else sb.append(",");
                             break;
+                        default:
+                            if (map.containsKey(k)) {
+                                Object v = map.get(k);
+                                sb.append(",").append(formatValue(v));
+                            } else sb.append(",");
                     }
                 }
                 sb.append("\n");
             }
         }
         return sb.toString();
-    }
-    public static int removeExifTags(File file, List<Key> tags) {
-        if (tags==null || tags.size()==0) return 0;
-        Key [] a = tags.toArray(new Key[tags.size()]);
-        return removeExifTags(file,a);
-    }
-    public static int removeExifTags(File file, Key ... tags) {
-        if (tags==null || tags.length==0) return 0;
-        if (file==null || !file.exists()) return 0;
-        String [] args = new String [tags.length+1];
-        args[0]="-overwrite_original";
-        for (int i=0;i<tags.length;i++) {
-            args[i+1] = "-"+Key.getName(tags[i])+"=";
-        }
-        try {
-            Map<String, List<String>> result = ExifTool.getInstance().execute(file, args);
-            int count = ExifTool.updatesFiles(result);
-            List<String> error = result.get(ExifTool.ERROR);
-            if (error != null && error.size() > 0) {
-                for (String err : error)
-                    System.out.println(err);
-            }
-            return count;
-        } catch (Exception e) {
-            Util.printStackTrace(e);
-            return 0;
-        }
     }
 
     private static int executeExiftool(File csvDir, File imgDir, Map<String,File> files,String ... args) {
@@ -562,6 +549,8 @@ public class Modification {
                 exifMap.clear();
                 files.clear();
                 count=0;
+                FileUtil.removeFilesInDir(csvDir,false);
+                FileUtil.removeFilesInDir(imgDir,false);
             }
         }
         if (count>0) {

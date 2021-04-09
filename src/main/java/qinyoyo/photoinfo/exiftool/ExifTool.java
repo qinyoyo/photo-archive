@@ -96,7 +96,11 @@ public class ExifTool {
      * @return 标签值，key为文件名，值为标签及值的map
      * @throws IOException io异常
      */
-    public Map<String,Map<Key, Object>> query(File dir, List<String> args, Key ... keys) throws IOException {
+    public Map<String,Map<Key, Object>> query(File dir, Key ... keys) throws IOException {
+        return query(dir, null, keys);
+    }
+
+    public Map<String,Map<Key, Object>> query(File dir, List<String> excludeExts, Key ... keys) throws IOException {
         // exiftool.exe -T -charset filename="" -c "%+.7f" -filename -SubSecDateTimeOriginal -DateTimeOriginal -Make -Model -LensID -GPSLongitude -GPSLatitude -GPSAltitude
         if (dir==null || !dir.exists()) return null;
         if (!dir.isDirectory() && !SupportFileType.isSupport(dir.getName())) return null;
@@ -116,12 +120,14 @@ public class ExifTool {
         argsList.add("\"%+.7f\"");
 
         if (dir.isDirectory()) {
-	        argsList.add("-charset");
-	        argsList.add("filename=\"\"");
+            argsList.add("-charset");
+            argsList.add("filename=\"\"");
             argsList.add("-filename");
         }
-
-        if (args!=null && args.size()>0) argsList.addAll(args);
+        if (excludeExts!=null) for (String ext: excludeExts) {
+            argsList.add("--ext");
+            argsList.add(ext);
+        }
 
         for (Key key : keys) {
             argsList.add(String.format("-%s", Key.getName(key)));
@@ -133,7 +139,6 @@ public class ExifTool {
         List<String> stdErr = result.getValue();
         return processQueryResult(dir, stdOut, stdErr, keys);
     }
-
     /**
      * 修改或删除指定tags
      * @param dir 目录或一个文件
@@ -141,7 +146,7 @@ public class ExifTool {
      * @param overwriteOriginal 是否直接覆盖源文件，不备份
      * @return 是否成功
      */
-    public boolean modifyAttributes(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
+    synchronized  public boolean update(File dir, Map<Key, Object> attrs, boolean overwriteOriginal) {
         try {
             if (attrs == null || attrs.size() == 0) return false;
             String[] argsList = new String[attrs.size() + (overwriteOriginal ? 1 : 0) + 1];
@@ -158,6 +163,19 @@ public class ExifTool {
         return false;
     }
 
+    public boolean remove(File file, List<Key> tags) {
+        if (tags==null || tags.size()==0) return false;
+        Key [] a = tags.toArray(new Key[tags.size()]);
+        return remove(file,a);
+    }
+    public boolean remove(File file, Key ... tags) {
+        if (tags==null || tags.length==0) return false;
+        if (file==null || !file.exists()) return false;
+        Map<Key, Object> attrs = new HashMap<>();
+        for (Key k : tags) attrs.put(k,null);
+        return update(file,attrs,true);
+    }
+
     /**
      * 执行一个exiftool命令
      * @param dir 文件或目录
@@ -165,7 +183,7 @@ public class ExifTool {
      * @return 执行结果
      * @throws IOException 异常
      */
-    public Map<String,List<String>> execute(File dir, String ... options) throws IOException {
+    synchronized public Map<String,List<String>> execute(File dir, String ... options) throws IOException {
         List<String> argsList = new ArrayList<>();
         argsList.add(EXIFTOOL);
         argsList.add("-charset");
@@ -196,8 +214,7 @@ public class ExifTool {
         if (msgList == null || msgList.size() == 0) msgList = result.get(ExifTool.ERROR);
         if (msgList == null || msgList.size() == 0) return 0;
         for (String msg : msgList) {
-            msg = msg.toLowerCase();
-            Pattern p = Pattern.compile("(\\d+).*files?.*updated");
+            Pattern p = Pattern.compile("\\b(\\d+)\\b.*?\\bfiles?\\b\\s*\\bupdated\\b",Pattern.CASE_INSENSITIVE);
             Matcher m = p.matcher(msg);
             if (m.find()) return Integer.parseInt(m.group(1));
         }

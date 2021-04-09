@@ -210,4 +210,49 @@ public class FileUtil {
             return ".";
         }
     }
+    public static void saveObj(File file, Object object) {
+        FileOutputStream outputStream = null;
+        ObjectOutputStream objectOutputStream = null;
+        try {
+            outputStream = new FileOutputStream(file);
+            objectOutputStream = new ObjectOutputStream(outputStream);
+            objectOutputStream.writeObject(object);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (objectOutputStream!=null) {
+                try {
+                    objectOutputStream.close();
+                } catch (IOException e){ Util.printStackTrace(e);}
+            }
+            if (outputStream!=null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e){ Util.printStackTrace(e);}
+            }
+        }
+    }
+    public static Object readObj(File file) {
+        FileInputStream fileInputStream = null;
+        ObjectInputStream objectInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            objectInputStream = new ObjectInputStream(fileInputStream);
+            return objectInputStream.readObject();
+        } catch (Exception e) {
+            // e.printStackTrace();
+        } finally {
+            if (objectInputStream != null)
+                try {
+                    objectInputStream.close();
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+            if (fileInputStream != null)
+                try {
+                    fileInputStream.close();
+                } catch (IOException e){ Util.printStackTrace(e);}
+        }
+        return null;
+    }
 }

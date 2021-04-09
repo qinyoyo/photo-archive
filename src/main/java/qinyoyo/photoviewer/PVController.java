@@ -214,10 +214,8 @@ public class PVController implements ApplicationRunner , ErrorController {
         model.addAllAttributes(res);
         final boolean incSub = (recursion!=null && recursion ? true : false);
         model.addAttribute("recursion",incSub);
-        List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p ->
-               p.getMimeType()!=null && p.getMimeType().contains("image") &&
-               (subFolder.equals(p.getSubFolder()) ||
-                 (incSub && p.getSubFolder().startsWith(subFolder+File.separator))   )
+        List<PhotoInfo> photos = archiveInfo.subFolderInfos(subFolder,incSub).stream().filter(p ->
+               p.getMimeType()!=null && p.getMimeType().contains("image")
             ).collect(Collectors.toList());
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
         model.addAttribute("countries", TimeZoneTable.countryTimeZones);

@@ -25,7 +25,6 @@ public class ArchiveInfo {
     private String path; // 末尾不带分隔符
     private List<PhotoInfo> infos;
     private boolean readFromFile = false;
-    private List<String> exifToolArgs = null;
 
     public boolean isReadFromFile() {
         return readFromFile;
@@ -45,15 +44,10 @@ public class ArchiveInfo {
 	}
 
     public ArchiveInfo() {
-        exifToolArgs = null;
         //exifTool = ExifTool.getInstance();
         infos = new ArrayList<>();
     }
     public ArchiveInfo(String dir) {
-        this(dir,null);
-    }
-    public ArchiveInfo(String dir, List<String> args) {
-        exifToolArgs = args;
         //exifTool = ExifTool.getInstance();
         File d = new File(dir);
         if (!d.exists()) d.mkdirs();
@@ -105,7 +99,7 @@ public class ArchiveInfo {
                 }
                 System.out.println("成功扫描文件 "+p);
             } else {
-                List<PhotoInfo> list = ArchiveUtils.seekPhotoInfosInFolder(f,path, true, exifToolArgs);
+                List<PhotoInfo> list = ArchiveUtils.seekPhotoInfosInFolder(f,path, true);
                 final String seekPath = f.getCanonicalPath().length() == path.length() ? "" : f.getCanonicalPath().substring(path.length()+1);
                 final String subSeekPath = seekPath.isEmpty() ? "" : seekPath + File.separator;
                 List<PhotoInfo> existedList = infos.stream().filter(
@@ -175,7 +169,7 @@ public class ArchiveInfo {
 
     private void seekPhotoInfo() {
         File dir = new File(path);
-        infos = ArchiveUtils.seekPhotoInfosInFolder(dir, path, true, exifToolArgs);
+        infos = ArchiveUtils.seekPhotoInfosInFolder(dir, path, true);
         sortInfos();
         saveInfos();
     }

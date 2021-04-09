@@ -6,7 +6,6 @@ import qinyoyo.photoinfo.exiftool.CommandRunner;
 import qinyoyo.photoinfo.exiftool.ExifTool;
 import qinyoyo.photoinfo.exiftool.Key;
 import qinyoyo.utils.BaiduGeo;
-import qinyoyo.utils.DateUtil;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.Util;
 
@@ -205,11 +204,8 @@ public class ArchiveManager {
                     path = chooseFolder("输入需要同步的RAW目录",fileFilter);
                     if (path==null) break;
                     currentPath = path;
-                    List<String> args = new ArrayList<String>() {{
-                        add("--ext");
-                        add("xmp");
-                    }};
-                    ArchiveUtils.syncExifAttributesByTime(archived.getInfos(), photoInfoListIn(path,false, args), path);
+                    ArchiveUtils.syncExifAttributesByTime(archived.getInfos(), photoInfoListIn(path,false,
+                            new ArrayList<String>(){{ add("xmp"); }}), path);
                     done = true;
                     break;
                 case "4":
@@ -335,8 +331,8 @@ public class ArchiveManager {
             }
         }
     }
-    static List<PhotoInfo> photoInfoListIn(String path,boolean includeSubFolder, List<String> args) {
-        List<PhotoInfo> list=ArchiveUtils.seekPhotoInfosInFolder(new File(path),path,includeSubFolder,args);
+    static List<PhotoInfo> photoInfoListIn(String path, boolean includeSubFolder, List<String> excludeExts) {
+        List<PhotoInfo> list=ArchiveUtils.seekPhotoInfosInFolder(new File(path),path,includeSubFolder, excludeExts);
         ArchiveUtils.defaultSort(list);
         return list;
     }

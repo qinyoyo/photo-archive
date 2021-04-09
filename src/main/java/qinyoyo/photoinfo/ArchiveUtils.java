@@ -14,8 +14,6 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.nio.file.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ArchiveUtils {
@@ -105,51 +103,7 @@ public class ArchiveUtils {
             }
         }
     }
-    public static void saveObj(File file, Object object) {
-        FileOutputStream outputStream = null;
-        ObjectOutputStream objectOutputStream = null;
-        try {
-            outputStream = new FileOutputStream(file);
-            objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(object);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (objectOutputStream!=null) {
-                try {
-                    objectOutputStream.close();
-                } catch (IOException e){ Util.printStackTrace(e);}
-            }
-            if (outputStream!=null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e){ Util.printStackTrace(e);}
-            }
-        }
-    }
-    public static Object readObj(File file) {
-        FileInputStream fileInputStream = null;
-        ObjectInputStream objectInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(file);
-            objectInputStream = new ObjectInputStream(fileInputStream);
-            return objectInputStream.readObject();
-        } catch (Exception e) {
-            // e.printStackTrace();
-        } finally {
-            if (objectInputStream != null)
-                try {
-                    objectInputStream.close();
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-            if (fileInputStream != null)
-                try {
-                    fileInputStream.close();
-                } catch (IOException e){ Util.printStackTrace(e);}
-        }
-        return null;
-    }
+
 
     public static String newFile(String root, PhotoInfo p) {
         try {
@@ -603,9 +557,11 @@ public class ArchiveUtils {
         }
         return list;
     }
-    public static List<PhotoInfo> seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder, List<String> exifToolArgs) {
+    public static List<PhotoInfo> seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder) {
+        return seekPhotoInfosInFolder(dir, rootPath,includeSubFolder, null);
+    }
+    public static List<PhotoInfo> seekPhotoInfosInFolder(File dir, String rootPath, boolean includeSubFolder, List<String> excludeExts) {
         List<PhotoInfo> infoList = new ArrayList<>();
-        if (exifToolArgs==null) exifToolArgs=new ArrayList<>();
         if (!dir.isDirectory() || !dir.exists()) return infoList;
         File [] files = dir.listFiles(new FileFilter() {
             @Override
@@ -622,7 +578,7 @@ public class ArchiveUtils {
 
         int count = 0;
         try {
-            fileInfos = ExifTool.getInstance().query(dir, exifToolArgs, ArchiveUtils.NEED_KEYS);
+            fileInfos = ExifTool.getInstance().query(dir, excludeExts, ArchiveUtils.NEED_KEYS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -671,7 +627,7 @@ public class ArchiveUtils {
                 });
                 for (File d : dirs) {
                     if (d.isDirectory()) {
-                        infoList.addAll(seekPhotoInfosInFolder(d, rootPath, includeSubFolder, exifToolArgs));
+                        infoList.addAll(seekPhotoInfosInFolder(d, rootPath, includeSubFolder));
                     }
                 }
             }
