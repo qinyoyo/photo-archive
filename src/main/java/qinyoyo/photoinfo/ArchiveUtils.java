@@ -326,7 +326,7 @@ public class ArchiveUtils {
                 else if (pc > 0) break;
                 else if (equals(tarPi.getModel(),srcPi.getModel())){
                     index++;
-                    Map<Key, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS), true);
+                    Map<Key, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS));
                     Modification.deleteSameProperties(tarPi,params);
                     if (!params.isEmpty()) {
                         modified ++;

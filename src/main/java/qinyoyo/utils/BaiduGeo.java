@@ -125,26 +125,8 @@ public class BaiduGeo {
         return HttpUtils.doJsonGet(url, null,Info.class);
     }
 
-    static int utf8Length(String s) {
-        if (s == null) return 0;
-        else {
-            try {
-                return s.getBytes("utf-8").length;
-            } catch (UnsupportedEncodingException e) {
-                return s.length();
-            }
-        }
-    }
-
-    static String trunc(String s, Key key) {
-        int maxLength = Key.getMaxLength(key);
-        if (maxLength == 0) return s;
-        int utf8size = utf8Length(s);
-        while (utf8size > maxLength) {
-            s = s.substring(0, s.length() - 1);
-            utf8size = utf8Length(s);
-        }
-        return s;
+    public static String truncLocationName(String location, Key key, String ... upLevelNames) {
+        return TimeZoneTable.truncLocationName(location, Key.getMaxLength(key), upLevelNames);
     }
 
     public static List<PhotoInfo> seekAddressInfo(List<PhotoInfo> list,String rootPath) {
@@ -190,16 +172,16 @@ public class BaiduGeo {
                             }
                             boolean cc = TimeZoneTable.hasChinese(country) || TimeZoneTable.hasChinese(province) || TimeZoneTable.hasChinese(city);
                             p.setCountryCode(countryCode);
-                            p.setCountry(trunc(country, Key.COUNTRY));
-                            p.setProvince(trunc(province, Key.STATE));
+                            p.setCountry(truncLocationName(country, Key.COUNTRY));
+                            p.setProvince(truncLocationName(province, Key.STATE, country));
                             if (city.equals(province) || city.isEmpty()) {
-                                p.setCity(trunc(district,Key.CITY));
+                                p.setCity(truncLocationName(district,Key.CITY, country, province));
                                 district = "";
                             } else {
                                 String jcity = cc ? ArchiveUtils.join(null, city,district)
                                         : ArchiveUtils.join(",", district, city);
-                                if (utf8Length(jcity) > Key.getMaxLength(Key.CITY)) {
-                                    p.setCity(trunc(city,Key.CITY));
+                                if (TimeZoneTable.utf8Length(jcity) > Key.getMaxLength(Key.CITY)) {
+                                    p.setCity(truncLocationName(city,Key.CITY,country, province));
                                 } else {
                                     p.setCity(jcity);
                                     district = "";
@@ -209,16 +191,16 @@ public class BaiduGeo {
                             String loc = cc ? ArchiveUtils.join(null, district, town, street)
                                     : ArchiveUtils.join(",", street, town, district);
                             int maxLocLen = Key.getMaxLength(Key.LOCATION);
-                            if (utf8Length(loc) > maxLocLen) {
+                            if (TimeZoneTable.utf8Length(loc) > maxLocLen) {
                                 loc = cc ? ArchiveUtils.join(null, district, town)
                                         : ArchiveUtils.join(",", town, district);
                                 if (loc == null || loc.isEmpty()) loc = street;
-                                if (utf8Length(loc) > maxLocLen) {
+                                if (TimeZoneTable.utf8Length(loc) > maxLocLen) {
                                     loc = district;
                                     if (loc == null || loc.isEmpty()) loc = town;
                                     if (loc == null || loc.isEmpty()) loc = street;
                                 }
-                                loc = trunc(loc, Key.LOCATION);
+                                loc = truncLocationName(loc, Key.LOCATION,country, province, city);
                             }
                             p.setLocation(loc);
 
@@ -227,7 +209,7 @@ public class BaiduGeo {
                                 if (pois!=null && pois.size()>0) {
                                     Poi poi = pois.get(0);
                                     if ("内".equals(poi.direction) || "0".equals(poi.distance))
-                                        p.setSubjectCode(trunc(poi.name, Key.SUBJECT_CODE));
+                                        p.setSubjectCode(truncLocationName(poi.name, Key.SUBJECT_CODE, country, province, city));
                                 }
                             }
                             count++;

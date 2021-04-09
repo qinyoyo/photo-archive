@@ -1,5 +1,6 @@
 package qinyoyo.photoinfo.archive;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -419,5 +420,40 @@ public class TimeZoneTable {
             if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(",",poi, address);
             else return address;
         }
+    }
+    public static int utf8Length(String s) {
+        if (s == null) return 0;
+        else {
+            try {
+                return s.getBytes("utf-8").length;
+            } catch (UnsupportedEncodingException e) {
+                return s.length();
+            }
+        }
+    }
+    public static String truncLocationName(String location, int maxLength, String ... upLevelNames) {
+        if (location==null || location.isEmpty()) return location;
+        if (upLevelNames!=null && upLevelNames.length>0) {
+            for (String upLevelName : upLevelNames) {
+                if (upLevelName==null || upLevelName.isEmpty()) continue;
+                String sl = location.toLowerCase(), rl = upLevelName.toLowerCase();
+                if (sl.startsWith(rl)) location = location.substring(upLevelName.length()).trim();
+                else if (sl.endsWith(upLevelName.toLowerCase()))
+                    location = location.substring(0, location.length() - upLevelName.length()).trim();
+            }
+        }
+        if (maxLength == 0) return location;
+        int utf8size = utf8Length(location);
+        while (utf8size > maxLength) {
+            int s = location.lastIndexOf("("), e = location.lastIndexOf(")");
+            if (s>0 && e>s) {
+                location = location.substring(0,s) + (e<location.length()-1 ? location.substring(e+1) : "");
+                utf8size = utf8Length(location);
+                continue;
+            }
+            location = location.substring(0, location.length() - 1);
+            utf8size = utf8Length(location);
+        }
+        return location;
     }
 }

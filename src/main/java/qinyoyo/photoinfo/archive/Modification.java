@@ -121,7 +121,7 @@ public class Modification {
     public Modification(PhotoInfo pi,List<Key> keys) {
         this.action = Exif;
         this.path = pi.getSubFolder().isEmpty() ? pi.getFileName() : (pi.getSubFolder() + File.separator + pi.getFileName());
-        this.params = exifMap(pi,keys,false);
+        this.params = exifMap(pi,keys);
     }
     @Override
     public String toString() {
@@ -197,15 +197,14 @@ public class Modification {
      * 获得tag键值对
      * @param pi 照片信息
      * @param keys 需要描述的tag列表
-     * @param skipNull 是否忽略值为空的字段
      * @return 键值对
      */
-    public static Map<Key,Object> exifMap(PhotoInfo pi, List<Key> keys, boolean skipNull) {
+    public static Map<Key,Object> exifMap(PhotoInfo pi, List<Key> keys) {
         Map<Key,Object> map = new HashMap<>();
         if (pi==null || keys==null || keys.size()==0) return map;
         for (Key key : keys) {
             Object value = pi.getFieldByTag(key);
-            if (!skipNull || !Util.isEmpty(value))   map.put(key,value);
+            map.put(key,value);
         }
         return map;
     }
@@ -219,7 +218,7 @@ public class Modification {
         if (p==null || attrs==null) return;
         List<Key> keys = new ArrayList<>();
         for (Key key : attrs.keySet()) keys.add(key);
-        Map<Key,Object> values = exifMap(p,keys,false);
+        Map<Key,Object> values = exifMap(p,keys);
         for (Key k : values.keySet()) {
             Object v1 = attrs.get(k);
             Object v2 = values.get(k);

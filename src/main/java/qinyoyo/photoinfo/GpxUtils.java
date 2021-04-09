@@ -199,6 +199,12 @@ public class GpxUtils {
                                             if (author!=null && !author.isEmpty()) map.put(Key.ARTIST,author);
                                             map.put(Key.GPS_LATITUDE, lat);
                                             map.put(Key.GPS_LONGITUDE, lon);
+                                            province = BaiduGeo.truncLocationName(province,Key.STATE,country);
+                                            city = BaiduGeo.truncLocationName(city,Key.CITY,country,province);
+                                            location = BaiduGeo.truncLocationName(location,Key.LOCATION,
+                                                    country,province,city);
+                                            step = BaiduGeo.truncLocationName(step,Key.SUBJECT_CODE,
+                                                    country,province,city);
                                             if (ele != null) map.put(Key.GPS_ALTITUDE, ele);
                                             if (step != null) map.put(Key.SUBJECT_CODE, step);
                                             if (country != null) map.put(Key.COUNTRY, country);

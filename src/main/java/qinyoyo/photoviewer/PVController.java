@@ -258,6 +258,17 @@ public class PVController implements ApplicationRunner , ErrorController {
                 }
             }
             if (selectedKey.isEmpty()) return "没有需要修改的标签";
+            if (selectedKey.contains(Key.COUNTRY_CODE)) {
+                String code = TimeZoneTable.standCountryName(p1.getCountry(),true);
+                if (!Util.isEmpty(code)) p1.setCountryCode(code);
+            }
+            if (selectedKey.contains(Key.STATE)) p1.setProvince(BaiduGeo.truncLocationName(p1.getProvince(),Key.STATE,p1.getCountry()));
+            if (selectedKey.contains(Key.CITY)) p1.setCity(BaiduGeo.truncLocationName(p1.getCity(),Key.CITY,p1.getCountry(),p1.getProvince()));
+            if (selectedKey.contains(Key.LOCATION)) p1.setLocation(BaiduGeo.truncLocationName(p1.getLocation(),Key.LOCATION,
+                    p1.getCountry(),p1.getProvince(),p1.getCity()));
+            if (selectedKey.contains(Key.SUBJECT_CODE)) p1.setSubjectCode(BaiduGeo.truncLocationName(p1.getSubjectCode(),Key.SUBJECT_CODE,
+                    p1.getCountry(),p1.getProvince(),p1.getCity()));
+
             PhotoInfo photoInfo = null;
             String [] subFolders = p1.getSubFolder().split(",",-1),
                     files = p1.getFileName().split(",",-1);
@@ -277,7 +288,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                         PhotoInfo p0 = op0.get();
                         List<Key> keys = ArchiveUtils.differentOf(p0, p1,selectedKey);
                         if (keys != null && !keys.isEmpty()) {
-                            Map<Key, Object> params = Modification.exifMap(p1, keys, false);
+                            Map<Key, Object> params = Modification.exifMap(p1, keys);
                             if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
                             String fullPath = subFolders[i].isEmpty()?files[i] : (subFolders[i]+File.separator+files[i]);
                             modifications.add(new Modification(Modification.Exif, fullPath, params));

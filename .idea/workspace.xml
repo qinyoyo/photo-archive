@@ -24,7 +24,12 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/GpxUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/TimeZoneTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/TimeZoneTable.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -200,6 +205,7 @@
       <workItem from="1617800631386" duration="6536000" />
       <workItem from="1617842976573" duration="18481000" />
       <workItem from="1617928979852" duration="10705000" />
+      <workItem from="1617952080335" duration="7795000" />
     </task>
     <servers />
   </component>
@@ -343,7 +349,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java</url>
-          <line>430</line>
+          <line>429</line>
           <option name="timeStamp" value="163" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
