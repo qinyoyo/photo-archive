@@ -163,7 +163,7 @@ public class ArchiveManager {
                         "\n——————————————————————————————\n" +
                         "1 重建缩略图文件\n" +
                         "2 同步缩略图方向属性\n" +
-                        "3 将属性写入到RAW文件\n" +
+                        "3 根据拍摄时间将属性写入到RAW等原始文件\n" +
                         "4 重新扫描子目录\n" +
                         "5 将一个目录合并入归档\n" +
                         "6 重新命名目录文件\n" +
@@ -201,10 +201,13 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "3":
+                    String subFolder = inputSubFolder("选择同步源子目录",rootPath);
+                    boolean incSub = Util.boolValue(getInputString("是否搜索子目录", "yes"));
                     path = chooseFolder("输入需要同步的RAW目录",fileFilter);
                     if (path==null) break;
                     currentPath = path;
-                    ArchiveUtils.syncExifAttributesByTime(archived.getInfos(), photoInfoListIn(path,false,
+                    ArchiveUtils.syncExifAttributesByTime(archived.subFolderInfos(subFolder,incSub),
+                            photoInfoListIn(path,incSub,
                             new ArrayList<String>(){{ add("xmp"); }}), path);
                     done = true;
                     break;
@@ -248,9 +251,9 @@ public class ArchiveManager {
                 case "6":
                     path = inputSubFolder("选择需要重新命名的目录",rootPath);
                     if (path==null) break;
-                    String incSub = getInputString("是否搜索子目录", "yes");
+                    incSub = Util.boolValue(getInputString("是否搜索子目录", "yes"));
                     final String temPath = path;
-                    if (rename(archived.subFolderInfos(path,Util.boolValue(incSub)), archived.getPath())) {
+                    if (rename(archived.subFolderInfos(path,incSub), archived.getPath())) {
                         done = true;
                         afterChanged(archived);
                     }
@@ -301,8 +304,8 @@ public class ArchiveManager {
                 case "b":
                     path = inputSubFolder("选择需要归档的目录",rootPath);
                     if (path==null) break;
-                    incSub = getInputString("是否搜索子目录", "yes");
-                    done = writeGpxFile(archived,path, Util.boolValue(incSub))>0;
+                    incSub = Util.boolValue(getInputString("是否搜索子目录", "yes"));
+                    done = writeGpxFile(archived,path, incSub)>0;
                     break;
                 case "c":
                     if (!selectGpxInfo()) break;
