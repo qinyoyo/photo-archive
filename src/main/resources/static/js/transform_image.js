@@ -882,6 +882,8 @@
                 mirror(false)
             } else if (event.code=='KeyV') {
                 mirror(true)
+            } else if (event.code=='Escape') {
+                document.querySelector('.tran-img__float-button.close').onclick(event)
             }
         }
         document.querySelector('body').onkeydown = imageKeyEvent
@@ -946,11 +948,15 @@
         node.style.zIndex = "6000"
         document.querySelector('body').appendChild(node)
     }
+    const backAsClose = function(event) {
+        document.querySelector('.tran-img__float-button.close').onclick(event)
+    }
     const removeImageDialog = function () {
         if (loopTimerId) {
             clearInterval(loopTimerId)
             loopTimerId = null
         }
+        window.removeEventListener("popstate", backAsClose);
         let m = document.querySelector('.tran-img__modal')
         if (m) m.remove()
         let d = document.querySelector('.tran-img__wrapper')
@@ -1045,8 +1051,7 @@
         function floatButtonClick(event, onclick) {
             event.stopPropagation()
             event.preventDefault()
-            const floatButtons = document.querySelector('.tran-img__fb-wrapper')
-            if (floatButtons.className.indexOf('show')>=0 && typeof onclick === 'function') {
+            if (typeof onclick === 'function' && ( event instanceof KeyboardEvent || event instanceof PopStateEvent || document.querySelector('.tran-img__fb-wrapper.show'))) {
                 onclick(event)
             } else toggleFloatButtons(true)
         }
@@ -1065,7 +1070,7 @@
         }
 
         createButton({
-            className:'close',
+            className:'close white',
             title: '关闭',
             iconClass:'fa fa-power-off',
             onclick:function (){
@@ -1079,6 +1084,10 @@
             }
         })
 
+        if (!document.querySelector('.auto-play-loop-images')) {
+            history.pushState(null, null, location.href)
+            window.addEventListener("popstate", backAsClose, false);
+        }
         if (buttonOptions && buttonOptions.favorite) createButton({
             className:'favorite',
             title: '收藏',
@@ -1089,7 +1098,7 @@
         })
 
         if (buttonOptions && buttonOptions.info) createButton({
-            className:'close',
+            className:'white',
             title: '图像信息',
             iconClass:'fa fa-info-circle',
             onclick:function (){
@@ -1125,7 +1134,7 @@
 
         if (fullScreenElement() !==0 && buttonOptions && buttonOptions.fullScreen ) {
             createButton({
-                className:'close',
+                className:'white',
                 title: '全屏/取消',
                 iconClass:'fa fa-arrows-alt',
                 onclick:function (){
@@ -1145,7 +1154,7 @@
         }
         if (buttonOptions && buttonOptions.download){
             createButton({
-                className:'close',title:'下载图片',iconClass:'fa fa-arrow-circle-down',onclick:function (){
+                className:'white',title:'下载图片',iconClass:'fa fa-arrow-circle-down',onclick:function (){
                     downloadImg(img)
                 }
             })

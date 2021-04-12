@@ -279,7 +279,7 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
     }
 
-    public void rename(String rootPath, String namePat) throws  Exception {
+    public boolean rename(String rootPath, String namePat) throws  Exception {
         String newName = namePat;
         if (newName == null) newName = RENAME_PATTERN;
 
@@ -300,26 +300,21 @@ public class PhotoInfo implements Serializable,Cloneable {
             m = p.matcher(newName);
         }
 
-        if (fileName.toLowerCase().indexOf(newName.toLowerCase())==0) return;
         File dir = new File(rootPath,subFolder);
         File file1=new File(dir,fileName);
-        if (!file1.exists()) return;
+        if (!file1.exists()) return false;
+        File thumb = new File(fullThumbPath(rootPath));
         File file2=new File(dir,newName+ext);
+        if (file2.compareTo(file1)==0) return false;
         pos = 0;
         while (file2.exists()) {
             pos++;
-            file2=new File(dir,newName+pos+ext);
+            file2=new File(dir,newName+"_"+String.format("%03d",pos)+ext);
         }
-        file2.getCanonicalPath();
         file1.renameTo(file2);
         fileName = file2.getName();
-        
-        if (file1.getAbsolutePath().startsWith("E:\\")) {
-			file1=new File("H"+file1.getAbsolutePath().substring(1));
-			file2=new File("H"+file2.getAbsolutePath().substring(1));
-			file1.renameTo(file2);
-        }
-        
+        if (thumb.exists()) thumb.renameTo(new File(fullThumbPath(rootPath)));
+        return true;
     }
     public void getFileProperties(String root) {
         getFileProperties(new File(fullPath(root)));

@@ -89,7 +89,7 @@ public class SamePhotoController {
             if (file1.exists() && file2.exists()) {
                 String f1 = file1.getCanonicalPath(), f2 = file2.getCanonicalPath();
                 String s_d = File.separator + ArchiveUtils.DELETED + File.separator;
-                String s_c = File.separator + FolderInfo.DEFPATH + File.separator;
+                String s_c = File.separator + "Camera" + File.separator;
                 if (f1.contains(s_d)) return deleteFile(file1);
                 else if (f2.contains(s_d)) return deleteFile(file2);
                 else if (f1.contains(s_c)) return deleteFile(file1);

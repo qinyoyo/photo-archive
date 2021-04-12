@@ -295,11 +295,6 @@
         </div>
     </#if>
     </div>
-    <#if needScan?? && needScan>
-        <div class="scan-folder" data-folder="${path}">
-        <span><i class="fa fa-refresh"></i>强制重新扫描</span>
-        </div>
-    </#if>
     </#if>
 </div>
 <div id="settings" class="dialog__wrapper" data-folder="${path}" style="display: none">

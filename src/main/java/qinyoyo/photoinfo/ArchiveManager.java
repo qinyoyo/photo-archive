@@ -134,10 +134,8 @@ public class ArchiveManager {
             for (PhotoInfo pi : infos) {
                 try {
                     String name0 = pi.getFileName();
-                    pi.rename(rootPath, pat);
-                    String name1 = pi.getFileName();
-                    if (name1.equals(name0)) System.out.println(name0 + " 没有重命名");
-                    else System.out.println(name0 + " 重命名为 " + name1);
+                    if (pi.rename(rootPath, pat)) System.out.println(name0 + " 重命名为 " + pi.getFileName());
+                    else System.out.println(name0 + " 没有重命名");
                 } catch (Exception e){ Util.printStackTrace(e);}
             }
             return true;
@@ -173,7 +171,7 @@ public class ArchiveManager {
                         "a 执行 .modification.dat.sync\n" +
                         "b 生成 gpx 归档文件\n" +
                         "c 根据 gpx 写入地理数据\n" +
-                        "d 删除gpsDatetime\n" +
+                        "d 目录信息\n" +
                         "0 下一个操作之后关机\n" +
                         "s 启动浏览服务\n" +
                         "q 退出\n请选择一个操作";
@@ -234,16 +232,13 @@ public class ArchiveManager {
                                 archived.addDirectory(new File(path));
                                 done = true;
                             } else {
-                                boolean clear1 = Util.boolValue(getInputString("是否重新完全扫描", "no"));
-                                boolean same1 = Util.boolValue(getInputString("将相同文件移到.delete目录", "yes"));
-                                boolean other1 = Util.boolValue(getInputString("将无法确定拍摄日期的文件移动到.other目录", "yes"));
-                                ArchiveInfo camera = ArchiveUtils.getArchiveInfo(path, clear1, same1, other1);
-                                if (camera!=null && camera.getInfos().size()>0) {
-                                    System.out.println("删除归档文件夹已经存在的待归档文件...");
-                                    camera.scanSameFilesWith(archived);
-                                    ArchiveUtils.executeArchive(camera, archived);
-                                    done = true;
-                                }
+                                ArchiveInfo camera = new ArchiveInfo(path);
+                                camera.sortInfos();
+                                camera.scanSameFiles(true);
+                                camera.moveNoShootTimeFiles(false);
+                                camera.scanSameFilesWith(archived);
+                                ArchiveUtils.executeArchive(camera, archived);
+                                done = true;
                             }
                         }
                     }
@@ -322,8 +317,9 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "d":
-                    removeGpsDatetime(archived);
-                    done = true;
+                    List<FolderInfo> fls = FolderInfo.seekFolderInfo(archived);
+                    fls.sort((a,b)->a.getPath().compareTo(b.getPath()));
+                    for (FolderInfo f: fls) System.out.println(f);
                     break;
                 default:
                     System.out.println("错误的选择！");

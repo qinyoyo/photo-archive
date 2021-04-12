@@ -159,14 +159,6 @@ public class PVController implements ApplicationRunner , ErrorController {
         Map<String, Object> res = getPathAttributes(path, false,
                 SessionOptions.getSessionOptions(request).isFavoriteFilter());
         model.addAllAttributes(res);
-        if (path!=null && !path.isEmpty() &&
-                 (new File(rootPath+File.separator+path+File.separator+".need-scan").exists() ||
-                    (res.get("htmls")==null && !archiveInfo.getInfos().stream().anyMatch(p->
-                        p.getSubFolder().equals(path) ||
-                        p.getSubFolder().startsWith(path+File.separator)                )
-                    )
-                 )
-           ) model.addAttribute("needScan",true);
         setBackgroundMusic(request,model,path);
         return "index";
     }

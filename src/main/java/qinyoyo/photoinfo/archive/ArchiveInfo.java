@@ -447,8 +447,6 @@ public class ArchiveInfo {
     }
     // 扫描相同文件，ref为参照结构。两个记录必须排序好
     public void scanSameFilesWith(ArchiveInfo ref) {
-        String signFile = "." + ref.getPath().replace(":", "_").replace(File.separator, "_");
-        if (new File(getPath(),signFile).exists()) return;
         List<PhotoInfo> rm = new ArrayList<>();
         List<PhotoInfo> sameAs = new ArrayList<>();
         List<PhotoInfo> all = getInfos();
@@ -512,7 +510,6 @@ public class ArchiveInfo {
             }
         }
         doDeleteSameFiles(rm,sameAs,ref);
-        FileUtil.writeToFile(new File(getPath(),signFile),ref.getPath());
     }
     private void listSameFiles(List<PhotoInfo> rm,List<PhotoInfo> sameAs) {
         try {
