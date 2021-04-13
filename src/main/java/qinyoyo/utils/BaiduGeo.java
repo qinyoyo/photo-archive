@@ -179,7 +179,7 @@ public class BaiduGeo {
                                 district = "";
                             } else {
                                 String jcity = cc ? ArchiveUtils.join(null, city,district)
-                                        : ArchiveUtils.join(",", district, city);
+                                        : ArchiveUtils.join(", ", district, city);
                                 if (TimeZoneTable.utf8Length(jcity) > Key.getMaxLength(Key.CITY)) {
                                     p.setCity(truncLocationName(city,Key.CITY,country, province));
                                 } else {
@@ -189,11 +189,11 @@ public class BaiduGeo {
                             }
 
                             String loc = cc ? ArchiveUtils.join(null, district, town, street)
-                                    : ArchiveUtils.join(",", street, town, district);
+                                    : ArchiveUtils.join(", ", street, town, district);
                             int maxLocLen = Key.getMaxLength(Key.LOCATION);
                             if (TimeZoneTable.utf8Length(loc) > maxLocLen) {
                                 loc = cc ? ArchiveUtils.join(null, district, town)
-                                        : ArchiveUtils.join(",", town, district);
+                                        : ArchiveUtils.join(", ", town, district);
                                 if (loc == null || loc.isEmpty()) loc = street;
                                 if (TimeZoneTable.utf8Length(loc) > maxLocLen) {
                                     loc = district;

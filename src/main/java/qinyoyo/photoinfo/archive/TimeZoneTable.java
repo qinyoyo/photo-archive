@@ -413,11 +413,11 @@ public class TimeZoneTable {
         boolean cc = hasChinese(country) || hasChinese(province) || hasChinese(city) || hasChinese(location);
         if (cc) {
             String address = joinAll("", country , province, city!=null && city.equals(province) ?"":city, location);
-            if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(",",address, poi);
+            if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(", ",address, poi);
             else return address;
         } else {
-            String address = joinAll(",",location, city!=null && city.equals(province) ?"":city, province, country);
-            if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(",",poi, address);
+            String address = joinAll(", ",location, city!=null && city.equals(province) ?"":city, province, country);
+            if (!isEmpty(poi) && !address.toUpperCase().contains(poi.toUpperCase())) return joinAll(", ",poi, address);
             else return address;
         }
     }
