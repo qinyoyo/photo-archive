@@ -24,15 +24,13 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/八大关/201810_青岛_八大关18.JPG" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/八大关/201810_青岛_八大关19.JPG" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/八大关/201810_青岛_八大关20.JPG" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/八大关/201810_青岛_八大关21.JPG" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/八大关/201810_青岛_八大关22.JPG" beforeDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -84,18 +82,6 @@
       <recent name="E:\J2EE\photo-archive\src\main\resources\static\image" />
     </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
   <component name="RunManager" selected="Spring Boot.PhotoArchiveApplication">
     <configuration name="map.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/src/main/resources/static/js/map.js" working-dir="$PROJECT_DIR$/src/main/resources/static/js">
       <method v="2" />
@@ -118,7 +104,7 @@
       </list>
     </recent_temporary>
   </component>
-  <component name="SpellCheckerSettings" BundledDictionaries="0" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" Dictionaries="0" CorrectionsLimit="5" DefaultDictionary="application-level" UseSingleDictionary="true" />
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -211,31 +197,32 @@
       <workItem from="1618210244067" duration="12648000" />
       <workItem from="1618281841890" duration="4415000" />
       <workItem from="1618291211568" duration="15684000" />
+      <workItem from="1618317754317" duration="222000" />
+      <workItem from="1618318003734" duration="2241000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1617806653998">
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1618318114081">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="191" y="0" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.680@0.0.1280.680" timestamp="1617454676877" />
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1617806653998" />
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1618318114081" />
     <state x="557" y="133" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1617196010456">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -246,66 +233,66 @@
     </state>
     <state width="479" height="305" key="DebuggerActiveHint/0.0.1280.680@0.0.1280.680" timestamp="1616912258958" />
     <state width="786" height="466" key="DebuggerActiveHint/0.0.1920.1040@0.0.1920.1040" timestamp="1617199812542" />
-    <state width="1860" height="277" key="GridCell.Tab.0.bottom" timestamp="1617807629774">
+    <state width="1860" height="384" key="GridCell.Tab.0.bottom" timestamp="1618320266943">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="277" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629774" />
-    <state width="1860" height="277" key="GridCell.Tab.0.center" timestamp="1617807629774">
+    <state width="1860" height="384" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266943" />
+    <state width="1860" height="384" key="GridCell.Tab.0.center" timestamp="1618320266943">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="277" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629774" />
-    <state width="1860" height="277" key="GridCell.Tab.0.left" timestamp="1617807629774">
+    <state width="1860" height="384" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266943" />
+    <state width="1860" height="384" key="GridCell.Tab.0.left" timestamp="1618320266942">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="277" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629774" />
-    <state width="1860" height="277" key="GridCell.Tab.0.right" timestamp="1617807629774">
+    <state width="1860" height="384" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266942" />
+    <state width="1860" height="384" key="GridCell.Tab.0.right" timestamp="1618320266943">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="277" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629774" />
-    <state width="1860" height="277" key="GridCell.Tab.1.bottom" timestamp="1617807629775">
+    <state width="1860" height="384" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266943" />
+    <state width="1860" height="384" key="GridCell.Tab.1.bottom" timestamp="1618320266939">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.1.bottom/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
-    <state width="1860" height="277" key="GridCell.Tab.1.center" timestamp="1617807629775">
+    <state width="1860" height="384" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266939" />
+    <state width="1860" height="384" key="GridCell.Tab.1.center" timestamp="1618320266939">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.1.center/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
-    <state width="1860" height="277" key="GridCell.Tab.1.left" timestamp="1617807629774">
+    <state width="1860" height="384" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266939" />
+    <state width="1860" height="384" key="GridCell.Tab.1.left" timestamp="1618320266939">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.1.left/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629774" />
-    <state width="1860" height="277" key="GridCell.Tab.1.right" timestamp="1617807629775">
+    <state width="1860" height="384" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266939" />
+    <state width="1860" height="384" key="GridCell.Tab.1.right" timestamp="1618320266939">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.1.right/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
-    <state width="1860" height="277" key="GridCell.Tab.2.bottom" timestamp="1617807629775">
+    <state width="1860" height="384" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266939" />
+    <state width="1860" height="277" key="GridCell.Tab.2.bottom" timestamp="1618320265907">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.2.bottom/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
-    <state width="1860" height="277" key="GridCell.Tab.2.center" timestamp="1617807629775">
+    <state width="1860" height="277" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618320265907" />
+    <state width="1860" height="277" key="GridCell.Tab.2.center" timestamp="1618320265906">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.2.center/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
-    <state width="1860" height="277" key="GridCell.Tab.2.left" timestamp="1617807629775">
+    <state width="1860" height="277" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618320265906" />
+    <state width="1860" height="277" key="GridCell.Tab.2.left" timestamp="1618320265906">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.2.left/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
-    <state width="1860" height="277" key="GridCell.Tab.2.right" timestamp="1617807629775">
+    <state width="1860" height="277" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618320265906" />
+    <state width="1860" height="277" key="GridCell.Tab.2.right" timestamp="1618320265907">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="195" key="GridCell.Tab.2.right/0.0.1280.680@0.0.1280.680" timestamp="1617454967503" />
-    <state width="1860" height="277" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617807629775" />
+    <state width="1860" height="277" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618320265907" />
     <state x="186" y="70" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1616899682651">
       <screen x="0" y="0" width="1280" height="680" />
     </state>
@@ -339,43 +326,44 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>384</line>
+          <line>386</line>
           <option name="timeStamp" value="138" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>432</line>
+          <line>434</line>
           <option name="timeStamp" value="139" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>295</line>
+          <line>296</line>
           <option name="timeStamp" value="151" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java</url>
-          <line>472</line>
-          <option name="timeStamp" value="166" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>291</line>
+          <line>292</line>
           <option name="timeStamp" value="167" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java</url>
-          <line>242</line>
+          <line>224</line>
           <option name="timeStamp" value="168" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
-          <line>988</line>
+          <line>994</line>
           <option name="timeStamp" value="111" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
-          <line>1101</line>
+          <line>1110</line>
           <option name="timeStamp" value="112" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/main/resources/static/js/exif.js</url>
+          <line>42</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="169" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

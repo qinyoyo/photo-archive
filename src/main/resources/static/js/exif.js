@@ -12,10 +12,10 @@ let selectedDom = null
 let mapPoint = {}
 let marker = null
 let copiedPoint = null
-const clipSign = 'P_V_E_X_I_F_C_L_I_P_B_O_A_R_D_D_A_T_A\n'
-const createTextArea = function(text) {
+const clipSign = 'PV_EXIF_CLIPBOARD_DATA: '
+
+function setClipboardData(text) {
     const textArea = document.createElement("textarea");
-    textArea.setAttribute('contenteditable',true)
     textArea.style.position = 'fixed';
     textArea.style.top = '-1000px';
     textArea.style.left = '0';
@@ -28,10 +28,6 @@ const createTextArea = function(text) {
     textArea.value = text;
     document.body.appendChild(textArea);
     textArea.select();
-    return textArea
-}
-function setClipboardData(text) {
-    const textArea = createTextArea(text);
     let result = false
     try {
         result =  document.execCommand('copy');
@@ -41,16 +37,24 @@ function setClipboardData(text) {
     textArea.remove()
     return result
 }
-function getClipboardData() {
-    const textArea = createTextArea('?');
-    let result = ''
-    try {
-        if (document.execCommand('paste')) result = textArea.text
-    } catch (err) {
-        result = ''
+function getClipboardData(event) {
+    document.removeEventListener('paste',getClipboardData)
+    if (event.clipboardData || event.originalEvent) {
+        var clipboardData = (event.clipboardData || window.clipboardData);
+        var text = clipboardData.getData('text');
+        if (text && text.indexOf(clipSign)==0) {
+            try{
+                copiedPoint=JSON.parse(text.substring(clipSign.length))
+                if (copiedPoint) {
+                    document.getElementById('btnPaste').removeAttribute('disabled')
+                    pasteFields()
+                    event.preventDefault();
+                }
+            } catch(e) {
+                copiedPoint = null
+            }
+        }
     }
-    textArea.remove()
-    return result
 }
 function placeSelectionMarkerOnMap(point) {
     if (getMap()){
@@ -394,13 +398,5 @@ window.onload=function(){
             toggleSaveState(true)
         }
     })
-    let text = getClipboardData()
-    if (text && text.indexOf(clipSign)==0) {
-        try{
-            copiedPoint=JSON.parse(text.substring(clipSign.length))
-            if (copiedPoint) document.getElementById('btnPaste').removeAttribute('disabled')
-        } catch(e) {
-            copiedPoint = null
-        }
-    }
+    document.addEventListener("paste", getClipboardData)
 }
