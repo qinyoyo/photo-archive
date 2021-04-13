@@ -97,7 +97,7 @@ public class ArchiveManager {
         String s = getProperty(key,def?"true":"false");
         return Util.boolValue(s);
     }
-    static boolean rename(List<PhotoInfo> infos, String rootPath) {
+    static boolean rename(List<PhotoInfo> infos, String rootPath, ArchiveInfo archiveInfo) {
         String pat = "";
         while (pat==null || pat.isEmpty()) {
             pat = getInputString("文件名格式(输入?显示提示)", PhotoInfo.RENAME_PATTERN);
@@ -134,8 +134,15 @@ public class ArchiveManager {
             for (PhotoInfo pi : infos) {
                 try {
                     String name0 = pi.getFileName();
-                    if (pi.rename(rootPath, pat)) System.out.println(name0 + " 重命名为 " + pi.getFileName());
-                    else System.out.println(name0 + " 没有重命名");
+                    String name1 = pi.nameWithPattern(rootPath, pat);
+                    if (!name0.equals(name1)){
+                        boolean result = false;
+                        if (archiveInfo!=null) result = Modification.renameAction(pi.getSubFolder().isEmpty() ? name0 : pi.getSubFolder()+File.separator + name0,
+                                name1, archiveInfo, true);
+                        else result = pi.renameTo(rootPath,name1);
+                        if (result) System.out.println(name0 + " 重命名为 " + name1);
+                        else System.out.println(name0 + " 重命名失败");
+                    }  else System.out.println(name0 + " 没有重命名");
                 } catch (Exception e){ Util.printStackTrace(e);}
             }
             return true;
@@ -248,7 +255,7 @@ public class ArchiveManager {
                     if (path==null) break;
                     incSub = Util.boolValue(getInputString("是否搜索子目录", "yes"));
                     final String temPath = path;
-                    if (rename(archived.subFolderInfos(path,incSub), archived.getPath())) {
+                    if (rename(archived.subFolderInfos(path,incSub), archived.getPath(), archived)) {
                         done = true;
                         afterChanged(archived);
                     }
@@ -391,7 +398,7 @@ public class ArchiveManager {
                     path = chooseFolder("选择图像目录",fileFilter);
                     if (path==null) break;
                     incSub = getInputString("是否搜索子目录", "yes");
-                    done = rename(photoInfoListIn(path,Util.boolValue(incSub),null),path);
+                    done = rename(photoInfoListIn(path,Util.boolValue(incSub),null),path,null);
                     break;
                 case "5":
                     path = chooseFolder("选择需要删除子空白目录的主目录",null);

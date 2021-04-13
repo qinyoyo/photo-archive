@@ -279,10 +279,9 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
     }
 
-    public boolean rename(String rootPath, String namePat) throws  Exception {
+    public String nameWithPattern(String rootPath, String namePat) throws  Exception {
         String newName = namePat;
         if (newName == null) newName = RENAME_PATTERN;
-
         int pos = fileName.lastIndexOf(".");
         String ext = (pos>=0 ? fileName.substring(pos) : "");
         if (namePat.contains("%E")) {
@@ -301,16 +300,23 @@ public class PhotoInfo implements Serializable,Cloneable {
         }
 
         File dir = new File(rootPath,subFolder);
-        File file1=new File(dir,fileName);
-        if (!file1.exists()) return false;
-        File thumb = new File(fullThumbPath(rootPath));
         File file2=new File(dir,newName+ext);
-        if (file2.compareTo(file1)==0) return false;
         pos = 0;
         while (file2.exists()) {
             pos++;
             file2=new File(dir,newName+"_"+String.format("%03d",pos)+ext);
         }
+        return file2.getName();
+    }
+    public boolean renameTo(String rootPath, String newName) throws  Exception {
+
+        File dir = new File(rootPath,subFolder);
+        File file1=new File(dir,fileName);
+        if (!file1.exists()) return false;
+        File thumb = new File(fullThumbPath(rootPath));
+        File file2=new File(dir,newName);
+        if (file2.compareTo(file1)==0) return false;
+
         file1.renameTo(file2);
         fileName = file2.getName();
         if (thumb.exists()) thumb.renameTo(new File(fullThumbPath(rootPath)));

@@ -261,7 +261,6 @@ public class PVController implements ApplicationRunner , ErrorController {
             if (selectedKey.contains(Key.SUBJECT_CODE)) p1.setSubjectCode(BaiduGeo.truncLocationName(p1.getSubjectCode(),Key.SUBJECT_CODE,
                     p1.getCountry(),p1.getProvince(),p1.getCity()));
 
-            PhotoInfo photoInfo = null;
             String [] subFolders = p1.getSubFolder().split(",",-1),
                     files = p1.getFileName().split(",",-1);
             List<PhotoInfo> photoList = new ArrayList<>();
@@ -281,9 +280,14 @@ public class PVController implements ApplicationRunner , ErrorController {
                         List<Key> keys = ArchiveUtils.differentOf(p0, p1,selectedKey);
                         if (keys != null && !keys.isEmpty()) {
                             Map<Key, Object> params = Modification.exifMap(p1, keys);
-                            if (params.containsKey(Key.getName(Key.ORIENTATION))) photoInfo=p0;
+                            if (i>0 && params.containsKey(Key.DATETIMEORIGINAL)) {
+                                Object dt = params.get(Key.DATETIMEORIGINAL);
+                                if (dt!=null && dt instanceof Date) {  // 避免时间相同
+                                    params.put(Key.DATETIMEORIGINAL,new Date(((Date)dt).getTime() + i*1000));
+                                }
+                            }
                             String fullPath = subFolders[i].isEmpty()?files[i] : (subFolders[i]+File.separator+files[i]);
-                            modifications.add(new Modification(Modification.Exif, fullPath, params));
+                            modifications.add(Modification.exifModified(fullPath, params));
                         }
                     }
                 }
@@ -291,10 +295,9 @@ public class PVController implements ApplicationRunner , ErrorController {
             if (modifications.isEmpty()) return "没有需要修改的对象";
             if (files.length==1) {
                 int count =  Modification.setExifTags(modifications,archiveInfo,true);
-               if (count>0) {
+                if (count>0) {
                    afterChanged();
-                   if (photoInfo!=null) return "ok,"+photoInfo.getLastModified();
-                   else return "ok";
+                   return "ok";
                 } else return "不需要修改";
             } else  {
                 new Thread() {
@@ -307,7 +310,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                         }
                     }
                 }.start();
-                return "提交后台处理，稍后需要刷新";
+                return "ok,提交后台处理，稍后需要刷新";
             }
         }
         return "没有需要修改的对象";
@@ -407,7 +410,7 @@ public class PVController implements ApplicationRunner , ErrorController {
             Map<Key,Object> map = new HashMap<>();
             if (rating!=null) map.put(Key.RATING,rating);
             if (orientations!=null) map.put(Key.ORIENTATION,pi.getOrientation());
-            Modification.save(new Modification(Modification.Exif,path,map),rootPath);
+            Modification.save(Modification.exifModified(path,map),rootPath);
             afterChanged();
             return "ok,"+
                     (pi.getOrientation()==null?"":pi.getOrientation())+

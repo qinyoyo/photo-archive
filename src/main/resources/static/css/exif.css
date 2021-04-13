@@ -43,6 +43,9 @@ body {
 .file-item.selected {
     background-color: #99bcf1;;
 }
+.file-item[data-gpslongitude][data-gpslatitude] {
+    color: #0ce061;
+}
 .thumb-image-wrapper {
     text-align: center;
     vertical-align: middle;

@@ -12,6 +12,46 @@ let selectedDom = null
 let mapPoint = {}
 let marker = null
 let copiedPoint = null
+const clipSign = 'P_V_E_X_I_F_C_L_I_P_B_O_A_R_D_D_A_T_A\n'
+const createTextArea = function(text) {
+    const textArea = document.createElement("textarea");
+    textArea.setAttribute('contenteditable',true)
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-1000px';
+    textArea.style.left = '0';
+    textArea.style.padding = '0';
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    textArea.style.color = 'transparent';
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    return textArea
+}
+function setClipboardData(text) {
+    const textArea = createTextArea(text);
+    let result = false
+    try {
+        result =  document.execCommand('copy');
+    } catch (err) {
+        result = false
+    }
+    textArea.remove()
+    return result
+}
+function getClipboardData() {
+    const textArea = createTextArea('?');
+    let result = ''
+    try {
+        if (document.execCommand('paste')) result = textArea.text
+    } catch (err) {
+        result = ''
+    }
+    textArea.remove()
+    return result
+}
 function placeSelectionMarkerOnMap(point) {
     if (getMap()){
         if (marker) removeMarker(marker)
@@ -33,6 +73,7 @@ function copyFields(){
         copiedPoint[field] = document.getElementById(field).value
         document.getElementById('btnPaste').removeAttribute('disabled')
     })
+    setClipboardData(clipSign + JSON.stringify(copiedPoint))
 }
 function pasteFields(){
     if (copiedPoint) {
@@ -174,21 +215,25 @@ function save() {
     let data = new FormData(form)
     toggleSaveState(false)
     Ajax.post(url,data,function(msg) {
-        if (msg && msg.indexOf('ok')==0) {
-            if (selectedDom) for (let i=0;i<dataKeys.length;i++) {
-                let val=data.get(nameKeys[i])
-                selectedDom.setAttribute(dataKeys[i],val?val:'')
-            }
-            let pp = msg.split(',')
-            if (pp.length>1) {
-                const file=selectedDom.getAttribute('data-file')
-                const curPath = selectedDom.getAttribute('data-folder').replace(/\\/g,'/')
-                selectedDom.setAttribute('data-lastmodified',pp[1])
-                document.querySelector('.thumb-image').setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +file
-                    +'?click='+pp[1])
-                document.querySelector('.thumb-image').setAttribute('data-src','/' + curPath + (curPath?'/':'') + file
-                    +'?click='+pp[1])
-            }
+        let pp = (msg?msg.split(","):['error'])
+        if (pp[0]=='ok') {
+            let lastModified = (new Date().getTime())+''
+            document.querySelectorAll('.file-item.selected').forEach(function (dom) {
+                dom.setAttribute('data-lastmodified',lastModified)
+                for (let i=0;i<dataKeys.length;i++) {
+                    let val=data.get(nameKeys[i])
+                    dom.setAttribute(dataKeys[i],val?val:'')
+                    if (nameKeys[i]=='orientation' && dom===selectedDom) {
+                        const file=dom.getAttribute('data-file')
+                        const curPath = dom.getAttribute('data-folder').replace(/\\/g,'/')
+                        document.querySelector('.thumb-image').setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +file
+                            +'?click='+lastModified)
+                        document.querySelector('.thumb-image').setAttribute('data-src','/' + curPath + (curPath?'/':'') + file
+                            +'?click='+lastModified)
+                    }
+                }
+            })
+            if (pp.length>1) toast(pp[1])
         } else {
             //toggleSaveState(true)
             toast(msg)
@@ -323,7 +368,8 @@ window.onload=function(){
     document.querySelector('.thumb-image').onclick = function() {
         addImageDialog(0, this)
     }
-    document.querySelector('.file-list').onkeydown = function (event) {
+    const fileList = document.querySelector('.file-list')
+    if (fileList) fileList.onkeydown = function (event) {
         if (event.code=='ArrowUp' || event.code=='Numpad8'){
             moveSelection(true)
         } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
@@ -348,4 +394,13 @@ window.onload=function(){
             toggleSaveState(true)
         }
     })
+    let text = getClipboardData()
+    if (text && text.indexOf(clipSign)==0) {
+        try{
+            copiedPoint=JSON.parse(text.substring(clipSign.length))
+            if (copiedPoint) document.getElementById('btnPaste').removeAttribute('disabled')
+        } catch(e) {
+            copiedPoint = null
+        }
+    }
 }

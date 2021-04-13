@@ -93,9 +93,11 @@ public class Modification {
 
     }
 
-    public static final int Exif        = 1;
-    public static final int Remove      = 2;
-    public static final int Scan        = 3;
+    private static final int Exif        = 1;
+    private static final int Remove      = 2;
+    private static final int Scan        = 3;
+    private static final int Rename      = 4;
+
     public static final String modification_dat = ".modification.dat";
     public static final String temp_path = "._g_s_t_";
     public static final String CSV = "csv";
@@ -103,6 +105,18 @@ public class Modification {
     String path;
     Map<Key,Object> params;
 
+    public static Modification exifModified(String path,Map<Key,Object> params) {
+        return new Modification(Exif,path,params);
+    }
+    public static Modification removeFile(String path) {
+        return new Modification(Remove,path,null);
+    }
+    public static Modification scanPath(String path) {
+        return new Modification(Scan,path,null);
+    }
+    public static Modification renamePath(String path,String newName) {
+        return new Modification(Rename,path,new HashMap<Key,Object>(){{ put(Key.DESCRIPTION,newName); }});
+    }
     /**
      * 构建一个修改描述
      * @param action 修改行为
@@ -455,7 +469,7 @@ public class Modification {
      */
     public static boolean removeAction(String path,ArchiveInfo archiveInfo, boolean saveModification) {
         if (ArchiveUtils.deletePhoto(archiveInfo,path)) {
-            if (saveModification) Modification.save(new Modification(Modification.Remove,path,null),archiveInfo.getPath());
+            if (saveModification) Modification.save(Modification.removeFile(path),archiveInfo.getPath());
             return true;
         }
         return false;
@@ -477,13 +491,26 @@ public class Modification {
                 archiveInfo.rescanFile(dir);
                 archiveInfo.sortInfos();
                 archiveInfo.saveInfos();
-                if (saveModification) save(new Modification(Modification.Scan, path, null), archiveInfo.getPath());
+                if (saveModification) save(Modification.scanPath(path), archiveInfo.getPath());
                 return true;
             }
         }
         return false;
     }
 
+    public static boolean renameAction(String path, String newName, ArchiveInfo archiveInfo, boolean saveModification) {
+        PhotoInfo pi = archiveInfo.find(new File(archiveInfo.getPath(),path));
+        if (pi!=null) {
+            try {
+                boolean result = pi.renameTo(archiveInfo.getPath(), newName);
+                if ( result && saveModification) save(renamePath(path,newName),archiveInfo.getPath());
+                return result;
+            } catch (Exception e) {
+                Util.printStackTrace(e);
+            }
+        }
+        return false;
+    }
     /**
      * 创建一个链接文件
      * @param source  源文件路径
@@ -569,49 +596,48 @@ public class Modification {
      */
     public static int setExifTags(List<Modification> list, ArchiveInfo archiveInfo, boolean saveModification) {
         int updated = 0;
-        String rootPath = archiveInfo.getPath();
-        list.stream().filter(m->m.action==Scan).reduce(new HashSet<String>(),(acc,m)-> {
-                if (!acc.contains(m.path)) acc.add(m.path);
-                return acc;
-            },(acc,m)->null).forEach(path->scanAction(path,archiveInfo,saveModification));
-
-        Set<String> removedPaths = new HashSet<>();
-        list.stream().filter(m->m.action==Remove).reduce(removedPaths,(acc,m)-> {
-            if (!acc.contains(m.path)) acc.add(m.path);
-            return acc;
-        },(acc,m)->null);
-        for (String path:removedPaths) {
-            if (removeAction(path, archiveInfo,saveModification)) updated++;
-        }
         Map<String,Map<Key,Object>> exifMap = new HashMap<>();
-        list.stream().filter(m->m.action==Exif && !removedPaths.contains(m.path))
-            .reduce(exifMap,(acc,m)->{
-                if (m.path==null || m.params==null || m.params.isEmpty()) return acc;
-                String filePath = m.path;
-                long now = new Date().getTime();
-                File img = new File(archiveInfo.getPath(), filePath);
-                if (img.exists() && img.isFile()) {
-                    Map<Key,Object> nm = new HashMap<>();
-                    PhotoInfo info = archiveInfo.find(img);
-                    nm.putAll(m.params);
-                    if (info != null) {
-                        deleteSameProperties(info, nm);
-                    }
-                    if (nm!=null && !nm.isEmpty()) {
-                        if (acc.containsKey(filePath)) {
-                            acc.get(filePath).putAll(nm);
-                        } else {
-                            acc.put(filePath,nm);
+        long now = new Date().getTime();
+        for (Modification m: list) {
+            if (m.action==Exif) {
+                if (m.path!=null && m.params!=null && !m.params.isEmpty()) {
+                    String filePath = m.path;
+                    File img = new File(archiveInfo.getPath(), filePath);
+                    if (img.exists() && img.isFile()) {
+                        Map<Key,Object> nm = new HashMap<>();
+                        PhotoInfo info = archiveInfo.find(img);
+                        nm.putAll(m.params);
+                        if (info != null) {
+                            deleteSameProperties(info, nm);
                         }
-                        if (info!=null) {
-                            info.setPropertiesBy(nm);
-                            info.setLastModified(now);
+                        if (nm!=null && !nm.isEmpty()) {
+                            if (exifMap.containsKey(filePath)) {
+                                exifMap.get(filePath).putAll(nm);
+                            } else {
+                                exifMap.put(filePath,nm);
+                            }
+                            if (info!=null) {
+                                info.setPropertiesBy(nm);
+                                info.setLastModified(now);
+                            }
                         }
                     }
                 }
-                return acc;
-            },(acc,m)->null);
-
+            }
+            else if (m.action==Scan) scanAction(m.getPath(),archiveInfo,saveModification);
+            else if (m.action==Remove) {
+                if (removeAction(m.getPath(), archiveInfo,saveModification)) {
+                    updated++;
+                    exifMap.remove(m.getPath());
+                }
+            }
+            else if (m.action==Rename) {
+                if (m.getParams()!=null) {
+                    Object newName = m.getParams().get(Key.DESCRIPTION);
+                    if (newName!=null) renameAction(m.getPath(),newName.toString(),archiveInfo,saveModification);
+                }
+            }
+        }
         if (!exifMap.isEmpty()) {
             int c = setExifTags(exifMap,archiveInfo.getPath());
             if(c>0) {

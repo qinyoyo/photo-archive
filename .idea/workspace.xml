@@ -24,9 +24,13 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pv.yml" beforeDir="false" afterPath="$PROJECT_DIR$/pv.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/TimeZoneTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/TimeZoneTable.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/BaiduGeo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/Modification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/PhotoInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -99,7 +103,6 @@
     <configuration name="PhotoArchiveApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <module name="photo-archive" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="qinyoyo.PhotoArchiveApplication" />
-      <option name="PROGRAM_PARAMETERS" value="-a" />
       <option name="ALTERNATIVE_JRE_PATH" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -207,6 +210,7 @@
       <workItem from="1618197980692" duration="4586000" />
       <workItem from="1618210244067" duration="12648000" />
       <workItem from="1618281841890" duration="4415000" />
+      <workItem from="1618291211568" duration="15684000" />
     </task>
     <servers />
   </component>
@@ -335,27 +339,27 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>377</line>
+          <line>384</line>
           <option name="timeStamp" value="138" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>425</line>
+          <line>432</line>
           <option name="timeStamp" value="139" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>288</line>
+          <line>295</line>
           <option name="timeStamp" value="151" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java</url>
-          <line>485</line>
+          <line>472</line>
           <option name="timeStamp" value="166" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>284</line>
+          <line>291</line>
           <option name="timeStamp" value="167" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">

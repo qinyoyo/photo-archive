@@ -310,32 +310,20 @@ public class ArchiveUtils {
 
 
     public static void syncExifAttributesByTime(List<PhotoInfo> sourceList, List<PhotoInfo> targetList, String targetRootPath) {
-        Iterator<PhotoInfo> iter = sourceList.iterator();
-        int index = 0;
         Map<String,Map<Key,Object>> modificationList = new HashMap<>();
         int modified = 0, same = 0;
-        while (iter.hasNext()) {
-            PhotoInfo srcPi = iter.next();
-            if (srcPi.getShootTime()==null) continue;
-            for (int i=index;i<targetList.size();i++) {
-                PhotoInfo tarPi = targetList.get(i);
-                index = i;
-                if (tarPi.getShootTime()==null || tarPi.getFileName().endsWith(".xmp")) continue;
-                long pc = tarPi.getShootTime().getTime() - srcPi.getShootTime().getTime();
-                if ( pc < 0) continue;
-                else if (pc > 0) break;
-                else if (equals(tarPi.getModel(),srcPi.getModel())){
-                    index++;
-                    Map<Key, Object> params = Modification.exifMap(srcPi, Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS));
-                    Modification.deleteSameProperties(tarPi,params);
-                    if (!params.isEmpty()) {
-                        modified ++;
-                        modificationList.put(tarPi.getSubFolder() + (tarPi.getSubFolder().isEmpty()?"":File.separator) + tarPi.getFileName(),
-                                params);
-                    } else same ++;
-                }
-                else continue;
-            }
+        for (int i=0;i<targetList.size();i++) {
+            PhotoInfo tarPi = targetList.get(i);
+            if (tarPi.getShootTime()==null || tarPi.getFileName().endsWith(".xmp")) continue;
+            List<PhotoInfo> matched = sourceList.stream().filter(p->p.getShootTime()!=null && p.getShootTime().equals(tarPi.getShootTime())).collect(Collectors.toList());
+            if (matched!=null && matched.size()>0) matched = matched.stream().filter(p->p.getFileName().equals(tarPi.getFileName())).collect(Collectors.toList());
+            if (matched==null || matched.size()==0 || matched.size()>1) continue;
+            Map<Key, Object> params = Modification.exifMap(matched.get(0), Arrays.asList(ArchiveUtils.MODIFIABLE_KEYS));
+            Modification.deleteSameProperties(tarPi,params);
+            if (!params.isEmpty()) {
+                modified ++;
+                modificationList.put(tarPi.getSubFolder() + (tarPi.getSubFolder().isEmpty()?"":File.separator) + tarPi.getFileName(),params);
+            } else same ++;
         }
         if (!modificationList.isEmpty()) Modification.setExifTags(modificationList,targetRootPath);
         System.out.println("同步RAW文件数量: "+modified+"; 忽略相同文件数: "+same+"; 匹配失败文件数: "+(targetList.size()-modified-same));
@@ -350,8 +338,7 @@ public class ArchiveUtils {
             if (thumbPath!=null && new File(thumbPath).exists()) {
                 Map<Key, Object> params = new HashMap<>();
                 params.put(Key.ORIENTATION, Orientation.name(pi.getOrientation()==null ? 1 : pi.getOrientation()));
-                modificationList.add(new Modification(Modification.Exif,
-                        thumbPath.substring(root.length() + 1), params));
+                modificationList.add(Modification.exifModified(thumbPath.substring(root.length() + 1), params));
             }
         }
         if (!modificationList.isEmpty()) {
