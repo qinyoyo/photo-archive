@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import qinyoyo.photoinfo.ArchiveUtils;
 import qinyoyo.photoinfo.archive.ArchiveInfo;
-import qinyoyo.photoinfo.archive.FolderInfo;
 import qinyoyo.photoinfo.archive.PhotoInfo;
 import qinyoyo.utils.FileUtil;
 import qinyoyo.utils.Util;
@@ -64,7 +63,7 @@ public class SamePhotoController {
             }
             ins.close();
             if (sb.length()==0) logFile.delete();
-            else FileUtil.writeToFile(logFile,sb.toString());
+            else FileUtil.writeToGbkFile(logFile,sb.toString());
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return null;
@@ -148,7 +147,7 @@ public class SamePhotoController {
                 }
                 ins.close();
                 if (sb.length()==0) logFile.delete();
-                else FileUtil.writeToFile(logFile,sb.toString());
+                else FileUtil.writeToGbkFile(logFile,sb.toString());
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 return e.getMessage();
@@ -178,7 +177,7 @@ public class SamePhotoController {
             }
             ins.close();
             if (sb.length()==0) logFile.delete();
-            else FileUtil.writeToFile(logFile,sb.toString());
+            else FileUtil.writeToGbkFile(logFile,sb.toString());
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return e.getMessage();

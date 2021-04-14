@@ -293,11 +293,21 @@ public class ArchiveManager {
                     done = true;
                     break;
                 case "a":
-                    List<Modification> list = Modification.read(rootPath);
+                    File[] files = selectFiles("选择修改同步文件文件", false, new FileFilter() {
+                        @Override
+                        public boolean accept(File f) {
+                            return f.isDirectory() || f.getName().startsWith(Modification.modification);
+                        }
+                        @Override
+                        public String getDescription() {
+                            return null;
+                        }
+                    });
+                    if (files==null || files.length<1) break;
+                    List<Modification> list = Modification.read(files[0].getAbsolutePath());
                     if (list!=null) {
                         System.out.println("同步修改...");
                         Modification.setExifTags(list,archived,false);
-                        Modification.resetSyncAction(rootPath);
                         afterChanged(archived);
                         System.out.println("同步修改完成.");
                         done = true;

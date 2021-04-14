@@ -392,7 +392,7 @@ public class ArchiveUtils {
                     } catch (IOException e) {
                         pi.delete(rootPath);
                         iter.remove();
-                        FileUtil.appendToFile(new File("recovery.bat"),"copy \""+rec.getAbsolutePath()+"\" \""+img.getAbsolutePath()+"\"");
+                        FileUtil.appendToGbkFile(new File("recovery.bat"),"copy \""+rec.getAbsolutePath()+"\" \""+img.getAbsolutePath()+"\"");
                     }
                 } else System.out.println("No recovery file :"+img.getAbsolutePath());
             }
@@ -446,7 +446,7 @@ public class ArchiveUtils {
     }
 
     public static void copyToFolder(ArchiveInfo camera, ArchiveInfo archived, List<FolderInfo> folderInfos) {
-        String sameLog = FileUtil.getFromFile(new File(camera.getPath(),ArchiveUtils.same_photo_log));
+        String sameLog = FileUtil.getFromGbkFile(new File(camera.getPath(),ArchiveUtils.same_photo_log));
         if (sameLog==null) sameLog="";
         List<PhotoInfo> noShootTime = new ArrayList<>();
         List<PhotoInfo> notMoved = new ArrayList<>();

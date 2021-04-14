@@ -83,7 +83,7 @@ public class PhotoArchiveApplication {
         Logger log = LoggerFactory.getLogger(Util.class);
         int pid = getProcessID(log);
         try {
-            FileUtil.writeToFile(new File(SpringContextUtil.getProjectHomeDirection(),"pid.log"),String.valueOf(pid));
+            FileUtil.writeToGbkFile(new File(SpringContextUtil.getProjectHomeDirection(),"pid.log"),String.valueOf(pid));
         } catch (Exception e){ Util.printStackTrace(e);}
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder(clazz);
         appBuilder.properties("file.encoding=UTF-8");

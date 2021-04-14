@@ -12,7 +12,6 @@ import qinyoyo.utils.ImageUtil;
 import qinyoyo.utils.Util;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -407,7 +406,7 @@ public class ArchiveInfo {
                     }
                 }
                 String batcmd = sb.toString().trim();
-                if (!batcmd.isEmpty()) FileUtil.writeToFile(new File(getPath(), ArchiveUtils.manual_other_bat), batcmd);
+                if (!batcmd.isEmpty()) FileUtil.writeToGbkFile(new File(getPath(), ArchiveUtils.manual_other_bat), batcmd);
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
@@ -531,7 +530,7 @@ public class ArchiveInfo {
                     }
                 }
                 if (sb.length()==0) logFile.delete();
-                else FileUtil.writeToFile(logFile,sb.toString());
+                else FileUtil.writeToGbkFile(logFile,sb.toString());
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
@@ -566,18 +565,18 @@ public class ArchiveInfo {
                             File targetDir = p.getSubFolder() == null || p.getSubFolder().isEmpty() ? rmf : new File(rmf, p.getSubFolder());
                             targetDir.mkdirs();
                             Files.move(source.toPath(), new File(targetDir, source.getName()).toPath());
-                            FileUtil.appendToFile(logFile, new File(targetDir, source.getName()).getCanonicalPath() + " <-> "
+                            FileUtil.appendToGbkFile(logFile, new File(targetDir, source.getName()).getCanonicalPath() + " <-> "
                                     + sameAs.get(i).fullPath(ref == null ? rootName : ref.getPath()));
                         }
                     } catch (Exception e) {
                         sb.append("move \"").append(p.fullPath(rootName)).append("\" \"").append(ArchiveUtils.newFile(sub, p))
                                 .append("\"\r\n");
                         if (!p.absoluteSameAs(sameAs.get(i)))
-                            FileUtil.appendToFile(logFile, p.fullPath(rootName) + " <-> " + sameAs.get(i).fullPath(ref == null ? rootName : ref.getPath()));
+                            FileUtil.appendToGbkFile(logFile, p.fullPath(rootName) + " <-> " + sameAs.get(i).fullPath(ref == null ? rootName : ref.getPath()));
                     }
                 }
                 String cmd = sb.toString().trim();
-                if (!cmd.isEmpty()) FileUtil.appendToFile(new File(getPath(), ArchiveUtils.manual_rm_bat), sb.toString());
+                if (!cmd.isEmpty()) FileUtil.appendToGbkFile(new File(getPath(), ArchiveUtils.manual_rm_bat), sb.toString());
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());

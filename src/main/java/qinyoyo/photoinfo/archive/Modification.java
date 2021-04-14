@@ -98,7 +98,8 @@ public class Modification {
     private static final int Scan        = 3;
     private static final int Rename      = 4;
 
-    public static final String modification_dat = ".modification.dat";
+    public static final String modification = ".modification";
+    public static final String modification_dat = modification + ".dat";
     public static final String temp_path = "._g_s_t_";
     public static final String CSV = "csv";
     int action;
@@ -139,7 +140,7 @@ public class Modification {
     }
     @Override
     public String toString() {
-        return new GsonBuilder().create().toJson(this);
+        return new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss.SSS").create().toJson(this);
     }
 
     /**
@@ -155,7 +156,7 @@ public class Modification {
         } catch (IOException e) {
             Util.printStackTrace(e);
         }
-        FileUtil.appendToFile(src, mod.toString());
+        FileUtil.appendToGbkFile(src, mod.toString());
     }
 
     /**
@@ -164,7 +165,9 @@ public class Modification {
      * @return 修改列表
      */
     public static List<Modification> read(String rootPath) {
-        String actions = FileUtil.getFromFile(new File(rootPath, modification_dat +".sync"));
+        File path=new File(rootPath);
+        if (path.isDirectory()) path=new File(path,modification_dat +".sync");
+        String actions = FileUtil.getFromGbkFile(path);
         if (actions==null) return null;
         String [] aa = actions.split("\n");
         List<Modification> list=new ArrayList<>();
@@ -602,25 +605,12 @@ public class Modification {
             if (m.action==Exif) {
                 if (m.path!=null && m.params!=null && !m.params.isEmpty()) {
                     String filePath = m.path;
-                    File img = new File(archiveInfo.getPath(), filePath);
-                    if (img.exists() && img.isFile()) {
-                        Map<Key,Object> nm = new HashMap<>();
-                        PhotoInfo info = archiveInfo.find(img);
-                        nm.putAll(m.params);
-                        if (info != null) {
-                            deleteSameProperties(info, nm);
-                        }
-                        if (nm!=null && !nm.isEmpty()) {
-                            if (exifMap.containsKey(filePath)) {
-                                exifMap.get(filePath).putAll(nm);
-                            } else {
-                                exifMap.put(filePath,nm);
-                            }
-                            if (info!=null) {
-                                info.setPropertiesBy(nm);
-                                info.setLastModified(now);
-                            }
-                        }
+                    Map<Key,Object> nm = new HashMap<>();
+                    nm.putAll(m.params);
+                    if (exifMap.containsKey(filePath)) {
+                        exifMap.get(filePath).putAll(nm);
+                    } else {
+                        exifMap.put(filePath,nm);
                     }
                 }
             }
@@ -639,24 +629,36 @@ public class Modification {
             }
         }
         if (!exifMap.isEmpty()) {
-            int c = setExifTags(exifMap,archiveInfo.getPath());
-            if(c>0) {
-                updated += c;
-                if (saveModification) {
-                    for (String p:exifMap.keySet()) {
-                        Modification.save(new Modification(Exif,p,exifMap.get(p)),archiveInfo.getPath());
+            Iterator<Map.Entry<String,Map<Key,Object>>> iter = exifMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                String filePath = iter.next().getKey();
+                File img = new File(archiveInfo.getPath(), filePath);
+                if (img.exists() && img.isFile()) {
+                    Map<Key,Object> nm = exifMap.get(filePath);
+                    PhotoInfo info = archiveInfo.find(img);
+                    if (info != null) {
+                        deleteSameProperties(info, nm);
+                        if (nm!=null && !nm.isEmpty()) {
+                            info.setPropertiesBy(nm);
+                            info.setLastModified(now);
+                            continue;
+                        }
+                    }
+                }
+                iter.remove();
+            }
+            if (!exifMap.isEmpty()) {
+                int c = setExifTags(exifMap, archiveInfo.getPath());
+                if (c > 0) {
+                    updated += c;
+                    if (saveModification) {
+                        for (String p : exifMap.keySet()) {
+                            Modification.save(new Modification(Exif, p, exifMap.get(p)), archiveInfo.getPath());
+                        }
                     }
                 }
             }
         }
         return updated;
-    }
-
-    /**
-     * 删除修改同步文件
-     * @param rootPath
-     */
-    public static void resetSyncAction(String rootPath) {
-        new File(rootPath, modification_dat +".sync").delete();
     }
 }

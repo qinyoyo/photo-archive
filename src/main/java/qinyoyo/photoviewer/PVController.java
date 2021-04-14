@@ -442,10 +442,10 @@ public class PVController implements ApplicationRunner , ErrorController {
     public String stdout(HttpServletRequest request) {
         File file = new File(STDOUT);
         if (request.getQueryString()!=null && request.getQueryString().toLowerCase().contains("truncate")) {
-            FileUtil.writeToFile(file,"");
+            FileUtil.writeToGbkFile(file,"");
             return "ok";
         } else {
-            String s = FileUtil.getFromFile(file);
+            String s = FileUtil.getFromGbkFile(file);
             if (s!=null) return s.replace("\n","<br>").replaceAll("\\u001B[^m]*m","");
             else return "Not message in stdout.";
         }

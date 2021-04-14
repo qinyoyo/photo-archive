@@ -16,11 +16,12 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class FileUtil {
-    public static String getFromFile(File file) {
+    public static String getFromGbkFile(File file) {
         return getFromFile(file, "GBK");
     }
 
     public static String getFromFile(File file, String charset) {
+        if (!file.exists() || file.isDirectory())  return null;
         FileInputStream s = null;
         try {
             s = new FileInputStream(file);
@@ -85,7 +86,7 @@ public class FileUtil {
             return null;
         }
     }
-    public static void writeToFile(File file, String string) {
+    public static void writeToGbkFile(File file, String string) {
         writeToFile(file, string, "GBK");
     }
 
@@ -113,7 +114,7 @@ public class FileUtil {
         }
     }
 
-    public static void appendToFile(File file, String string) {
+    public static void appendToGbkFile(File file, String string) {
         appendToFile(file, string, "GBK");
     }
 

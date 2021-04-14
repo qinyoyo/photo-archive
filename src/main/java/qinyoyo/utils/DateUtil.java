@@ -1,7 +1,9 @@
 package qinyoyo.utils;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,9 +35,21 @@ public class DateUtil {
         return string2Date(s, fmt, null);
     }
     public static Date string2Date(String s, String fmt, TimeZone zone) {
-        if (s == null)
+        if (s == null) return null;
+        else if (fmt==null) {
+            DateFormat [] defaultFormats = new DateFormat[]{
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+                    DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.CHINA),
+                    DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.US) };
+            for (DateFormat sdf: defaultFormats) {
+                try {
+                    if (zone != null) sdf.setTimeZone(zone);
+                    return sdf.parse(s);
+                } catch (Exception e) {
+                }
+            }
             return null;
-        try {
+        } else try {
             SimpleDateFormat sdf = new SimpleDateFormat(fmt);
             if (zone!=null) sdf.setTimeZone(zone);
             return sdf.parse(s);
@@ -67,7 +81,7 @@ public class DateUtil {
                         return string2Date(newS + z, "yyyy-MM-dd HH:mm:ss.SSSz");
                     }
                 }
-            } else return null;
+            } else return string2Date(s,null,zone);
         } catch (Exception e) {
             throw new RuntimeException(s + " 无法格式化");
         }

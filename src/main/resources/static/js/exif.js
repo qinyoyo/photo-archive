@@ -37,6 +37,24 @@ function setClipboardData(text) {
     textArea.remove()
     return result
 }
+function moveUseKey(event) {
+    if (event.code=='ArrowUp' || event.code=='Numpad8'){
+        moveSelection(true)
+    } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
+        moveSelection(false)
+    } else if (event.ctrlKey && document.querySelector('.map-wrapper').style.display=='none') {
+        event.preventDefault();
+        if (event.code=='KeyC') copyFields()
+        else if (event.code=='KeyA'){
+            document.querySelectorAll('form input[type="checkbox"]').forEach(function (e){
+                e.checked=(e.value!='artist'&&e.value!='shootTime'&&e.value!='model'&&e.value!='lens'&&e.value!='scene'&&e.value!='orientation'&&e.value!='rating'&&e.value!='gpsDatetime')
+            })
+            document.getElementById('btnCopy').removeAttribute('disabled')
+            copyFields()
+        } else if (event.code=='KeyV') pasteFields()
+        else if (event.code=='KeyS') save()
+    }
+}
 function getClipboardData(event) {
     document.removeEventListener('paste',getClipboardData)
     if (event.clipboardData || event.originalEvent) {
@@ -135,6 +153,9 @@ function afterSelection() {
             })
         }
         toggleSaveState(false)
+        if (document.querySelector('.map-wrapper').style.display=='block') {
+            setDefaultMarket()
+        }
     }
 }
 function moveSelection(up) {
@@ -217,32 +238,32 @@ function save() {
     const form = document.getElementById('exifForm')
     let url = '/exifSave'
     let data = new FormData(form)
-    toggleSaveState(false)
-    Ajax.post(url,data,function(msg) {
-        let pp = (msg?msg.split(","):['error'])
-        if (pp[0]=='ok') {
-            let lastModified = (new Date().getTime())+''
-            document.querySelectorAll('.file-item.selected').forEach(function (dom) {
-                dom.setAttribute('data-lastmodified',lastModified)
-                for (let i=0;i<dataKeys.length;i++) {
-                    let val=data.get(nameKeys[i])
-                    dom.setAttribute(dataKeys[i],val?val:'')
-                    if (nameKeys[i]=='orientation' && dom===selectedDom) {
-                        const file=dom.getAttribute('data-file')
-                        const curPath = dom.getAttribute('data-folder').replace(/\\/g,'/')
-                        document.querySelector('.thumb-image').setAttribute('src','/.thumb/' + curPath + (curPath?'/':'') +file
-                            +'?click='+lastModified)
-                        document.querySelector('.thumb-image').setAttribute('data-src','/' + curPath + (curPath?'/':'') + file
-                            +'?click='+lastModified)
+    if (data.get('selectedTags')){
+        toggleSaveState(false)
+        Ajax.post(url,data,function (msg){
+            let pp=(msg?msg.split(","):['error'])
+            if (pp[0]=='ok'){
+                let lastModified=(new Date().getTime())+''
+                document.querySelectorAll('.file-item.selected').forEach(function (dom){
+                    dom.setAttribute('data-lastmodified',lastModified)
+                    for (let i=0; i<dataKeys.length; i++){
+                        let val=data.get(nameKeys[i])
+                        dom.setAttribute(dataKeys[i],val?val:'')
+                        if (nameKeys[i]=='orientation'&&dom===selectedDom){
+                            const file=dom.getAttribute('data-file')
+                            const curPath=dom.getAttribute('data-folder').replace(/\\/g,'/')
+                            document.querySelector('.thumb-image').setAttribute('src','/.thumb/'+curPath+(curPath?'/':'')+file+'?click='+lastModified)
+                            document.querySelector('.thumb-image').setAttribute('data-src','/'+curPath+(curPath?'/':'')+file+'?click='+lastModified)
+                        }
                     }
-                }
-            })
-            if (pp.length>1) toast(pp[1])
-        } else {
-            //toggleSaveState(true)
-            toast(msg)
-        }
-    })
+                })
+                if (pp.length>1) toast(pp[1])
+            }else{
+                //toggleSaveState(true)
+                toast(msg)
+            }
+        })
+    }
 }
 
 function clickExifMap(e) {
@@ -315,13 +336,7 @@ function exifControl() {
     })
 }
 let point = null
-function showMap() {
-    if (!getMap()){
-        initMap('mapContainer',point, exifControl(),true)
-        mapEventListener('click',clickExifMap)
-    }
-    document.querySelector('.map-wrapper').style.display='block'
-    document.querySelector('#app').style.display='none'
+function setDefaultMarket() {
     let lng=document.getElementById('longitude').value,lat=document.getElementById('latitude').value
     if (lng&&lat){
         setTimeout(function (){
@@ -331,9 +346,24 @@ function showMap() {
         },100)
     }
 }
+function showMap() {
+    if (!getMap()){
+        initMap('mapContainer',point, exifControl(),true)
+        mapEventListener('click',clickExifMap)
+    }
+    document.querySelector('.map-wrapper').style.display='block'
+    document.querySelector('#app').style.display='none'
+    const fileList = document.querySelector('.file-list')
+    if (fileList) fileList.onkeydown = null
+    document.onkeydown = moveUseKey
+    setDefaultMarket()
+}
 function hideMap() {
     document.querySelector('.map-wrapper').style.display = 'none'
     document.querySelector('#app').style.display = 'block'
+    const fileList = document.querySelector('.file-list')
+    if (fileList) fileList.onkeydown = moveUseKey
+    document.onkeydown = null
 }
 function setAddressValue(field) {
     let e = document.getElementById(field)
@@ -373,13 +403,7 @@ window.onload=function(){
         addImageDialog(0, this)
     }
     const fileList = document.querySelector('.file-list')
-    if (fileList) fileList.onkeydown = function (event) {
-        if (event.code=='ArrowUp' || event.code=='Numpad8'){
-            moveSelection(true)
-        } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
-            moveSelection(false)
-        }
-    }
+    if (fileList) fileList.onkeydown = moveUseKey
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {
