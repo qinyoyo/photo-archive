@@ -60,68 +60,98 @@
     function return2view() {
         window.location.href = '/?path=' + encodeURI('<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>')
     }
-    const distanceLimit = 10
-    const pointDataList = []
+    function hideMap() {
+        return2view()
+    }
+    function refresh(path) {
+        window.location.href = '/step?path=' + encodeURI(path)
+    }
     const firstPoint = <#if photos??><#assign photoPointTemp = photos[0].getPointMap(CLIENT_POINT_TYPE) />{lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}<#else>null</#if>
-    console.log(firstPoint)
     function getPointData() {
         <#if photos??>
-        const stepIcon = makeIcon({
-            url: "/static/image/step.png",
-            width: 18,
-            height: 27,
-            pointX: 9,
-            pointY: 26
-        })
-        const stepIcon0 = makeIcon({
-            url: "/static/image/step0.png",
-            width: 18,
-            height: 27,
-            pointX: 9,
-            pointY: 26
-        })
-        const stepIcon1 = makeIcon({
-            url: "/static/image/step1.png",
-            width: 18,
-            height: 27,
-            pointX: 9,
-            pointY: 26
-        })
         let distance = 1000
         <#list photos as p>
         <#assign photoPointTemp = p.getPointMap(CLIENT_POINT_TYPE) />
         <#if p_index gt 0>
         distance = getDistance({lng: pointDataList[${(p_index-1)?c}].longitude,lat:pointDataList[${(p_index-1)?c}].latitude},{lng: ${photoPointTemp.lng},lat: ${photoPointTemp.lat}})
         if (distance < distanceLimit) pointDataList[${(p_index-1)?c}].next = ${p_index?c}
-        </#if>
-        pointDataList.push({
-            <#if p.shootTime??>
-            shootTime: '${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}',
             </#if>
-            src: '${fileUrl(p)}?click=${p.lastModified?c}',
-            title: '<#if p.shootTime??>${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}\n</#if>${p.formattedAddress(false)?replace('"','\\"')?replace("'","\\'")}',
-            <#if p_index gt 0>
-            prev: (distance < distanceLimit ? ${(p_index-1)?c} : -1),
-            <#else>
-            prev: -1,
-            </#if>
-            next: -1,
-            longitude: ${photoPointTemp.lng}, latitude: ${photoPointTemp.lat},
-            <#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation>
-            orientation: ${p.orientation},
-            </#if>
-            <#if p.rating??>
-            rating: ${p.rating},
-            </#if>
-            <#if p_index gt 0>
-            marker: (distance < distanceLimit ? pointDataList[${(p_index-1)?c}].marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>}))
-            <#else>
-            marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>})
-            </#if>
-        })
+            pointDataList.push({
+                <#if p.shootTime??>
+                shootTime: '${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}',
+                </#if>
+                src: '${fileUrl(p)}?click=${p.lastModified?c}',
+                title: '<#if p.shootTime??>${statics["qinyoyo.utils.DateUtil"].date2String(p.shootTime,"yyyy-MM-dd HH:mm")}\n</#if>${p.formattedAddress(false)?replace('"','\\"')?replace("'","\\'")}',
+                <#if p_index gt 0>
+                prev: (distance < distanceLimit ? ${(p_index-1)?c} : -1),
+                <#else>
+                prev: -1,
+                </#if>
+                next: -1,
+                longitude: ${photoPointTemp.lng}, latitude: ${photoPointTemp.lat},
+                <#if p.orientation?? && p.orientation gt 1 && !sessionOptions.supportOrientation>
+                orientation: ${p.orientation},
+                </#if>
+                <#if p.rating??>
+                rating: ${p.rating},
+                </#if>
+                <#if p_index gt 0>
+                marker: (distance < distanceLimit ? null : placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>}))
+                <#else>
+                marker: placeMarker({lng:${photoPointTemp.lng}, lat:${photoPointTemp.lat}}, {icon: stepIcon<#if p_index==0>0<#elseif !p_has_next>1</#if>})
+                </#if>
+            })
         </#list>
         </#if>
         return pointDataList
+    }
+    function stepControl() {
+        var div = document.createElement('div');
+        var btnOk = document.createElement('i')
+        btnOk.id = 'showLine'
+        btnOk.className = 'fa fa-line-chart'
+        btnOk.onclick = showLine
+        btnOk.style.marginLeft = '15px';
+        btnOk.style.marginRight = '15px';
+        div.appendChild(btnOk)
+        var btnHide = document.createElement('i')
+        btnHide.className = 'fa fa-close'
+        btnHide.onclick = hideMap
+        btnHide.style.margin = '0 5px';
+        div.appendChild(btnHide)
+        return createUserControl({
+            element: div,
+            position: 'RT',
+            offsetX: 5,
+            offsetY:5
+        })
+    }
+    function mapLoaded() {
+        removeEventListener('tilesloaded',mapLoaded)
+        loadMarkerData()
+        hideWaiting()
+    }
+    function clickStepMap(e) {
+        deoCoderGetAddress(e.latlng, function(add) {
+            if (add && add.address) {
+                showInfoWindow({
+                    width: 0,
+                    height: 0,
+                    info: add.address,
+                    title: add.subjectCode,
+                    enableAutoPan: true,
+                    point: e.latlng
+                })
+            }
+        })
+    }
+    window.onload=function(){
+        showWaiting()
+        document.querySelector('.map-wrapper').style.width = '100%'
+        document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
+        initMap('mapContainer',firstPoint, stepControl(), true)
+        mapEventListener('click',clickStepMap)
+        mapEventListener('tilesloaded', mapLoaded)
     }
 </script>
 </html>

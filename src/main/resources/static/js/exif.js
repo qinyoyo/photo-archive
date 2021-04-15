@@ -74,11 +74,11 @@ function getClipboardData(event) {
         }
     }
 }
-function placeSelectionMarkerOnMap(point) {
+function placeSelectionMarkerOnMap(point,options) {
     if (getMap()){
         if (marker) removeMarker(marker)
         const pos=getPosition(point)
-        marker=placeMarker(pos)
+        marker=placeMarker(pos,options)
         setCenter(pos)
         removeClass(document.getElementById('addressSelected'),'disabled')
     }
@@ -248,7 +248,8 @@ function save() {
                     dom.setAttribute('data-lastmodified',lastModified)
                     for (let i=0; i<dataKeys.length; i++){
                         let val=data.get(nameKeys[i])
-                        dom.setAttribute(dataKeys[i],val?val:'')
+                        if (val) dom.setAttribute(dataKeys[i],val)
+                        else dom.removeAttribute(dataKeys[i])
                         if (nameKeys[i]=='orientation'&&dom===selectedDom){
                             const file=dom.getAttribute('data-file')
                             const curPath=dom.getAttribute('data-folder').replace(/\\/g,'/')
@@ -346,19 +347,87 @@ function setDefaultMarket() {
         },100)
     }
 }
+function getPointData() {
+    if (pointDataList && pointDataList.length>0) {
+        pointDataList.forEach(function(p){
+            if (p.marker) removeMarker(p.marker)
+        })
+        pointDataList.splice(0,pointDataList.length)
+    }
+    let selectedIndex = -1
+    let distance = 1000
+    const photos = document.querySelectorAll('.file-item[data-gpslongitude][data-gpslatitude]')
+    if (photos.length){
+        for (let i=0; i<photos.length; i++){
+            if (photos[i] === selectedDom) selectedIndex = i
+            const point={
+                longitude:parseFloat(photos[i].getAttribute('data-gpslongitude')),
+                latitude:parseFloat(photos[i].getAttribute('data-gpslatitude')),
+                shootTime: photos[i].getAttribute('data-datetimeoriginal')?photos[i].getAttribute('data-datetimeoriginal').substring(0,16):null,
+                orientation: photos[i].getAttribute('data-orientation') ? parseInt(photos[i].getAttribute('data-orientation')) : null,
+                src: photos[i].getAttribute('data-src'),
+                rating: photos[i].getAttribute('data-rating') ? parseInt(photos[i].getAttribute('data-rating')) : null,
+                title: photos[i].getAttribute('title'),
+                prev: -1,
+                next: -1
+            }
+            if (i>0){
+                distance = getDistance({lng: pointDataList[i-1].longitude,lat:pointDataList[i-1].latitude},{lng:point.longitude, lat:point.latitude})
+                if (distance < distanceLimit) {
+                    pointDataList[i-1].next = i
+                    point.prev = i-1
+                    point.marker = null
+                }
+            }
+            if (point.prev == -1) point.marker = placeMarker({lng:point.longitude, lat:point.latitude},
+                {icon: selectedIndex<0 ? stepIcon : (selectedIndex == i ? stepIcon0 : stepIcon1)})
+            if (selectedIndex == i && point.marker==null) {
+                for (let j=i-1;j>=0;j--) {
+                    if (pointDataList[j].marker) {
+                        removeMarker(pointDataList[j].marker)
+                        pointDataList[j].marker = placeMarker(pointDataList[j].marker.getPosition(), {icon:stepIcon0})
+                        break
+                    }
+                }
+            }
+            pointDataList.push(point)
+        }
+    }
+    showLine()
+    return pointDataList
+}
+
+function mapLoaded() {
+    removeEventListener('tilesloaded',mapLoaded)
+    loadMarkerData()
+    hideWaiting()
+}
+
 function showMap() {
     if (!getMap()){
+        showWaiting()
+        document.querySelector('.map-wrapper').style.width = '100%'
+        document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
         initMap('mapContainer',point, exifControl(),true)
         mapEventListener('click',clickExifMap)
-    }
+        mapEventListener('tilesloaded', mapLoaded)
+    } else loadMarkerData()
     document.querySelector('.map-wrapper').style.display='block'
     document.querySelector('#app').style.display='none'
+    removeClass(document.body,"exif")
+    addClass(document.body,"map")
     const fileList = document.querySelector('.file-list')
     if (fileList) fileList.onkeydown = null
     document.onkeydown = moveUseKey
     setDefaultMarket()
 }
 function hideMap() {
+    if (polyline){
+        removePolyline(polyline)
+        polyline=null
+    }
+    removeClass(document.body,"map")
+    addClass(document.body,"exif")
     document.querySelector('.map-wrapper').style.display = 'none'
     document.querySelector('#app').style.display = 'block'
     const fileList = document.querySelector('.file-list')

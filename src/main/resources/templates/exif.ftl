@@ -17,6 +17,7 @@
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
     <script type="text/javascript" src="/static/js/bmap.js"></script>
+    <script type="text/javascript" src="/static/js/step_map.js"></script>
     <title>Photo Viewer</title>
 </head>
 <script>
@@ -24,7 +25,7 @@
 </script>
 <script type="text/javascript" src="/static/js/exif.js"></script>
 <#assign path = '' />
-<body>
+<body class="exif">
 <div id="app" data-folder="<#if pathNames??><#list pathNames as name>${name}<#if name_has_next>/</#if></#list></#if>">
     <div class="folder-head no-wrap" >
         <div class="folder-head__left">

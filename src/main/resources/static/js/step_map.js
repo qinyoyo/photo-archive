@@ -1,50 +1,33 @@
-
-function refresh(path) {
-    window.location.href = '/step?path=' + encodeURI(path)
-}
-function clickStepMap(e) {
-    deoCoderGetAddress(e.latlng, function(add) {
-        if (add && add.address) {
-            showInfoWindow({
-                width: 0,
-                height: 0,
-                info: add.address,
-                title: add.subjectCode,
-                enableAutoPan: true,
-                point: e.latlng
-            })
-        }
-    })
-}
-
-function stepControl() {
-    var div = document.createElement('div');
-    var btnOk = document.createElement('i')
-    btnOk.id = 'showLine'
-    btnOk.className = 'fa fa-line-chart'
-    btnOk.onclick = showLine
-    btnOk.style.marginLeft = '15px';
-    btnOk.style.marginRight = '15px';
-    div.appendChild(btnOk)
-    var btnHide = document.createElement('i')
-    btnHide.className = 'fa fa-close'
-    btnHide.onclick = hideMap
-    btnHide.style.margin = '0 5px';
-    div.appendChild(btnHide)
-    return createUserControl({
-        element: div,
-        position: 'RT',
-        offsetX: 5,
-        offsetY:5
-    })
-}
+const distanceLimit = 10
+const pointDataList = []
+const stepIcon = makeIcon({
+    url: "/static/image/step.png",
+    width: 18,
+    height: 27,
+    pointX: 9,
+    pointY: 26
+})
+const stepIcon0 = makeIcon({
+    url: "/static/image/step0.png",
+    width: 18,
+    height: 27,
+    pointX: 9,
+    pointY: 26
+})
+const stepIcon1 = makeIcon({
+    url: "/static/image/step1.png",
+    width: 18,
+    height: 27,
+    pointX: 9,
+    pointY: 26
+})
 function loadMarkerData() {
     const setImg = function(img,index) {
         if (data[index].className) img.className = data[index].className
         img.setAttribute('data-index', index)
         img.setAttribute('data-prev', data[index].prev)
         img.setAttribute('data-next', data[index].next)
-        img.setAttribute('src','/.thumb'+data[index].src)
+        img.setAttribute('src','/.thumb'+(data[index].src.indexOf('/')==0?'':'/')+data[index].src)
         img.setAttribute('data-src',data[index].src)
         if (data[index].orientation) addClass(img,'orientation-'+data[index].orientation)
         img.setAttribute('title',data[index].title)
@@ -137,27 +120,13 @@ function showLine() {
     if (!polyline) {
         const pointList = []
         pointDataList.forEach(function(d){
-            pointList.push(d.marker.getPosition())
+            if (d.marker) pointList.push(d.marker.getPosition())
         })
-        polyline = drawPolyline(pointList, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
+        if (pointList.length) polyline = drawPolyline(pointList, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
     } else {
         removePolyline(polyline)
         polyline = null
     }
 }
-function hideMap() {
-    return2view()
-}
-function mapLoaded() {
-    removeEventListener('tilesloaded',mapLoaded)
-    loadMarkerData()
-    hideWaiting()
-}
-window.onload=function(){
-    showWaiting()
-    document.querySelector('.map-wrapper').style.width = '100%'
-    document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
-    initMap('mapContainer',firstPoint, stepControl(), true)
-    mapEventListener('click',clickStepMap)
-    mapEventListener('tilesloaded', mapLoaded)
-}
+
+

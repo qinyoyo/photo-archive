@@ -1,7 +1,12 @@
 body {
-    max-width: 1080px!important;
     padding:0!important;
     margin: 0 auto!important;
+}
+body.exif {
+    max-width: 1080px!important;
+}
+body.map {
+    max-width: 100%!important;
 }
 #app {
     padding:10px!important;
@@ -107,4 +112,14 @@ i {
 }
 div:focus {
     outline: none;
+}
+.img-info-window-container {
+    user-select: none;
+    overflow: hidden;
+    text-align: center;
+    position: relative;
+}
+.img-info-window-container img {
+    max-width: 100%;
+    max-height: 100%;
 }
