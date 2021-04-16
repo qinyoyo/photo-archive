@@ -196,13 +196,15 @@
                     <input class="tag-value" id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed(this)">
                     <input type="checkbox" value="gpsDatetime" name="selectedTags" >
                 </div>
-                <div style="text-align: center">
-                    <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()">复制</button>
-                    <button id="btnPaste" class="exif__button" disabled="disabled" onclick="pasteFields()">粘贴</button>
-                    <button class="exif__button" onclick="showMap()">选点</button>
-                    <button id="submit" class="exif__button" disabled="disabled" onclick="save()">保存</button>
-                </div>
             </form>
+            <input type="checkbox" value="1" id="autoSaveMarkerDrag" >
+            <label for="autoSaveMarkerDrag">自动保存拖动标记的变化</label>
+            <div style="text-align: center">
+                <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()">复制</button>
+                <button id="btnPaste" class="exif__button" disabled="disabled" onclick="pasteFields()">粘贴</button>
+                <button class="exif__button" onclick="showMap()">选点</button>
+                <button id="submit" class="exif__button" disabled="disabled" onclick="save()">保存</button>
+            </div>
         </div>
     </div>
     </div>

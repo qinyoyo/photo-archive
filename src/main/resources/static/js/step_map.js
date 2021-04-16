@@ -21,7 +21,8 @@ const stepIcon1 = makeIcon({
     pointX: 9,
     pointY: 26
 })
-function loadMarkerData() {
+
+function loadMarkerData(markerClick) {
     const setImg = function(img,index) {
         if (data[index].className) img.className = data[index].className
         img.setAttribute('data-index', index)
@@ -61,71 +62,72 @@ function loadMarkerData() {
     }
     for (let index=0; index<data.length;index++) {
         if (data[index].marker) {
-            data[index].marker.addEventListener("click", function(e){
-                e.domEvent.stopPropagation()
-                let infoWindow = null
-                let div = document.createElement('div')
-                div.className = 'img-info-window-container'
-                div.style.cursor = 'pointer'
-                let img = document.createElement('img')
-                div.appendChild(img)
-                div.onclick = function(event) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    clickImgOn(img,event.offsetX,div.clientWidth)
-                }
-                div.ontouchstart = function(event) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    if (event.changedTouches.length > 0) {
-                        let currentTarget = div
-                        let left = 0
-                        while (currentTarget !== null) {
-                            left += currentTarget.offsetLeft
-                            currentTarget = currentTarget.offsetParent
+            (function(){ // 使用闭包
+                data[index].marker.addEventListener("click",function (e){
+                    if (typeof markerClick==='function') markerClick(e,data[index])
+                    e.domEvent.stopPropagation()
+                    let infoWindow=null
+                    let div=document.createElement('div')
+                    div.className='img-info-window-container'
+                    div.style.cursor='pointer'
+                    let img=document.createElement('img')
+                    div.appendChild(img)
+                    div.onclick=function (event){
+                        event.preventDefault()
+                        event.stopPropagation()
+                        clickImgOn(img,event.offsetX,div.clientWidth)
+                    }
+                    div.ontouchstart=function (event){
+                        event.preventDefault()
+                        event.stopPropagation()
+                        if (event.changedTouches.length>0){
+                            let currentTarget=div
+                            let left=0
+                            while (currentTarget!==null){
+                                left+=currentTarget.offsetLeft
+                                currentTarget=currentTarget.offsetParent
+                            }
+                            clickImgOn(img,event.changedTouches[0].pageX-left,div.clientWidth)
                         }
-                        clickImgOn(img,event.changedTouches[0].pageX - left, div.clientWidth)
                     }
-                }
-                img.onload = function() {
-                    const dat = data[parseInt(img.getAttribute('data-index'))]
-                    let title = dat.shootTime ? dat.shootTime : '时间未知'
-                    if (dat.prev>=0) title = '<' + title
-                    if (dat.next>=0) title = title + '>'
-                    if (!infoWindow) {
-                        infoWindow = showInfoWindow({
-                            width: img.naturalWidth,
-                            height: img.naturalHeight+10,
-                            title: title,
-                            info: div,
-                            point: dat.marker.getPosition(),
-                            enableAutoPan: true
-                        })
-                        infoWindow.disableCloseOnClick()
-                    } else {
-                        infoWindow.setWidth(img.naturalWidth)
-                        infoWindow.setHeight(img.naturalHeight + 10)
-                        infoWindow.setTitle(title)
-                        infoWindow.redraw()
+                    img.onload=function (){
+                        const dat=data[parseInt(img.getAttribute('data-index'))]
+                        let title=dat.shootTime?dat.shootTime:'时间未知'
+                        if (dat.prev>=0) title='<'+title
+                        if (dat.next>=0) title=title+'>'
+                        if (!infoWindow){
+                            infoWindow=showInfoWindow({
+                                width:img.naturalWidth,height:img.naturalHeight+10,title:title,info:div,point:dat.marker.getPosition(),enableAutoPan:true
+                            })
+                            infoWindow.disableCloseOnClick()
+                        }else{
+                            infoWindow.setWidth(img.naturalWidth)
+                            infoWindow.setHeight(img.naturalHeight+10)
+                            infoWindow.setTitle(title)
+                            infoWindow.redraw()
+                        }
                     }
-                }
-                setImg(img,index)
-            });
+                    setImg(img,index)
+                });
+            }())
         }
     }
 }
 
 let polyline = null
-function showLine() {
-    if (!polyline) {
+function showLine(forceShow) {
+    function show() {
         const pointList = []
         pointDataList.forEach(function(d){
             if (d.marker) pointList.push(d.marker.getPosition())
         })
         if (pointList.length) polyline = drawPolyline(pointList, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
-    } else {
+    }
+    if (!polyline) show()
+    else {
         removePolyline(polyline)
         polyline = null
+        if (forceShow) show()
     }
 }
 

@@ -202,6 +202,7 @@
         openDialog(dlgOptions)
     }
     window.addClass = function(dom,cls) {
+        if (!dom) return
         let cls0 = dom.className
         if (!cls0) dom.className = cls
         else {
@@ -213,6 +214,7 @@
         }
     }
     window.removeClass = function(dom,cls) {
+        if (!dom) return
         let cls0 = dom.className
         if (cls0) {
             let ac = cls0.split(' ')

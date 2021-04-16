@@ -37,20 +37,16 @@ function setClipboardData(text) {
     textArea.remove()
     return result
 }
-function moveUseKey(event) {
+function exifKeyEvent(event) {
     if (event.code=='ArrowUp' || event.code=='Numpad8'){
         moveSelection(true)
     } else if (event.code=='ArrowDown' || event.code=='Numpad2'){
         moveSelection(false)
     } else if (event.ctrlKey && document.querySelector('.map-wrapper').style.display=='none') {
         event.preventDefault();
-        if (event.code=='KeyC') copyFields()
-        else if (event.code=='KeyA'){
-            document.querySelectorAll('form input[type="checkbox"]').forEach(function (e){
-                e.checked=(e.value!='artist'&&e.value!='shootTime'&&e.value!='model'&&e.value!='lens'&&e.value!='scene'&&e.value!='orientation'&&e.value!='rating'&&e.value!='gpsDatetime')
-            })
-            document.getElementById('btnCopy').removeAttribute('disabled')
-            copyFields()
+        if (event.code=='KeyC') {
+            copyFields(['subjectCode','country','countryCode','province','city','location',
+                'headline','subTitle','longitude','latitude','altitude'])
         } else if (event.code=='KeyV') pasteFields()
         else if (event.code=='KeyS') save()
     }
@@ -76,21 +72,32 @@ function getClipboardData(event) {
 }
 function placeSelectionMarkerOnMap(point,options) {
     if (getMap()){
-        if (marker) removeMarker(marker)
         const pos=getPosition(point)
-        marker=placeMarker(pos,options)
-        setCenter(pos)
+        if (marker) {
+            marker.setPosition(pos)
+        } else {
+            marker=placeMarker(pos,options)
+        }
         removeClass(document.getElementById('addressSelected'),'disabled')
+        setTimeout(function(){
+            setCenter(pos)
+        },200)
     }
 }
 function refresh(path) {
     const e = document.getElementById('recursion')
     window.location.href = '/exif?path=' + encodeURI(path) + '&recursion='+(e.checked ? 'true':'false')
 }
-function copyFields(){
+function copyFields(tags){
     copiedPoint = {}
     document.getElementById('btnPaste').setAttribute('disabled', 'disabled')
-    document.querySelectorAll('input[name="selectedTags"]:checked').forEach(function(e){
+    if (tags) {
+        tags.forEach(function(field) {
+            copiedPoint[field] = document.getElementById(field).value
+        })
+        document.getElementById('btnPaste').removeAttribute('disabled')
+    }
+    else document.querySelectorAll('input[name="selectedTags"]:checked').forEach(function(e){
         let field = e.value
         copiedPoint[field] = document.getElementById(field).value
         document.getElementById('btnPaste').removeAttribute('disabled')
@@ -119,6 +126,17 @@ function toggleSaveState(enable) {
         document.getElementById('submit').removeAttribute('disabled')
     else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
+function setThumbImage(dom) {
+    const file = dom.getAttribute('data-file')
+    const lastModified = dom.getAttribute('data-lastmodified')
+    const curPath = dom.getAttribute('data-folder').replace(/\\/g, '/')
+    const thumbDom = document.querySelector('.thumb-image')
+    thumbDom.setAttribute('src', '/.thumb/' + curPath + (curPath ? '/' : '') + file
+        + (lastModified ? '?click=' + lastModified : ''))
+    thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
+        + (lastModified ? '?click=' + lastModified : ''))
+    thumbDom.setAttribute('title', dom.getAttribute('title'))
+}
 function afterSelection() {
     let folders = [], files=[]
     document.querySelectorAll('.file-item.selected').forEach(function (i) {
@@ -128,15 +146,7 @@ function afterSelection() {
     document.getElementById('subFolder').value = folders.join(',')
     document.getElementById('fileName').value = files.join(',')
     if (selectedDom) {
-        const file = selectedDom.getAttribute('data-file')
-        const lastModified = selectedDom.getAttribute('data-lastmodified')
-        const curPath = selectedDom.getAttribute('data-folder').replace(/\\/g, '/')
-        const thumbDom = document.querySelector('.thumb-image')
-        thumbDom.setAttribute('src', '/.thumb/' + curPath + (curPath ? '/' : '') + file
-            + (lastModified ? '?click=' + lastModified : ''))
-        thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
-            + (lastModified ? '?click=' + lastModified : ''))
-        thumbDom.setAttribute('title', selectedDom.getAttribute('title'))
+        setThumbImage(selectedDom)
         for (let i = 0; i < dataKeys.length; i++) {
             let v = selectedDom.getAttribute(dataKeys[i])
             if (v && (nameKeys[i] === 'shootTime' || nameKeys[i] === 'gpsDatetime')) v = v.replace(' ', 'T')
@@ -153,7 +163,7 @@ function afterSelection() {
             })
         }
         toggleSaveState(false)
-        if (document.querySelector('.map-wrapper').style.display=='block') {
+        if (document.querySelector('.map-wrapper').style.display=='none') {
             setDefaultMarket()
         }
     }
@@ -266,34 +276,36 @@ function save() {
         })
     }
 }
-
-function clickExifMap(e) {
-    deoCoderGetAddress(e.latlng, function(add) {
-        placeSelectionMarkerOnMap(e.latlng)
-        mapPoint = add
-        document.getElementById("address").value = (mapPoint.subjectCode ? mapPoint.subjectCode + ':' : '') + mapPoint.address
-        if (add.address && add.address.search(/[\u4e00-\u9fa5]/) < 0) {
-            let aa = add.address.split(',')
-            let country = aa[aa.length - 1].trim()
-            if (country === 'Scotland' ||country == 'Northern Ireland') {
-                mapPoint.country = 'England'
-                mapPoint.countryCode = 'GB'
-            } else {
-                const options = document.getElementById('country').options
-                for (let i=0;i<options.length;i++){
-                    if (options[i].value==country){
-                        mapPoint.country=country
-                        mapPoint.countryCode=options[i].getAttribute('data-code')
-                        return
-                    }
+function selectMapPoint(add) {
+    placeSelectionMarkerOnMap({lng:add.longitude, lat: add.latitude})
+    mapPoint = add
+    document.getElementById("address").value = (mapPoint.subjectCode ? mapPoint.subjectCode + ':' : '') + mapPoint.address
+    if (add.address && add.address.search(/[\u4e00-\u9fa5]/) < 0) {
+        let aa = add.address.split(',')
+        let country = aa[aa.length - 1].trim()
+        if (country === 'Scotland' ||country == 'Northern Ireland') {
+            mapPoint.country = 'England'
+            mapPoint.countryCode = 'GB'
+        } else {
+            const options = document.getElementById('country').options
+            for (let i=0;i<options.length;i++){
+                if (options[i].value==country){
+                    mapPoint.country=country
+                    mapPoint.countryCode=options[i].getAttribute('data-code')
+                    return
                 }
-                console.log('国家地区检索失败: '+ add.address)
             }
-        } else if (add.address) {
-            mapPoint.country = '中国'
-            mapPoint.countryCode = 'CN'
+            console.log('国家地区检索失败: '+ add.address)
         }
-    })
+    } else if (add.address) {
+        mapPoint.country = '中国'
+        mapPoint.countryCode = 'CN'
+    }
+}
+let pauseMapClick = false
+function clickExifMap(e) {
+    console.log('map click')
+    if (!pauseMapClick) deoCoderGetAddress(e.latlng, selectMapPoint)
 }
 function exifControl() {
     var div = document.createElement('div');
@@ -318,7 +330,11 @@ function exifControl() {
     btnOk.id = 'addressSelected'
     btnOk.className = 'fa fa-check disabled'
     btnOk.onclick = function() {
-        if (btnOk.className.indexOf('disabled')<0) selectAddress()
+        if (btnOk.className.indexOf('disabled')<0) {
+            selectAddress()
+            hideMap()
+            toggleSaveState(true)
+        }
     }
     btnOk.style.marginLeft = '15px';
     btnOk.style.marginRight = '15px';
@@ -339,13 +355,73 @@ function exifControl() {
 let point = null
 function setDefaultMarket() {
     let lng=document.getElementById('longitude').value,lat=document.getElementById('latitude').value
-    if (lng&&lat){
-        setTimeout(function (){
-            placeSelectionMarkerOnMap({lng:parseFloat(lng),lat:parseFloat(lat)})
-            addClass(document.getElementById('addressSelected'),'disabled')
-            document.getElementById("address").value=formattedAddress(document.getElementById('province').value,document.getElementById('city').value,document.getElementById('location').value,document.getElementById('subjectCode').value)
-        },100)
+    if (lng && lat){
+        let point = {lng:parseFloat(lng),lat:parseFloat(lat)}
+        placeSelectionMarkerOnMap(point)
+        addClass(document.getElementById('addressSelected'),'disabled')
+        document.getElementById("address").value=formattedAddress(document.getElementById('province').value,document.getElementById('city').value,document.getElementById('location').value,document.getElementById('subjectCode').value)
     }
+}
+function pointInfoFromDom(dom,longitude,latitude) {
+    return {
+            country: dom.getAttribute('data-country-primarylocationname'),
+            countryCode: dom.getAttribute('data-country-code'),
+            location: dom.getAttribute('data-sub-location'),
+            city: dom.getAttribute('data-city'),
+            province: dom.getAttribute('data-province-state'),
+            subjectCode: dom.getAttribute('data-subjectCode'),
+            longitude: longitude ? longitude : (dom.getAttribute('data-gpslongitude') ? parseFloat(domElement.getAttribute('data-gpslongitude')) : null),
+            latitude: latitude ? latitude : (dom.getAttribute('data-gpslatitude') ? parseFloat(domElement.getAttribute('data-gpslatitude')) : null),
+            altitude: dom.getAttribute('data-gpsaltitude') ? parseFloat(domElement.getAttribute('data-gpsaltitude')) : null
+        }
+}
+function markerDrag(e,index) {
+    e.domEvent.stopPropagation()
+    e.domEvent.preventDefault()
+    let p = pointDataList[index].marker.getPosition()
+    pointDataList[index].longitude = p.lng
+    pointDataList[index].latitude = p.lat
+
+    const fileItems = document.querySelectorAll('.file-item')
+    fileItems.forEach(function(e) {removeClass(e,'selected')})
+    let folders = [], files=[]
+    for (let i=0;;i++) {
+        addClass(pointDataList[i+index].domElement,'selected')
+        selectedDom = pointDataList[i+index].domElement
+        folders.push(pointDataList[i+index].domElement.getAttribute('data-folder'))
+        files.push(pointDataList[i+index].domElement.getAttribute('data-file'))
+        if (pointDataList[i+index].next==-1) break
+    }
+    document.getElementById('subFolder').value = folders.join(',')
+    document.getElementById('fileName').value = files.join(',')
+    if (selectedDom) {
+        setThumbImage(selectedDom)
+        toggleSaveState(true)
+    }
+    const afterGeo = function() {
+        if (document.getElementById('autoSaveMarkerDrag').checked) {
+            selectAddress()
+            save()
+        }
+        showLine(true)
+    }
+    for (let i=0;i<pointDataList.length;i++) {  // 自动粘连
+        if (i!=index && pointDataList[i].marker && getDistance(p,pointDataList[i].marker.getPosition()) <= distanceLimit) {
+            pointDataList[index].longitude = pointDataList[i].longitude
+            pointDataList[index].latitude = pointDataList[i].latitude
+            mapPoint = pointInfoFromDom(pointDataList[i].domElement, pointDataList[i].longitude, pointDataList[i].latitude)
+            p = {lng: pointDataList[index].longitude, lat: pointDataList[index].latitude}
+            pointDataList[index].marker.setPosition(p)
+            placeSelectionMarkerOnMap(p)
+            document.getElementById("address").value = formattedAddress(mapPoint.province,mapPoint.city,mapPoint.location,mapPoint.subjectCode)
+            afterGeo()
+            return
+        }
+    }
+    deoCoderGetAddress(p, function(add) {
+        selectMapPoint(add)
+        afterGeo()
+    })
 }
 function getPointData() {
     if (pointDataList && pointDataList.length>0) {
@@ -361,6 +437,7 @@ function getPointData() {
         for (let i=0; i<photos.length; i++){
             if (photos[i] === selectedDom) selectedIndex = i
             const point={
+                domElement: photos[i],
                 longitude:parseFloat(photos[i].getAttribute('data-gpslongitude')),
                 latitude:parseFloat(photos[i].getAttribute('data-gpslatitude')),
                 shootTime: photos[i].getAttribute('data-datetimeoriginal')?photos[i].getAttribute('data-datetimeoriginal').substring(0,16):null,
@@ -379,13 +456,23 @@ function getPointData() {
                     point.marker = null
                 }
             }
-            if (point.prev == -1) point.marker = placeMarker({lng:point.longitude, lat:point.latitude},
-                {icon: selectedIndex<0 ? stepIcon : (selectedIndex == i ? stepIcon0 : stepIcon1)})
+            if (point.prev == -1) {
+                (function(){
+                    point.marker = placeMarker({lng:point.longitude, lat:point.latitude},
+                    {icon: selectedIndex<0 ? stepIcon : (selectedIndex == i ? stepIcon0 : stepIcon1), enableDragging: true})
+                    point.marker.addEventListener('dragend',function (e){
+                        pauseMapClick=true
+                        markerDrag(e,i)
+                        setTimeout(function() {
+                            pauseMapClick=false
+                        },200)
+                    })
+                }())
+            }
             if (selectedIndex == i && point.marker==null) {
                 for (let j=i-1;j>=0;j--) {
                     if (pointDataList[j].marker) {
-                        removeMarker(pointDataList[j].marker)
-                        pointDataList[j].marker = placeMarker(pointDataList[j].marker.getPosition(), {icon:stepIcon0})
+                        pointDataList[j].marker.setIcon(stepIcon0)
                         break
                     }
                 }
@@ -396,14 +483,22 @@ function getPointData() {
     showLine()
     return pointDataList
 }
-
+function markerClick(e, point) {
+    console.log('marker click')
+    if (point && point.domElement) {
+        mapPoint = pointInfoFromDom(point.domElement, point.longitude, point.latitude)
+        placeSelectionMarkerOnMap({lng:point.longitude, lat: point.latitude})
+        document.getElementById("address").value = formattedAddress(mapPoint.province,mapPoint.city,mapPoint.location,mapPoint.subjectCode)
+    }
+}
 function mapLoaded() {
     removeEventListener('tilesloaded',mapLoaded)
-    loadMarkerData()
+    loadMarkerData(markerClick)
     hideWaiting()
 }
 
 function showMap() {
+    if (document.getElementById('autoSaveMarkerDrag').checked && !confirm("确实需要自动保存拖动改变的地理信息？")) return
     if (!getMap()){
         showWaiting()
         document.querySelector('.map-wrapper').style.width = '100%'
@@ -411,15 +506,14 @@ function showMap() {
         initMap('mapContainer',point, exifControl(),true)
         mapEventListener('click',clickExifMap)
         mapEventListener('tilesloaded', mapLoaded)
-    } else loadMarkerData()
+    } else loadMarkerData(markerClick)
     document.querySelector('.map-wrapper').style.display='block'
     document.querySelector('#app').style.display='none'
     removeClass(document.body,"exif")
     addClass(document.body,"map")
     const fileList = document.querySelector('.file-list')
     if (fileList) fileList.onkeydown = null
-    document.onkeydown = moveUseKey
-    setDefaultMarket()
+    document.onkeydown = exifKeyEvent
 }
 function hideMap() {
     if (polyline){
@@ -431,7 +525,7 @@ function hideMap() {
     document.querySelector('.map-wrapper').style.display = 'none'
     document.querySelector('#app').style.display = 'block'
     const fileList = document.querySelector('.file-list')
-    if (fileList) fileList.onkeydown = moveUseKey
+    if (fileList) fileList.onkeydown = exifKeyEvent
     document.onkeydown = null
 }
 function setAddressValue(field) {
@@ -455,8 +549,6 @@ function selectAddress() {
     setAddressValue('subjectCode')
     setAddressValue('country')
     setAddressValue('countryCode')
-    hideMap()
-    toggleSaveState(true)
 }
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
@@ -472,7 +564,7 @@ window.onload=function(){
         addImageDialog(0, this)
     }
     const fileList = document.querySelector('.file-list')
-    if (fileList) fileList.onkeydown = moveUseKey
+    if (fileList) fileList.onkeydown = exifKeyEvent
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {
