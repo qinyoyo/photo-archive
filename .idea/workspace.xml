@@ -24,14 +24,10 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/ajax.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/ajax.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/bmap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/bmap.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/step.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/step.ftl" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -83,18 +79,6 @@
       <recent name="E:\J2EE\photo-archive\src\main\resources\static\image" />
     </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
   <component name="RunManager" selected="Spring Boot.PhotoArchiveApplication">
     <configuration name="map.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/src/main/resources/static/js/map.js" working-dir="$PROJECT_DIR$/src/main/resources/static/js">
       <method v="2" />
@@ -117,7 +101,7 @@
       </list>
     </recent_temporary>
   </component>
-  <component name="SpellCheckerSettings" BundledDictionaries="0" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" Dictionaries="0" CorrectionsLimit="5" DefaultDictionary="application-level" UseSingleDictionary="true" />
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -218,24 +202,24 @@
       <workItem from="1618535204743" duration="19788000" />
       <workItem from="1618793244528" duration="5744000" />
       <workItem from="1618817600277" duration="7579000" />
+      <workItem from="1618833067656" duration="4771000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
     <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1618318114081">
@@ -253,26 +237,26 @@
     </state>
     <state width="479" height="305" key="DebuggerActiveHint/0.0.1280.680@0.0.1280.680" timestamp="1616912258958" />
     <state width="786" height="466" key="DebuggerActiveHint/0.0.1920.1040@0.0.1920.1040" timestamp="1617199812542" />
-    <state width="1860" height="384" key="GridCell.Tab.0.bottom" timestamp="1618320266943">
+    <state width="1860" height="124" key="GridCell.Tab.0.bottom" timestamp="1618837796608">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="384" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266943" />
-    <state width="1860" height="384" key="GridCell.Tab.0.center" timestamp="1618320266943">
+    <state width="1860" height="124" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618837796608" />
+    <state width="1860" height="124" key="GridCell.Tab.0.center" timestamp="1618837796608">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="384" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266943" />
-    <state width="1860" height="384" key="GridCell.Tab.0.left" timestamp="1618320266942">
+    <state width="1860" height="124" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618837796608" />
+    <state width="1860" height="124" key="GridCell.Tab.0.left" timestamp="1618837796608">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="384" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266942" />
-    <state width="1860" height="384" key="GridCell.Tab.0.right" timestamp="1618320266943">
+    <state width="1860" height="124" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618837796608" />
+    <state width="1860" height="124" key="GridCell.Tab.0.right" timestamp="1618837796608">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1237" height="185" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1617618497086" />
-    <state width="1860" height="384" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618320266943" />
+    <state width="1860" height="124" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618837796608" />
     <state width="1860" height="384" key="GridCell.Tab.1.bottom" timestamp="1618320266939">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -317,11 +301,11 @@
       <screen x="0" y="0" width="1280" height="680" />
     </state>
     <state x="186" y="70" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.0.1280.680@0.0.1280.680" timestamp="1616899682651" />
-    <state x="509" y="110" width="905" height="820" key="find.popup" timestamp="1617801670746">
+    <state x="509" y="110" width="905" height="820" key="find.popup" timestamp="1618833967816">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="339" y="72" width="603" height="536" key="find.popup/0.0.1280.680@0.0.1280.680" timestamp="1615087424101" />
-    <state x="509" y="110" width="905" height="820" key="find.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1617801670746" />
+    <state x="509" y="110" width="905" height="820" key="find.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1618833967816" />
     <state x="800" y="275" key="refactoring.ChangeSignatureDialog" timestamp="1616677947349">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -346,12 +330,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>396</line>
+          <line>406</line>
           <option name="timeStamp" value="138" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>444</line>
+          <line>454</line>
           <option name="timeStamp" value="139" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
@@ -361,7 +345,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java</url>
-          <line>306</line>
+          <line>316</line>
           <option name="timeStamp" value="178" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
@@ -381,7 +365,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/step_map.js</url>
-          <line>66</line>
+          <line>51</line>
           <option name="timeStamp" value="181" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">

@@ -446,8 +446,6 @@ public class ArchiveUtils {
     }
 
     public static void copyToFolder(ArchiveInfo camera, ArchiveInfo archived, List<FolderInfo> folderInfos) {
-        String sameLog = FileUtil.getFromGbkFile(new File(camera.getPath(),ArchiveUtils.same_photo_log));
-        if (sameLog==null) sameLog="";
         List<PhotoInfo> noShootTime = new ArrayList<>();
         List<PhotoInfo> notMoved = new ArrayList<>();
         String root = camera.getPath();

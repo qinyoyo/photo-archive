@@ -376,7 +376,6 @@ function pointInfoFromDom(dom,longitude,latitude) {
 }
 function markerDrag(e,index) {
     e.domEvent.stopPropagation()
-    e.domEvent.preventDefault()
     let p = pointDataList[index].marker.getPosition()
     pointDataList[index].longitude = p.lng
     pointDataList[index].latitude = p.lat
@@ -495,7 +494,7 @@ function getPointData() {
             pointDataList.push(point)
         }
     }
-    showLine()
+    showLine(true)
     return pointDataList
 }
 function markerClick(e, point) {

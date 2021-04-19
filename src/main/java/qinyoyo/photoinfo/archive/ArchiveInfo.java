@@ -485,7 +485,7 @@ public class ArchiveInfo {
                     PhotoInfo pij = refInfos.get(j);
                     if (ArchiveUtils.isInWebFolder(pij.getSubFolder())) continue;
                     Date dt1 = pij.getShootTime();
-                    if (dt1.getTime() == dt0.getTime()) {
+                    if (dt1!=null && dt1.getTime() == dt0.getTime()) {
                         if (!j0set) {
                             j0 = j;
                             j0set = true;
@@ -501,7 +501,7 @@ public class ArchiveInfo {
                             sameAs.add(pij);
                             break;
                         }
-                    } else if (dt1.getTime() > dt0.getTime()) {
+                    } else if (dt1!=null && dt1.getTime() > dt0.getTime()) {
                         break;
                     }
 
