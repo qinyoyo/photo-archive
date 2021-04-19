@@ -236,6 +236,7 @@
         document.querySelector('body').appendChild(waitingIcon)
     }
     window.hideWaiting = function(id) {
-        document.getElementById( id ? id : 'waiting_icon_overlay').remove()
+        const icon = document.getElementById( id ? id : 'waiting_icon_overlay')
+        if (icon) icon.remove()
     }
 })();

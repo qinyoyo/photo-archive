@@ -35,10 +35,11 @@ function loadMarkerData(markerClick) {
     }
     const data = getPointData()
     const clickImgOn = function(img,x, width) {
-        if (x>2*width/3){
+        let imgL = (width - img.naturalWidth)/2 + img.naturalWidth / 3, imgR =  (width + img.naturalWidth)/2 - img.naturalWidth / 3
+        if (x>=imgR){
             let next = parseInt(img.getAttribute('data-next'))
             if (next>=0) setImg(img,next)
-        } else if (x<width/3) {
+        } else if (x<=imgL) {
             let prev = parseInt(img.getAttribute('data-prev'))
             if (prev>=0) setImg(img,prev)
         } else {
@@ -75,11 +76,11 @@ function loadMarkerData(markerClick) {
                     div.onclick=function (event){
                         event.preventDefault()
                         event.stopPropagation()
-                        clickImgOn(img,event.offsetX,div.clientWidth)
+                        clickImgOn(img,event.layerX,div.clientWidth)
                     }
                     div.ontouchstart=function (event){
-                        event.preventDefault()
-                        event.stopPropagation()
+                        //event.preventDefault()
+                        //event.stopPropagation()
                         if (event.changedTouches.length>0){
                             let currentTarget=div
                             let left=0

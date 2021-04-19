@@ -1,5 +1,6 @@
 
 let baiduMap = null
+
 function getMap() {
     return baiduMap
 }
@@ -120,14 +121,17 @@ function showInfoWindow({width, height, title, info, point, enableAutoPan}) {
         return infoWindow
     }
 }
-function mapEventListener(event,listener) {
-    if (baiduMap) {
-        baiduMap.addEventListener(event,listener)
+
+function addMapEventListener(event,listener,object) {
+    if (!object) object = baiduMap
+    if (object) {
+        object.addEventListener(event, listener)
     }
 }
-function removeEventListener(event,listener) {
-    if (baiduMap) {
-        baiduMap.removeEventListener(event,listener)
+function removeMapEventListener(event,listener,object) {
+    if (!object) object = baiduMap
+    if (object) {
+        object.removeEventListener(event,listener)
     }
 }
 function createUserControl({element, position, offsetX, offsetY}) {

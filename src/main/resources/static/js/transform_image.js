@@ -282,7 +282,7 @@
                     else if (rotateZ==180) orientations += '3'
                     else if (rotateZ==270) orientations += '8'
                 }
-                if (orientations || (imgRating && imgRating.indexOf('+')===0)) {
+                if (orientations || (typeof imgRating === 'string' && imgRating.indexOf('+')===0)) {
                     let url = '/orientation?path='+encodeURI(path)+
                         (orientations? ('&orientations='+orientations) : '') +
                         (imgRating && imgRating.indexOf('+')===0 ?

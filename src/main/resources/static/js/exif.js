@@ -79,9 +79,7 @@ function placeSelectionMarkerOnMap(point,options) {
             marker=placeMarker(pos,options)
         }
         removeClass(document.getElementById('addressSelected'),'disabled')
-        setTimeout(function(){
-            setCenter(pos)
-        },200)
+        if (document.querySelector('.map-wrapper').style.display=='block')  setCenter(pos)
     }
 }
 function refresh(path) {
@@ -359,7 +357,8 @@ function setDefaultMarket() {
         let point = {lng:parseFloat(lng),lat:parseFloat(lat)}
         placeSelectionMarkerOnMap(point)
         addClass(document.getElementById('addressSelected'),'disabled')
-        document.getElementById("address").value=formattedAddress(document.getElementById('province').value,document.getElementById('city').value,document.getElementById('location').value,document.getElementById('subjectCode').value)
+        let dom = document.getElementById("address")
+        if (dom) dom.value=formattedAddress(document.getElementById('province').value,document.getElementById('city').value,document.getElementById('location').value,document.getElementById('subjectCode').value)
     }
 }
 function pointInfoFromDom(dom,longitude,latitude) {
@@ -414,6 +413,22 @@ function markerDrag(e,index) {
             pointDataList[index].marker.setPosition(p)
             placeSelectionMarkerOnMap(p)
             document.getElementById("address").value = formattedAddress(mapPoint.province,mapPoint.city,mapPoint.location,mapPoint.subjectCode)
+            let midMarker = 0
+            let i0 = Math.min(index,i), i1 = Math.max(index,i)
+            for (let j = i0+1; j<i1; j++) {
+                if (pointDataList[j].marker) {
+                    midMarker = 1
+                    break
+                }
+            }
+            if (!midMarker) {
+                pointDataList[i0].next = i0+1
+                pointDataList[i0+1].prev = i0
+                pointDataList[i1-1].next = i1
+                pointDataList[i1].prev = i1-1
+                if (pointDataList[i1].marker) removeMarker(pointDataList[i1].marker)
+                pointDataList[i1].marker = null
+            }
             afterGeo()
             return
         }
@@ -504,9 +519,12 @@ function showMap() {
         document.querySelector('.map-wrapper').style.width = '100%'
         document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
         initMap('mapContainer',point, exifControl(),true)
-        mapEventListener('click',clickExifMap)
-        mapEventListener('tilesloaded', mapLoaded)
+        addMapEventListener('click',clickExifMap)
+        addMapEventListener('tilesloaded', mapLoaded)
     } else loadMarkerData(markerClick)
+    if (marker) setTimeout(function(){
+        setCenter(marker.getPosition())
+    },200)
     document.querySelector('.map-wrapper').style.display='block'
     document.querySelector('#app').style.display='none'
     removeClass(document.body,"exif")

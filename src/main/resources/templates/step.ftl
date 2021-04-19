@@ -150,8 +150,8 @@
         document.querySelector('.map-wrapper').style.width = '100%'
         document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
         initMap('mapContainer',firstPoint, stepControl(), true)
-        mapEventListener('click',clickStepMap)
-        mapEventListener('tilesloaded', mapLoaded)
+        addMapEventListener('click',clickStepMap)
+        addMapEventListener('tilesloaded', mapLoaded)
     }
 </script>
 </html>
