@@ -1012,11 +1012,14 @@
      *                      2 一个回调函数，入参 为 index , 出参为 { src, orientation, rating, title, imgIndex }，
      *                        入参 index = -1时，返回循环图像总数
      * @param buttonOptions 显示哪些按钮
+     * @param onclose 关闭时回调
      */
-    window.addImageDialog = function(index, getDataObject, buttonOptions) {
+    let imageDialogOnClose = null
+    window.addImageDialog = function(index, getDataObject, buttonOptions, onclose) {
         removeImageDialog()
         addModel()
-
+        if (typeof onclose === 'function') imageDialogOnClose = onclose
+        else imageDialogOnClose = null
         let bodyClass = document.querySelector('body').className
         if (bodyClass && bodyClass.indexOf('transform_image_show')<0) {
             bodyClass = bodyClass + ' transform_image_show'
@@ -1074,9 +1077,11 @@
             title: '关闭',
             iconClass:'fa fa-power-off',
             onclick:function (){
+
                 document.querySelector('body').onkeydown = null
                 window.onresize = null
                 removeImageDialog()
+                if (typeof imageDialogOnClose === 'function') imageDialogOnClose()
                 document.querySelector('head title').innerText = 'Photo Viewer'
                 if (document.querySelector('.auto-play-loop-images')) {
                     history.back()

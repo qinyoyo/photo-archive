@@ -21,7 +21,58 @@ const stepIcon1 = makeIcon({
     pointX: 9,
     pointY: 26
 })
-
+let skipNextClick = false
+function stopNextClick() {
+    skipNextClick = true
+    setTimeout(function() {
+        skipNextClick = false
+    },300)
+}
+function getImageIndexSet(data, index) {
+    const paramsOf = function(imgIndex) {
+        let start = imgIndex, end = imgIndex
+        while (start>0 && data[start-1].next == start) start--
+        while (end<data.length-1 && data[end+1].prev == end) end++
+        return {
+            start: start,
+            end: end,
+            position: data[start].marker ? data[start].marker.getPosition() : null
+        }
+    }
+    if (index<0 || index>=data.length) return null
+    if (data[index].imageIndexSet) return data[index].imageIndexSet
+    let param = paramsOf(index)
+    const indexSet = []
+    let startIndex = 0
+    if (param) {
+        if (param.position) {
+            for (let i=0;i<data.length;) {
+                if (i>=param.start && i<=param.end) {
+                    startIndex = index - param.start + indexSet.length
+                    for (let j=param.start;j<=param.end;j++) indexSet.push(j)
+                    i=param.end + 1
+                    continue
+                }
+                let p = paramsOf(i)
+                if (!p) i++
+                else {
+                    if (p.position && getDistance(p.position,param.position) <= distanceLimit) {
+                        for (let j=p.start;j<=p.end;j++) indexSet.push(j)
+                    }
+                    i = p.end + 1
+                }
+            }
+        } else {
+            for (let i=param.start;i<=param.end;i++) indexSet.push(i)
+            startIndex = index - param.start
+        }
+        data[index].imageIndexSet = {
+            set: indexSet,
+            startIndex: startIndex
+        }
+        return data[index].imageIndexSet
+    } else return null
+}
 function loadMarkerData(markerClick) {
     const setImg = function(img,index) {
         if (data[index].className) img.className = data[index].className
@@ -35,29 +86,34 @@ function loadMarkerData(markerClick) {
     }
     const data = getPointData()
     const clickImgOn = function(img,x, width) {
+        let index = parseInt(img.getAttribute('data-index'))
+        const params = getImageIndexSet(data,index)
+        if (!params) return
         let imgL = (width - img.naturalWidth)/2 + img.naturalWidth / 3, imgR =  (width + img.naturalWidth)/2 - img.naturalWidth / 3
         if (x>=imgR){
-            let next = parseInt(img.getAttribute('data-next'))
-            if (next>=0) setImg(img,next)
+            let next = params.startIndex+1
+            if (next<params.set.length) setImg(img,params.set[next])
         } else if (x<=imgL) {
-            let prev = parseInt(img.getAttribute('data-prev'))
-            if (prev>=0) setImg(img,prev)
+            let prev = params.startIndex - 1
+            if (prev>=0) setImg(img,params.set[prev])
         } else {
-            let index = parseInt(img.getAttribute('data-index'))
-            let start = index, end = index
-            while (start>0 && data[start-1].next == start) start--
-            while (end<data.length-1 && data[end+1].prev == end) end++
-            addImageDialog(index - start, function(i) {
-                if (i == -1) return end - start + 1
-                else return {
-                    src: data[start + i].src,
-                    orientation: data[start + i].orientation,
-                    rating: data[start + i].rating,
-                    title: data[start + i].title,
-                    imgIndex: i
+            document.querySelector('.map-wrapper').style.display='none'
+            addImageDialog(params.startIndex, function(i) {
+                if (i == -1) return params.set.length
+                else {
+                    const dataIndex = params.set[i]
+                    return {
+                        src: data[dataIndex].src,
+                        orientation: data[dataIndex].orientation,
+                        rating: data[dataIndex].rating,
+                        title: data[dataIndex].title,
+                        imgIndex: i
+                    }
                 }
             },{
-                loop: end > start
+                loop: params.set.length > 1
+            }, function (){
+                document.querySelector('.map-wrapper').style.display='block'
             })
         }
     }
@@ -65,6 +121,8 @@ function loadMarkerData(markerClick) {
         if (data[index].marker) {
             (function(){ // 使用闭包
                 data[index].marker.addEventListener("click",function (e){
+                    stopNextClick()
+                    console.log('marker click')
                     if (typeof markerClick==='function') markerClick(e,data[index])
                     e.domEvent.stopPropagation()
                     let infoWindow=null
@@ -74,13 +132,13 @@ function loadMarkerData(markerClick) {
                     let img=document.createElement('img')
                     div.appendChild(img)
                     div.onclick=function (event){
-                        event.preventDefault()
-                        event.stopPropagation()
+                        stopNextClick()
+                        console.log('img container click')
                         clickImgOn(img,event.layerX,div.clientWidth)
                     }
                     div.ontouchstart=function (event){
-                        //event.preventDefault()
-                        //event.stopPropagation()
+                        stopNextClick()
+                        console.log('img container touch start')
                         if (event.changedTouches.length>0){
                             let currentTarget=div
                             let left=0
@@ -94,8 +152,6 @@ function loadMarkerData(markerClick) {
                     img.onload=function (){
                         const dat=data[parseInt(img.getAttribute('data-index'))]
                         let title=dat.shootTime?dat.shootTime:'时间未知'
-                        if (dat.prev>=0) title='<'+title
-                        if (dat.next>=0) title=title+'>'
                         if (!infoWindow){
                             infoWindow=showInfoWindow({
                                 width:img.naturalWidth,height:img.naturalHeight+10,title:title,info:div,point:dat.marker.getPosition(),enableAutoPan:true

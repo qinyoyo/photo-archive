@@ -110,7 +110,9 @@
         var btnOk = document.createElement('i')
         btnOk.id = 'showLine'
         btnOk.className = 'fa fa-line-chart'
-        btnOk.onclick = showLine
+        btnOk.onclick = function() {
+            showLine()
+        }
         btnOk.style.marginLeft = '15px';
         btnOk.style.marginRight = '15px';
         div.appendChild(btnOk)
@@ -127,11 +129,11 @@
         })
     }
     function mapLoaded() {
-        removeEventListener('tilesloaded',mapLoaded)
         loadMarkerData()
         hideWaiting()
     }
     function clickStepMap(e) {
+        if (skipNextClick) return
         deoCoderGetAddress(e.latlng, function(add) {
             if (add && add.address) {
                 showInfoWindow({
@@ -151,7 +153,7 @@
         document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
         initMap('mapContainer',firstPoint, stepControl(), true)
         addMapEventListener('click',clickStepMap)
-        addMapEventListener('tilesloaded', mapLoaded)
+        mapLoaded()
     }
 </script>
 </html>

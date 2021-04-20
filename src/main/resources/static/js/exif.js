@@ -77,6 +77,7 @@ function placeSelectionMarkerOnMap(point,options) {
             marker.setPosition(pos)
         } else {
             marker=placeMarker(pos,options)
+            marker.setZIndex(1)
         }
         removeClass(document.getElementById('addressSelected'),'disabled')
         if (document.querySelector('.map-wrapper').style.display=='block')  setCenter(pos)
@@ -300,10 +301,11 @@ function selectMapPoint(add) {
         mapPoint.countryCode = 'CN'
     }
 }
-let pauseMapClick = false
+
 function clickExifMap(e) {
+    if (skipNextClick) return
     console.log('map click')
-    if (!pauseMapClick) deoCoderGetAddress(e.latlng, selectMapPoint)
+    deoCoderGetAddress(e.latlng, selectMapPoint)
 }
 function exifControl() {
     var div = document.createElement('div');
@@ -374,6 +376,7 @@ function pointInfoFromDom(dom,longitude,latitude) {
             altitude: dom.getAttribute('data-gpsaltitude') ? parseFloat(domElement.getAttribute('data-gpsaltitude')) : null
         }
 }
+
 function markerDrag(e,index) {
     e.domEvent.stopPropagation()
     let p = pointDataList[index].marker.getPosition()
@@ -474,12 +477,16 @@ function getPointData() {
                 (function(){
                     point.marker = placeMarker({lng:point.longitude, lat:point.latitude},
                     {icon: selectedIndex<0 ? stepIcon : (selectedIndex == i ? stepIcon0 : stepIcon1), enableDragging: true})
+                    point.marker.addEventListener('dragstart',function(){
+                        console.log('marker dragstart')
+                        getMap().disableDragging()
+                    })
+                    point.marker.setZIndex(1000+i)
                     point.marker.addEventListener('dragend',function (e){
-                        pauseMapClick=true
+                        console.log('marker dragsend')
+                        stopNextClick()
                         markerDrag(e,i)
-                        setTimeout(function() {
-                            pauseMapClick=false
-                        },200)
+                        getMap().enableDragging()
                     })
                 }())
             }
@@ -498,7 +505,6 @@ function getPointData() {
     return pointDataList
 }
 function markerClick(e, point) {
-    console.log('marker click')
     if (point && point.domElement) {
         mapPoint = pointInfoFromDom(point.domElement, point.longitude, point.latitude)
         placeSelectionMarkerOnMap({lng:point.longitude, lat: point.latitude})
@@ -506,7 +512,6 @@ function markerClick(e, point) {
     }
 }
 function mapLoaded() {
-    removeEventListener('tilesloaded',mapLoaded)
     loadMarkerData(markerClick)
     hideWaiting()
 }
@@ -519,7 +524,7 @@ function showMap() {
         document.querySelector('.map-wrapper').style.height = window.innerHeight + 'px'
         initMap('mapContainer',point, exifControl(),true)
         addMapEventListener('click',clickExifMap)
-        addMapEventListener('tilesloaded', mapLoaded)
+        mapLoaded()
     } else loadMarkerData(markerClick)
     if (marker) setTimeout(function(){
         setCenter(marker.getPosition())
