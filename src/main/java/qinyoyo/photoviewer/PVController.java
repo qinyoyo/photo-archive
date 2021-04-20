@@ -179,10 +179,9 @@ public class PVController implements ApplicationRunner , ErrorController {
         commonAttribute(model,request);
         Map<String, Object> res = getFolderPathAttributes(path, false);
         model.addAllAttributes(res);
-        List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p ->
+        List<PhotoInfo> photos = archiveInfo.subFolderInfos(subFolder,true).stream().filter(p ->
                 p.getMimeType()!=null && p.getMimeType().contains("image") &&
-                        p.getLongitude()!=null && p.getLatitude()!=null &&
-                        (subFolder.isEmpty() || subFolder.equals(p.getSubFolder()) || p.getSubFolder().startsWith(subFolder+File.separator))
+                        p.getLongitude()!=null && p.getLatitude()!=null
         ).collect(Collectors.toList());
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
         model.addAttribute("CLIENT_POINT_TYPE", pointType());

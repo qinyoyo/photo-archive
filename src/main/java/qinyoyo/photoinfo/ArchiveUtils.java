@@ -449,43 +449,60 @@ public class ArchiveUtils {
         List<PhotoInfo> noShootTime = new ArrayList<>();
         List<PhotoInfo> notMoved = new ArrayList<>();
         String root = camera.getPath();
+        StringBuilder notMovedLog = new StringBuilder();
         for (PhotoInfo pi : camera.getInfos()) {
             Date dt = pi.getShootTime();
             if (dt == null) noShootTime.add(pi);
             else {
                 long d = dt.getTime() / FolderInfo.DAY_LENGTH;
-                List<FolderInfo> fis = folderInfos.stream().filter(f -> f.getDate0() <= d && f.getDate1() >= d).collect(Collectors.toList());
-                if (fis == null || fis.size() == 0) notMoved.add(pi);
+                List<FolderInfo> fis0 = folderInfos.stream().filter(f -> f.getDate0() <= d && f.getDate1() >= d).collect(Collectors.toList());
+                if (fis0 == null || fis0.size() == 0) {
+                    notMoved.add(pi);
+                    notMovedLog.append(pi.getSubFolder()).append(File.separator).append(pi.getFileName()).append(": ").append(DateUtil.date2String(dt)).append(" 未找到时间区间\n");
+                }
                 else {
-                    if (fis.size() > 1 && pi.getModel() != null)
-                        fis = fis.stream().filter(f -> f.getModels().contains(pi.getModel())).collect(Collectors.toList());
-                    if (fis == null || fis.size() == 0 || fis.size() > 1) notMoved.add(pi);
+                    List<FolderInfo> fis1 = fis0;
+                    if (fis0.size() > 1 && pi.getModel() != null) {
+                        fis1 = fis0.stream().filter(f -> f.getModels().contains(pi.getModel())).collect(Collectors.toList());
+                    }
+                    if (fis1 == null || fis1.size() == 0 || fis1.size() > 1) {
+                        notMoved.add(pi);
+                        notMovedLog.append(pi.getSubFolder()).append(File.separator).append(pi.getFileName()).append(": ").append(DateUtil.date2String(dt)).append(" 匹配数过多，设备信息匹配失败\n");
+                        for (FolderInfo fi: fis0) notMovedLog.append("\t").append(fi.getPath()).append("\n");
+                        continue;
+                    }
                     else {
-                        File target = new File(archived.getPath(),fis.get(0).getPath().isEmpty() ? pi.getFileName() : fis.get(0).getPath() + File.separator + pi.getFileName());
-                        if (!archived.moveFile(pi, camera.getPath(), target))
+                        File target = new File(archived.getPath(),fis1.get(0).getPath().isEmpty() ? pi.getFileName() : fis1.get(0).getPath() + File.separator + pi.getFileName());
+                        if (!archived.moveFile(pi, camera.getPath(), target)) {
                             notMoved.add(pi);
+                            notMovedLog.append(pi.getSubFolder()).append(File.separator).append(pi.getFileName()).append(": ").append(DateUtil.date2String(dt)).append(" 文件移动到\n")
+                                    .append("\t").append(target.getAbsolutePath()).append(" 失败\n");
+                        }
                     }
                 }
             }
         }
-        File notMovedDir = new File(camera.getPath(),".notMoved");
-        notMovedDir.mkdirs();
-        for (PhotoInfo pi : notMoved) {
-            File source = new File(pi.fullPath(root));
-            File targetDir = null;
-            if (pi.getSubFolder().isEmpty()) {
-                Date dt = pi.getShootTime();
-                targetDir = new File(notMovedDir, DateUtil.date2String(dt, "yyyy")
-                        + File.separator + DateUtil.date2String(dt, "yyyyMM"));
-                targetDir.mkdirs();
-            } else {  // 使用原有的目录，合并文件夹
-                targetDir = new File(notMovedDir ,pi.getSubFolder());
-                targetDir.mkdirs();
-            }
-            try {
-                Files.move(source.toPath(), new File(targetDir, pi.getFileName()).toPath(), StandardCopyOption.ATOMIC_MOVE);
-            } catch (Exception e) {
-                System.out.println(source.getAbsolutePath() + " 移动失败: "+e.getMessage());
+        if (notMoved.size()>0) {
+            File notMovedDir = new File(camera.getPath(), ".notMoved");
+            notMovedDir.mkdirs();
+            FileUtil.writeToGbkFile(new File(notMovedDir,"notMove.log"),notMovedLog.toString());
+            for (PhotoInfo pi : notMoved) {
+                File source = new File(pi.fullPath(root));
+                File targetDir = null;
+                if (pi.getSubFolder().isEmpty()) {
+                    Date dt = pi.getShootTime();
+                    targetDir = new File(notMovedDir, DateUtil.date2String(dt, "yyyy")
+                            + File.separator + DateUtil.date2String(dt, "yyyyMM"));
+                    targetDir.mkdirs();
+                } else {  // 使用原有的目录，合并文件夹
+                    targetDir = new File(notMovedDir, pi.getSubFolder());
+                    targetDir.mkdirs();
+                }
+                try {
+                    Files.move(source.toPath(), new File(targetDir, pi.getFileName()).toPath(), StandardCopyOption.ATOMIC_MOVE);
+                } catch (Exception e) {
+                    System.out.println(source.getAbsolutePath() + " 移动失败: " + e.getMessage());
+                }
             }
         }
         processDir(archived,false,false);
@@ -506,17 +523,19 @@ public class ArchiveUtils {
         a.saveInfos();
     }
     public static void executeArchive(ArchiveInfo camera, ArchiveInfo archived) {
-        List<FolderInfo> folderInfos = FolderInfo.seekFolderInfo(archived);
-        if (folderInfos!=null) {
-            System.out.println("Now :"+DateUtil.date2String(new Date()));
-            System.out.println("将文件归档...");
-            ArchiveUtils.copyToFolder(camera, archived, folderInfos);
-            System.out.println("Now :"+DateUtil.date2String(new Date()));
-            System.out.println("删除空目录");
-            FileUtil.removeEmptyFolder(new File(archived.getPath()));
-            FileUtil.removeEmptyFolder(new File(camera.getPath()));
-            System.out.println("Now :"+DateUtil.date2String(new Date()));
-            System.out.println("归档完成");
+        if (camera.getInfos().size()>0) {
+            List<FolderInfo> folderInfos = FolderInfo.seekFolderInfo(archived);
+            if (folderInfos != null) {
+                System.out.println("Now :" + DateUtil.date2String(new Date()));
+                System.out.println("将文件归档...");
+                ArchiveUtils.copyToFolder(camera, archived, folderInfos);
+                System.out.println("Now :" + DateUtil.date2String(new Date()));
+                System.out.println("删除空目录");
+                FileUtil.removeEmptyFolder(new File(archived.getPath()));
+                FileUtil.removeEmptyFolder(new File(camera.getPath()));
+                System.out.println("Now :" + DateUtil.date2String(new Date()));
+                System.out.println("归档完成");
+            }
         }
     }
 

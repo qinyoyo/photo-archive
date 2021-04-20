@@ -73,6 +73,27 @@ function getImageIndexSet(data, index) {
         return data[index].imageIndexSet
     } else return null
 }
+function setAllImageIndexSet(data) {
+    for (let i=0;i<data.length;i++) {
+        if (data[i].imageIndexSet) continue
+        else {
+            const param = getImageIndexSet(data,i)
+            if (param) {
+                for (let j=0;j<param.set.length;j++) {
+                    data[param.set[j]].imageIndexSet = {
+                        set: param.set,
+                        startIndex: j
+                    }
+                }
+            } else {
+                data[i].imageIndexSet = {
+                    set: [i],
+                    startIndex: 0
+                }
+            }
+        }
+    }
+}
 function loadMarkerData(markerClick) {
     const setImg = function(img,index) {
         if (data[index].className) img.className = data[index].className
@@ -85,6 +106,7 @@ function loadMarkerData(markerClick) {
         img.setAttribute('title',data[index].title)
     }
     const data = getPointData()
+    setAllImageIndexSet(data)
     const clickImgOn = function(img,x, width) {
         let index = parseInt(img.getAttribute('data-index'))
         const params = getImageIndexSet(data,index)
@@ -152,6 +174,10 @@ function loadMarkerData(markerClick) {
                     img.onload=function (){
                         const dat=data[parseInt(img.getAttribute('data-index'))]
                         let title=dat.shootTime?dat.shootTime:'时间未知'
+                        if(dat.imageIndexSet && dat.imageIndexSet.set.length>1) {
+                            if (dat.imageIndexSet.startIndex>0) title = '<' + title
+                            if (dat.imageIndexSet.startIndex<dat.imageIndexSet.set.length-1) title = title + '>'
+                        }
                         if (!infoWindow){
                             infoWindow=showInfoWindow({
                                 width:img.naturalWidth,height:img.naturalHeight+10,title:title,info:div,point:dat.marker.getPosition(),enableAutoPan:true
