@@ -471,17 +471,20 @@ public class ArchiveManager {
 
     private static void changeDateTime(String path, boolean incSub) {
         while(true) {
-            String zs = getInputString("时间调整值[+/-]HH[:mm[:ss]]", "0");
+            String zs = getInputString("时间调整值[+/-][y-M-d ]H[:m[:s]]", "0");
             if (zs.equals("0")) return;
-            Pattern p = Pattern.compile("^(\\+|-)?(\\d{1,2}(:\\d{1,2}(:\\d{1,2})?)?)$");
+
+            Pattern p = Pattern.compile("^(\\+|-)?(((\\d{1,4}-)?\\d{1,2}-)?\\d{1,2}\\s)?(\\d{1,2}(:\\d{1,2}(:\\d{1,2})?)?)?$");
             Matcher m = p.matcher(zs);
             if (m.find()) {
                 String jj = (m.group(1) != null && m.group(1).equals("-") ? "-" : "+");
+                String delta = (m.group(2) !=null ? m.group(2).replace("-",":") : "");
+                delta += (m.group(5) !=null ? m.group(5) : "");
                 try {
-                    System.out.println("调整拍摄时间...");
+                    System.out.println("调整拍摄时间 "+jj+delta);
                     Map<String, List<String>> result = incSub ?
-                            ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-r", "-AllDates" + jj + "=" + m.group(2)) :
-                            ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-AllDates" + jj + "=" + m.group(2));
+                            ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-r", "-AllDates" + jj + "=" + delta) :
+                            ExifTool.getInstance().execute(new File(path), "-overwrite_original", "-AllDates" + jj + "=" + delta);
                     for (String k : result.keySet()) {
                         for (String s : result.get(k)) {
                             System.out.println(s);

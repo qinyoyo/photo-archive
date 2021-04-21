@@ -24,9 +24,7 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/step_map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/ArchiveManager.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -219,6 +217,7 @@
       <workItem from="1618833067656" duration="4771000" />
       <workItem from="1618883665552" duration="12183000" />
       <workItem from="1618905405269" duration="3910000" />
+      <workItem from="1618967970058" duration="3873000" />
     </task>
     <servers />
   </component>
@@ -401,7 +400,11 @@
       <configuration name="SpringBootApplicationConfigurationType">
         <watch expression="field.getType()" language="JAVA" />
         <watch expression="m.group(1)" language="JAVA" />
-        <watch expression="value.getClass()" language="JAVA" />
+        <watch expression="m.groups" language="JAVA" />
+        <watch expression="m.group(2)" language="JAVA" />
+        <watch expression="m.group(3)" language="JAVA" />
+        <watch expression="m.group(4)" language="JAVA" />
+        <watch expression="m.group(5)" language="JAVA" />
         <watch expression="&quot;,,&quot;.split(&quot;,&quot;)[0]" language="JAVA" />
         <watch expression="DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT)" language="JAVA" />
       </configuration>
