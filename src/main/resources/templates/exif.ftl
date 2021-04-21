@@ -197,12 +197,12 @@
                     <input type="checkbox" value="gpsDatetime" name="selectedTags" >
                 </div>
             </form>
-            <input type="checkbox" value="1" id="autoSaveMarkerDrag" >
-            <label for="autoSaveMarkerDrag">自动保存拖动标记的变化</label>
+            <input type="checkbox" value="1" id="autoSaveMarkerDrag" title="拖动足迹标识自动同步修改对应的所有图像文件的位置信息" >
+            <label for="autoSaveMarkerDrag">拖动自动修改</label>
             <div style="text-align: center">
                 <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()">复制</button>
                 <button id="btnPaste" class="exif__button" disabled="disabled" onclick="pasteFields()">粘贴</button>
-                <button class="exif__button" onclick="showMap()">选点</button>
+                <button class="exif__button" onclick="showMap()" title="shift+点击标识将选择对应的所有图像文件">地图</button>
                 <button id="submit" class="exif__button" disabled="disabled" onclick="save()">保存</button>
             </div>
         </div>

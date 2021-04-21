@@ -110,9 +110,7 @@
         var btnOk = document.createElement('i')
         btnOk.id = 'showLine'
         btnOk.className = 'fa fa-line-chart'
-        btnOk.onclick = function() {
-            showLine()
-        }
+        btnOk.onclick = togglePolylineShow
         btnOk.style.marginLeft = '15px';
         btnOk.style.marginRight = '15px';
         div.appendChild(btnOk)
@@ -129,7 +127,7 @@
         })
     }
     function mapLoaded() {
-        loadMarkerData()
+        loadMarkerData(null,function(){})
         hideWaiting()
     }
     function clickStepMap(e) {

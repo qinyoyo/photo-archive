@@ -377,21 +377,20 @@ function pointInfoFromDom(dom,longitude,latitude) {
         }
 }
 
-function markerDrag(e,index) {
-    e.domEvent.stopPropagation()
-    let p = pointDataList[index].marker.getPosition()
-    pointDataList[index].longitude = p.lng
-    pointDataList[index].latitude = p.lat
-
+function selectFilesByMarker(index) {
     const fileItems = document.querySelectorAll('.file-item')
     fileItems.forEach(function(e) {removeClass(e,'selected')})
+    selectedDom = null
     let folders = [], files=[]
-    for (let i=0;;i++) {
-        addClass(pointDataList[i+index].domElement,'selected')
-        selectedDom = pointDataList[i+index].domElement
-        folders.push(pointDataList[i+index].domElement.getAttribute('data-folder'))
-        files.push(pointDataList[i+index].domElement.getAttribute('data-file'))
-        if (pointDataList[i+index].next==-1) break
+    const param = getImageIndexSet(pointDataList,index)
+    if (param){
+        for (let i=0; i<param.set.length; i++){
+            let d = pointDataList[param.set[i]]
+            addClass(d.domElement,'selected')
+            selectedDom=d.domElement
+            folders.push(d.domElement.getAttribute('data-folder'))
+            files.push(d.domElement.getAttribute('data-file'))
+        }
     }
     document.getElementById('subFolder').value = folders.join(',')
     document.getElementById('fileName').value = files.join(',')
@@ -399,13 +398,44 @@ function markerDrag(e,index) {
         setThumbImage(selectedDom)
         toggleSaveState(true)
     }
-    const afterGeo = function() {
-        if (document.getElementById('autoSaveMarkerDrag').checked) {
-            selectAddress()
-            save()
-        }
-        showLine(true)
+}
+
+function markerClick(event,index) {
+    let point = pointDataList[index]
+    if (point && point.domElement) {
+        mapPoint = pointInfoFromDom(point.domElement, point.longitude, point.latitude)
+        placeSelectionMarkerOnMap({lng:point.longitude, lat: point.latitude})
+        document.getElementById("address").value = formattedAddress(mapPoint.province,mapPoint.city,mapPoint.location,mapPoint.subjectCode)
+        if (event.shiftKey) selectFilesByMarker(index)
     }
+}
+function markerDrag(event, index) {
+    stopNextClick()
+    if (!document.getElementById('autoSaveMarkerDrag').checked) return
+    let p = pointDataList[index].marker.getPosition()
+    pointDataList[index].longitude = p.lng
+    pointDataList[index].latitude = p.lat
+    const clearImageIndexSet = function(next) {
+        if (pointDataList[next].imageIndexSet) {
+            let set = pointDataList[next].imageIndexSet.set
+            for (let i=0;i<set.length;i++) {
+                pointDataList[set[i]].imageIndexSet = null
+            }
+        } else while (next!=-1) {
+            pointDataList[next].imageIndexSet = null
+            next = pointDataList[next].next
+        }
+    }
+    const afterGeo = function(moveBy) {
+        clearImageIndexSet(index)
+        setAllImageIndexSet(pointDataList)
+        selectFilesByMarker(index)
+        selectAddress()
+        save()
+        if (moveBy) movePointOfPolylineBy(moveBy)
+        else redrawPolyline()
+    }
+    let moveByMarker = pointDataList[index].marker
     for (let i=0;i<pointDataList.length;i++) {  // 自动粘连
         if (i!=index && pointDataList[i].marker && getDistance(p,pointDataList[i].marker.getPosition()) <= distanceLimit) {
             pointDataList[index].longitude = pointDataList[i].longitude
@@ -428,16 +458,20 @@ function markerDrag(e,index) {
                 pointDataList[i0+1].prev = i0
                 pointDataList[i1-1].next = i1
                 pointDataList[i1].prev = i1-1
-                if (pointDataList[i1].marker) removeMarker(pointDataList[i1].marker)
+                if (pointDataList[i1].marker) {
+                    clearImageIndexSet(i1)
+                    removeMarker(pointDataList[i1].marker)
+                }
                 pointDataList[i1].marker = null
+                moveByMarker = null
             }
-            afterGeo()
+            afterGeo(moveByMarker)
             return
         }
     }
     deoCoderGetAddress(p, function(add) {
         selectMapPoint(add)
-        afterGeo()
+        afterGeo(moveByMarker)
     })
 }
 function getPointData() {
@@ -450,6 +484,7 @@ function getPointData() {
     let selectedIndex = -1
     let distance = 1000
     const photos = document.querySelectorAll('.file-item[data-gpslongitude][data-gpslatitude]')
+    let icon = stepIcon0
     if (photos.length){
         for (let i=0; i<photos.length; i++){
             if (photos[i] === selectedDom) selectedIndex = i
@@ -476,24 +511,15 @@ function getPointData() {
             if (point.prev == -1) {
                 (function(){
                     point.marker = placeMarker({lng:point.longitude, lat:point.latitude},
-                    {icon: selectedIndex<0 ? stepIcon : (selectedIndex == i ? stepIcon0 : stepIcon1), enableDragging: true})
-                    point.marker.addEventListener('dragstart',function(){
-                        console.log('marker dragstart')
-                        getMap().disableDragging()
-                    })
+                    {icon: i==photos.length-1 ? stepIcon1 : icon})
+                    icon = stepIcon
                     point.marker.setZIndex(1000+i)
-                    point.marker.addEventListener('dragend',function (e){
-                        console.log('marker dragsend')
-                        stopNextClick()
-                        markerDrag(e,i)
-                        getMap().enableDragging()
-                    })
                 }())
             }
-            if (selectedIndex == i && point.marker==null) {
+            if (i == photos.length -1 && point.marker==null) {
                 for (let j=i-1;j>=0;j--) {
                     if (pointDataList[j].marker) {
-                        pointDataList[j].marker.setIcon(stepIcon0)
+                        pointDataList[j].marker.setIcon(stepIcon1)
                         break
                     }
                 }
@@ -501,23 +527,16 @@ function getPointData() {
             pointDataList.push(point)
         }
     }
-    showLine(true)
+    redrawPolyline()
     return pointDataList
 }
-function markerClick(e, point) {
-    if (point && point.domElement) {
-        mapPoint = pointInfoFromDom(point.domElement, point.longitude, point.latitude)
-        placeSelectionMarkerOnMap({lng:point.longitude, lat: point.latitude})
-        document.getElementById("address").value = formattedAddress(mapPoint.province,mapPoint.city,mapPoint.location,mapPoint.subjectCode)
-    }
-}
+
 function mapLoaded() {
-    loadMarkerData(markerClick)
+    loadMarkerData(markerClick, markerDrag)
     hideWaiting()
 }
 
 function showMap() {
-    if (document.getElementById('autoSaveMarkerDrag').checked && !confirm("确实需要自动保存拖动改变的地理信息？")) return
     if (!getMap()){
         showWaiting()
         document.querySelector('.map-wrapper').style.width = '100%'
@@ -525,7 +544,7 @@ function showMap() {
         initMap('mapContainer',point, exifControl(),true)
         addMapEventListener('click',clickExifMap)
         mapLoaded()
-    } else loadMarkerData(markerClick)
+    } else loadMarkerData(markerClick, markerDrag)
     if (marker) setTimeout(function(){
         setCenter(marker.getPosition())
     },200)
@@ -605,5 +624,8 @@ window.onload=function(){
             toggleSaveState(true)
         }
     })
+    document.getElementById('autoSaveMarkerDrag').onchange = function() {
+        if (this.checked && !confirm("确实需要自动保存拖动改变的地理信息？")) this.checked = false
+    }
     document.addEventListener("paste", getClipboardData)
 }

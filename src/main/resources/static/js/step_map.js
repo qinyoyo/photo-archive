@@ -94,7 +94,7 @@ function setAllImageIndexSet(data) {
         }
     }
 }
-function loadMarkerData(markerClick) {
+function loadMarkerData(markerClick,markerDrag) {
     const setImg = function(img,index) {
         if (data[index].className) img.className = data[index].className
         img.setAttribute('data-index', index)
@@ -106,6 +106,24 @@ function loadMarkerData(markerClick) {
         img.setAttribute('title',data[index].title)
     }
     const data = getPointData()
+    if (typeof markerDrag==='function') {
+        for (let i=0;i<pointDataList.length;i++) {
+            const d=pointDataList[i]
+            if (d.marker) {
+                d.marker.enableDragging()
+                d.marker.addEventListener('dragstart',function(){
+                    getMap().disableDragging()
+                })
+                d.marker.addEventListener('dragging',function(){
+                    movePointOfPolylineBy(d.marker)
+                })
+                d.marker.addEventListener('dragend',function (e){
+                    markerDrag(e,i)
+                    getMap().enableDragging()
+                })
+            }
+        }
+    }
     setAllImageIndexSet(data)
     const clickImgOn = function(img,x, width) {
         let index = parseInt(img.getAttribute('data-index'))
@@ -145,7 +163,7 @@ function loadMarkerData(markerClick) {
                 data[index].marker.addEventListener("click",function (e){
                     stopNextClick()
                     console.log('marker click')
-                    if (typeof markerClick==='function') markerClick(e,data[index])
+                    if (typeof markerClick==='function') markerClick(e, index)
                     e.domEvent.stopPropagation()
                     let infoWindow=null
                     let div=document.createElement('div')
@@ -198,20 +216,38 @@ function loadMarkerData(markerClick) {
 }
 
 let polyline = null
-function showLine(forceShow) {
-    function show() {
-        const pointList = []
-        pointDataList.forEach(function(d){
-            if (d.marker) pointList.push(d.marker.getPosition())
-        })
-        if (pointList.length) polyline = drawPolyline(pointList, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
-    }
-    if (!polyline) show()
-    else {
+function togglePolylineShow() {
+    if (polyline) hidePolyline()
+    else redrawPolyline()
+}
+function hidePolyline() {
+    if (polyline)  {
         removePolyline(polyline)
         polyline = null
-        if (forceShow) show()
     }
 }
+function redrawPolyline() {
+    if (polyline) hidePolyline()
+    const pointList = []
+    pointDataList.forEach(function(d){
+        if (d.marker) pointList.push(d.marker.getPosition())
+    })
+    if (pointList.length) polyline = drawPolyline(pointList, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
 
+}
+
+function movePointOfPolylineBy(marker) {
+    if (polyline && pointDataList && marker) {
+        let index = 0
+        for (let i=0;i<pointDataList.length;i++) {
+            if (pointDataList[i].marker) {
+                if (marker === pointDataList[i].marker) {
+                    polyline.setPositionAt(index, marker.getPosition())
+                    return
+                }
+                index++
+            }
+        }
+    }
+}
 
