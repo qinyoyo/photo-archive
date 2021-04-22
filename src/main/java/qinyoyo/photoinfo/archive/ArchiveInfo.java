@@ -297,35 +297,32 @@ public class ArchiveInfo {
         }
         infos.add(p);
     }
-    public boolean moveFile(File source,File target) {
-        try {
-            Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-            int index1 = indexOf(source);
-            int index2 = indexOf(target);
-
-            if (index1==-1 && index2== -1) {
-                PhotoInfo p = new PhotoInfo(path,target);
-                p.readProperties(path);
-                insert2SortedInfos(p);
-            } else if (index1==-1) {
-                PhotoInfo p = infos.remove(index2);  // 需要重新排序和读取属性
-                p.readProperties(path);
-                insert2SortedInfos(p);
-            } else if (index2 == -1) {
-                PhotoInfo p = infos.remove(index1);
+    public boolean moveFile(List<PhotoInfo> list, String newFolder) {
+        if (list==null || list.isEmpty()) return false;
+        final String subFolder = ArchiveUtils.formatterSubFolder(newFolder,path);
+        list=list.stream().filter(p->!subFolder.equals(p.getSubFolder())).collect(Collectors.toList());
+        if (list==null || list.isEmpty()) return false;
+        File targetDir = new File(path,subFolder);
+        targetDir.mkdirs();
+        File targetThumbDir = new File(new File(path,ArchiveUtils.THUMB),subFolder);
+        targetThumbDir.mkdirs();
+        for (PhotoInfo p: list) {
+            try {
+                File target = new File(targetDir, p.getFileName());
+                Files.move(new File(p.fullPath(path)).toPath(), target.toPath());
+                try {
+                    Files.move(new File(p.fullThumbPath(path)).toPath(), new File(targetThumbDir, p.getFileName()).toPath());
+                } catch (Exception e1) {}
+                p.setSubFolder(subFolder);
                 p.setFile(path,target);
-                insert2SortedInfos(p);
-            } else {
-                PhotoInfo p1 = infos.remove(index1);
-                infos.remove(index2);
-                p1.setFile(path,target);
-                insert2SortedInfos(p1);
+            } catch (Exception e) {
+                Util.printStackTrace(e);
+                return false;
             }
-            return true;
-        } catch (Exception e) {
-            return false;
         }
+        sortInfos();
+        saveInfos();
+        return true;
     }
     public boolean moveFile(PhotoInfo pi,String sourceRootPath, File target) {
         try {

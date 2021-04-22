@@ -113,6 +113,8 @@ function pasteFields(){
     }
 }
 function toggleSaveState(enable) {
+    if (document.getElementById('fileName').value) document.getElementById('btnMove').removeAttribute('disabled')
+    else document.getElementById('btnMove').setAttribute('disabled', 'disabled')
     if (copiedPoint && Object.keys(copiedPoint).length>0) document.getElementById('btnPaste').removeAttribute('disabled')
     else document.getElementById('btnPaste').setAttribute('disabled', 'disabled')
 
@@ -126,15 +128,20 @@ function toggleSaveState(enable) {
     else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
 function setThumbImage(dom) {
-    const file = dom.getAttribute('data-file')
-    const lastModified = dom.getAttribute('data-lastmodified')
-    const curPath = dom.getAttribute('data-folder').replace(/\\/g, '/')
-    const thumbDom = document.querySelector('.thumb-image')
-    thumbDom.setAttribute('src', '/.thumb/' + curPath + (curPath ? '/' : '') + file
-        + (lastModified ? '?click=' + lastModified : ''))
-    thumbDom.setAttribute('data-src', '/' + curPath + (curPath ? '/' : '') + file
-        + (lastModified ? '?click=' + lastModified : ''))
-    thumbDom.setAttribute('title', dom.getAttribute('title'))
+    const thumbDom=document.querySelector('.thumb-image')
+    let count = document.querySelectorAll('.file-item.selected').length
+    document.querySelector('.selection-length').innerText = (count?count+' 个图像':'')
+    if (dom){
+        thumbDom.parentElement.style.display = 'block'
+        const file=dom.getAttribute('data-file')
+        const lastModified=dom.getAttribute('data-lastmodified')
+        const curPath=dom.getAttribute('data-folder').replace(/\\/g,'/')
+        thumbDom.setAttribute('src','/.thumb/'+curPath+(curPath?'/':'')+file+(lastModified?'?click='+lastModified:''))
+        thumbDom.setAttribute('data-src','/'+curPath+(curPath?'/':'')+file+(lastModified?'?click='+lastModified:''))
+        thumbDom.setAttribute('title',dom.getAttribute('title'))
+    } else {
+        thumbDom.parentElement.style.display = 'none'
+    }
 }
 function afterSelection() {
     let folders = [], files=[]
@@ -144,8 +151,8 @@ function afterSelection() {
     })
     document.getElementById('subFolder').value = folders.join(',')
     document.getElementById('fileName').value = files.join(',')
+    setThumbImage(selectedDom)
     if (selectedDom) {
-        setThumbImage(selectedDom)
         for (let i = 0; i < dataKeys.length; i++) {
             let v = selectedDom.getAttribute(dataKeys[i])
             if (v && (nameKeys[i] === 'shootTime' || nameKeys[i] === 'gpsDatetime')) v = v.replace(' ', 'T')
@@ -190,26 +197,25 @@ function selectFile(dom,event) {
     const fileItems = document.querySelectorAll('.file-item')
     if (event.shiftKey || (event.target && event.target.tagName == 'I')) {
         selectedDom = dom
-        let start = -1, index = -1
+        let start = -1, index = -1, end = -1
         for (let i=0;i<fileItems.length;i++) {
             if (fileItems[i]===dom) index = i
             if (fileItems[i].className.indexOf('selected')>=0) {
-                start=i
+                end=i
+                if (start==-1) start = i
             }
-            if (start>=0 && index>=0) break
         }
         if (index<start) {
-            for (let i=index;i<start;i++) {
-                addClass(fileItems[i],'selected')
-            }
-        } else if (index>start && start>=0) {
-            for (let i=start+1;i<=index;i++) {
-                addClass(fileItems[i],'selected')
-            }
+            for (let i=index;i<start;i++) addClass(fileItems[i],'selected')
+        } else if (index>end) {
+            for (let i=end+1;i<=index;i++) addClass(fileItems[i],'selected')
+        } else if (start<index && end>index) {
+            for (let i=index+1;i<=end;i++) removeClass(fileItems[i],'selected')
         }
     } else if (event.ctrlKey || window.sessionOptions.mobile) {
         if (dom.className.indexOf('selected')>=0) {
             removeClass(dom,'selected')
+            selectedDom = null
             fileItems.forEach(function(i) {
                 if (i.className.indexOf('selected')>=0) {
                     selectedDom = i
@@ -394,8 +400,8 @@ function selectFilesByMarker(index) {
     }
     document.getElementById('subFolder').value = folders.join(',')
     document.getElementById('fileName').value = files.join(',')
+    setThumbImage(selectedDom)
     if (selectedDom) {
-        setThumbImage(selectedDom)
         toggleSaveState(true)
     }
 }
@@ -591,6 +597,67 @@ function selectAddress() {
     setAddressValue('country')
     setAddressValue('countryCode')
 }
+const getResource = function(callback) {
+    const dialog = document.getElementById('select-resource')
+    dialog.querySelector('.dialog__content').style.width = '500px'
+    const html = document.getElementById('select-resource-content').innerHTML.trim()
+    if (!html) {
+        reloadResourceByPath(document.getElementById('app').getAttribute("data-folder"))
+    }
+    dialog.querySelector('button.resource-selected').onclick = function() {
+        const d = dialog.querySelector('.folder-item.selected')
+        if (d) callback(d.getAttribute('data-folder'))
+        dialog.style.display='none'
+    }
+    dialog.style.display='block'
+}
+const reloadResourceByPath = function(path) {
+    let currentPath = document.getElementById('app').getAttribute("data-folder")
+    const url = '/resource?folderOnly=true&current='+encodeURI(currentPath) + (path ? '&path=' + encodeURI(path) : '')
+    Ajax.get(url, function (responseText) {
+        if (responseText && responseText!='error') {
+            document.getElementById('select-resource-content').innerHTML = responseText
+            initResource()
+        }
+    })
+}
+const initResource = function() {
+    const dialog = document.getElementById('select-resource')
+    dialog.querySelectorAll('.folder-item .folder-item__arrow, .folder-head .folder-item').forEach(function(d){
+        d.onclick = function () {
+            reloadResourceByPath((d.tagName==='I'?d.parentElement:d).getAttribute('data-folder'))
+        }
+    })
+    dialog.querySelectorAll('.folder-list .folder-item').forEach(function(d) {
+        d.ondblclick=function () {
+            reloadResourceByPath(d.getAttribute('data-folder'))
+        }
+        d.onclick=function () {
+            dialog.querySelectorAll('.folder-item.selected').forEach(function(d1) {
+                removeClass(d1,'selected')
+            })
+            addClass(d,'selected')
+        }
+    });
+}
+function moveFiles() {
+    if (document.getElementById('fileName').value) getResource(function(path) {
+        let url = '/moveFile?path=' + encodeURI(path)
+            + '&subFolder=' + encodeURI(document.getElementById('subFolder').value)
+            + '&fileName=' + encodeURI(document.getElementById('fileName').value)
+        Ajax.get(url, function (msg) {
+            if (msg === 'ok') {
+                document.getElementById('subFolder').value = ''
+                document.getElementById('fileName').value = ''
+                document.querySelectorAll('.file-item.selected').forEach(function(d){
+                    d.remove()
+                })
+                selectedDom = null
+                afterSelection()
+            } else toast(msg)
+        })
+    })
+}
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
     document.querySelector('.map-wrapper').style.height = (window.innerHeight) + 'px'
@@ -602,7 +669,23 @@ window.onload=function(){
         }
     })
     document.querySelector('.thumb-image').onclick = function() {
-        addImageDialog(0, this)
+        const selection = []
+        let start = 0
+        let i=0
+        document.querySelectorAll('.file-item.selected').forEach(function (d) {
+            selection.push(d)
+            if (d===selectedDom) start = i
+            i++
+        })
+        if (selection.length>0) addImageDialog(start, function(i) {
+            if (i == -1) return selection.length
+            else {
+                return getTranImageParams(selection[i], i)
+            }
+        },{
+            loop: selection.length > 1,
+            download: true
+        })
     }
     const fileList = document.querySelector('.file-list')
     if (fileList) fileList.onkeydown = exifKeyEvent

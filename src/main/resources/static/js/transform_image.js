@@ -197,12 +197,28 @@
         element.style.transform = element.style.msTransform = element.style.OTransform = element.style.MozTransform = t.join(' ')
     }
 
-
+    window.getTranImageParams = function(thumb, index) {
+        if (thumb) {
+            let title = thumb.getAttribute('title')
+            let src = thumb.getAttribute('data-src')
+            if (!src) src = thumb.getAttribute('src')
+            let click = thumb.getAttribute('data-lastModified')
+            if (click) {
+                src = src + '?click='+click
+            }
+            let orientation = thumb.getAttribute('data-orientation')
+            let rating = thumb.getAttribute('data-rating')
+            return { src: src, orientation:orientation, rating:rating, title:title, imgIndex: index }
+        } else return {
+            src: null,
+            imgIndex: index
+        }
+    }
     /********* 初始化 图像变换 *************/
     const initTransformImage = function (img, index, getDataObject) {
         let removedIndexList = []
-        let loopDirection = 1
         const totalImages = typeof getDataObject === 'function' ? getDataObject(-1) : Math.max(document.querySelectorAll('*[class*="img-index-"]').length,(getDataObject?1:0))
+        let loopDirection = (index === totalImages - 1 ? -1 : 1)
         const srcByIndex = function (imgIndex) {
             if (imgIndex < 0) return totalImages
             else if (imgIndex >= totalImages) return {src: null, imgIndex:imgIndex}
@@ -213,18 +229,7 @@
             if (imgIndex>=0 && imgIndex < totalImages) {
                 let thumb = document.querySelector('.img-index-' + imgIndex)
                 if (!thumb && totalImages==1) thumb = getDataObject
-                if (thumb) {
-                    let title = thumb.getAttribute('title')
-                    let src = thumb.getAttribute('data-src')
-                    if (!src) src = thumb.getAttribute('src')
-                    let click = thumb.getAttribute('data-lastModified')
-                    if (click) {
-                        src = src + '?click='+click
-                    }
-                    let orientation = thumb.getAttribute('data-orientation')
-                    let rating = thumb.getAttribute('data-rating')
-                    return { src: src, orientation:orientation, rating:rating, title:title, imgIndex:imgIndex }
-                }
+                return getTranImageParams(thumb, imgIndex)
             }
             return {
                 src: null,
@@ -250,8 +255,8 @@
         let   imageW = pageW, imageH = pageH
         let   clientW = pageW, clientH = pageH
         let   realSizeScale = 1
-        const container = img.parentNode
-        const wrapper = document.querySelector('.tran-img__wrapper')
+        const tranImageContainer = img.parentNode
+        const tranImageWrapper = document.querySelector('.tran-img__wrapper')
         let   scaleValue = 1
         let   isReady = false
         let   translateXChanged = false, translateYChanged = false
@@ -358,10 +363,10 @@
                 let newLeft = 0, left = (fromLeft ? -(pageW + 10) : pageW + 10)
 
                 let newDialog = createImagePlayerDialog()
-                newDialog.dialogBody.innerHTML = wrapper.querySelector('.tran-img__body').innerHTML
-                wrapper.parentElement.prepend(newDialog.wrapper)
+                newDialog.dialogBody.innerHTML = tranImageWrapper.querySelector('.tran-img__body').innerHTML
+                tranImageWrapper.parentElement.prepend(newDialog.wrapper)
 
-                wrapper.style.left = left + 'px'
+                tranImageWrapper.style.left = left + 'px'
 
                 const moveImage = function() {
                     if (fromLeft) {
@@ -374,14 +379,14 @@
                     if ((!fromLeft && left<=0) || (fromLeft && left>=0)) {
                         newDialog.wrapper.remove()
                         document.querySelectorAll('.tran-img__wrapper').forEach(function(w){
-                            if (w !== wrapper) w.remove()
+                            if (w !== tranImageWrapper) w.remove()
                         })
-                        wrapper.style.left = '0px'
+                        tranImageWrapper.style.left = '0px'
                         isReady = true
                         loopWaiting()
                     } else {
                         newDialog.wrapper.style.left = newLeft+'px'
-                        wrapper.style.left = left + 'px'
+                        tranImageWrapper.style.left = left + 'px'
                         setTimeout(moveImage, 50);
                     }
                 }
@@ -409,6 +414,7 @@
                     moveImage()
                 }
                 img.setAttribute('src', src)
+                img.setAttribute('title', title)
             }
             loadImg.onerror = function() {
                 preLoadImageBy(index + loopDirection)  // 预加载文件
@@ -841,7 +847,7 @@
             }
         }
 
-        container.onclick=function (event) {
+        tranImageContainer.onclick=function (event) {
             let limit = axisLimit(clientW, clientH)
             let minX = limit.x.min + translateX, maxX = limit.x.max + translateX
             let minPage = pageFromClient({x: minX, y: 0}), maxPage = pageFromClient({x: maxX, y: 0})
@@ -1206,6 +1212,7 @@
             music: imageEditable,
             loop: window.sessionOptions.loopTimer,
             fullScreen: true,
+            download: true,
             remove: imageEditable && window.sessionOptions.unlocked
         }
     }

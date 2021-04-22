@@ -20,7 +20,7 @@ body.map {
         width: 100%;
     }
     .scroll-items-wrapper {
-        max-height: calc(50% - 33px);
+        max-height: calc(50% - 10px);
         overflow: auto;
     }
     .scroll-from-wrapper {
@@ -39,15 +39,30 @@ body.map {
         width: 100%;
     }
     .scroll-items-wrapper, .scroll-from-wrapper {
-        height: calc(100% - 66px);
+        height: calc(100% - 20px);
     }
 }
 .file-list {
     user-select: none;
 }
-.file-item.selected {
+.file-item.selected, .folder-item.selected {
     background-color: #99bcf1;;
 }
+.folder-item .folder-item__arrow {
+    width: 64px;
+    text-align: right;
+}
+.date-picker {
+    display: none;
+}
+.dialog__content {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -khtml-user-select: none;
+    user-select: none;
+}
+
 .file-item[data-gpslongitude][data-gpslatitude] {
     color: #0ce061;
 }
@@ -55,6 +70,14 @@ body.map {
     text-align: center;
     vertical-align: middle;
     margin: 10px 0;
+    position: relative;
+}
+.selection-length {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 16px;
+    color: #0c88e8;
 }
 .thumb-image {
     max-height: 200px;

@@ -26,9 +26,9 @@ public class SessionOptions {
     private boolean supportOrientation;
     public SessionOptions() {
         debug = false;
-        htmlEditable = false;
+        htmlEditable = PhotoArchiveApplication.ideMode;
         favoriteFilter = false;
-        loopTimer = 5000;
+        loopTimer = PhotoArchiveApplication.ideMode ? 1600 : 5000;
         musicIndex = 0;
         unlocked = PhotoArchiveApplication.ideMode;
         playBackMusic = true;

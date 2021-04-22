@@ -76,6 +76,7 @@
     <div class="scroll-from-wrapper no-wrap">
         <div class="scroll-items">
             <div class="thumb-image-wrapper">
+                <div class="selection-length"></div>
                 <img class="thumb-image img-index-0"/>
             </div>
             <form id="exifForm" class="tag-editor" onsubmit="return false;">
@@ -200,7 +201,8 @@
             <input type="checkbox" value="1" id="autoSaveMarkerDrag" title="拖动足迹标识自动同步修改对应的所有图像文件的位置信息" >
             <label for="autoSaveMarkerDrag">拖动自动修改</label>
             <div style="text-align: center">
-                <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()">复制</button>
+                <button id="btnMove" class="exif__button" disabled="disabled" onclick="moveFiles()" title="将选定文件移动到其他目录">移动</button>
+                <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()" title="复制指定的标签">复制</button>
                 <button id="btnPaste" class="exif__button" disabled="disabled" onclick="pasteFields()">粘贴</button>
                 <button class="exif__button" onclick="showMap()" title="shift+点击标识将选择对应的所有图像文件">地图</button>
                 <button id="submit" class="exif__button" disabled="disabled" onclick="save()">保存</button>
@@ -211,6 +213,22 @@
 </div>
 <div class="map-wrapper" style="display: none">
     <div id="mapContainer"></div>
+</div>
+<div id="select-resource" style="display:none" class="dialog__wrapper">
+    <div class="dialog__content" style="margin-top: 20px;">
+        <div class="dialog__title">
+            <span class="select-resource-title">选择目录</span>
+            <i class="dialog__close-icon fa fa-close" onclick="document.getElementById('select-resource').style.display='none'"></i>
+        </div>
+        <div class="dialog__body" style="top:10px">
+            <div id="select-resource-content" >
+            </div>
+            <div style="text-align: center">
+                <button class="dialog__button resource-selected">移动文件</button>
+                <button class="dialog__button" onclick="document.getElementById('select-resource').style.display='none'">取消</button>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

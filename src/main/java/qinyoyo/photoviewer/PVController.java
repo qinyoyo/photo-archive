@@ -221,6 +221,24 @@ public class PVController implements ApplicationRunner , ErrorController {
         return String.format("%.7f,%.7f",p1.longitude,p1.latitude);
     }
     @ResponseBody
+    @RequestMapping(value = "/moveFile")
+    public String moveFiles(HttpServletRequest request, HttpServletResponse response, String path, String subFolder,String fileName) {
+        SessionOptions options = SessionOptions.getSessionOptions(request);
+        if (!options.isUnlocked()) {
+            return "请先解锁!!!";
+        }
+        if (Util.isEmpty(subFolder) || Util.isEmpty(fileName)) return "没有指定文件";
+        String [] subFolders = subFolder.split(",",-1),
+                files = fileName.split(",",-1);
+        List<PhotoInfo> photoList = new ArrayList<>();
+        for (int i=0;i< files.length;i++) {
+            PhotoInfo p = archiveInfo.find(subFolders[i],files[i]);
+            if (p!=null) photoList.add(p);
+        }
+        if (!photoList.isEmpty() && archiveInfo.moveFile(photoList,path)) return "ok";
+        else return "error";
+    }
+    @ResponseBody
     @RequestMapping(value = "/exifSave")
     public String exifSave(PhotoInfo p1, String type, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
         SessionOptions options = SessionOptions.getSessionOptions(request);

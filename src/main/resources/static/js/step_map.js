@@ -151,7 +151,8 @@ function loadMarkerData(markerClick,markerDrag) {
                     }
                 }
             },{
-                loop: params.set.length > 1
+                loop: params.set.length > 1,
+                download: true
             }, function (){
                 document.querySelector('.map-wrapper').style.display='block'
             })

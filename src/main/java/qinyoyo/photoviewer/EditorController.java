@@ -94,15 +94,17 @@ public class EditorController implements ApplicationRunner {
 
     @ResponseBody
     @RequestMapping(value = "resource")
-    public String resource(HttpServletRequest request, HttpServletResponse response, String path, String date, String current) {
+    public String resource(HttpServletRequest request, HttpServletResponse response, String path, String date, String current, Boolean folderOnly) {
         if (path==null) path="";
         if (current==null) current="";
         try {
             SessionOptions options = SessionOptions.getSessionOptions(request);
-            Map<String, Object> pa = date==null ? pvController.getPathAttributes(path, true, options.isFavoriteFilter())
-                    : pvController.getPathAttributesByDate(date, options.isFavoriteFilter());
+            Map<String, Object> pa = folderOnly!=null && folderOnly ? pvController.getFolderPathAttributes(path,true) :
+                    (date==null ? pvController.getPathAttributes(path, true, options.isFavoriteFilter())
+                            : pvController.getPathAttributesByDate(date, options.isFavoriteFilter()));
             if (current.startsWith("/") || current.startsWith("\\")) current = current.substring(1);
             if (current.endsWith("/") || current.endsWith("\\")) current = current.substring(0,current.length()-1);
+
             pa.put("currentPath",current);
             pa.put("sessionOptions",options);
             String resourceHtml = freeMarkerWriter("resource.ftl", pa);
