@@ -30,6 +30,9 @@ body.map {
         padding-bottom: 10px;
     }
 }
+#exifForm {
+    margin: 10px 0
+}
 /*横屏, 如果宽高最小为1:1的话，显示这个内容*/
 @media screen and (min-aspect-ratio: 1/1) {
     .exif-box {
@@ -37,7 +40,6 @@ body.map {
         grid-auto-flow: row;
         grid-template-columns: repeat(2, 1fr);
         grid-gap: 5px;
-        align-items: center;
         justify-content: center;
         width: 100%;
     }
@@ -55,9 +57,7 @@ body.map {
     width: 64px;
     text-align: right;
 }
-.date-picker {
-    display: none;
-}
+
 .dialog__content {
     -moz-user-select: none;
     -webkit-user-select: none;

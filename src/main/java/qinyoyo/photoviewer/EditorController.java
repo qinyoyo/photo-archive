@@ -104,7 +104,7 @@ public class EditorController implements ApplicationRunner {
                             : pvController.getPathAttributesByDate(date, options.isFavoriteFilter()));
             if (current.startsWith("/") || current.startsWith("\\")) current = current.substring(1);
             if (current.endsWith("/") || current.endsWith("\\")) current = current.substring(0,current.length()-1);
-
+            if (folderOnly!=null && folderOnly) pa.put("folderOnly",true);
             pa.put("currentPath",current);
             pa.put("sessionOptions",options);
             String resourceHtml = freeMarkerWriter("resource.ftl", pa);
@@ -112,6 +112,17 @@ public class EditorController implements ApplicationRunner {
         } catch (Exception e) {
             return "error";
         }
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "mkdir")
+    public String mkdir(HttpServletRequest request, HttpServletResponse response, String current, String path) {
+        if (Util.isEmpty(path)) return "请输入目录名";
+        current = ArchiveUtils.formatterSubFolder(current,pvController.getRootPath());
+        File dir = new File(new File(pvController.getRootPath(),current), path);
+        if (dir.exists()) return "已存在";
+        if (dir.mkdirs()) return "ok";
+        else return "目录创建失败";
     }
 
     @ResponseBody

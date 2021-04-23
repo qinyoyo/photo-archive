@@ -129,9 +129,14 @@ function toggleSaveState(enable) {
 }
 function setThumbImage(dom) {
     const thumbDom=document.querySelector('.thumb-image')
-    let count = document.querySelectorAll('.file-item.selected').length
-    document.querySelector('.selection-length').innerText = (count?count+' 个图像':'')
+    const items = document.querySelectorAll('.file-item.selected')
     if (dom){
+        for (let i=0;i<items.length;i++) {
+            if (dom===items.item(i)) {
+                document.querySelector('.selection-length').innerText = (i+1) + '/' + items.length
+                break
+            }
+        }
         thumbDom.parentElement.style.display = 'block'
         const file=dom.getAttribute('data-file')
         const lastModified=dom.getAttribute('data-lastmodified')
@@ -141,6 +146,7 @@ function setThumbImage(dom) {
         thumbDom.setAttribute('title',dom.getAttribute('title'))
     } else {
         thumbDom.parentElement.style.display = 'none'
+        document.querySelector('.selection-length').innerText = '0/' + items.length
     }
 }
 function afterSelection() {
@@ -216,12 +222,7 @@ function selectFile(dom,event) {
         if (dom.className.indexOf('selected')>=0) {
             removeClass(dom,'selected')
             selectedDom = null
-            fileItems.forEach(function(i) {
-                if (i.className.indexOf('selected')>=0) {
-                    selectedDom = i
-                    return
-                }
-            })
+            if (fileItems.length) selectedDom = fileItems.item(0)
         }
         else {
             addClass(dom,'selected')
@@ -377,9 +378,9 @@ function pointInfoFromDom(dom,longitude,latitude) {
             city: dom.getAttribute('data-city'),
             province: dom.getAttribute('data-province-state'),
             subjectCode: dom.getAttribute('data-subjectCode'),
-            longitude: longitude ? longitude : (dom.getAttribute('data-gpslongitude') ? parseFloat(domElement.getAttribute('data-gpslongitude')) : null),
-            latitude: latitude ? latitude : (dom.getAttribute('data-gpslatitude') ? parseFloat(domElement.getAttribute('data-gpslatitude')) : null),
-            altitude: dom.getAttribute('data-gpsaltitude') ? parseFloat(domElement.getAttribute('data-gpsaltitude')) : null
+            longitude: longitude ? longitude : (dom.getAttribute('data-gpslongitude') ? parseFloat(dom.getAttribute('data-gpslongitude')) : null),
+            latitude: latitude ? latitude : (dom.getAttribute('data-gpslatitude') ? parseFloat(dom.getAttribute('data-gpslatitude')) : null),
+            altitude: dom.getAttribute('data-gpsaltitude') ? parseFloat(dom.getAttribute('data-gpsaltitude')) : null
         }
 }
 
@@ -611,24 +612,50 @@ const getResource = function(callback) {
     }
     dialog.style.display='block'
 }
-const reloadResourceByPath = function(path) {
+const reloadResourceByPath = function(path, selectedPath) {
     let currentPath = document.getElementById('app').getAttribute("data-folder")
     const url = '/resource?folderOnly=true&current='+encodeURI(currentPath) + (path ? '&path=' + encodeURI(path) : '')
     Ajax.get(url, function (responseText) {
         if (responseText && responseText!='error') {
             document.getElementById('select-resource-content').innerHTML = responseText
-            initResource()
+            initResource(selectedPath)
         }
     })
 }
-const initResource = function() {
+const makeDirectory = function() {
+    window.input({
+        title: '输入目录名',
+        dialogClass: 'float-editor__dialog',
+        inputType: 'text',
+        callback: function(v) {
+            if (v) {
+                const dirs = document.querySelectorAll('.folder-head .folder-head__left .folder-item')
+                if (dirs.length) {
+                    const current = dirs.item(dirs.length-1).getAttribute('data-folder')
+                    const url='/mkdir?current='+encodeURI(current)+'&path='+encodeURI(v)
+                    Ajax.get(url,function (msg){
+                        if (msg&&msg=='ok'){
+                            reloadResourceByPath(current,v)
+                        }else toast(msg)
+                    })
+                }
+            }
+        }
+    })
+}
+const initResource = function(selectedPath) {
     const dialog = document.getElementById('select-resource')
     dialog.querySelectorAll('.folder-item .folder-item__arrow, .folder-head .folder-item').forEach(function(d){
         d.onclick = function () {
             reloadResourceByPath((d.tagName==='I'?d.parentElement:d).getAttribute('data-folder'))
         }
     })
+    dialog.querySelector('.add-folder').onclick = makeDirectory
     dialog.querySelectorAll('.folder-list .folder-item').forEach(function(d) {
+        if (selectedPath && d.querySelector('span').innerText === selectedPath) {
+            addClass(d,'selected')
+            selectedPath = null
+        }
         d.ondblclick=function () {
             reloadResourceByPath(d.getAttribute('data-folder'))
         }
@@ -638,7 +665,7 @@ const initResource = function() {
             })
             addClass(d,'selected')
         }
-    });
+    })
 }
 function moveFiles() {
     if (document.getElementById('fileName').value) getResource(function(path) {

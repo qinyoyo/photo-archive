@@ -21,15 +21,17 @@
                 </#if>
             </#if>
         </div>
-        <#if !folderOnly??>
-            <div class="folder-head__right">
-                <#if resourceByDate??>
-                    <i class = "fa fa-folder-open-o folder-picker folder-head__item" title="按目录检索"></i>
-                <#else>
-                    <i class = "fa fa-calendar date-picker folder-head__item" title="按日期检索"></i>
-                </#if>
-            </div>
-        </#if>
+        <div class="folder-head__right">
+            <#if folderOnly??>
+                <i class = "fa fa-plus add-folder folder-head__item" title="增加目录"></i>
+            <#else>
+            <#if resourceByDate??>
+                <i class = "fa fa-folder-open-o folder-picker folder-head__item" title="按目录检索"></i>
+            <#else>
+                <i class = "fa fa-calendar date-picker folder-head__item" title="按日期检索"></i>
+            </#if>
+            </#if>
+        </div>
     </div>
     <#if subDirectories??>
         <div class="folder-list" >

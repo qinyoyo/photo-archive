@@ -75,7 +75,7 @@
     </div>
     <div class="scroll-from-wrapper no-wrap">
         <div class="scroll-items">
-            <div class="thumb-image-wrapper">
+            <div class="thumb-image-wrapper" style="display:none">
                 <div class="selection-length"></div>
                 <img class="thumb-image img-index-0"/>
             </div>
