@@ -13,15 +13,18 @@ body.map {
 }
 .exif-box {
     height: calc(100% - 50px);
+    overflow: hidden;
+}
+.scroll-items-wrapper, .scroll-from-wrapper {
+    overflow: auto;
 }
 /*竖屏, 如果宽高比最大1:1的话，显示这个内容*/
 @media screen and (max-aspect-ratio: 1/1) {
     .exif-box {
         width: 100%;
     }
-    .scroll-items-wrapper {
+    .scroll-items-wrapper, .scroll-from-wrapper {
         max-height: calc(50% - 10px);
-        overflow: auto;
     }
     .scroll-from-wrapper {
         padding-bottom: 10px;
@@ -39,7 +42,7 @@ body.map {
         width: 100%;
     }
     .scroll-items-wrapper, .scroll-from-wrapper {
-        height: calc(100% - 20px);
+        max-height: calc(100% - 20px);
     }
 }
 .file-list {
