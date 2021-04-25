@@ -53,6 +53,9 @@ body.map {
 .file-item.selected, .folder-item.selected {
     background-color: #99bcf1;;
 }
+.file-item.selected.current-selection {
+    background-color: #689ef1;
+}
 .folder-item .folder-item__arrow {
     width: 64px;
     text-align: right;
@@ -66,7 +69,7 @@ body.map {
     user-select: none;
 }
 
-.file-item[data-gpslongitude][data-gpslatitude] {
+.file-item[data-longitude][data-latitude] {
     color: #0ce061;
 }
 .thumb-image-wrapper {

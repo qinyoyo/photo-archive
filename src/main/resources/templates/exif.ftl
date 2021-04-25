@@ -65,7 +65,7 @@
             <div class="file-list" data-size="${photos?size?c}" tabindex="0">
                 <#list photos as p>
                 <div class="folder-list__item file-item" data-folder="${p.subFolder}" data-file="${p.fileName}" <@photoAttributes p />>
-                    <i class = "fa fa-picture-o folder__icon"></i>
+                    <i class = "fa fa-picture-o folder__icon" title="连续选择"></i>
                     <span>${p.fileName}</span>
                 </div>
                 </#list>

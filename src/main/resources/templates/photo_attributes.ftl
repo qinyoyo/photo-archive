@@ -59,16 +59,16 @@
         data-height="${p.height?c}"
     </#if>
     <#if p.shootTime??>
-        data-datetimeoriginal="${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss.SSS')}"
+        data-shootTime="${statics['qinyoyo.utils.DateUtil'].date2String(p.shootTime,'yyyy-MM-dd HH:mm:ss.SSS')}"
     </#if>
     <#if p.createTime??>
-        data-createdate="${statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss')}"
+        data-createTime="${statics['qinyoyo.utils.DateUtil'].date2String(p.createTime,'yyyy-MM-dd HH:mm:ss')}"
     </#if>
     <#if p.headline??>
         data-headline="${p.headline?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.subTitle??>
-        data-caption-abstract="${p.subTitle?replace('"','&#34;')?replace("'","&#39;")}"
+        data-subTitle="${p.subTitle?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.artist??>
         data-artist="${p.artist?replace('"','&#34;')?replace("'","&#39;")}"
@@ -77,45 +77,45 @@
         data-model="${p.model?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.lens??>
-        data-Lensid="${p.lens?replace('"','&#34;')?replace("'","&#39;")}"
+        data-lens="${p.lens?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.subjectCode??>
         data-subjectCode="${p.subjectCode?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.country??>
-        data-country-primarylocationname="${p.country}"
+        data-country="${p.country}"
     </#if>
     <#if p.countryCode??>
-        data-country-code="${p.countryCode}"
+        data-countryCode="${p.countryCode}"
     </#if>
     <#if p.province??>
-        data-province-state="${p.province?replace('"','&#34;')?replace("'","&#39;")}"
+        data-province="${p.province?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.city??>
         data-city="${p.city?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if p.location??>
-        data-sub-location="${p.location?replace('"','&#34;')?replace("'","&#39;")}"
+        data-location="${p.location?replace('"','&#34;')?replace("'","&#39;")}"
     </#if>
     <#if CLIENT_POINT_TYPE??>
         <#if p.longitude?? && p.latitude??>
         <#assign photoPointTemp = p.getPointMap(CLIENT_POINT_TYPE) />
-        data-gpslongitude="${photoPointTemp.lng}"
-        data-gpslatitude="${photoPointTemp.lat}"
+        data-longitude="${photoPointTemp.lng}"
+        data-latitude="${photoPointTemp.lat}"
         </#if>
     <#else>
         <#if p.longitude??>
-        data-gpslongitude="${statics['java.lang.String'].format('%.7f',p.longitude)}"
+        data-longitude="${statics['java.lang.String'].format('%.7f',p.longitude)}"
         </#if>
         <#if p.latitude??>
-        data-gpslatitude="${statics['java.lang.String'].format('%.7f',p.latitude)}"
+        data-latitude="${statics['java.lang.String'].format('%.7f',p.latitude)}"
         </#if>
     </#if>
     <#if p.altitude??>
-        data-gpsaltitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"
+        data-altitude="${statics['java.lang.String'].format('%.1f',p.altitude)}"
     </#if>
     <#if p.gpsDatetime??>
-        data-gpsdatetime="${statics['qinyoyo.utils.DateUtil'].date2StringByZoneId(p.gpsDatetime,'yyyy-MM-dd HH:mm:ss','UTC')}"
+        data-gpsDatetime="${statics['qinyoyo.utils.DateUtil'].date2StringByZoneId(p.gpsDatetime,'yyyy-MM-dd HH:mm:ss','UTC')}"
     </#if>
     title="${photoTitle(p)?replace('"','&#34;')?replace("'","&#39;")}"
 </#macro>

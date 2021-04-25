@@ -1,9 +1,4 @@
-const dataKeys = ['data-artist','data-datetimeoriginal','data-model','data-Lensid',
-        'data-subjectCode','data-country-primarylocationname','data-country-code','data-province-state','data-city','data-sub-location',
-        'data-headline','data-caption-abstract','data-scene','data-orientation','data-rating',
-        'data-gpslongitude','data-gpslatitude','data-gpsaltitude','data-gpsdatetime'
-    ],
-    nameKeys = ['artist','shootTime','model','lens',
+const nameKeys = ['artist','shootTime','model','lens',
         'subjectCode','country','countryCode','province','city','location',
         'headline','subTitle','scene','orientation','rating',
         'longitude','latitude','altitude','gpsDatetime'
@@ -127,10 +122,14 @@ function toggleSaveState(enable) {
         document.getElementById('submit').removeAttribute('disabled')
     else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
+let prevSelectedDom  = null
 function setThumbImage(dom) {
     const thumbDom=document.querySelector('.thumb-image')
     const items = document.querySelectorAll('.file-item.selected')
+    if (prevSelectedDom && prevSelectedDom!==dom) removeClass(prevSelectedDom,'current-selection')
+    prevSelectedDom = dom
     if (dom){
+        addClass(dom,'current-selection')
         for (let i=0;i<items.length;i++) {
             if (dom===items.item(i)) {
                 document.querySelector('.selection-length').innerText = (i+1) + '/' + items.length
@@ -139,7 +138,7 @@ function setThumbImage(dom) {
         }
         thumbDom.parentElement.style.display = 'block'
         const file=dom.getAttribute('data-file')
-        const lastModified=dom.getAttribute('data-lastmodified')
+        const lastModified=dom.getAttribute('data-lastModified')
         const curPath=dom.getAttribute('data-folder').replace(/\\/g,'/')
         thumbDom.setAttribute('src','/.thumb/'+curPath+(curPath?'/':'')+file+(lastModified?'?click='+lastModified:''))
         thumbDom.setAttribute('data-src','/'+curPath+(curPath?'/':'')+file+(lastModified?'?click='+lastModified:''))
@@ -159,8 +158,8 @@ function afterSelection() {
     document.getElementById('fileName').value = files.join(',')
     setThumbImage(selectedDom)
     if (selectedDom) {
-        for (let i = 0; i < dataKeys.length; i++) {
-            let v = selectedDom.getAttribute(dataKeys[i])
+        for (let i = 0; i < nameKeys.length; i++) {
+            let v = selectedDom.getAttribute('data-'+nameKeys[i])
             if (v && (nameKeys[i] === 'shootTime' || nameKeys[i] === 'gpsDatetime')) v = v.replace(' ', 'T')
             else if (v && nameKeys[i] === 'orientation') {
                 if (v && parseInt(v) > 1 && !sessionOptions.supportOrientation) {
@@ -221,8 +220,7 @@ function selectFile(dom,event) {
     } else if (event.ctrlKey || window.sessionOptions.mobile) {
         if (dom.className.indexOf('selected')>=0) {
             removeClass(dom,'selected')
-            selectedDom = null
-            if (fileItems.length) selectedDom = fileItems.item(0)
+            selectedDom = document.querySelector('.file-item.selected')
         }
         else {
             addClass(dom,'selected')
@@ -261,11 +259,11 @@ function save() {
             if (pp[0]=='ok'){
                 let lastModified=(new Date().getTime())+''
                 document.querySelectorAll('.file-item.selected').forEach(function (dom){
-                    dom.setAttribute('data-lastmodified',lastModified)
-                    for (let i=0; i<dataKeys.length; i++){
+                    dom.setAttribute('data-lastModified',lastModified)
+                    for (let i=0; i<nameKeys.length; i++){
                         let val=data.get(nameKeys[i])
-                        if (val) dom.setAttribute(dataKeys[i],val)
-                        else dom.removeAttribute(dataKeys[i])
+                        if (val) dom.setAttribute('data-'+nameKeys[i], ''+val)
+                        else dom.removeAttribute('data-'+nameKeys[i])
                         if (nameKeys[i]=='orientation'&&dom===selectedDom){
                             const file=dom.getAttribute('data-file')
                             const curPath=dom.getAttribute('data-folder').replace(/\\/g,'/')
@@ -372,15 +370,15 @@ function setDefaultMarket() {
 }
 function pointInfoFromDom(dom,longitude,latitude) {
     return {
-            country: dom.getAttribute('data-country-primarylocationname'),
-            countryCode: dom.getAttribute('data-country-code'),
-            location: dom.getAttribute('data-sub-location'),
+            country: dom.getAttribute('data-country'),
+            countryCode: dom.getAttribute('data-countryCode'),
+            location: dom.getAttribute('data-location'),
             city: dom.getAttribute('data-city'),
-            province: dom.getAttribute('data-province-state'),
+            province: dom.getAttribute('data-province'),
             subjectCode: dom.getAttribute('data-subjectCode'),
-            longitude: longitude ? longitude : (dom.getAttribute('data-gpslongitude') ? parseFloat(dom.getAttribute('data-gpslongitude')) : null),
-            latitude: latitude ? latitude : (dom.getAttribute('data-gpslatitude') ? parseFloat(dom.getAttribute('data-gpslatitude')) : null),
-            altitude: dom.getAttribute('data-gpsaltitude') ? parseFloat(dom.getAttribute('data-gpsaltitude')) : null
+            longitude: longitude ? longitude : (dom.getAttribute('data-longitude') ? parseFloat(dom.getAttribute('data-longitude')) : null),
+            latitude: latitude ? latitude : (dom.getAttribute('data-latitude') ? parseFloat(dom.getAttribute('data-latitude')) : null),
+            altitude: dom.getAttribute('data-altitude') ? parseFloat(dom.getAttribute('data-altitude')) : null
         }
 }
 
@@ -490,16 +488,16 @@ function getPointData() {
     }
     let selectedIndex = -1
     let distance = 1000
-    const photos = document.querySelectorAll('.file-item[data-gpslongitude][data-gpslatitude]')
+    const photos = document.querySelectorAll('.file-item[data-longitude][data-latitude]')
     let icon = stepIcon0
     if (photos.length){
         for (let i=0; i<photos.length; i++){
             if (photos[i] === selectedDom) selectedIndex = i
             const point={
                 domElement: photos[i],
-                longitude:parseFloat(photos[i].getAttribute('data-gpslongitude')),
-                latitude:parseFloat(photos[i].getAttribute('data-gpslatitude')),
-                shootTime: photos[i].getAttribute('data-datetimeoriginal')?photos[i].getAttribute('data-datetimeoriginal').substring(0,16):null,
+                longitude:parseFloat(photos[i].getAttribute('data-longitude')),
+                latitude:parseFloat(photos[i].getAttribute('data-latitude')),
+                shootTime: photos[i].getAttribute('data-shootTime')?photos[i].getAttribute('data-shootTime').substring(0,16):null,
                 orientation: photos[i].getAttribute('data-orientation') ? parseInt(photos[i].getAttribute('data-orientation')) : null,
                 src: photos[i].getAttribute('data-src'),
                 rating: photos[i].getAttribute('data-rating') ? parseInt(photos[i].getAttribute('data-rating')) : null,
@@ -719,8 +717,8 @@ window.onload=function(){
     const fileItems = document.querySelectorAll('.file-item')
     if (fileItems.length>0) fileItems.forEach(function(v) {
         if (!point) {
-            let lng = v.getAttribute('data-gpslongitude'),
-                lat = v.getAttribute('data-gpslatitude')
+            let lng = v.getAttribute('data-longitude'),
+                lat = v.getAttribute('data-latitude')
             if (lng && lat) {
                 point = {lng:parseFloat(lng),lat:parseFloat(lat)}
             }

@@ -601,15 +601,15 @@ function adjustSize(img) {
                                 let dt = '', poi = '', longitude ='', latitude= ''
                                 if (imgs.length>0) {
                                     imgs.forEach(function(img){
-                                        dt = img.getAttribute('data-datetimeoriginal')
+                                        dt = img.getAttribute('data-shootTime')
                                         if (dt && dt.length>10) dt=dt.substring(0,16)
                                         poi = img.getAttribute('title')
                                         if (poi) {
                                             let pos = poi.indexOf('\ufeff')
                                             if (pos>=0) poi = poi.substring(0,pos)
                                         }
-                                        longitude = img.getAttribute('data-gpslongitude')
-                                        latitude = img.getAttribute('data-gpslatitude')
+                                        longitude = img.getAttribute('data-longitude')
+                                        latitude = img.getAttribute('data-latitude')
                                         if (longitude && latitude)  return
                                     })
                                 }
