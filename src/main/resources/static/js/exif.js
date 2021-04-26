@@ -171,8 +171,8 @@ function afterSelection() {
         folders.push(i.getAttribute('data-folder'))
         files.push(i.getAttribute('data-file'))
     })
-    document.getElementById('subFolder').value = folders.join(',')
-    document.getElementById('fileName').value = files.join(',')
+    document.getElementById('subFolder').value = folders.join('|')
+    document.getElementById('fileName').value = files.join('|')
     setThumbImage(selectedDom)
     if (selectedDom) {
         for (let i = 0; i < nameKeys.length; i++) {
@@ -414,27 +414,19 @@ function pointInfoFromDom(dom,longitude,latitude) {
         }
 }
 
-function selectFilesByMarker(index) {
+function selectFilesByMarker(index, append) {
     const fileItems = document.querySelectorAll('.file-item')
-    fileItems.forEach(function(e) {removeClass(e,'selected')})
+    if (!append) fileItems.forEach(function(e) {removeClass(e,'selected')})
     selectedDom = null
-    let folders = [], files=[]
     const param = getImageIndexSet(pointDataList,index)
     if (param){
         for (let i=0; i<param.set.length; i++){
             let d = pointDataList[param.set[i]]
             addClass(d.domElement,'selected')
             selectedDom=d.domElement
-            folders.push(d.domElement.getAttribute('data-folder'))
-            files.push(d.domElement.getAttribute('data-file'))
         }
     }
-    document.getElementById('subFolder').value = folders.join(',')
-    document.getElementById('fileName').value = files.join(',')
-    setThumbImage(selectedDom)
-    if (selectedDom) {
-        toggleSaveState(true)
-    }
+    afterSelection()
 }
 
 function markerClick(event,index) {
@@ -443,7 +435,7 @@ function markerClick(event,index) {
         mapPoint = pointInfoFromDom(point.domElement, point.longitude, point.latitude)
         placeSelectionMarkerOnMap({lng:point.longitude, lat: point.latitude})
         document.getElementById("address").value = formattedAddress(mapPoint.province,mapPoint.city,mapPoint.location,mapPoint.subjectCode)
-        if (event.shiftKey) selectFilesByMarker(index)
+        if (document.getElementById('markerSelection').checked) selectFilesByMarker(index,event.shiftKey)
     }
 }
 function markerDrag(event, index) {
@@ -679,6 +671,7 @@ const makeDirectory = function() {
 }
 const initResource = function(selectedPath) {
     const dialog = document.getElementById('select-resource')
+    document.getElementById('resource-list').style.maxHeight = (window.innerHeight -120) + 'px'
     dialog.querySelectorAll('.folder-item .folder-item__arrow, .folder-head .folder-item').forEach(function(d){
         d.onclick = function () {
             reloadResourceByPath((d.tagName==='I'?d.parentElement:d).getAttribute('data-folder'))
@@ -858,4 +851,5 @@ window.onload=function(){
         if (this.checked && !confirm("确实需要自动保存拖动改变的地理信息？")) this.checked = false
     }
     document.addEventListener("paste", getClipboardData)
+
 }

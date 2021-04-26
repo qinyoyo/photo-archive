@@ -187,13 +187,15 @@
                 </div>-->
             </form>
             <input style="margin-left:32px" type="checkbox" value="1" id="autoSaveMarkerDrag" title="拖动足迹标识自动同步修改对应的所有图像文件的位置信息" >
-            <label for="autoSaveMarkerDrag">拖动自动修改</label>
+            <label for="autoSaveMarkerDrag">拖动修改</label>
+            <input style="margin-left:10px" type="checkbox" value="1" id="markerSelection" title="点击地图标识选择对应文件" >
+            <label for="markerSelection">点选</label>
             <a style="margin-right:5px;float:right" id="selectAllTags" title="选择/取消选择全部标签" >Gps</a>
             <div style="text-align: center">
                 <button id="btnMove" class="exif__button" disabled="disabled" onclick="moveFiles()" title="将选定文件移动到其他目录">移动</button>
                 <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()" title="复制指定的标签">复制</button>
                 <button id="btnPaste" class="exif__button" disabled="disabled" onclick="pasteFields()">粘贴</button>
-                <button class="exif__button" onclick="showMap()" title="shift+点击标识将选择对应的所有图像文件">地图</button>
+                <button class="exif__button" onclick="showMap()">地图</button>
                 <button id="submit" class="exif__button" disabled="disabled" onclick="save()">保存</button>
             </div>
         </div>

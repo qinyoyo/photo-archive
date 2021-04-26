@@ -228,8 +228,8 @@ public class PVController implements ApplicationRunner , ErrorController {
             return "请先解锁!!!";
         }
         if (Util.isEmpty(subFolder) || Util.isEmpty(fileName)) return "没有指定文件";
-        String [] subFolders = subFolder.split(",",-1),
-                files = fileName.split(",",-1);
+        String [] subFolders = subFolder.split("\\|",-1),
+                files = fileName.split("\\|",-1);
         List<PhotoInfo> photoList = new ArrayList<>();
         for (int i=0;i< files.length;i++) {
             PhotoInfo p = archiveInfo.find(subFolders[i],files[i]);
@@ -259,8 +259,8 @@ public class PVController implements ApplicationRunner , ErrorController {
                     p1.setLongitude(null);
                 }
             }
-            String [] subFolders = p1.getSubFolder().split(",",-1),
-                    files = p1.getFileName().split(",",-1);
+            String [] subFolders = p1.getSubFolder().split("\\|",-1),
+                    files = p1.getFileName().split("\\|",-1);
             String [] tags = selectedTags.split(",");
             List<Key> selectedKey = new ArrayList<>();
             for (String tag : tags) {

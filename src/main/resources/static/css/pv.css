@@ -195,7 +195,7 @@ img[data-rating="5"] + .img-favorite-state {
     cursor: pointer;
 }
 #resource-list {
-    max-height: 800px;
+    max-height: calc(100% - 100px);
     overflow-y: auto;
 }
 #select-resource-content.video .audio-list, #select-resource-content.video .photo-list {

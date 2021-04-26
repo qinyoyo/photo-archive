@@ -546,7 +546,7 @@ function adjustSize(img) {
               bw = document.querySelector('body').clientWidth
         //if ((sw - bw)/2 > 32) document.querySelector('.float-editor__buttons').style.right = (Math.round((sw - bw)/2) - 32) + 'px'
 
-        document.querySelector('#select-resource .dialog__body').style.width = (sw>600 ? '600px' : sw+'px')
+        document.querySelector('#select-resource .dialog__body').style.width = (sw>620 ? '600px' : (sw-20)+'px')
 
         const cw = cellWidth() + 'px'
         document.querySelectorAll('.grid-cell-label').forEach(function(e) {

@@ -63,7 +63,7 @@ function addressSearch(address,callback) {
     }
 }
 function formattedAddress(province,city,location,subjectCode) {
-    let cc = province.search(/[\u4e00-\u9fa5]/)
+    let cc = province ? province.search(/[\u4e00-\u9fa5]/) : (city ? city.search(/[\u4e00-\u9fa5]/):0)
     let s = subjectCode ? subjectCode : ''
     let a = ''
     if (cc>=0) {
