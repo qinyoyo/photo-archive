@@ -506,21 +506,14 @@ public class PhotoInfo implements Serializable,Cloneable {
         } catch (Exception e) {
             return null;
         }
-        }
+    }
 
     public boolean modifyOrientation(String root, Integer newRating, Integer ... operations) {
         if (mimeType==null || !mimeType.contains("image/")) return false;
         Integer newOrientation = null;
         if (operations!=null && operations.length>0) {
             Integer orientation0 = orientation;
-            Integer orientation1=null;
-            if (orientation0==null || orientation0==Orientation.NONE.getValue()) orientation1 = Orientation.by(operations);
-            else {
-                Integer [] ops = new Integer[operations.length+1];
-                ops[0]=orientation0;
-                for (int i=0;i<operations.length;i++) ops[i+1] = operations[i];
-                orientation1 = Orientation.by(ops);
-            }
+            Integer orientation1=Orientation.byWithOriginal(orientation0,operations);
             if (!Orientation.equals(orientation0,orientation1)) {
                 newOrientation = orientation1;
             }

@@ -83,6 +83,9 @@
                 <input id="subFolder" name="subFolder" type="hidden">
                 <input id="fileName" name="fileName" type="hidden">
                 <input id="type" name="type" type="hidden" value="${CLIENT_POINT_TYPE}">
+                <input type="hidden" id="orientation" name="orientation">
+                <input type="checkbox" style="display:none" value="orientation" name="selectedTags" >
+
                 <div style="position: relative">
                     <label for="artist">拍摄者</label>
                     <input class="tag-value" id="artist" name="artist" onchange="changed(this)">
@@ -130,21 +133,6 @@
                     <input class="tag-value" id="scene" name="scene" onchange="changed(this)">
                     <input type="checkbox" value="scene" name="selectedTags" >
                 </div>
-                <#--                <div style="position: relative">
-                                    <label for="orientation">方向</label>
-                                    <select class="tag-value" id="orientation" name="orientation" onchange="changed(this)">
-                                        <option value="">默认</option>
-                                        <option value="1">水平</option>
-                                        <option value="2">水平翻转</option>
-                                        <option value="3">旋转180度</option>
-                                        <option value="4">垂直翻转</option>
-                                        <option value="5">水平翻转逆旋转90度</option>
-                                        <option value="6">顺时针旋转90度</option>
-                                        <option value="7">水平翻转顺旋转90度</option>
-                                        <option value="8">逆时针旋转90度</option>
-                                    </select>
-                                    <input type="checkbox" value="orientation" name="selectedTags" >
-                                </div>-->
                 <div style="position: relative; margin-top:10px">
                     <label for="subjectCode">POI</label>
                     <input class="tag-value" id="subjectCode" name="subjectCode" onchange="changed(this)">

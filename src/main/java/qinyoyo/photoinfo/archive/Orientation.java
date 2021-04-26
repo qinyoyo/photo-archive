@@ -115,6 +115,13 @@ public enum Orientation {
         }
         return r;
     }
+    public static int byWithOriginal(Integer original, Integer ... oris) {
+        if (original==null || original == 0 || original == 1) return by(oris);
+        Integer [] ops = new Integer[oris.length+1];
+        ops[0]=original;
+        for (int i=0;i<oris.length;i++) ops[i+1] = oris[i];
+        return Orientation.by(ops);
+    }
     public static boolean equals(Integer o0,Integer o1) {
         if (o0==null && o1==null) return true;
         else if (o0==null) return o1.intValue()==NONE.value;

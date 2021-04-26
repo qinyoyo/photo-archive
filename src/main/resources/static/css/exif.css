@@ -65,10 +65,13 @@ body.map {
     color: #0ce061;
 }
 .thumb-image-wrapper {
-    text-align: center;
-    vertical-align: middle;
     margin: 10px 0;
     position: relative;
+    overflow: hidden;
+    max-height: 200px;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
 }
 .selection-length {
     position: absolute;
@@ -78,8 +81,8 @@ body.map {
     color: #0c88e8;
 }
 .thumb-image {
-    max-height: 200px;
     max-width: 100%;
+    max-height: 100%;
 }
 .scroll-items {
     max-height:100%;

@@ -240,7 +240,7 @@ public class PVController implements ApplicationRunner , ErrorController {
     }
     @ResponseBody
     @RequestMapping(value = "/exifSave")
-    public String exifSave(PhotoInfo p1, String type, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path) {
+    public String exifSave(PhotoInfo p1, String type, String selectedTags, HttpServletRequest request, HttpServletResponse response, String path, Integer [] orientations) {
         SessionOptions options = SessionOptions.getSessionOptions(request);
         if (!options.isUnlocked()) {
             return "请先解锁!!!";
@@ -259,10 +259,22 @@ public class PVController implements ApplicationRunner , ErrorController {
                     p1.setLongitude(null);
                 }
             }
+            String [] subFolders = p1.getSubFolder().split(",",-1),
+                    files = p1.getFileName().split(",",-1);
             String [] tags = selectedTags.split(",");
             List<Key> selectedKey = new ArrayList<>();
             for (String tag : tags) {
-                if (PhotoInfo.FIELD_TAG.containsKey(tag)) {
+                if (tag.equals("orientation")) {
+                    if (orientations!=null && orientations.length>0 && files.length==1) {
+                        Integer orientation0 = p1.getOrientation();
+                        Integer orientation1 = Orientation.byWithOriginal(orientation0,orientations);
+                        if (!Orientation.equals(orientation0,orientation1)) {
+                            p1.setOrientation(orientation1);
+                            selectedKey.add(PhotoInfo.FIELD_TAG.get(tag));
+                        }
+                    }
+                }
+                else if (PhotoInfo.FIELD_TAG.containsKey(tag)) {
                     selectedKey.add(PhotoInfo.FIELD_TAG.get(tag));
                 }
             }
@@ -278,8 +290,6 @@ public class PVController implements ApplicationRunner , ErrorController {
             if (selectedKey.contains(Key.SUBJECT_CODE)) p1.setSubjectCode(BaiduGeo.truncLocationName(p1.getSubjectCode(),Key.SUBJECT_CODE,
                     p1.getCountry(),p1.getProvince(),p1.getCity()));
 
-            String [] subFolders = p1.getSubFolder().split(",",-1),
-                    files = p1.getFileName().split(",",-1);
             List<PhotoInfo> photoList = new ArrayList<>();
             for (int i=0;i< files.length;i++) {
                 PhotoInfo p = archiveInfo.find(subFolders[i],files[i]);

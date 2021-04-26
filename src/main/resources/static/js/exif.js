@@ -2,8 +2,7 @@ const nameKeys = ['artist','shootTime',
         // 'model','lens',
         'subjectCode','country','countryCode','province','city','location',
         'headline','subTitle','scene',
-        // 'orientation',
-         'rating',
+        'orientation', 'rating',
         'longitude','latitude','altitude'
         // ,'gpsDatetime'
     ]
@@ -91,14 +90,18 @@ function copyFields(tags){
     document.getElementById('btnPaste').setAttribute('disabled', 'disabled')
     if (tags) {
         tags.forEach(function(field) {
-            copiedPoint[field] = document.getElementById(field).value
+            if (field!='orientation') {
+                copiedPoint[field] = document.getElementById(field).value
+                document.getElementById('btnPaste').removeAttribute('disabled')
+            }
         })
-        document.getElementById('btnPaste').removeAttribute('disabled')
     }
     else document.querySelectorAll('input[name="selectedTags"]:checked').forEach(function(e){
         let field = e.value
-        copiedPoint[field] = document.getElementById(field).value
-        document.getElementById('btnPaste').removeAttribute('disabled')
+        if (field!='orientation'){
+            copiedPoint[field]=document.getElementById(field).value
+            document.getElementById('btnPaste').removeAttribute('disabled')
+        }
     })
     setClipboardData(clipSign + JSON.stringify(copiedPoint))
 }
@@ -117,18 +120,28 @@ function toggleSaveState(enable) {
     if (copiedPoint && Object.keys(copiedPoint).length>0) document.getElementById('btnPaste').removeAttribute('disabled')
     else document.getElementById('btnPaste').setAttribute('disabled', 'disabled')
 
-    const selectedTag = (document.querySelectorAll('input[name="selectedTags"]:checked').length>0)
+    const selectedTags = document.querySelectorAll('input[name="selectedTags"]:checked')
 
-    if (selectedTag) document.getElementById('btnCopy').removeAttribute('disabled')
+    if (selectedTags.length>1 || (selectedTags.length==1 && selectedTags.item(0).value!=='orientation')) document.getElementById('btnCopy').removeAttribute('disabled')
     else document.getElementById('btnCopy').setAttribute('disabled', 'disabled')
 
-    if (enable && document.getElementById('fileName').value && selectedTag)
+    if (enable && document.getElementById('fileName').value && selectedTags.length>0)
         document.getElementById('submit').removeAttribute('disabled')
     else document.getElementById('submit').setAttribute('disabled', 'disabled')
 }
 let prevSelectedDom  = null
-function setThumbImage(dom) {
+function resetThumbImageTransform() {
     const thumbDom=document.querySelector('.thumb-image')
+    thumbDom.removeAttribute('data-mirrorH')
+    thumbDom.removeAttribute('data-mirrorV')
+    thumbDom.removeAttribute('data-rotateZ')
+    thumbDom.style.transform = thumbDom.style.msTransform = thumbDom.style.OTransform = thumbDom.style.MozTransform = 'none'
+    document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked = false
+}
+function setThumbImage(dom) {
+    resetThumbImageTransform()
+    const thumbDom=document.querySelector('.thumb-image')
+    document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked = false
     const items = document.querySelectorAll('.file-item.selected')
     if (prevSelectedDom && prevSelectedDom!==dom) removeClass(prevSelectedDom,'current-selection')
     prevSelectedDom = dom
@@ -267,9 +280,12 @@ function save() {
     let data = new FormData(form)
     if (data.get('selectedTags')){
         toggleSaveState(false)
+        let orientations = getTransformParams()
+        if (orientations) data.append('orientations',orientations)
         Ajax.post(url,data,function (msg){
             let pp=(msg?msg.split(","):['error'])
             if (pp[0]=='ok'){
+                resetThumbImageTransform()
                 let lastModified=(new Date().getTime())+''
                 document.querySelectorAll('.file-item.selected').forEach(function (dom){
                     dom.setAttribute('data-lastModified',lastModified)
@@ -291,6 +307,9 @@ function save() {
                 toast(msg)
             }
         })
+    } else {
+        toast('未选择修改字段')
+        toggleSaveState(false)
     }
 }
 function selectMapPoint(add) {
@@ -700,6 +719,67 @@ function moveFiles() {
         })
     })
 }
+function doTransform(img,op) {
+    if (op==='c') {
+        resetThumbImageTransform()
+        toggleSaveState(true)
+    }
+    else if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
+        let rotateZ=img.getAttribute('data-rotateZ')?parseInt(img.getAttribute('data-rotateZ')):0
+        let mirrorH=img.getAttribute('data-mirrorH')?true:false
+        let mirrorV=img.getAttribute('data-mirrorV')?true:false
+        let imgOrientation=selectedDom.getAttribute('data-orientation')?parseInt(selectedDom.getAttribute('data-orientation')):0
+        if (op==='+') rotateZ+=90
+        else if (op==='-') rotateZ-=90
+        else if (op==='h') mirrorH= !mirrorH
+        else if (op==='v') mirrorV= !mirrorV
+        else return
+        if (mirrorH&&mirrorV){
+            mirrorH=mirrorV=false
+            rotateZ+=180
+        }
+        rotateZ=rotateZ%360
+        if (rotateZ<0) rotateZ+=360
+        if (rotateZ==90 || rotateZ==270) {
+            let scale = img.clientHeight/img.clientWidth
+            transform({img,rotateZ,mirrorV,mirrorH,imgOrientation,scale})
+        } else transform({img,rotateZ,mirrorV,mirrorH,imgOrientation})
+        if (mirrorH) img.setAttribute('data-mirrorH','true')
+        else img.removeAttribute('data-mirrorH')
+        if (mirrorV) img.setAttribute('data-mirrorV','true')
+        else img.removeAttribute('data-mirrorV')
+        if (rotateZ) img.setAttribute('data-rotateZ',''+rotateZ)
+        else img.removeAttribute('data-rotateZ')
+        document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked=(rotateZ||mirrorV||mirrorH)
+        toggleSaveState(rotateZ||mirrorV||mirrorH)
+    }
+}
+function getTransformParams() {
+    if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
+        let img=document.querySelector('.thumb-image')
+        let rotateZ = img.getAttribute('data-rotateZ') ? parseInt(img.getAttribute('data-rotateZ')) : 0
+        let mirrorH = img.getAttribute('data-mirrorH') ? true : false
+        let mirrorV = img.getAttribute('data-mirrorV') ? true : false
+        if (mirrorH && mirrorV) {
+            mirrorH = mirrorV = false
+            rotateZ += 180
+        }
+        rotateZ = rotateZ % 360
+        if (rotateZ < 0) rotateZ += 360
+        if (mirrorH || mirrorV || rotateZ) {
+            let orientations = ''
+            if (mirrorH) orientations = '2'
+            else if (mirrorV) orientations = '4'
+            if (rotateZ) {
+                if (orientations) orientations = orientations + ','
+                if (rotateZ==90) orientations += '6'
+                else if (rotateZ==180) orientations += '3'
+                else if (rotateZ==270) orientations += '8'
+            }
+            return orientations
+        } else return null
+    } else return null
+}
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
     document.querySelector('.map-wrapper').style.height = (window.innerHeight) + 'px'
@@ -710,24 +790,34 @@ window.onload=function(){
             refresh(path)
         }
     })
-    document.querySelector('.thumb-image').onclick = function() {
-        const selection = []
-        let start = 0
-        let i=0
-        document.querySelectorAll('.file-item.selected').forEach(function (d) {
-            selection.push(d)
-            if (d===selectedDom) start = i
-            i++
-        })
-        if (selection.length>0) addImageDialog(start, function(i) {
-            if (i == -1) return selection.length
-            else {
-                return getTranImageParams(selection[i], i)
-            }
-        },{
-            loop: selection.length > 1,
-            download: true
-        })
+
+    document.querySelector('.thumb-image').onclick = function(e) {
+        if (e.offsetY<=50 && (e.offsetX<=50 || e.offsetX>=this.clientWidth - 50)) {
+            doTransform(this,'c')
+        } else if (e.offsetX < 50 && e.offsetY>this.clientHeight - 50) { // left-bottom
+            doTransform(this,'-')
+        } else if (e.offsetX>this.clientWidth - 50 && e.offsetY>this.clientHeight - 50) { // right-bottom
+            doTransform(this,'+')
+        } else if (e.offsetX < 50 || e.offsetX > this.clientWidth - 50) {
+            doTransform(this,'h')
+        } else if (e.offsetY < 50 || e.offsetY > this.clientHeight - 50) {
+            doTransform(this,'v')
+        } else {
+            const selection=[]
+            let start=0
+            let i=0
+            document.querySelectorAll('.file-item.selected').forEach(function (d){
+                selection.push(d)
+                if (d===selectedDom) start=i
+                i++
+            })
+            if (selection.length>0) addImageDialog(start,function (i){
+                if (i== -1) return selection.length
+                else return getTranImageParams(selection[i],i)
+            },{
+                loop:selection.length>1,download:true
+            })
+        }
     }
     const fileList = document.querySelector('.file-list')
     if (fileList) fileList.onkeydown = exifKeyEvent

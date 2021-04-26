@@ -170,31 +170,34 @@
         }
     }
 
-
     /**********  通用变换 ***********/
-    const transform = function(element,translateX,translateY,rotateZ, mirrorH, mirrorV, orientation) {
-        if (!window.sessionOptions.supportOrientation && orientation) {
-            if (orientation=='2' || orientation=='5' || orientation=='7') mirrorH = !mirrorH
-            else if (orientation=='4') mirrorV = !mirrorH
-            if (orientation=='6'|| orientation=='7') rotateZ += 90
-            else if (orientation=='3') rotateZ += 180
-            else if (orientation=='5' || orientation=='8') rotateZ += 270
+    window.transform = function({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation, scale}) {
+        if (!translateX) translateX = 0
+        if (!translateY) translateY = 0
+        if (!rotateZ) rotateZ = 0
+        if (!window.sessionOptions.supportOrientation && imgOrientation) {
+            if (imgOrientation=='2' || imgOrientation=='5' || imgOrientation=='7') mirrorH = (mirrorH ? false : true)
+            else if (imgOrientation=='4') mirrorV = (mirrorV ? false : true)
+            if (imgOrientation=='6'|| imgOrientation=='7') rotateZ += 90
+            else if (imgOrientation=='3') rotateZ += 180
+            else if (imgOrientation=='5' || imgOrientation=='8') rotateZ += 270
         }
         let t = new Array()
         if (mirrorH && mirrorV) {
             rotateZ+=180
             mirrorH = mirrorV = false
         }
-        if (rotateZ!=0) t.push('rotate('+rotateZ+'deg)')
-        if (translateX!=0 || translateY!=0) {
-            let frameTranslate = frameFromClient({ x: translateX, y: translateY },
+        if (rotateZ) t.push('rotate('+rotateZ+'deg)')
+        if (translateX || translateY) {
+            let frameTranslate = frameFromClient({ x: translateX, y: translateY  },
                 rotateZ, {x:0, y:0})
             t.push('translate('+Math.round(frameTranslate.x) + 'px,' + Math.round(frameTranslate.y) + 'px)')
         }
         if (mirrorH) t.push('rotateY(180deg)')
         else if (mirrorV) t.push('rotateX(180deg)')
+        if (scale) t.push('scale('+scale+')')
         if (t.length==0) t.push('none')
-        element.style.transform = element.style.msTransform = element.style.OTransform = element.style.MozTransform = t.join(' ')
+        img.style.transform = img.style.msTransform = img.style.OTransform = img.style.MozTransform = t.join(' ')
     }
 
     window.getTranImageParams = function(thumb, index) {
@@ -410,7 +413,7 @@
                     realSizeScale = Math.max(imageW / pageW, imageH / pageH)
                     if (realSizeScale<1) realSizeScale = 1
                     calcSize()
-                    transform(img, 0, 0, 0, mirrorH, mirrorV,imgOrientation)
+                    transform({img, mirrorH, mirrorV,imgOrientation})
                     moveImage()
                 }
                 img.setAttribute('src', src)
@@ -572,7 +575,7 @@
             if (p.y != translateY) translateYChanged = true
             translateX = p.x
             translateY = p.y
-            if (!justCalc) transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
+            if (!justCalc) transform({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation})
         }
         // 在当前位移的基础上，移动一个位移
         const move = function(p) {
@@ -643,7 +646,7 @@
             let image=refPage?imageFromPage(refPage):null
             rotateZ=Math.trunc(angle)%360
             translate({x:translateX,y:translateY},true)
-            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
+            transform({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation})
             if (refPage){
                 translateTo(image,refPage)
             } else translateHome()
@@ -654,7 +657,7 @@
             let angle = b90 * 90
             if (Math.abs(angle-rotateZ)<15 ) {
                 rotateZ = angle
-                transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
+                transform({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation})
             }
         }
 
@@ -668,7 +671,7 @@
                 mirrorH = mirrorV = false
                 rotateZ += 180
             }
-            transform(img,translateX,translateY,rotateZ,mirrorH,mirrorV,imgOrientation)
+            transform({img,translateX,translateY,rotateZ,mirrorH,mirrorV,imgOrientation})
         }
 
 
@@ -904,7 +907,7 @@
             let ms = minScale()
             if (scaleValue < ms) scaleValue = ms
             calcSize()
-            transform(img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation)
+            transform({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation})
         }
 
         this.indexImg = function() {
