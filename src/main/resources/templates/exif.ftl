@@ -93,47 +93,27 @@
                     <input class="tag-value" id="shootTime" name="shootTime" type="datetime-local" step="0.001" onchange="changed(this)">
                     <input type="checkbox" value="shootTime" name="selectedTags" >
                 </div>
-                <div style="position: relative">
+<#--                <div style="position: relative">
                     <label for="model">设备</label>
-                    <input class="tag-value" id="model" name="model" onchange="changed(this)">
-                    <input type="checkbox" value="model" name="selectedTags" >
+                    <input class="tag-value" id="model" name="model" disabled="disabled" onchange="changed(this)">
+&lt;#&ndash;                    <input type="checkbox" value="model" name="selectedTags" >&ndash;&gt;
                 </div>
                 <div style="position: relative">
                     <label for="lens">镜头</label>
-                    <input class="tag-value" id="lens" name="lens" onchange="changed(this)">
-                    <input type="checkbox" value="lens" name="selectedTags" >
-                </div>
+                    <input class="tag-value" id="lens" name="lens" disabled="disabled"  onchange="changed(this)">
+&lt;#&ndash;                    <input type="checkbox" value="lens" name="selectedTags" >&ndash;&gt;
+                </div>-->
                 <div style="position: relative">
-                    <label for="subjectCode">POI</label>
-                    <input class="tag-value" id="subjectCode" name="subjectCode" onchange="changed(this)">
-                    <input type="checkbox" value="subjectCode" name="selectedTags" >
-                </div>
-                <div style="position: relative">
-                    <label for="country">国家</label>
-                    <select class="tag-value" id="country" name="country" onchange="changed(this)">
-                        <option data-code="" value="">未知</option>
-                        <#list countries as c>
-                            <option data-code="${c[0]}" value="<#if c[0]=='CN'>${c[2]}<#else>${c[1]}</#if>">${c[2]}/${c[1]}</option>
-                        </#list>
+                    <label for="rating">星级</label>
+                    <select class="tag-value" id="rating" name="rating" onchange="changed(this)">
+                        <option value="">无</option>
+                        <option value="1">☆</option>
+                        <option value="2">☆☆</option>
+                        <option value="3">☆☆☆</option>
+                        <option value="4">☆☆☆☆</option>
+                        <option value="5">☆☆☆☆☆(收藏)</option>
                     </select>
-                    <input type="checkbox" value="country" name="selectedTags" onclick="countryToggle(this)">
-                </div>
-                <input type="hidden" id="countryCode" name="countryCode">
-                <input type="checkbox" value="countryCode" name="selectedTags" style="display:none">
-                <div style="position: relative">
-                    <label for="province">省/州</label>
-                    <input class="tag-value" id="province" name="province"  maxlength="4" onchange="changed(this)">
-                    <input type="checkbox" value="province" name="selectedTags" >
-                </div>
-                <div style="position: relative">
-                    <label for="city">城市</label>
-                    <input class="tag-value" id="city" name="city" onchange="changed(this)">
-                    <input type="checkbox" value="city" name="selectedTags" >
-                </div>
-                <div style="position: relative">
-                    <label for="location">地址</label>
-                    <input class="tag-value" id="location" name="location" onchange="changed(this)">
-                    <input type="checkbox" value="location" name="selectedTags" >
+                    <input type="checkbox" value="rating" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="headline">标题</label>
@@ -150,56 +130,77 @@
                     <input class="tag-value" id="scene" name="scene" onchange="changed(this)">
                     <input type="checkbox" value="scene" name="selectedTags" >
                 </div>
-                <div style="position: relative">
-                    <label for="rating">星级</label>
-                    <select class="tag-value" id="rating" name="rating" onchange="changed(this)">
-                        <option value="">无</option>
-                        <option value="1">☆</option>
-                        <option value="2">☆☆</option>
-                        <option value="3">☆☆☆</option>
-                        <option value="4">☆☆☆☆</option>
-                        <option value="5">☆☆☆☆☆(收藏)</option>
-                    </select>
-                    <input type="checkbox" value="rating" name="selectedTags" >
+                <#--                <div style="position: relative">
+                                    <label for="orientation">方向</label>
+                                    <select class="tag-value" id="orientation" name="orientation" onchange="changed(this)">
+                                        <option value="">默认</option>
+                                        <option value="1">水平</option>
+                                        <option value="2">水平翻转</option>
+                                        <option value="3">旋转180度</option>
+                                        <option value="4">垂直翻转</option>
+                                        <option value="5">水平翻转逆旋转90度</option>
+                                        <option value="6">顺时针旋转90度</option>
+                                        <option value="7">水平翻转顺旋转90度</option>
+                                        <option value="8">逆时针旋转90度</option>
+                                    </select>
+                                    <input type="checkbox" value="orientation" name="selectedTags" >
+                                </div>-->
+                <div style="position: relative; margin-top:10px">
+                    <label for="subjectCode">POI</label>
+                    <input class="tag-value" id="subjectCode" name="subjectCode" onchange="changed(this)">
+                    <input class="gps-info" type="checkbox" value="subjectCode" name="selectedTags" >
                 </div>
                 <div style="position: relative">
-                    <label for="orientation">方向</label>
-                    <select class="tag-value" id="orientation" name="orientation" onchange="changed(this)">
-                        <option value="">默认</option>
-                        <option value="1">水平</option>
-                        <option value="2">水平翻转</option>
-                        <option value="3">旋转180度</option>
-                        <option value="4">垂直翻转</option>
-                        <option value="5">水平翻转逆旋转270度</option>
-                        <option value="6">逆时针旋转90度</option>
-                        <option value="7">水平翻转逆旋转90度</option>
-                        <option value="8">逆时针旋转270度</option>
+                    <label for="country">国家</label>
+                    <select class="tag-value" id="country" name="country" onchange="changed(this)">
+                        <option data-code="" value="">未知</option>
+                        <#list countries as c>
+                            <option data-code="${c[0]}" value="<#if c[0]=='CN'>${c[2]}<#else>${c[1]}</#if>">${c[2]}/${c[1]}</option>
+                        </#list>
                     </select>
-                    <input type="checkbox" value="orientation" name="selectedTags" >
+                    <input class="gps-info" type="checkbox" value="country" name="selectedTags" onclick="countryToggle(this)">
+                </div>
+                <input type="hidden" id="countryCode" name="countryCode">
+                <input class="gps-info" type="checkbox" value="countryCode" name="selectedTags" style="display:none">
+                <div style="position: relative">
+                    <label for="province">省/州</label>
+                    <input class="tag-value" id="province" name="province"  maxlength="4" onchange="changed(this)">
+                    <input class="gps-info" type="checkbox" value="province" name="selectedTags" >
+                </div>
+                <div style="position: relative">
+                    <label for="city">城市</label>
+                    <input class="tag-value" id="city" name="city" onchange="changed(this)">
+                    <input class="gps-info" type="checkbox" value="city" name="selectedTags" >
+                </div>
+                <div style="position: relative">
+                    <label for="location">地址</label>
+                    <input class="tag-value" id="location" name="location" onchange="changed(this)">
+                    <input class="gps-info" type="checkbox" value="location" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="longitude">经度</label>
                     <input class="tag-value" id="longitude" name="longitude" type="number" min="-180" max="180" step="0.0000001" onchange="changed(this)">
-                    <input type="checkbox" value="longitude" name="selectedTags" >
+                    <input class="gps-info" type="checkbox" value="longitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="latitude">纬度</label>
                     <input class="tag-value" id="latitude" name="latitude" type="number" min="-90" max="90"  step="0.0000001" onchange="changed(this)">
-                    <input type="checkbox" value="latitude" name="selectedTags" >
+                    <input class="gps-info" type="checkbox" value="latitude" name="selectedTags" >
                 </div>
                 <div style="position: relative">
                     <label for="altitude">海拔</label>
                     <input class="tag-value" id="altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1" onchange="changed(this)">
-                    <input type="checkbox" value="altitude" name="selectedTags" >
+                    <input class="gps-info" type="checkbox" value="altitude" name="selectedTags" >
                 </div>
-                <div style="position: relative">
+<#--                <div style="position: relative">
                     <label for="gpsDatetime">GPS时间</label>
                     <input class="tag-value" id="gpsDatetime" name="gpsDatetime" type="datetime-local" step="1" onchange="changed(this)">
                     <input type="checkbox" value="gpsDatetime" name="selectedTags" >
-                </div>
+                </div>-->
             </form>
-            <input type="checkbox" value="1" id="autoSaveMarkerDrag" title="拖动足迹标识自动同步修改对应的所有图像文件的位置信息" >
+            <input style="margin-left:32px" type="checkbox" value="1" id="autoSaveMarkerDrag" title="拖动足迹标识自动同步修改对应的所有图像文件的位置信息" >
             <label for="autoSaveMarkerDrag">拖动自动修改</label>
+            <a style="margin-right:5px;float:right" id="selectAllTags" title="选择/取消选择全部标签" >Gps</a>
             <div style="text-align: center">
                 <button id="btnMove" class="exif__button" disabled="disabled" onclick="moveFiles()" title="将选定文件移动到其他目录">移动</button>
                 <button id="btnCopy" class="exif__button" disabled="disabled" onclick="copyFields()" title="复制指定的标签">复制</button>
@@ -215,7 +216,7 @@
     <div id="mapContainer"></div>
 </div>
 <div id="select-resource" style="display:none" class="dialog__wrapper">
-    <div class="dialog__content" style="margin-top: 20px;">
+    <div class="dialog__content none-select" style="margin-top: 20px;">
         <div class="dialog__title">
             <span class="select-resource-title">选择目录</span>
             <i class="dialog__close-icon fa fa-close" onclick="document.getElementById('select-resource').style.display='none'"></i>

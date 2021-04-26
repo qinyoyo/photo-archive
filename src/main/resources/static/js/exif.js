@@ -1,7 +1,11 @@
-const nameKeys = ['artist','shootTime','model','lens',
+const nameKeys = ['artist','shootTime',
+        // 'model','lens',
         'subjectCode','country','countryCode','province','city','location',
-        'headline','subTitle','scene','orientation','rating',
-        'longitude','latitude','altitude','gpsDatetime'
+        'headline','subTitle','scene',
+        // 'orientation',
+         'rating',
+        'longitude','latitude','altitude'
+        // ,'gpsDatetime'
     ]
 let selectedDom = null
 let mapPoint = {}
@@ -178,6 +182,15 @@ function afterSelection() {
             setDefaultMarket()
         }
     }
+}
+function clearSelection() {
+    document.querySelectorAll('.file-item.selected').forEach(function (i) {
+        removeClass(i,'selected')
+    })
+    document.getElementById('subFolder').value = ''
+    document.getElementById('fileName').value = ''
+    selectedDom = null
+    setThumbImage(selectedDom)
 }
 function moveSelection(up) {
     const fileItems = document.querySelectorAll('.file-item')
@@ -573,6 +586,10 @@ function hideMap() {
     const fileList = document.querySelector('.file-list')
     if (fileList) fileList.onkeydown = exifKeyEvent
     document.onkeydown = null
+    if (selectedDom) {
+        const wrapper = document.querySelector('.scroll-items-wrapper .scroll-items')
+        if (wrapper && selectedDom.offsetTop > wrapper.offsetHeight) wrapper.scrollTop = selectedDom.offsetTop - wrapper.offsetHeight
+    }
 }
 function setAddressValue(field) {
     let e = document.getElementById(field)
@@ -732,6 +749,21 @@ window.onload=function(){
             toggleSaveState(true)
         }
     })
+    document.getElementById('selectAllTags').onclick = function() {
+        const selected = document.querySelectorAll('input.gps-info[name="selectedTags"]:checked')
+        if (selected.length) {
+            selected.forEach(function(e){
+                e.checked = false
+            })
+            toggleSaveState(false)
+        } else {
+            document.querySelectorAll('input.gps-info[name="selectedTags"]').forEach(function(e){
+                e.checked = true
+            })
+            toggleSaveState(true)
+        }
+    }
+    document.querySelector('.selection-length').onclick = clearSelection
     document.getElementById('autoSaveMarkerDrag').onchange = function() {
         if (this.checked && !confirm("确实需要自动保存拖动改变的地理信息？")) this.checked = false
     }
