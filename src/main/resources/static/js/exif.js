@@ -312,6 +312,48 @@ function save() {
         toggleSaveState(false)
     }
 }
+function saveMarkerFiles(index) {
+    const param = getImageIndexSet(pointDataList,index)
+    if (param){
+        let files=[], folders=[]
+        let data = new FormData()
+        for (let i=0; i<param.set.length; i++){
+            let d = pointDataList[param.set[i]]
+            folders.push(d.domElement.getAttribute('data-folder'))
+            files.push(d.domElement.getAttribute('data-file'))
+        }
+        data.append('subFolder', folders.join('|'))
+        data.append('fileName', files.join('|'))
+        const selectedTags = ['longitude','latitude','province','city','location','subjectCode','country','countryCode']
+        data.append('selectedTags', selectedTags.join(','))
+        data.append('type',document.getElementById('type').value)
+        selectedTags.forEach(function(field){
+            if (mapPoint[field]) {
+                if (field==='longitude' || field==='latitude') data.append(field, mapPoint[field].toFixed(7))
+                else data.append(field,  mapPoint[field])
+            }
+        })
+        Ajax.post('/exifSave',data,function (msg){
+            let pp=(msg?msg.split(","):['error'])
+            if (pp[0]=='ok'){
+                let modified=(new Date().getTime())+''
+                for (let i=0; i<param.set.length; i++){
+                    const dom = pointDataList[param.set[i]].domElement
+                    dom.setAttribute('data-lastModified',modified)
+                    if (dom===selectedDom) resetThumbImageTransform()
+                    selectedTags.forEach(function(field){
+                        let val=data.get(field)
+                        if (val) dom.setAttribute('data-'+field, ''+val)
+                        else dom.removeAttribute('data-'+field)
+                    })
+                }
+                if (pp.length>1) toast(pp[1])
+            }else{
+                toast(msg)
+            }
+        })
+    }
+}
 function selectMapPoint(add) {
     placeSelectionMarkerOnMap({lng:add.longitude, lat: add.latitude})
     mapPoint = add
@@ -458,9 +500,7 @@ function markerDrag(event, index) {
     const afterGeo = function(moveBy) {
         clearImageIndexSet(index)
         setAllImageIndexSet(pointDataList)
-        selectFilesByMarker(index)
-        selectAddress()
-        save()
+        saveMarkerFiles(index)
         if (moveBy) movePointOfPolylineBy(moveBy)
         else redrawPolyline()
     }

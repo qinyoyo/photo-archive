@@ -180,12 +180,11 @@ audio, video {
     position:absolute;
     right:2px;
     bottom:2px;
-    color: #f88;
     font-size: 16px;
-    display: none;
+    color: transparent;
 }
 img[data-rating="5"] + .img-favorite-state {
-    display: block;
+    color: #f88;
 }
 .scan-folder {
     margin-top: 20px;
