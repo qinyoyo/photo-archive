@@ -211,11 +211,10 @@ public class ArchiveInfo {
     public List<PhotoInfo> subFolderInfos(String subFolder,boolean incSubFolder) {
         final String standardFubFolder = ArchiveUtils.formatterSubFolder(subFolder, path);
         if (standardFubFolder.isEmpty() && incSubFolder) return infos;
-        return infos.stream().filter(p->{
-            String sub = p.getSubFolder();
-            return standardFubFolder.equals(sub) ||
-                   (incSubFolder && sub.startsWith(standardFubFolder+File.separator));
-        }).collect(Collectors.toList());
+        return infos.stream().filter(p->
+                    standardFubFolder.equals(p.getSubFolder()) ||
+                    (incSubFolder && p.getSubFolder().startsWith(standardFubFolder+File.separator))
+        ).collect(Collectors.toList());
     }
     public void createThumbFiles(PhotoInfo p) {
         try {

@@ -753,20 +753,50 @@ function moveFiles() {
     })
 }
 function doTransform(img,op) {
-    if (op==='c') {
-        resetThumbImageTransform()
-        toggleSaveState(true)
-    }
-    else if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
+    if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
         let rotateZ=img.getAttribute('data-rotateZ')?parseInt(img.getAttribute('data-rotateZ')):0
         let mirrorH=img.getAttribute('data-mirrorH')?true:false
         let mirrorV=img.getAttribute('data-mirrorV')?true:false
         let imgOrientation=selectedDom.getAttribute('data-orientation')?parseInt(selectedDom.getAttribute('data-orientation')):0
-        if (op==='+') rotateZ+=90
-        else if (op==='-') rotateZ-=90
-        else if (op==='h') mirrorH= !mirrorH
+        if (op==='h') mirrorH= !mirrorH
         else if (op==='v') mirrorV= !mirrorV
-        else return
+        else {
+            if (mirrorH) {
+                if (op.indexOf('l')>=0) op=op.replace('l','r')
+                else if (op.indexOf('r')>=0) op=op.replace('r','l')
+            }
+            if (mirrorV) {
+                if (op.indexOf('t')>=0) op=op.replace('t','b')
+                else if (op.indexOf('b')>=0) op=op.replace('b','t')
+            }
+            if (rotateZ) {
+                if (rotateZ==90) {
+                    if (op=='rt') op='rb'
+                    else if (op=='rb') op='lb'
+                    else if (op=='lb') op='lt'
+                    else if (op=='lt') op='rt'
+                }
+                else if (rotateZ==180) {
+                    if (op=='lt') op='rb'
+                    else if (op=='rt') op='lb'
+                    else if (op=='rb') op='lt'
+                    else if (op=='lb') op='rt'
+                }
+                else if (rotateZ==270) {
+                    if (op=='lb') op='rb'
+                    else if (op=='lt') op='lb'
+                    else if (op=='rt') op='lt'
+                    else if (op=='rb') op='rt'
+                }
+            }
+            if (op=='rb') rotateZ += 90
+            else if (op=='lb') rotateZ -= 90
+            else if (op=='rt') {
+                resetThumbImageTransform()
+                toggleSaveState(true)
+                return
+            } else return
+        }
         if (mirrorH&&mirrorV){
             mirrorH=mirrorV=false
             rotateZ+=180
@@ -785,6 +815,9 @@ function doTransform(img,op) {
         else img.removeAttribute('data-rotateZ')
         document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked=(rotateZ||mirrorV||mirrorH)
         toggleSaveState(rotateZ||mirrorV||mirrorH)
+    } else {
+        resetThumbImageTransform()
+        toggleSaveState(true)
     }
 }
 function getTransformParams() {
@@ -825,17 +858,15 @@ window.onload=function(){
     })
 
     document.querySelector('.thumb-image').onclick = function(e) {
-        if (e.offsetY<=50 && (e.offsetX<=50 || e.offsetX>=this.clientWidth - 50)) {
-            doTransform(this,'c')
-        } else if (e.offsetX < 50 && e.offsetY>this.clientHeight - 50) { // left-bottom
-            doTransform(this,'-')
-        } else if (e.offsetX>this.clientWidth - 50 && e.offsetY>this.clientHeight - 50) { // right-bottom
-            doTransform(this,'+')
-        } else if (e.offsetX < 50 || e.offsetX > this.clientWidth - 50) {
-            doTransform(this,'h')
-        } else if (e.offsetY < 50 || e.offsetY > this.clientHeight - 50) {
-            doTransform(this,'v')
-        } else {
+        let pos=''
+        if (e.offsetY<=50 && e.offsetX<=50) pos='lt'
+        else if (e.offsetY<=50 && e.offsetX>=this.clientWidth - 50) pos='rt'
+        else if (e.offsetX < 50 && e.offsetY>this.clientHeight - 50) pos='lb'
+        else if (e.offsetX>this.clientWidth - 50 && e.offsetY>this.clientHeight - 50) pos='rb'
+        else if (e.offsetX < 50 || e.offsetX > this.clientWidth - 50) pos = 'h'
+        else if (e.offsetY < 50 || e.offsetY > this.clientHeight - 50) pos = 'v'
+        if (pos) doTransform(this,pos)
+        else {
             const selection=[]
             let start=0
             let i=0

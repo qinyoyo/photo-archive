@@ -23,8 +23,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/corner_click.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/PositionUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/PositionUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -229,6 +233,7 @@
       <workItem from="1619415884761" duration="13402000" />
       <workItem from="1619443331547" duration="5147000" />
       <workItem from="1619487479756" duration="4450000" />
+      <workItem from="1619495202211" duration="17942000" />
     </task>
     <servers />
   </component>
@@ -372,7 +377,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java</url>
-          <line>279</line>
+          <line>283</line>
           <option name="timeStamp" value="188" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
@@ -405,9 +410,20 @@
     <watches-manager>
       <configuration name="SpringBootApplicationConfigurationType">
         <watch expression="field.getType()" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.5649762,103.515714),new qinyoyo.utils.PositionUtil.LatLng(32.5688418,103.5059072))" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.5688418,103.5059072),new qinyoyo.utils.PositionUtil.LatLng(32.5706787,103.5076844))" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.7555767,103.8305307),new qinyoyo.utils.PositionUtil.LatLng(32.599049,103.6149001))" language="JAVA" />
         <watch expression="m.group(1)" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.599049,103.6149001),new qinyoyo.utils.PositionUtil.LatLng(32.599049,103.6149001))" language="JAVA" />
         <watch expression="m.groups" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.599049,103.6149001),new qinyoyo.utils.PositionUtil.LatLng(32.540418,103.5921971)) " language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.540418,103.5921971),new qinyoyo.utils.PositionUtil.LatLng(32.5649762,103.515714))" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.5649762,103.515714),new qinyoyo.utils.PositionUtil.LatLng(32.5649689,103.5157071))" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.5649689,103.5157071),new qinyoyo.utils.PositionUtil.LatLng(32.5692319,103.5164997)) " language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.5692319,103.5164997),new qinyoyo.utils.PositionUtil.LatLng(32.5649762,103.515714))" language="JAVA" />
         <watch expression="m.group(2)" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.5688418,103.5059072),new qinyoyo.utils.PositionUtil.LatLng(32.5706787,103.5076844))" language="JAVA" />
+        <watch expression="qinyoyo.utils.PositionUtil.distanceBetween(new qinyoyo.utils.PositionUtil.LatLng(32.7901589,103.6362482),new qinyoyo.utils.PositionUtil.LatLng(32.7870697,103.6344084))" language="JAVA" />
         <watch expression="m.group(3)" language="JAVA" />
         <watch expression="m.group(4)" language="JAVA" />
         <watch expression="m.group(5)" language="JAVA" />

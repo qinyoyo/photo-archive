@@ -175,14 +175,18 @@ public class PVController implements ApplicationRunner , ErrorController {
             model.addAttribute("message","Not ready!!!");
             return "message";
         }
-        String subFolder=ArchiveUtils.formatterSubFolder(path,archiveInfo.getPath());
+        SessionOptions sessionOptions = SessionOptions.getSessionOptions(request);
         commonAttribute(model,request);
         Map<String, Object> res = getFolderPathAttributes(path, false);
         model.addAllAttributes(res);
-        List<PhotoInfo> photos = archiveInfo.subFolderInfos(subFolder,true).stream().filter(p ->
-                p.getMimeType()!=null && p.getMimeType().contains("image") &&
-                        p.getLongitude()!=null && p.getLatitude()!=null
+        final String standardFubFolder = ArchiveUtils.formatterSubFolder(path, archiveInfo.getPath());
+        List<PhotoInfo> photos = archiveInfo.getInfos().stream().filter(p ->
+                (standardFubFolder.equals(p.getSubFolder()) || ((standardFubFolder.isEmpty() || p.getSubFolder().startsWith(standardFubFolder+File.separator))))
+                && p.getMimeType()!=null && p.getMimeType().contains("image")
+                && (!sessionOptions.isFavoriteFilter() || (p.getRating()!=null && p.getRating()==5))
+                && p.getLongitude()!=null && p.getLatitude()!=null
         ).collect(Collectors.toList());
+
         if (photos!=null && photos.size()>0) model.addAttribute("photos",photos);
         model.addAttribute("CLIENT_POINT_TYPE", pointType());
         return "step";
@@ -528,13 +532,14 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (s!=null && s.toLowerCase().contains(text)) return true;
         return false;
     }
-    List<PhotoInfo> mimeListInPath(String mime, String folder, boolean favoriteFilter) {
+    List<PhotoInfo> mimeListInPath(String mime, String folder, boolean favoriteFilter, boolean incSubFolder) {
         if (!isReady) return null;
-        List<PhotoInfo> list = archiveInfo.getInfos().stream()
-                .filter(p->
-                        folder.equals(p.getSubFolder()) && p.getMimeType()!=null && p.getMimeType().contains(mime) &&
-                                (!favoriteFilter || !mime.equals("image") || (p.getRating()!=null && p.getRating()==5))
-                ).collect(Collectors.toList());
+        final String standardFubFolder = ArchiveUtils.formatterSubFolder(folder, archiveInfo.getPath());
+        List<PhotoInfo> list = archiveInfo.getInfos().stream().filter(p->
+                                (standardFubFolder.equals(p.getSubFolder()) || (incSubFolder && (standardFubFolder.isEmpty() || p.getSubFolder().startsWith(standardFubFolder+File.separator))))
+                                && p.getMimeType()!=null && p.getMimeType().contains(mime)
+                                && (!favoriteFilter || !mime.equals("image") || (p.getRating()!=null && p.getRating()==5))
+                            ).collect(Collectors.toList());
         if (mime.equals("html")) {  // 游记文件，特殊处理
             List<PhotoInfo> list1 = archiveInfo.getInfos().stream()
                     .filter(p->p.getFileName().equals("index.html") && p.getSubFolder().endsWith(".web") &&
@@ -640,19 +645,19 @@ public class PVController implements ApplicationRunner , ErrorController {
         if (dir.exists() && dir.isDirectory()) {
             if (!just4ResourceList) {
                 // html文件
-                List<PhotoInfo> htmls = mimeListInPath("html", path, favoriteFilter);
+                List<PhotoInfo> htmls = mimeListInPath("html", path, favoriteFilter, false);
                 if (htmls != null && htmls.size() > 0) model.put("htmls", htmls);
             }
             // video文件
-            List<PhotoInfo> videos = mimeListInPath("video",path, favoriteFilter);
+            List<PhotoInfo> videos = mimeListInPath("video",path, favoriteFilter,false);
             if (videos!=null && videos.size()>0)  model.put("videos",videos);
 
             // audio文件
-            List<PhotoInfo> audios = mimeListInPath("audio",path, favoriteFilter);
+            List<PhotoInfo> audios = mimeListInPath("audio",path, favoriteFilter,false);
             if (audios!=null && audios.size()>0)  model.put("audios",audios);
 
             //Photo Info
-            List<PhotoInfo> photos = mimeListInPath("image",path, favoriteFilter);
+            List<PhotoInfo> photos = mimeListInPath("image",path, favoriteFilter,false);
             if (photos!=null && photos.size()>0) {
                 model.put("photos",photos);
             }
@@ -755,9 +760,10 @@ public class PVController implements ApplicationRunner , ErrorController {
             public void run() {
                 archiveInfo = new ArchiveInfo(rootPath);
                 rootPath = archiveInfo.getPath();  // 标准化
+                archiveInfo.removeNotExistInfo();
+                FileUtil.removeEmptyFolder(new File(rootPath));
                 System.out.println("归档主目录为 : "+rootPath);
                 isReady = true;
-                archiveInfo.removeNotExistInfo();
                 archiveInfo.createThumbFiles();
                 System.out.println("Photo viewer started.");
             }

@@ -372,4 +372,173 @@ public class PositionUtil {
         }
         return flag;
     }
+
+    static private double EARTHRADIUS = 6370996.81;
+    static private double [] MCBAND = new double[]{12890594.86, 8362377.87, 5591021, 3481989.83, 1678043.12, 0};
+    static private int[] LLBAND = new int[]{86, 60, 45, 30, 15, 0};
+    static private double[][] MC2LL = new double[][] {{1.410526172116255e-8, 0.00000898305509648872, -1.9939833816331, 200.9824383106796, -187.2403703815547, 91.6087516669843, -23.38765649603339, 2.57121317296198, -0.03801003308653, 17337981.2},
+            {-7.435856389565537e-9, 0.000008983055097726239, -0.78625201886289, 96.32687599759846, -1.85204757529826, -59.36935905485877, 47.40033549296737, -16.50741931063887, 2.28786674699375, 10260144.86},
+            {-3.030883460898826e-8, 0.00000898305509983578, 0.30071316287616, 59.74293618442277, 7.357984074871, -25.38371002664745, 13.45380521110908, -3.29883767235584, 0.32710905363475, 6856817.37},
+            {-1.981981304930552e-8, 0.000008983055099779535, 0.03278182852591, 40.31678527705744, 0.65659298677277, -4.44255534477492, 0.85341911805263, 0.12923347998204, -0.04625736007561, 4482777.06},
+            {3.09191371068437e-9, 0.000008983055096812155, 0.00006995724062, 23.10934304144901, -0.00023663490511, -0.6321817810242, -0.00663494467273, 0.03430082397953, -0.00466043876332, 2555164.4},
+            {2.890871144776878e-9, 0.000008983055095805407, -3.068298e-8, 7.47137025468032, -0.00000353937994, -0.02145144861037, -0.00001234426596, 0.00010322952773, -0.00000323890364, 826088.5}};
+
+    static private double[][] LL2MC = new double[][]
+            {{-0.0015702102444, 111320.7020616939, 1704480524535203.0, -10338987376042340.0, 26112667856603880.0, -35149669176653700.0, 26595700718403920.0, -10725012454188240.0, 1800819912950474.0, 82.5},
+                    {0.0008277824516172526, 111320.7020463578, 647795574.6671607, -4082003173.641316, 10774905663.51142, -15171875531.51559, 12053065338.62167, -5124939663.577472, 913311935.9512032, 67.5},
+                    {0.00337398766765, 111320.7020202162, 4481351.045890365, -23393751.19931662, 79682215.47186455, -115964993.2797253, 97236711.15602145, -43661946.33752821, 8477230.501135234, 52.5},
+                    {0.00220636496208, 111320.7020209128, 51751.86112841131, 3796837.749470245, 992013.7397791013, -1221952.21711287, 1340652.697009075, -620943.6990984312, 144416.9293806241, 37.5},
+                    {-0.0003441963504368392, 111320.7020576856, 278.2353980772752, 2485758.690035394, 6070.750963243378, 54821.18345352118, 9540.606633304236, -2710.55326746645, 1405.483844121726, 22.5},
+                    {-0.0003218135878613132, 111320.7020701615, 0.00369383431289, 823725.6402795718, 0.46104986909093, 2351.343141331292, 1.58060784298199, 8.77738589078284, 0.37238884252424, 7.45}};
+
+    static private class HT {
+        double lng;
+        double lat;
+        HT latLng;
+        public HT(double lng,double lat) {
+            this.lng=lng;
+            this.lat=lat;
+            latLng=null;
+        }
+        public boolean equals(HT i) {
+            if (i==null) {
+                return false;
+            }
+            double hS = Math.abs(this.lat - i.lat);
+            double T = Math.abs(this.lng - i.lng);
+            double e = 1e-8;
+            if (hS < e && T < e) {
+                return true;
+            }
+            return false;
+        }
+    }
+    static private double getLoop(double T, double i, double e) {
+        while (T > e) {
+            T -= e - i;
+        }
+        while (T < i) {
+            T += e - i;
+        }
+        return T;
+    }
+    static private double fG(double T, double i, double e) {
+        if (T < i) {
+            T = i;
+        } else {
+            if (T > e) {
+                T = e;
+            }
+        }
+        return T;
+    }
+    static private HT convertor(HT T, double[]hS) {
+        if (T==null || hS==null) {
+            return null;
+        }
+        double e = hS[0] + hS[1] * Math.abs(T.lng);
+        double i = Math.abs(T.lat) / hS[9];
+        double hT = hS[2] + hS[3] * i + hS[4] * i * i + hS[5] * i * i * i + hS[6] * i * i * i * i + hS[7] * i * i * i * i * i + hS[8] * i * i * i * i * i * i;
+        e *= (T.lng < 0 ? -1 : 1);
+        hT *= (T.lat < 0 ? -1 : 1);
+        return new HT(e,hT);
+    }
+    static private HT convertLL2MC(LatLng hV) {
+        if (hV==null) {
+            return new HT(0,0);
+        }
+        double hX = hV.latitude;
+        double hS = hV.longitude;
+        hS = getLoop(hV.longitude, -180, 180);
+        hX = fG(hX, -85, 85);
+        double[] hU = null;
+        for (int hT = 0; hT < LLBAND.length; hT++) {
+            if (hX >= LLBAND[hT]) {
+                hU = LL2MC[hT];
+                break;
+            }
+        }
+        if (hU==null) {
+            for (int hT = 0; hT < LLBAND.length; hT++) {
+                if (hX <= -LLBAND[hT]) {
+                    hU = LL2MC[hT];
+                    break;
+                }
+            }
+        }
+        HT T = new HT(hS,hX);
+        HT hW = convertor(T, hU);
+        HT e = new HT(hW.lng,hW.lat);
+        e.latLng = c5(hV.latitude,hV.longitude);
+        return e;
+    }
+    static private HT c5(double i, double e) {
+        if (i < -90) {
+            i = -90;
+        } else {
+            if (i > 90) {
+                i = 90;
+            }
+        }
+        while (e < -180) {
+            e += 360;
+        }
+        while (e > 180) {
+            e -= 360;
+        }
+        return new HT(e, i);
+    }
+    static private HT convertMC2LL(HT e) {
+        if (e == null) {
+            return new HT(0,0);
+        }
+        double[] hT = null;
+        HT T = new HT(Math.abs(e.lng),Math.abs(e.lat));
+        for (int hS = 0; hS < MCBAND.length; hS++) {
+            if (T.lat >= MCBAND[hS]) {
+                hT = MC2LL[hS];
+                break;
+            }
+        }
+        HT hU = convertor(e, hT);
+        return c5(hU.lat,hU.lng);
+    }
+    static private double dL(double e) {
+        return e * Math.PI / 180;
+    }
+    static private double getDistanceByMC(HT hU, HT hS) {
+        if (hU==null || hS==null) {
+            return 0;
+        }
+        hU = convertMC2LL(hU);
+        if (hU==null) {
+            return 0;
+        }
+        double i = dL(hU.lng);
+        double hT = dL(hU.lat);
+        hS = convertMC2LL(hS);
+        if (hS==null) {
+            return 0;
+        }
+        double e = dL(hS.lng);
+        double T = dL(hS.lat);
+        return EARTHRADIUS * Math.acos((Math.sin(hT) * Math.sin(T) + Math.cos(hT) * Math.cos(T) * Math.cos(e - i)));
+    }
+    static private double getDistanceIn(HT hT, HT e) {
+        if (hT==null || e==null) {
+            return 0;
+        }
+        if (hT.equals(e)) {
+            return 0;
+        }
+        double i = getDistanceByMC(hT, e);
+        return i;
+    }
+    static double distanceBetween(LatLng a, LatLng b) {
+        if (a==null || b==null) return 0;
+        HT i = convertLL2MC(a);
+        HT hS = convertLL2MC(b);
+        double e = getDistanceIn(i, hS);
+        return e;
+    }
 }
