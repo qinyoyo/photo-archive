@@ -11,17 +11,25 @@
         else return null
     }
     function getRealPosition(pos, el) {
-        if (!el || !pos || pos==='h' || pos==='v') return pos
+        if (!el || !pos) return pos
         else{
             const transform = el.style.transform || el.style.msTransform || el.style.OTransform || el.style.MozTransform
-            if (!transform || transform==='none') return pos
-            let mirrorH = (transform.indexOf('rotateY(180deg)') >= 0)
-            let mirrorV = (transform.indexOf('rotateX(180deg)') >= 0)
-            let p = new RegExp('rotate\\((\\d*(\\.\\d*)?)deg\\)')
-            let rotateZ = (p.test(transform) ? Math.trunc(parseFloat(RegExp.$1)) : 0)
-            let v = transformInitial(el)
-            if (v) {
-
+            let mirrorH = false
+            let mirrorV = false
+            let rotateZ = 0
+            if (!transform) {
+                let v = transformInitial(el)
+                if (v) {
+                    if (v.mirrorH) mirrorH = true
+                    if (v.mirrorV) mirrorV = true
+                    if (v.rotateZ) rotateZ = v.rotateZ
+                } else return pos
+            } else if (transform==='none') return pos
+            else {
+                mirrorH = (transform.indexOf('rotateY(180deg)') >= 0)
+                mirrorV = (transform.indexOf('rotateX(180deg)') >= 0)
+                let p = new RegExp('rotate\\((\\d*(\\.\\d*)?)deg\\)')
+                rotateZ = (p.test(transform) ? Math.trunc(parseFloat(RegExp.$1)) : 0)
             }
             if (mirrorV && mirrorH) {
                 rotateZ += 180

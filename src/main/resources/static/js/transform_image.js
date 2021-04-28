@@ -197,7 +197,7 @@
         if (mirrorH) t.push('rotateY(180deg)')
         else if (mirrorV) t.push('rotateX(180deg)')
         if (scale && Math.abs(scale-1)>0.0001) t.push('scale('+scale+')')
-        img.style.transform = img.style.msTransform = img.style.OTransform = img.style.MozTransform = (t.length==0 ? null : t.join(' '))
+        img.style.transform = img.style.msTransform = img.style.OTransform = img.style.MozTransform = (t.length==0 ? 'none' : t.join(' '))
     }
 
     window.getTranImageParams = function(thumb, index) {
@@ -1211,7 +1211,6 @@
             window.debugElement.className = 'tran-img__debug'
             body.appendChild(window.debugElement)
         }
-
         transformObject = new initTransformImage(img, index, getDataObject)
     }
 
@@ -1241,18 +1240,16 @@
             if (pos<0) img.className = img.className + ' img-index-'+imgIndex
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):imgIndex)
             imgIndex ++;
-            new ImageCornerClick(img,{
-                clickEvent: function (event){
-                    event.stopPropagation()
-                    window.onresize = resizeEvent
-                    addImageDialog(index==NaN?0:index, img, buttonOptions)
-                }
-            })
-            /*img.onclick=function (event){
+            const clickEvent = function (event) {
                 event.stopPropagation()
                 window.onresize = resizeEvent
-                addImageDialog(index==NaN?0:index, img, buttonOptions)
-            }*/
+                addImageDialog(index == NaN ? 0 : index, img, buttonOptions)
+            }
+            if (window.sessionOptions.unlocked) {
+                new ImageCornerClick(img, {
+                    clickEvent: clickEvent
+                })
+            } else img.onclick = clickEvent
         });
         if (imgIndex>1 && window.sessionOptions.loopTimer===3456) {
             const xhr = new XMLHttpRequest();
@@ -1299,6 +1296,13 @@
             this.mirrorH = false
             this.rotateZ = 0
 
+            transform({
+                img: this.element,
+                rotateZ: this.rotateZ,
+                mirrorV: this.mirrorV,
+                mirrorH:this.mirrorH,
+                imgOrientation: this.imgOrientation
+            })
         }
         this.initial()
         this.reset=function() {
