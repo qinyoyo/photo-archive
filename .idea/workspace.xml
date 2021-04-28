@@ -23,13 +23,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/corner_click.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoinfo/archive/ArchiveInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/PositionUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/PositionUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/exif.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/corner_click.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/corner_click.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/exif.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/exif.ftl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/index.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/index.ftl" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -234,6 +234,7 @@
       <workItem from="1619443331547" duration="5147000" />
       <workItem from="1619487479756" duration="4450000" />
       <workItem from="1619495202211" duration="17942000" />
+      <workItem from="1619570471609" duration="28891000" />
     </task>
     <servers />
   </component>
@@ -380,15 +381,15 @@
           <line>283</line>
           <option name="timeStamp" value="188" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
-          <line>1006</line>
-          <option name="timeStamp" value="111" />
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java</url>
+          <line>429</line>
+          <option name="timeStamp" value="189" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
-          <line>1127</line>
-          <option name="timeStamp" value="112" />
+          <line>1014</line>
+          <option name="timeStamp" value="111" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/step_map.js</url>
@@ -402,7 +403,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>
-          <line>901</line>
+          <line>909</line>
           <option name="timeStamp" value="187" />
         </line-breakpoint>
       </breakpoints>

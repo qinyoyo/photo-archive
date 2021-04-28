@@ -11,7 +11,7 @@ let mapPoint = {}
 let marker = null
 let copiedPoint = null
 const clipSign = 'PV_EXIF_CLIPBOARD_DATA: '
-
+let thumbImageCornerClick = null
 function setClipboardData(text) {
     const textArea = document.createElement("textarea");
     textArea.style.position = 'fixed';
@@ -131,15 +131,9 @@ function toggleSaveState(enable) {
 }
 let prevSelectedDom  = null
 function resetThumbImageTransform() {
-    const thumbDom=document.querySelector('.thumb-image')
-    thumbDom.removeAttribute('data-mirrorH')
-    thumbDom.removeAttribute('data-mirrorV')
-    thumbDom.removeAttribute('data-rotateZ')
-    thumbDom.style.transform = thumbDom.style.msTransform = thumbDom.style.OTransform = thumbDom.style.MozTransform = 'none'
-    document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked = false
+    if (thumbImageCornerClick) thumbImageCornerClick.reset()
 }
 function setThumbImage(dom) {
-    resetThumbImageTransform()
     const thumbDom=document.querySelector('.thumb-image')
     document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked = false
     const items = document.querySelectorAll('.file-item.selected')
@@ -160,6 +154,7 @@ function setThumbImage(dom) {
         thumbDom.setAttribute('src','/.thumb/'+curPath+(curPath?'/':'')+file+(lastModified?'?click='+lastModified:''))
         thumbDom.setAttribute('data-src','/'+curPath+(curPath?'/':'')+file+(lastModified?'?click='+lastModified:''))
         thumbDom.setAttribute('title',dom.getAttribute('title'))
+        if (thumbImageCornerClick) thumbImageCornerClick.changeImage(dom.getAttribute('data-rating'),dom.getAttribute('data-orientation'))
     } else {
         thumbDom.parentElement.style.display = 'none'
         document.querySelector('.selection-length').innerText = '0/' + items.length
@@ -280,8 +275,6 @@ function save() {
     let data = new FormData(form)
     if (data.get('selectedTags')){
         toggleSaveState(false)
-        let orientations = getTransformParams()
-        if (orientations) data.append('orientations',orientations)
         Ajax.post(url,data,function (msg){
             let pp=(msg?msg.split(","):['error'])
             if (pp[0]=='ok'){
@@ -752,100 +745,7 @@ function moveFiles() {
         })
     })
 }
-function doTransform(img,op) {
-    if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
-        let rotateZ=img.getAttribute('data-rotateZ')?parseInt(img.getAttribute('data-rotateZ')):0
-        let mirrorH=img.getAttribute('data-mirrorH')?true:false
-        let mirrorV=img.getAttribute('data-mirrorV')?true:false
-        let imgOrientation=selectedDom.getAttribute('data-orientation')?parseInt(selectedDom.getAttribute('data-orientation')):0
-        if (op==='h') mirrorH= !mirrorH
-        else if (op==='v') mirrorV= !mirrorV
-        else {
-            if (mirrorH) {
-                if (op.indexOf('l')>=0) op=op.replace('l','r')
-                else if (op.indexOf('r')>=0) op=op.replace('r','l')
-            }
-            if (mirrorV) {
-                if (op.indexOf('t')>=0) op=op.replace('t','b')
-                else if (op.indexOf('b')>=0) op=op.replace('b','t')
-            }
-            if (rotateZ) {
-                if (rotateZ==90) {
-                    if (op=='rt') op='rb'
-                    else if (op=='rb') op='lb'
-                    else if (op=='lb') op='lt'
-                    else if (op=='lt') op='rt'
-                }
-                else if (rotateZ==180) {
-                    if (op=='lt') op='rb'
-                    else if (op=='rt') op='lb'
-                    else if (op=='rb') op='lt'
-                    else if (op=='lb') op='rt'
-                }
-                else if (rotateZ==270) {
-                    if (op=='lb') op='rb'
-                    else if (op=='lt') op='lb'
-                    else if (op=='rt') op='lt'
-                    else if (op=='rb') op='rt'
-                }
-            }
-            if (op=='rb') rotateZ += 90
-            else if (op=='lb') rotateZ -= 90
-            else if (op=='rt') {
-                resetThumbImageTransform()
-                toggleSaveState(true)
-                return
-            } else return
-        }
-        if (mirrorH&&mirrorV){
-            mirrorH=mirrorV=false
-            rotateZ+=180
-        }
-        rotateZ=rotateZ%360
-        if (rotateZ<0) rotateZ+=360
-        if (rotateZ==90 || rotateZ==270) {
-            let scale = img.clientHeight/img.clientWidth
-            transform({img,rotateZ,mirrorV,mirrorH,imgOrientation,scale})
-        } else transform({img,rotateZ,mirrorV,mirrorH,imgOrientation})
-        if (mirrorH) img.setAttribute('data-mirrorH','true')
-        else img.removeAttribute('data-mirrorH')
-        if (mirrorV) img.setAttribute('data-mirrorV','true')
-        else img.removeAttribute('data-mirrorV')
-        if (rotateZ) img.setAttribute('data-rotateZ',''+rotateZ)
-        else img.removeAttribute('data-rotateZ')
-        document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked=(rotateZ||mirrorV||mirrorH)
-        toggleSaveState(rotateZ||mirrorV||mirrorH)
-    } else {
-        resetThumbImageTransform()
-        toggleSaveState(true)
-    }
-}
-function getTransformParams() {
-    if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
-        let img=document.querySelector('.thumb-image')
-        let rotateZ = img.getAttribute('data-rotateZ') ? parseInt(img.getAttribute('data-rotateZ')) : 0
-        let mirrorH = img.getAttribute('data-mirrorH') ? true : false
-        let mirrorV = img.getAttribute('data-mirrorV') ? true : false
-        if (mirrorH && mirrorV) {
-            mirrorH = mirrorV = false
-            rotateZ += 180
-        }
-        rotateZ = rotateZ % 360
-        if (rotateZ < 0) rotateZ += 360
-        if (mirrorH || mirrorV || rotateZ) {
-            let orientations = ''
-            if (mirrorH) orientations = '2'
-            else if (mirrorV) orientations = '4'
-            if (rotateZ) {
-                if (orientations) orientations = orientations + ','
-                if (rotateZ==90) orientations += '6'
-                else if (rotateZ==180) orientations += '3'
-                else if (rotateZ==270) orientations += '8'
-            }
-            return orientations
-        } else return null
-    } else return null
-}
+
 window.onload=function(){
     document.querySelector('.map-wrapper').style.width = '100%'
     document.querySelector('.map-wrapper').style.height = (window.innerHeight) + 'px'
@@ -857,16 +757,25 @@ window.onload=function(){
         }
     })
 
-    document.querySelector('.thumb-image').onclick = function(e) {
-        let pos=''
-        if (e.offsetY<=50 && e.offsetX<=50) pos='lt'
-        else if (e.offsetY<=50 && e.offsetX>=this.clientWidth - 50) pos='rt'
-        else if (e.offsetX < 50 && e.offsetY>this.clientHeight - 50) pos='lb'
-        else if (e.offsetX>this.clientWidth - 50 && e.offsetY>this.clientHeight - 50) pos='rb'
-        else if (e.offsetX < 50 || e.offsetX > this.clientWidth - 50) pos = 'h'
-        else if (e.offsetY < 50 || e.offsetY > this.clientHeight - 50) pos = 'v'
-        if (pos) doTransform(this,pos)
-        else {
+    thumbImageCornerClick = new ImageCornerClick(document.querySelector('.thumb-image'),{
+        changeEvent: function({rotateZ,mirrorV,mirrorH,orientations,rating,rating0}) {
+            if (selectedDom && document.querySelectorAll('.file-item.selected').length==1){
+                document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked=(rotateZ||mirrorV||mirrorH)
+                document.getElementById('orientations').value = orientations
+                if ((rating && !rating0) || (!rating && rating0) || rating!=rating0) {
+                    document.querySelector('input[type="checkbox"][value="rating"][name="selectedTags"]').checked=true
+                    document.getElementById('rating').value = rating ? rating : ''
+                } else {
+                    document.getElementById('rating').value = rating0 ? rating0 : ''
+                    document.querySelector('input[type="checkbox"][value="rating"][name="selectedTags"]').checked=false
+                }
+                toggleSaveState(rotateZ||mirrorV||mirrorH)
+            } else {
+                document.querySelector('input[type="checkbox"][value="orientation"][name="selectedTags"]').checked = false
+                toggleSaveState(true)
+            }
+        },
+        clickEvent: function(e) {
             const selection=[]
             let start=0
             let i=0
@@ -882,6 +791,9 @@ window.onload=function(){
                 loop:selection.length>1,download:true
             })
         }
+    })
+    thumbImageCornerClick.cornerClick.options.actionLB = function() {
+        thumbImageCornerClick.reset()
     }
     const fileList = document.querySelector('.file-list')
     if (fileList) fileList.onkeydown = exifKeyEvent

@@ -171,11 +171,12 @@
     }
 
     /**********  通用变换 ***********/
-    window.transform = function({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation, scale}) {
+    const transform = function({img,translateX,translateY,rotateZ, mirrorH, mirrorV, imgOrientation, scale}) {
         if (!translateX) translateX = 0
         if (!translateY) translateY = 0
         if (!rotateZ) rotateZ = 0
         if (!window.sessionOptions.supportOrientation && imgOrientation) {
+            if (typeof imgOrientation !== 'string') imgOrientation = imgOrientation +''
             if (imgOrientation=='2' || imgOrientation=='5' || imgOrientation=='7') mirrorH = (mirrorH ? false : true)
             else if (imgOrientation=='4') mirrorV = (mirrorV ? false : true)
             if (imgOrientation=='6'|| imgOrientation=='7') rotateZ += 90
@@ -195,9 +196,8 @@
         }
         if (mirrorH) t.push('rotateY(180deg)')
         else if (mirrorV) t.push('rotateX(180deg)')
-        if (scale) t.push('scale('+scale+')')
-        if (t.length==0) t.push('none')
-        img.style.transform = img.style.msTransform = img.style.OTransform = img.style.MozTransform = t.join(' ')
+        if (scale && Math.abs(scale-1)>0.0001) t.push('scale('+scale+')')
+        img.style.transform = img.style.msTransform = img.style.OTransform = img.style.MozTransform = (t.length==0 ? null : t.join(' '))
     }
 
     window.getTranImageParams = function(thumb, index) {
@@ -216,6 +216,18 @@
             src: null,
             imgIndex: index
         }
+    }
+
+    const saveImageOrientation = function(img, orientations, rating, callback) {
+        if (!img || (!orientations && !rating)) return
+        let path = img.getAttribute('src')
+        let pos = path.indexOf('?')
+        if (pos>=0) path = path.substring(0,pos)
+        if (path.indexOf('/.thumb/')==0) path=path.substring(7)
+        let url = '/orientation?path='+encodeURI(path)+
+            (orientations? ('&orientations='+orientations) : '') +
+            (rating? ('&rating='+rating) : '')
+        Ajax.get(url, callback)
     }
     /********* 初始化 图像变换 *************/
     const initTransformImage = function (img, index, getDataObject) {
@@ -271,9 +283,6 @@
 
         const saveOrientation = function () {
             const imgIndex = index
-            let path = img.getAttribute('src')
-            let pos = path.indexOf('?')
-            if (pos>=0) path = path.substring(0,pos)
             if (Math.trunc(rotateZ/90) * 90 == rotateZ) {
                 if (mirrorH && mirrorV) {
                     mirrorH = mirrorV = false
@@ -291,11 +300,10 @@
                     else if (rotateZ==270) orientations += '8'
                 }
                 if (orientations || (typeof imgRating === 'string' && imgRating.indexOf('+')===0)) {
-                    let url = '/orientation?path='+encodeURI(path)+
-                        (orientations? ('&orientations='+orientations) : '') +
-                        (imgRating && imgRating.indexOf('+')===0 ?
-                           ('&rating='+(imgRating=='+5'?'0':'5')) :'')
-                    Ajax.get(url, function(responseText) {
+                    let rating = (imgRating && imgRating.indexOf('+')===0 ? ((imgRating=='+5'?'0':'5')) : null)
+                    //(imgRating && imgRating.indexOf('+')===0 ?
+                    //    ('&rating='+(imgRating=='+5'?'0':'5')) :'')
+                    saveImageOrientation(img,orientations,rating,function(responseText) {
                         if (responseText && responseText.indexOf('ok,')===0){
                             const pp=responseText.split(',')
                             if (index==imgIndex) {
@@ -1024,7 +1032,7 @@
      * @param onclose 关闭时回调
      */
     let imageDialogOnClose = null
-    window.addImageDialog = function(index, getDataObject, buttonOptions, onclose) {
+    const addImageDialog = function(index, getDataObject, buttonOptions, onclose) {
         removeImageDialog()
         addModel()
         if (typeof onclose === 'function') imageDialogOnClose = onclose
@@ -1225,7 +1233,7 @@
      *      条件 ： src 以 .thumb/ 开头               *
      *             类 img-index-xx, xx为序号          *
      *************************************************/
-    window.TransformImage =function(selector){
+    const TransformImage =function(selector){
         const buttonOptions = defaultButtonOptions()
         let imgIndex = 0
         document.querySelectorAll(selector).forEach(function (img){
@@ -1233,11 +1241,18 @@
             if (pos<0) img.className = img.className + ' img-index-'+imgIndex
             const index=(pos>=0?parseInt(img.className.substring(pos+10)):imgIndex)
             imgIndex ++;
-            img.onclick=function (event){
+            new ImageCornerClick(img,{
+                clickEvent: function (event){
+                    event.stopPropagation()
+                    window.onresize = resizeEvent
+                    addImageDialog(index==NaN?0:index, img, buttonOptions)
+                }
+            })
+            /*img.onclick=function (event){
                 event.stopPropagation()
                 window.onresize = resizeEvent
                 addImageDialog(index==NaN?0:index, img, buttonOptions)
-            }
+            }*/
         });
         if (imgIndex>1 && window.sessionOptions.loopTimer===3456) {
             const xhr = new XMLHttpRequest();
@@ -1252,7 +1267,7 @@
         }
         else if (imgIndex<=1) window.sessionOptions.loopTimer = 0
     }
-    window.AutoLoopPlayImage =function(starterIndex){
+    const AutoLoopPlayImage =function(starterIndex){
         const buttonOptions = defaultButtonOptions()
         starterIndex = starterIndex ? starterIndex : 0
         let firstImg = document.querySelector('.img-index-'+starterIndex)
@@ -1266,6 +1281,220 @@
                 addImageDialog(0, firstImg, buttonOptions)
             }
         }
+    }
+
+    const ImageCornerClick = function(el, options) {
+        this.element = typeof el == 'string' ? document.querySelector(el) : el
+        this.imgOrientation = options.orientation || this.element.getAttribute('data-orientation')
+        this.rating0 = options.rating || this.element.getAttribute('data-rating')
+
+        this.changeEvent = options.changeEvent
+        this.clickEvent = options.clickEvent
+        this.initial=function() {
+            if (this.rating0) this.element.setAttribute('data-rating', this.rating0)
+            else this.element.removeAttribute('data-rating')
+            this.rating = this.rating0
+
+            this.mirrorV = false
+            this.mirrorH = false
+            this.rotateZ = 0
+
+        }
+        this.initial()
+        this.reset=function() {
+            this.initial()
+            if (typeof this.changeEvent === 'function') this.changeEvent({
+                rotateZ: this.rotateZ,
+                mirrorV: this.mirrorV,
+                mirrorH:this.mirrorH,
+                rating: this.rating,
+                rating0: this.rating0,
+                orientations: ''
+            })
+        }
+        this.favorite = function() {
+            const f = this.element.getAttribute('data-rating')
+            if (f==='5') {
+                if (this.rating0 && this.rating0 !== '5'){
+                    this.element.setAttribute('data-rating',this.rating0)
+                    this.rating = this.rating0
+                }
+                else {
+                    this.element.removeAttribute('data-rating')
+                    this.rating = null
+                }
+            } else {
+                this.element.setAttribute('data-rating','5')
+                this.rating = '5'
+            }
+            if (typeof this.changeEvent === 'function') this.changeEvent({
+                rotateZ: this.rotateZ,
+                mirrorV: this.mirrorV,
+                mirrorH:this.mirrorH,
+                rating: this.rating,
+                rating0: this.rating0,
+                orientations: this.getOperations()
+            })
+        }
+        this.mirrorHFunc = function() {
+            this.mirrorH = !this.mirrorH
+            this.doTransform()
+        }
+        this.mirrorVFunc = function() {
+            this.mirrorV = !this.mirrorV
+            this.doTransform()
+        }
+        this.rotate = function(v) {
+            this.rotateZ += v
+            this.doTransform()
+        }
+        this.doTransform = function() {
+            if (this.mirrorH && this.mirrorV){
+                this.mirrorH=this.mirrorV=false
+                this.rotateZ+=180
+            }
+            this.rotateZ=this.rotateZ%360
+            if (this.rotateZ<0) this.rotateZ+=360
+            let r90 = Math.trunc(this.rotateZ / 90)
+            if (this.imgOrientation === '5' || this.imgOrientation === '6' ||this.imgOrientation === '7' ||this.imgOrientation === '8') {
+                r90++
+            }
+            r90 = r90 % 2
+            let scale = 1
+            if (r90) {
+                let mW = this.element.parentElement.clientWidth
+                let mH = this.element.parentElement.clientHeight
+                let w = this.element.clientHeight, h = this.element.clientWidth
+                if (w>mW || h>mH) scale = Math.min(mW / w,mH / h)
+            }
+            const transformOptions = {
+                img: this.element,
+                rotateZ: this.rotateZ,
+                mirrorV: this.mirrorV,
+                mirrorH:this.mirrorH,
+                imgOrientation: this.imgOrientation,
+                scale: scale
+            }
+            transform(transformOptions)
+            if (typeof this.changeEvent === 'function') this.changeEvent({
+                rotateZ: this.rotateZ,
+                mirrorV: this.mirrorV,
+                mirrorH:this.mirrorH,
+                rating: this.rating,
+                rating0: this.rating0,
+                orientations: this.getOperations()
+            })
+        }
+        this.save=function() {
+            let newRating = null
+            if ((this.rating && !this.rating0) || (!this.rating && this.rating0) || this.rating!=this.rating0) {
+                newRating = this.rating
+            }
+            const operators = this.getOperations()
+            const _this = this
+            saveImageOrientation(this.element,operators,newRating, function(responseText) {
+                if (responseText && responseText.indexOf('ok,')===0){
+                    const pp=responseText.split(',')
+                    _this.element.setAttribute('data-rating',pp[2])
+                    if (operators){
+                        _this.element.setAttribute('data-orientation',pp[1])
+                        if (!window.sessionOptions.supportOrientation) {
+                            let cls = _this.element.className
+                            if (cls) {
+                                if (cls.indexOf('orientation-')>=0) _this.element.className = cls.replace(/orientation-\d/,'orientation-'+pp[1])
+                                else _this.element.className = cls + ' orientation-'+pp[1]
+                            } else _this.element.className = 'orientation-'+pp[1]
+                        }
+                        let tp=_this.element.getAttribute('src')
+                        if (tp) {
+                            let pos = tp.indexOf('?')
+                            if (pos >= 0) tp = tp.substring(0, pos)
+                            const lastModified = (pp.length>3?pp[3]:(new Date().getTime()))
+                            _this.element.setAttribute('src', tp + '?click=' + lastModified)
+                            _this.element.setAttribute('data-lastModified',lastModified)
+                            _this.element.onload = function() {
+                                toast('已保存')
+                            }
+                        }
+                    }
+                    _this.changeImage(pp[2],pp[1])
+                }
+            })
+        }
+        const f = el.getAttribute('data-orientation')
+        el.setAttribute('data-orientation0',f ? f : '0')
+        const _this = this
+        this.cornerClick = new CornerClick(el,{
+            cornerSize: 32,
+            clickEvent: _this.clickEvent,
+            actionLT: function() {
+                _this.rotate(-90)
+            },
+            actionRT: function() {
+                _this.rotate(90)
+            },
+            actionLB: function() {
+            },
+            actionRB: function() {
+                _this.favorite()
+            },
+            actionH: function() {
+                _this.mirrorHFunc()
+            },
+            actionV: function() {
+                _this.mirrorVFunc()
+            },
+            /*
+            reset: function(){
+                _this.reset()
+            },
+            resetPos: 'lb'
+            */
+            actionLB: function() {
+                _this.save()
+            }
+        })
+        this.getOperations = function() {
+            if (this.mirrorH && this.mirrorV) {
+                this.mirrorH = this.mirrorV = false
+                this.rotateZ += 180
+            }
+            this.rotateZ = this.rotateZ % 360
+            if (this.rotateZ < 0) this.rotateZ += 360
+            if (this.mirrorH || this.mirrorV || this.rotateZ) {
+                let orientations = ''
+                if (this.mirrorH) orientations = '2'
+                else if (this.mirrorV) orientations = '4'
+                if (this.rotateZ>45) {
+                    if (orientations) orientations = orientations + ','
+                    if (this.rotateZ<135) orientations += '6'
+                    else if (this.rotateZ<225) orientations += '3'
+                    else if (this.rotateZ<315) orientations += '8'
+                }
+                return orientations
+            } else return null
+        }
+        this.changeImage = function(rating,orientation) {
+            this.rating0 = rating
+            this.imgOrientation = orientation
+            this.reset()
+        }
+        return this
+    }
+    ImageCornerClick.prototype = {
+        destroy: function() {
+            this.cornerClick.destroy()
+            return null
+        }
+    }
+    if (typeof module !== 'undefined' && typeof exports === 'object') {
+        module.exports = [addImageDialog, transform, AutoLoopPlayImage, TransformImage, ImageCornerClick]
+    } else {
+        window.addImageDialog = addImageDialog
+        window.transform = transform
+        window.AutoLoopPlayImage = AutoLoopPlayImage
+        window.TransformImage = TransformImage
+        window.ImageCornerClick = ImageCornerClick
     }
 
 })();

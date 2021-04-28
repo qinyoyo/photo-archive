@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/static/css/exif.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
+    <script type="text/javascript" src="/static/js/corner_click.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=0G9lIXB6bpnSqgLv0QpieBnGMXK6WA6o"></script>
     <script type="text/javascript" src="/static/js/bmap.js"></script>
@@ -84,6 +85,7 @@
                 <input id="fileName" name="fileName" type="hidden">
                 <input id="type" name="type" type="hidden" value="${CLIENT_POINT_TYPE}">
                 <input type="hidden" id="orientation" name="orientation">
+                <input type="hidden" id="orientations" name="orientations">
                 <input type="checkbox" style="display:none" value="orientation" name="selectedTags" >
 
                 <div style="position: relative">

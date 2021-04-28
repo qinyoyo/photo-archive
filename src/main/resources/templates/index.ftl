@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/static/css/common.css">
     <script type="text/javascript" src="/static/js/ajax.js"></script>
     <script type="text/javascript" src="/static/js/alloy_finger.js"></script>
+    <script type="text/javascript" src="/static/js/corner_click.js"></script>
     <script type="text/javascript" src="/static/js/transform_image.js"></script>
     <#if !loopPlay??>
     <script type="text/javascript" src="/static/js/folder.js"></script>
