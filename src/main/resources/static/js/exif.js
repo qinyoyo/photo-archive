@@ -321,7 +321,7 @@ function saveMarkerFiles(index) {
             +'<input id="asf_type" name="type" type="hidden" value="bd09">\n'
             +'<div style="position:relative;margin-top:10px">\n'
             +'    <label for="asf_subjectCode">POI</label>\n'
-            +'    <input class="tag-value" id="asf_subjectCode" name="subjectCode">\n'
+            +'    <input class="tag-value" id="asf_subjectCode" name="subjectCode" onchange="this.nextElementSibling.checked = true">\n'
             +'    <input class="gps-info" type="checkbox" value="subjectCode" name="selectedTags">\n'
             +'</div>\n'
             +'<div style="position:relative">\n'
