@@ -59,14 +59,31 @@
             xhr.send(data);
         }
     }
+    /**
+     * 打开对话框
+     * @param options
+        {
+           title: '标题',
+           okText: 'Save', //确定执行按钮文字，默认为 确定
+           onshow: function(dlgBody) {
+           }, // 创建后回调，参数为 dialog__body
+           callback: function(dlgBody) {
+           }, // 确定时回调，参数为 dialog__body， 空不显示确定按钮
+           oncancel: function(dlgBody) {
+           }, // 取消时回调，参数为 dialog__body， 空不显示取消按钮
+           dialogClass: '', // dialog__content的附加class
+           dialogStyle: {
+           }, // dialog__content的附加style， map类型，key与元素style类别key相同
+           dialogBodyClass: '', // dialog__body的附加class
+           dialogBodyStyle: {
+             width: 'auto'
+           }, //dialog__body的附加style， map类型，key与元素style类别key相同
+           body: '' // 对话框内容，html string 或 element object
+        }
+     */
     window.openDialog = function(options) {
         const dlgWrapper = document.createElement('div')
         dlgWrapper.className='dialog__wrapper'
-
-        const closeFunction = function() {
-            if (typeof options.oncancel === 'function') options.oncancel()
-            dlgWrapper.remove()
-        }
 
         const dlgContent = document.createElement('div')
         dlgContent.className='dialog__content' + (options.dialogClass ? ' '+options.dialogClass : '')
@@ -87,17 +104,27 @@
             title.innerText = options.title
             dlgTitleWrapper.appendChild(title)
         }
+
+        const dlgBody = document.createElement('div')
+
+        const closeFunction = function() {
+            if (typeof options.oncancel === 'function') options.oncancel(dlgBody)
+            dlgWrapper.remove()
+        }
+
         const closeIcon = document.createElement('i')
         closeIcon.className = 'dialog__close-icon fa fa-close'
         closeIcon.onclick = closeFunction
         dlgTitleWrapper.appendChild(closeIcon)
 
-        const dlgBody = document.createElement('div')
+
         dlgBody.className='dialog__body' + (options.dialogBodyClass ? ' '+options.dialogBodyClass : '')
         if (options.dialogBodyStyle) {
             if (options.dialogBodyStyle) {
                 Object.keys(options.dialogBodyStyle).forEach(function(key){
-                    dlgBody.style[key] = options.dialogBodyStyle[key]
+                    if (key==='width' && options.dialogBodyStyle[key]==='auto') {
+                        dlgBody.style[key] = (window.innerWidth>=530 ? '500px' : (window.innerWidth - 30) +'px')
+                    } else dlgBody.style[key] = options.dialogBodyStyle[key]
                 })
             }
         }
@@ -130,6 +157,8 @@
             }
         }
         document.querySelector('body').appendChild(dlgWrapper)
+        if (typeof options.onshow==='function') options.onshow(dlgBody)
+
     }
 
     window.message = function (msg) {
@@ -201,28 +230,33 @@
         }
         openDialog(dlgOptions)
     }
+    window.hasClass = function(dom,clsRegExp) {
+        if (!dom || !clsRegExp) return false
+        let cls0 = dom.className
+        if (!cls0) return false
+        return new RegExp('\\b'+clsRegExp+'\\b').test(cls0)
+    }
     window.addClass = function(dom,cls) {
-        if (!dom) return
+        if (!dom || !cls) return
         let cls0 = dom.className
         if (!cls0) dom.className = cls
         else {
-            let ac = cls0.split(' ')
-            if (ac.indexOf(cls)<0) {
-                ac.push(cls)
-                dom.className = ac.join(' ')
-            }
+            if (hasClass(dom,cls)) return
+            dom.className = cls0 +' '+cls
         }
     }
-    window.removeClass = function(dom,cls) {
-        if (!dom) return
+    window.removeClass = function(dom,clsRegExp) {
+        if (!dom || !clsRegExp) return
         let cls0 = dom.className
         if (cls0) {
             let ac = cls0.split(' ')
-            let i = ac.indexOf(cls)
-            if (i>=0) {
-                ac.splice(i,1)
-                dom.className = ac.join(' ')
+            let nac = []
+            const p=new RegExp(clsRegExp)
+            for (let i=0;i<ac.length;i++) {
+                if (!p.test(ac[i])) nac.push(ac[i])
             }
+            if (nac.length) dom.className = nac.join(' ')
+            else dom.className = null
         }
     }
     window.showWaiting = function(id) {

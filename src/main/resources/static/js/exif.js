@@ -309,42 +309,109 @@ function saveMarkerFiles(index) {
     const param = getImageIndexSet(pointDataList,index)
     if (param){
         let files=[], folders=[]
-        let data = new FormData()
         for (let i=0; i<param.set.length; i++){
             let d = pointDataList[param.set[i]]
             folders.push(d.domElement.getAttribute('data-folder'))
             files.push(d.domElement.getAttribute('data-file'))
         }
-        data.append('subFolder', folders.join('|'))
-        data.append('fileName', files.join('|'))
-        const selectedTags = ['longitude','latitude','province','city','location','subjectCode','country','countryCode']
-        data.append('selectedTags', selectedTags.join(','))
-        data.append('type',document.getElementById('type').value)
-        selectedTags.forEach(function(field){
-            if (mapPoint[field]) {
-                if (field==='longitude' || field==='latitude') data.append(field, mapPoint[field].toFixed(7))
-                else data.append(field,  mapPoint[field])
-            }
-        })
-        Ajax.post('/exifSave',data,function (msg){
-            let pp=(msg?msg.split(","):['error'])
-            if (pp[0]=='ok'){
-                let modified=(new Date().getTime())+''
-                for (let i=0; i<param.set.length; i++){
-                    const dom = pointDataList[param.set[i]].domElement
-                    dom.setAttribute('data-lastModified',modified)
-                    if (dom===selectedDom) resetThumbImageTransform()
+        const form = document.createElement('form')
+        form.id='autoSaveForm'
+        form.innerHTML = '<input id="asf_subFolder" name="subFolder" type="hidden">\n'
+            +'<input id="asf_fileName" name="fileName" type="hidden">\n'
+            +'<input id="asf_type" name="type" type="hidden" value="bd09">\n'
+            +'<div style="position:relative;margin-top:10px">\n'
+            +'    <label for="asf_subjectCode">POI</label>\n'
+            +'    <input class="tag-value" id="asf_subjectCode" name="subjectCode">\n'
+            +'    <input class="gps-info" type="checkbox" value="subjectCode" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_country">国家</label>\n'
+            +'    <input class="tag-value" id="asf_country" name="country" >\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="country" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_countryCode">代码</label>\n'
+            +'    <input class="tag-value" id="asf_countryCode" name="countryCode">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="countryCode" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_province">省/州</label>\n'
+            +'    <input class="tag-value" id="asf_province" name="province" maxlength="4">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="province" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_city">城市</label>\n'
+            +'    <input class="tag-value" id="asf_city" name="city">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="city" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_location">地址</label>\n'
+            +'    <input class="tag-value" id="asf_location" name="location">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="location" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_longitude">经度</label>\n'
+            +'    <input class="tag-value" id="asf_longitude" name="longitude" type="number" min="-180" max="180" step="0.0000001">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="longitude" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_latitude">纬度</label>\n'
+            +'    <input class="tag-value" id="asf_latitude" name="latitude" type="number" min="-90" max="90" step="0.0000001">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="latitude" name="selectedTags">\n'
+            +'</div>\n'
+            +'<div style="position:relative">\n'
+            +'    <label for="asf_altitude">海拔</label>\n'
+            +'    <input class="tag-value" id="asf_altitude" name="altitude" type="number" min="-10000" max="8848" step="0.1">\n'
+            +'    <input class="gps-info" type="checkbox" checked="checked" value="altitude" name="selectedTags">\n'
+            +'</div>'
+
+        const selectedTags = ['longitude','latitude','altitude', 'province','city','location','subjectCode','country','countryCode']
+        openDialog(
+            {
+                title: '批量修改 ' + files.length + ' 个文件',
+                oncancel: function() {},
+                callback: function(dlgBody) {
+                    const data = new FormData(form)
+                    if (data.get('selectedTags')) {
+                        Ajax.post('/exifSave',data,function (msg){
+                            let pp=(msg?msg.split(","):['error'])
+                            if (pp[0]=='ok'){
+                                let modified=(new Date().getTime())+''
+                                for (let i=0; i<param.set.length; i++){
+                                    const dom=pointDataList[param.set[i]].domElement
+                                    dom.setAttribute('data-lastModified',modified)
+                                    if (dom===selectedDom) resetThumbImageTransform()
+                                    selectedTags.forEach(function (field){
+                                        let val=data.get(field)
+                                        if (val) dom.setAttribute('data-'+field,''+val)
+                                        else dom.removeAttribute('data-'+field)
+                                    })
+                                }
+                                if (pp.length>1) toast(pp[1])
+                            }else{
+                                toast(msg)
+                            }
+                        })
+                    }
+                },
+                onshow: function(dlgBody) {
+                    document.getElementById('asf_subFolder').value = folders.join('|')
+                    document.getElementById('asf_fileName').value = files.join('|')
+                    document.getElementById('asf_type').value = document.getElementById('type').value
                     selectedTags.forEach(function(field){
-                        let val=data.get(field)
-                        if (val) dom.setAttribute('data-'+field, ''+val)
-                        else dom.removeAttribute('data-'+field)
+                        if (mapPoint[field]) {
+                            if (field==='longitude' || field==='latitude') document.getElementById('asf_'+field).value = mapPoint[field].toFixed(7)
+                            else document.getElementById('asf_'+field).value = mapPoint[field]
+                        }
                     })
-                }
-                if (pp.length>1) toast(pp[1])
-            }else{
-                toast(msg)
+                },
+                dialogBodyStyle: {
+                    width: 'auto'
+                },
+                body: form,
+                okText: '保存'
             }
-        })
+        )
     }
 }
 function selectMapPoint(add) {
@@ -830,9 +897,6 @@ window.onload=function(){
         }
     }
     document.querySelector('.selection-length').onclick = clearSelection
-    document.getElementById('autoSaveMarkerDrag').onchange = function() {
-        if (this.checked && !confirm("确实需要自动保存拖动改变的地理信息？")) this.checked = false
-    }
     document.addEventListener("paste", getClipboardData)
 
 }

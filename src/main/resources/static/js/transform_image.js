@@ -196,7 +196,17 @@
         }
         if (mirrorH) t.push('rotateY(180deg)')
         else if (mirrorV) t.push('rotateX(180deg)')
-        if (scale && Math.abs(scale-1)>0.0001) t.push('scale('+scale+')')
+        if (typeof scale === 'number' && Math.abs(scale-1)>0.01) t.push('scale('+scale+')')
+        else if (scale==='fit') {
+            let r90 = Math.trunc(rotateZ / 90) % 2
+            if (r90 && img.parentElement) {
+                let mW = img.parentElement.clientWidth
+                let mH = img.parentElement.clientHeight
+                let w = img.clientHeight, h = img.clientWidth
+                if (w>mW || h>mH) scale = Math.min(mW/w, mH/h)
+                if (scale>0 && Math.abs(scale-1)>0.01) t.push('scale('+scale+')')
+            }
+        }
         img.style.transform = img.style.msTransform = img.style.OTransform = img.style.MozTransform = (t.length==0 ? 'none' : t.join(' '))
     }
 
@@ -1301,7 +1311,8 @@
                 rotateZ: this.rotateZ,
                 mirrorV: this.mirrorV,
                 mirrorH:this.mirrorH,
-                imgOrientation: this.imgOrientation
+                imgOrientation: this.imgOrientation,
+                scale: 'fit'
             })
         }
         this.initial()
@@ -1359,25 +1370,13 @@
             }
             this.rotateZ=this.rotateZ%360
             if (this.rotateZ<0) this.rotateZ+=360
-            let r90 = Math.trunc(this.rotateZ / 90)
-            if (this.imgOrientation === '5' || this.imgOrientation === '6' ||this.imgOrientation === '7' ||this.imgOrientation === '8') {
-                r90++
-            }
-            r90 = r90 % 2
-            let scale = 1
-            if (r90) {
-                let mW = this.element.parentElement.clientWidth
-                let mH = this.element.parentElement.clientHeight
-                let w = this.element.clientHeight, h = this.element.clientWidth
-                if (w>mW || h>mH) scale = Math.min(mW / w,mH / h)
-            }
             const transformOptions = {
                 img: this.element,
                 rotateZ: this.rotateZ,
                 mirrorV: this.mirrorV,
                 mirrorH:this.mirrorH,
                 imgOrientation: this.imgOrientation,
-                scale: scale
+                scale: 'fit'
             }
             transform(transformOptions)
             if (typeof this.changeEvent === 'function') this.changeEvent({

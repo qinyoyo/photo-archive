@@ -114,7 +114,10 @@ public class PVController implements ApplicationRunner , ErrorController {
     String favicon() {
         return "/static/image/favicon.ico";
     }
-
+    @RequestMapping(value = "regTest")
+    String regTest() {
+        return "reg_test";
+    }
     String [] randomMusic = null;
     @RequestMapping(value = "music")
     String switchMusic(HttpServletRequest request) {

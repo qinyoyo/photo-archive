@@ -102,7 +102,7 @@ function loadMarkerData(markerClick,markerDrag) {
         img.setAttribute('data-next', data[index].next)
         img.setAttribute('src','/.thumb'+(data[index].src.indexOf('/')==0?'':'/')+data[index].src)
         img.setAttribute('data-src',data[index].src)
-        if (data[index].orientation) addClass(img,'orientation-'+data[index].orientation)
+        if (!window.sessionOptions.supportOrientation && data[index].orientation) addClass(img,'orientation-'+data[index].orientation)
         img.setAttribute('title',data[index].title)
     }
     const data = getPointData()
@@ -174,12 +174,10 @@ function loadMarkerData(markerClick,markerDrag) {
                     div.appendChild(img)
                     div.onclick=function (event){
                         stopNextClick()
-                        console.log('img container click')
                         clickImgOn(img,event.layerX,div.clientWidth)
                     }
                     div.ontouchstart=function (event){
                         stopNextClick()
-                        console.log('img container touch start')
                         if (event.changedTouches.length>0){
                             let currentTarget=div
                             let left=0

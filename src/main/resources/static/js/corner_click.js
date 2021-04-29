@@ -1,6 +1,6 @@
 ; (function () {
     function transformInitial(img) {
-        if (!img || !img.className) return null
+        if (!img || !hasClass(img,'orientation-\\d')) return null
         if (img.className.indexOf('orientation-2')>=0) return {mirrorH : true}
         else if (img.className.indexOf('orientation-3')>=0) return {rotateZ : 180}
         else if (img.className.indexOf('orientation-4')>=0) return {mirrorV : true}
@@ -51,8 +51,8 @@
                     else if (pos=='rb') pos='lb'
                     else if (pos=='lb') pos='lt'
                     else if (pos=='lt') pos='rt'
-                    else if (pos=='h') pos='v'
-                    else if (pos=='v') pos='h'
+                    //else if (pos=='h') pos='v'
+                    //else if (pos=='v') pos='h'
                 } else if (rotateZ < 225) {
                     if (pos=='lt') pos='rb'
                     else if (pos=='rt') pos='lb'
@@ -63,8 +63,8 @@
                     else if (pos=='lt') pos='lb'
                     else if (pos=='rt') pos='lt'
                     else if (pos=='rb') pos='rt'
-                    else if (pos=='h') pos='v'
-                    else if (pos=='v') pos='h'
+                    //else if (pos=='h') pos='v'
+                    //else if (pos=='v') pos='h'
                 }
             }
             return pos
