@@ -24,8 +24,7 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pv.yml" beforeDir="false" afterPath="$PROJECT_DIR$/pv.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/folder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/folder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,17 +79,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Maven.photo-archive [clean,package]">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="photo-archive [clean,package]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
       <MavenSettings>
         <option name="myGeneralSettings" />
@@ -266,6 +254,7 @@
       <workItem from="1622001613214" duration="184000" />
       <workItem from="1625039229719" duration="7987000" />
       <workItem from="1625055942055" duration="2753000" />
+      <workItem from="1625060066688" duration="991000" />
     </task>
     <servers />
   </component>

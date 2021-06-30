@@ -231,6 +231,9 @@ img[data-rating="5"] + .img-favorite-state {
     .video-list.grid-box {
         grid-template-columns: repeat(2, 1fr);
     }
+    .video-list.grid-box .grid-cell {
+        max-width:358px;
+    }
 }
 
 .dialog__wrapper {
