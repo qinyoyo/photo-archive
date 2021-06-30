@@ -23,7 +23,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/exif.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pv.yml" beforeDir="false" afterPath="$PROJECT_DIR$/pv.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/SpringContextUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/qinyoyo/utils/SpringContextUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/folder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/folder.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -91,6 +94,32 @@
     </option>
   </component>
   <component name="RunManager" selected="Spring Boot.PhotoArchiveApplication">
+    <configuration name="photo-archive [clean,package]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list>
+                <option value="clean" />
+                <option value="package" />
+              </list>
+            </option>
+            <option name="pomFileName" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method v="2" />
+    </configuration>
     <configuration name="map.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/src/main/resources/static/js/map.js" working-dir="$PROJECT_DIR$/src/main/resources/static/js">
       <method v="2" />
     </configuration>
@@ -103,6 +132,7 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Maven.photo-archive [clean,package]" />
       <item itemvalue="Node.js.map.js" />
       <item itemvalue="Spring Boot.PhotoArchiveApplication" />
     </list>
@@ -233,6 +263,11 @@
       <workItem from="1619609092187" duration="2479000" />
       <workItem from="1619657899522" duration="15426000" />
       <workItem from="1619686372730" duration="242000" />
+      <workItem from="1620715971877" duration="1400000" />
+      <workItem from="1620784432961" duration="1104000" />
+      <workItem from="1620786432125" duration="2241000" />
+      <workItem from="1622001613214" duration="184000" />
+      <workItem from="1625039229719" duration="7987000" />
     </task>
     <servers />
   </component>
@@ -383,6 +418,11 @@
           <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/photoviewer/PVController.java</url>
           <line>432</line>
           <option name="timeStamp" value="189" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/qinyoyo/utils/FileUtil.java</url>
+          <line>39</line>
+          <option name="timeStamp" value="190" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/main/resources/static/js/transform_image.js</url>

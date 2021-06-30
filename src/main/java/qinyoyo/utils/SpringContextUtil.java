@@ -5,19 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+
 
 @Component
 public class SpringContextUtil implements ApplicationContextAware {
@@ -60,4 +51,5 @@ public class SpringContextUtil implements ApplicationContextAware {
             setProjectHomeDirection(FileUtil.getPath(null));
         }
     }
+
 }
