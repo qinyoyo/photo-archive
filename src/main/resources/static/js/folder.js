@@ -52,23 +52,20 @@ function videoSlideController(video) {
                 recordPos(e,x,y)
                 if ( x0 > w/3 && x0 < 2*w/3 && x > w/3 && x < 2*w/3) {
                     let s = e.playbackRate
-                    if (y<y0) {
-                        if (s==0.5) e.playbackRate=1
-                        else if (s==1) e.playbackRate=1.25
-                        else if (s==1.25) e.playbackRate=1.5
-                        else if (s==1.5) e.playbackRate=2
-                        else if (s==2) e.playbackRate=3
-                        else if (s==3) e.playbackRate=4
-                    } else {
-                        if (s==4) e.playbackRate=3
-                        else if (s==3) e.playbackRate=2
-                        else if (s==2) e.playbackRate=1.5
-                        else if (s==1.5) e.playbackRate=1.25
-                        else if (s==1.25) e.playbackRate=1
-                        else if (s==1) e.playbackRate=0.5
+                    const findRate = function(r,dir) {
+                        const rates = [0.5,1,1.25,1.5,2,3,4,8,16]
+                        for (let i=(dir>0?0:rates.length-1);;) {
+                            if (i>=0 && i<rates.length) {
+                                if (dir<0 && rates[i]<r) return rates[i]
+                                else if (dir>0 && rates[i]>r) return rates[i]
+                                if (dir>0) i++;
+                                else i--;
+                            } else return r
+                        }
                     }
-                    s = e.playbackRate
-                    window.toast(s+'x')
+                    let r = findRate(s,y<y0 ? 1 : -1)
+                    e.playbackRate = r
+                    window.toast(r+'x')
                 } else if ( x > 2*w/3 && x0 > 2*w/3) {
                     let s = e.volume
                     if (y<y0) {
@@ -96,32 +93,44 @@ function videoSlideController(video) {
                 }
             }
             else if (Math.abs(y-y0)*2 < Math.abs(x-x0) && Math.abs(x-x0) > 30 ) {
+                recordPos(e,x,y)
                 let s = e.currentTime
-                s = s + (x-x0)/30 * 10
+                s = s + (x-x0)
                 if (s<0) s=0
+                else if (s>e.duration) s=e.duration
                 e.currentTime = s
             }
         }
     }
-    if (window.sessionOptions.mobile) {
-        new AlloyFinger(video, {
-            touchStart: function(e) {
-                recordPos(video,e.touches[0].clientX,e.touches[0].clientY)
-            },
-            touchEnd: function(e) {
-                endSlide(video,e.touches[0].clientX,e.touches[0].clientY)
-            },
-        });
-    } else {
-        video.onmousedown=function(e) {
+    const slideStart = function(e) {
+        if (window.sessionOptions.mobile) {
+            recordPos(video, e.touches[0].clientX, e.touches[0].clientY)
+            video.addEventListener("touchmove", slideMove, false);
+        } else {
             recordPos(video,e.offsetX,e.offsetY)
-            video.onmousemove=function(e) {
-                endSlide(video,e.offsetX,e.offsetY)
-            }
+            video.addEventListener("mousemove", slideMove, false);
         }
-        video.onmouseup=function(e) {
-            video.onmousemove = null
+    }
+    const slideMove = function(e) {
+        if (window.sessionOptions.mobile) {
+            endSlide(video,e.touches[0].clientX,e.touches[0].clientY)
+        } else {
+            endSlide(video,e.offsetX,e.offsetY)
         }
+    }
+    const slideEnd = function(e) {
+        if (window.sessionOptions.mobile) {
+            video.removeEventListener("touchmove", slideMove);
+        } else {
+            video.removeEventListener("mousemove", slideMove);
+        }
+    }
+    if (window.sessionOptions.mobile) {
+        video.addEventListener("touchstart", slideStart, false);
+        video.addEventListener("touchend", slideEnd, false);
+    } else {
+        video.addEventListener("mousedown", slideStart, false);
+        video.addEventListener("mouseup", slideEnd, false);
     }
 }
 window.onload=function(){
