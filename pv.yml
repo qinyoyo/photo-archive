@@ -27,6 +27,6 @@ photo:
 #   no-video-thumb: true
    support-orientation: HeyTapBrowser,Firefox,Mac OS X,HuaweiBrowser,UCBrowser/13
 #   root-path: E:\Photo\Archived
-   root-path: I:\VVV
+   root-path: I:\VVV\Archived\Video\210630
    ffmpeg: E:\Photo\ffmpeg.exe
    exiftool: E:\Photo\exiftool.exe

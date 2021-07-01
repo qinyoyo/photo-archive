@@ -36,22 +36,37 @@ function adjustSize(img) {
     if (iw<=w) img.parentNode.style.height = Math.min(w,ih) + 'px'
     else img.parentNode.style.height = Math.trunc(Math.min(w, ih*w/iw)) + 'px';
 }
-function videoSlideController(video) {
-    const recordPos = function(e,x,y) {
-        e.setAttribute('data-x',x)
-        e.setAttribute('data-y',y)
+function getOffsetPosition(el,x,y) {
+    let currentTarget = el
+    let top = 0
+    let left = 0
+    while (currentTarget !== null) {
+        top += currentTarget.offsetTop
+        left += currentTarget.offsetLeft
+        currentTarget = currentTarget.offsetParent
     }
-    const endSlide = function(e,x,y) {
-        let x0 = e.getAttribute('data-x')
-        let y0 = e.getAttribute('data-y')
-        if (x0 && y0) {
+    return {
+        x: x-left,
+        y: y-top
+    }
+}
+function videoSlideController(video) {
+    const recordPos = function(v,x,y) {
+        v.setAttribute('data-x',x)
+        v.setAttribute('data-y',y)
+    }
+    const endSlide = function(event,v,x,y) {
+        let x0 = v.getAttribute('data-x')
+        let y0 = v.getAttribute('data-y')
+        if (x0 && y0 && !v.paused) {
             x0 = parseInt(x0)
             y0 = parseInt(y0)
-            let w = e.clientWidth
+            let w = v.clientWidth
             if (Math.abs(x-x0)*2 < Math.abs(y-y0) && Math.abs(y-y0) > 30 ) {  // 上下滑动
-                recordPos(e,x,y)
+                event.preventDefault()
+                recordPos(v,x,y)
                 if ( x0 > w/3 && x0 < 2*w/3 && x > w/3 && x < 2*w/3) {
-                    let s = e.playbackRate
+                    let s = v.playbackRate
                     const findRate = function(r,dir) {
                         const rates = [0.5,1,1.25,1.5,2,3,4,8,16]
                         for (let i=(dir>0?0:rates.length-1);;) {
@@ -64,10 +79,10 @@ function videoSlideController(video) {
                         }
                     }
                     let r = findRate(s,y<y0 ? 1 : -1)
-                    e.playbackRate = r
+                    v.playbackRate = r
                     window.toast(r+'x')
                 } else if ( x > 2*w/3 && x0 > 2*w/3) {
-                    let s = e.volume
+                    let s = v.volume
                     if (y<y0) {
                         s = s + 0.1
                         if (s>1) s=1
@@ -75,10 +90,10 @@ function videoSlideController(video) {
                         s = s - 0.1
                         if (s<0) s=0
                     }
-                    e.volume = s
+                    v.volume = s
                 }
                 else if ( x < w/3 && x0 < w/3) {
-                    let s = e.getAttribute('data-brightness')
+                    let s = v.getAttribute('data-brightness')
                     if (s) s=parseFloat(s)
                     else s=0.5
                     if (y<y0) {
@@ -88,23 +103,25 @@ function videoSlideController(video) {
                         s = s - 0.1
                         if (s<0) s=0
                     }
-                    e.style.filter = "brightness(" + s + ")";
-                    e.setAttribute('data-brightness',s)
+                    v.style.filter = "brightness(" + s + ")";
+                    v.setAttribute('data-brightness',s)
                 }
             }
             else if (Math.abs(y-y0)*2 < Math.abs(x-x0) && Math.abs(x-x0) > 30 ) {
-                recordPos(e,x,y)
-                let s = e.currentTime
+                event.preventDefault()
+                recordPos(v,x,y)
+                let s = v.currentTime
                 s = s + (x-x0)
                 if (s<0) s=0
-                else if (s>e.duration) s=e.duration
-                e.currentTime = s
+                else if (s>v.duration) s=v.duration
+                v.currentTime = s
             }
         }
     }
     const slideStart = function(e) {
         if (window.sessionOptions.mobile) {
-            recordPos(video, e.touches[0].clientX, e.touches[0].clientY)
+            let offset = getOffsetPosition(video,e.touches[0].pageX,e.touches[0].pageY)
+            recordPos(video, offset.x, offset.y)
             video.addEventListener("touchmove", slideMove, false);
         } else {
             recordPos(video,e.offsetX,e.offsetY)
@@ -113,9 +130,10 @@ function videoSlideController(video) {
     }
     const slideMove = function(e) {
         if (window.sessionOptions.mobile) {
-            endSlide(video,e.touches[0].clientX,e.touches[0].clientY)
+            let offset = getOffsetPosition(video,e.touches[0].pageX,e.touches[0].pageY)
+            endSlide(e,video,offset.x, offset.y)
         } else {
-            endSlide(video,e.offsetX,e.offsetY)
+            endSlide(e,video,e.offsetX,e.offsetY)
         }
     }
     const slideEnd = function(e) {
