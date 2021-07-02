@@ -24,11 +24,7 @@
   <component name="ChangeListManager">
     <list default="true" id="97974e30-2a23-4b3c-bedd-6f4fc30d70e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pv.yml" beforeDir="false" afterPath="$PROJECT_DIR$/pv.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/pv.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/folder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/folder.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/transform_image.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/index.ftl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/index.ftl" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -277,6 +273,7 @@
       <workItem from="1625142886453" duration="38000" />
       <workItem from="1625209357322" duration="5024000" />
       <workItem from="1625214437323" duration="2016000" />
+      <workItem from="1625217042138" duration="1356000" />
     </task>
     <servers />
   </component>

@@ -77,6 +77,8 @@ function getOffsetPosition(el,x,y) {
         y: y-top
     }
 }
+let videoParametersAdjusted = false
+let videoPaused = false
 function videoSlideController(video) {
     const recordPos = function(v,x,y) {
         v.setAttribute('data-x',x)
@@ -92,6 +94,7 @@ function videoSlideController(video) {
             if (Math.abs(x-x0)*2 < Math.abs(y-y0) && Math.abs(y-y0) > 30 ) {  // 上下滑动
                 event.preventDefault()
                 recordPos(v,x,y)
+                videoParametersAdjusted = true
                 if ( x0 > w/3 && x0 < 2*w/3 && x > w/3 && x < 2*w/3) {
                     let s = v.playbackRate
                     const findRate = function(r,dir) {
@@ -139,6 +142,7 @@ function videoSlideController(video) {
             else if (Math.abs(y-y0)*2 < Math.abs(x-x0) && Math.abs(x-x0) > 30 ) {
                 event.preventDefault()
                 recordPos(v,x,y)
+                videoParametersAdjusted = true
                 let s = v.currentTime
                 s = s + (x-x0)
                 if (s<0) s=0
@@ -159,6 +163,8 @@ function videoSlideController(video) {
         }
     }
     const slideStart = function(e) {
+        videoParametersAdjusted = false
+        videoPaused = video.paused
         if (window.sessionOptions.mobile) {
             let offset = getOffsetPosition(video,e.touches[0].pageX,e.touches[0].pageY)
             recordPos(video, offset.x, offset.y)
@@ -181,6 +187,12 @@ function videoSlideController(video) {
             video.removeEventListener("touchmove", slideMove);
         } else {
             video.removeEventListener("mousemove", slideMove);
+        }
+        if (videoParametersAdjusted) {
+            setTimeout(function(){
+                if (videoPaused && !video.paused) video.pause()
+                else if (!videoPaused && video.paused)video.play()
+            },500)
         }
     }
     if (window.sessionOptions.mobile) {
