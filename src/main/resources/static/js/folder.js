@@ -3,23 +3,50 @@ function searchText(text) {
     if (text) window.location.href = '/search?text=' + encodeURI(text)
 }
 function videoOverlay(v) {
+    const display = document.getElementById('app').style.display
+    document.getElementById('app').style.display = 'none'
+    if (!window.fullScreenElement()) window.handleFullScreen(document.body)
     const wrapper = document.createElement('div')
     wrapper.className = 'dialog__wrapper'
     wrapper.style.background = '#808080'
     const video = document.createElement('video')
-    const w = parseInt(v.getAttribute('data-width')), h = parseInt(v.getAttribute('data-height'))
-    video.style.position = 'fixed'
-    video.style.left = (window.innerWidth - w)/2  + 'px'
-    video.style.top = (window.innerHeight - h)/2  + 'px'
-    video.style.width =  w +'px'
-    video.style.height = h +'px'
-    video.style.maxHeight = window.innerHeight +'px'
+    const setSize = function(){
+        const w=parseInt(v.getAttribute('data-width')),h=parseInt(v.getAttribute('data-height'))
+        video.style.position='fixed'
+        if (window.innerWidth>w){
+            video.style.left=(window.innerWidth-w)/2+'px'
+            video.style.width=w+'px'
+        }else{
+            video.style.left='0px'
+            video.style.width=window.innerWidth+'px'
+        }
+        if (window.innerHeight>h){
+            video.style.top=(window.innerHeight-h)/2+'px'
+            video.style.height=h+'px'
+        }else{
+            video.style.top='0px'
+            video.style.height=window.innerHeight+'px'
+        }
+        video.style.maxHeight=window.innerHeight+'px'
+        video.style.maxWidth=window.innerWidth+'px'
+    }
+    setSize()
+    window.onresize = setSize
     video.setAttribute('src',v.getAttribute('src'))
     video.setAttribute('controls','true')
     video.currentTime = v.currentTime
-    wrapper.ondblclick=function() {
+    const dblclick=function() {
+        if (window.fullScreenElement()) window.handleFullScreen(document.body)
+        document.getElementById('app').style.display = display
         video.pause()
         wrapper.remove()
+    }
+    if (window.sessionOptions.mobile) {
+        new AlloyFinger(wrapper, {
+            doubleTap: dblclick
+        });
+    } else{
+        wrapper.ondblclick=dblclick
     }
     document.querySelectorAll('audio,video').forEach(function(r){
         r.pause()
@@ -58,7 +85,7 @@ function videoSlideController(video) {
     const endSlide = function(event,v,x,y) {
         let x0 = v.getAttribute('data-x')
         let y0 = v.getAttribute('data-y')
-        if (x0 && y0 && !v.paused) {
+        if (x0 && y0) {
             x0 = parseInt(x0)
             y0 = parseInt(y0)
             let w = v.clientWidth
@@ -88,9 +115,10 @@ function videoSlideController(video) {
                         if (s>1) s=1
                     } else {
                         s = s - 0.1
-                        if (s<0) s=0
+                        if (s<=0) s=0
                     }
                     v.volume = s
+                    window.toast(s ? Math.trunc(s*100)+'%' : '静音')
                 }
                 else if ( x < w/3 && x0 < w/3) {
                     let s = v.getAttribute('data-brightness')
@@ -105,6 +133,7 @@ function videoSlideController(video) {
                     }
                     v.style.filter = "brightness(" + s + ")";
                     v.setAttribute('data-brightness',s)
+                    window.toast(s ? Math.trunc(s*100)+'%' : '黑屏')
                 }
             }
             else if (Math.abs(y-y0)*2 < Math.abs(x-x0) && Math.abs(x-x0) > 30 ) {
@@ -115,6 +144,17 @@ function videoSlideController(video) {
                 if (s<0) s=0
                 else if (s>v.duration) s=v.duration
                 v.currentTime = s
+                const secondText = function(sec) {
+                    sec=Math.trunc(sec)
+                    let t = ''
+                    if (sec>=3600) {
+                        t=Math.trunc(sec/3600) + ':'
+                        sec = sec % 3600
+                    }
+                    t = t + Math.trunc(sec/60) + ':' + sec % 60
+                    return t
+                }
+                window.toast(secondText(s) + '/' + secondText(v.duration))
             }
         }
     }
@@ -197,20 +237,33 @@ window.onload=function(){
     }
     document.querySelectorAll('video').forEach(function(v) {
         const w=window.innerWidth, h=window.innerHeight
-        videoSlideController(v)
         v.onclick = function() {
             this.controls = !this.controls
         }
-        const vw = v.getAttribute('data-width'), vh = v.getAttribute('data-height')
-        if (vw && vh && parseInt(vw)<w && parseInt(vh)<h) {
-            v.ondblclick = function() {
-                videoOverlay(v)
-            }
-            const div = v.nextElementSibling
-            if (div && div.tagName.toUpperCase()==='DIV') {
-                div.style.cursor = 'pointer'
-                div.onclick = function() {
-                    videoOverlay(v)
+        const dblclick = function (){
+            v.pause()
+            videoOverlay(v)
+        }
+        if (window.sessionOptions.mobile) {
+            new AlloyFinger(v, {
+                doubleTap: dblclick
+            });
+        } else{
+            v.ondblclick=dblclick
+        }
+        const icon = v.nextElementSibling
+        if (icon && icon.className.indexOf('video-remove')>=0) {
+            icon.onclick = function() {
+                let fn = v.getAttribute('src')
+                let pos = fn.indexOf('?')
+                if (pos>=0) fn = fn.substring(0,pos)
+                if (fn && confirm('确定删除 '+fn+' ?')) {
+                    let url = '/remove?path=' + encodeURI(fn)
+                    Ajax.get(url, function (responseText) {
+                        if ("ok" == responseText) {
+                            v.parentElement.remove()
+                        }
+                    })
                 }
             }
         }

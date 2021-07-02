@@ -952,7 +952,7 @@
                 Ajax.get(url, function (responseText) {
                     if ("ok" == responseText) {
                         removedIndexList.push(imgIndex)
-                        document.querySelector('.img-index-' + imgIndex).remove()
+                        document.querySelector('.img-index-' + imgIndex).parentElement.remove()
                     }
                 })
                 if (needResumeLoop) resumeLoop(true)

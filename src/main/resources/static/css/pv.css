@@ -149,7 +149,7 @@ audio, video {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.photo-item {
+.photo-item, .video-item, .audio-item {
     position: relative;
 }
 .photo-info {
@@ -183,6 +183,14 @@ audio, video {
     font-size: 16px;
     color: transparent;
     pointer-events: none;
+}
+.video-remove {
+    position:absolute;
+    left:2px;
+    bottom:0px;
+    font-size: 16px;
+    color: #f44;
+    cursor: pointer;
 }
 img[data-rating="5"] + .img-favorite-state {
     color: #f88;

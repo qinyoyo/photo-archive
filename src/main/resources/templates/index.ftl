@@ -271,6 +271,7 @@
         <#list videos as v>
             <div class="video-item grid-cell">
                 <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}"<#if v.width?? && v.height??> data-width="${v.width?c}" data-height="${v.height?c}"</#if> onplay="onavplay(this)"></video>
+                <#if sessionOptions.unlocked><i class="fa fa-trash-o video-remove"></i></#if>
                 <div>${v.fileName}</div>
             </div>
         </#list>
