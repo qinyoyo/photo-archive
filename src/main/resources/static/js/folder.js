@@ -2,6 +2,9 @@
 function searchText(text) {
     if (text) window.location.href = '/search?text=' + encodeURI(text)
 }
+
+let videoParametersAdjusted = false
+
 function videoOverlay(v) {
     const display = document.getElementById('app').style.display
     document.getElementById('app').style.display = 'none'
@@ -35,6 +38,14 @@ function videoOverlay(v) {
     video.setAttribute('src',v.getAttribute('src'))
     video.setAttribute('controls','true')
     video.currentTime = v.currentTime
+    video.onclick = function(event){
+        event.preventDefault()
+        if (!videoParametersAdjusted) {
+            if (video.paused) video.play()
+            else video.pause()
+        }
+    }
+
     const dblclick=function() {
         if (window.fullScreenElement()) window.handleFullScreen(document.body)
         document.getElementById('app').style.display = display
@@ -77,8 +88,6 @@ function getOffsetPosition(el,x,y) {
         y: y-top
     }
 }
-let videoParametersAdjusted = false
-let videoPaused = false
 function videoSlideController(video) {
     const recordPos = function(v,x,y) {
         v.setAttribute('data-x',x)
@@ -164,7 +173,6 @@ function videoSlideController(video) {
     }
     const slideStart = function(e) {
         videoParametersAdjusted = false
-        videoPaused = video.paused
         if (window.sessionOptions.mobile) {
             let offset = getOffsetPosition(video,e.touches[0].pageX,e.touches[0].pageY)
             recordPos(video, offset.x, offset.y)
@@ -187,12 +195,6 @@ function videoSlideController(video) {
             video.removeEventListener("touchmove", slideMove);
         } else {
             video.removeEventListener("mousemove", slideMove);
-        }
-        if (videoParametersAdjusted) {
-            setTimeout(function(){
-                if (videoPaused && !video.paused) video.pause()
-                else if (!videoPaused && video.paused)video.play()
-            },500)
         }
     }
     if (window.sessionOptions.mobile) {
