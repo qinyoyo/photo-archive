@@ -88,6 +88,7 @@ function getOffsetPosition(el,x,y) {
         y: y-top
     }
 }
+let videoSlideMode = ''
 function videoSlideController(video) {
     const recordPos = function(v,x,y) {
         v.setAttribute('data-x',x)
@@ -100,11 +101,21 @@ function videoSlideController(video) {
             x0 = parseInt(x0)
             y0 = parseInt(y0)
             let w = v.clientWidth
-            if (Math.abs(x-x0)*2 < Math.abs(y-y0) && Math.abs(y-y0) > 30 ) {  // 上下滑动
+            if (!videoSlideMode) {
+                if (Math.abs(x-x0)*2 < Math.abs(y-y0) && Math.abs(y-y0) > 30 ) {
+                    if ( x0 > w/3 && x0 < 2*w/3 && x > w/3 && x < 2*w/3) videoSlideMode = 'vs'
+                    else if ( x > 2*w/3 && x0 > 2*w/3) videoSlideMode = 'vv'
+                    else if ( x < w/3 && x0 < w/3) videoSlideMode = 'vb'
+                }  else if (Math.abs(y-y0)*2 < Math.abs(x-x0) && Math.abs(x-x0) > 30 ) {
+                    videoSlideMode = 'h'
+                }
+            }
+            if (!videoSlideMode) return
+            if ( videoSlideMode.indexOf('v')==0 && Math.abs(y-y0) > 30 ) {  // 上下滑动
                 event.preventDefault()
                 recordPos(v,x,y)
                 videoParametersAdjusted = true
-                if ( x0 > w/3 && x0 < 2*w/3 && x > w/3 && x < 2*w/3) {
+                if (videoSlideMode==='vs' ) {
                     let s = v.playbackRate
                     const findRate = function(r,dir) {
                         const rates = [0.5,1,1.25,1.5,2,3,4,8,16]
@@ -120,7 +131,7 @@ function videoSlideController(video) {
                     let r = findRate(s,y<y0 ? 1 : -1)
                     v.playbackRate = r
                     window.toast(r+'x')
-                } else if ( x > 2*w/3 && x0 > 2*w/3) {
+                } else if ( videoSlideMode==='vv') {
                     let s = v.volume
                     if (y<y0) {
                         s = s + 0.1
@@ -132,7 +143,7 @@ function videoSlideController(video) {
                     v.volume = s
                     window.toast(s ? Math.trunc(s*100)+'%' : '静音')
                 }
-                else if ( x < w/3 && x0 < w/3) {
+                else if ( videoSlideMode==='vb') {
                     let s = v.getAttribute('data-brightness')
                     if (s) s=parseFloat(s)
                     else s=0.5
@@ -148,7 +159,7 @@ function videoSlideController(video) {
                     window.toast(s ? Math.trunc(s*100)+'%' : '黑屏')
                 }
             }
-            else if (Math.abs(y-y0)*2 < Math.abs(x-x0) && Math.abs(x-x0) > 30 ) {
+            else if (videoSlideMode==='h' && Math.abs(x-x0) > 30 ) {
                 event.preventDefault()
                 recordPos(v,x,y)
                 videoParametersAdjusted = true
@@ -173,6 +184,7 @@ function videoSlideController(video) {
     }
     const slideStart = function(e) {
         videoParametersAdjusted = false
+        videoSlideMode = ''
         if (window.sessionOptions.mobile) {
             let offset = getOffsetPosition(video,e.touches[0].pageX,e.touches[0].pageY)
             recordPos(video, offset.x, offset.y)

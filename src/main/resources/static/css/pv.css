@@ -58,12 +58,9 @@ audio, video {
     width: 100%;
     max-height: 200px;
 }
-video::-webkit-media-controls-fullscreen-button { display: none !important; }
-video::-moz-media-controls-fullscreen-button  { display: none !important; }
-video::media-controls-fullscreen-button  { display: none !important; }
-video::-webkit-media-controls-download-button { display: none !important; }
-video::-moz-media-controls-download-button  { display: none !important; }
-video::media-controls-download-button  { display: none !important; }
+*::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+}
 .folder-head__item {
     margin: 0 5px 0 5px;
 }
