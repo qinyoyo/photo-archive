@@ -335,7 +335,7 @@ public class ArchiveManager {
                     break;
                 case "d":
                     List<FolderInfo> fls = FolderInfo.seekFolderInfo(archived);
-                    fls.sort((a,b)->a.getPath().compareTo(b.getPath()));
+                    fls.sort((a,b)->Util.chineseCompare(a.getPath(),b.getPath()));
                     for (FolderInfo f: fls) System.out.println(f);
                     break;
                 default:

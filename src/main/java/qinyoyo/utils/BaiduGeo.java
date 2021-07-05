@@ -137,7 +137,7 @@ public class BaiduGeo {
         }
         if (list != null && list.size() > 0) {
             list.sort((a, b) -> {
-                int r = a.getSubFolder().compareTo(b.getSubFolder());
+                int r = Util.chineseCompare(a.getSubFolder(),b.getSubFolder());
                 return r == 0 ? a.compareTo(b) : r;
             });
             List<PhotoInfo> changedList = new ArrayList<>();

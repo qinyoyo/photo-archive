@@ -25,8 +25,9 @@ logging:
 photo:
    password: 123456
 #   no-video-thumb: true
+   no-video-time: true
    support-orientation: HeyTapBrowser,Firefox,Mac OS X,HuaweiBrowser,UCBrowser/13
 #   root-path: E:\Photo\Archived
-   root-path: E:\Photo\Archived
+   root-path: I:\VVV\Archived
    ffmpeg: E:\Photo\ffmpeg.exe
    exiftool: E:\Photo\exiftool.exe

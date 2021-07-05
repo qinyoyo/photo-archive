@@ -541,8 +541,8 @@ public class PhotoInfo implements Serializable,Cloneable {
     }
 
     private int nameCompare(PhotoInfo p) {
-        int cp = getSubFolder().compareTo(p.getSubFolder());
-        if (cp==0) return getFileName().compareTo(p.getFileName());
+        int cp = Util.chineseCompare(getSubFolder(),p.getSubFolder());
+        if (cp==0) return Util.chineseCompare(getFileName(),p.getFileName());
         else return cp;
     }
     public int compareTo(PhotoInfo p) {

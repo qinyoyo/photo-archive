@@ -400,7 +400,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 map.put("path", dir);
                 subDirectories.add(map);
             }
-            subDirectories.sort((a, b) -> a.get("name").toString().compareTo(b.get("name").toString()));
+            subDirectories.sort((a, b) -> Util.chineseCompare(a.get("name").toString(),b.get("name").toString()));
             model.addAttribute("subDirectories", subDirectories);
         }
         if (htmls!=null && htmls.size()>0)  model.addAttribute("htmls",htmls);
@@ -635,7 +635,7 @@ public class PVController implements ApplicationRunner , ErrorController {
                 }
             }
             if (subDirectories.size() > 0) {
-                subDirectories.sort((a, b) -> a.get("name").toString().compareTo(b.get("name").toString()));
+                subDirectories.sort((a, b) -> Util.chineseCompare(a.get("name").toString(),b.get("name").toString()));
                 model.put("subDirectories", subDirectories);
             }
         }
@@ -751,6 +751,7 @@ public class PVController implements ApplicationRunner , ErrorController {
         unlockPassword = env.getProperty("photo.password");
         if (unlockPassword ==null) unlockPassword = "19960802";
         noVideoThumb = Util.boolValue(env.getProperty("photo.no-video-thumb"));
+        boolean noVideoTime = Util.boolValue(env.getProperty("photo.no-video-time"));
 
         String vca = env.getProperty("photo.video-capture-at");
         if (vca!=null) ArchiveUtils.VIDEO_CAPTURE_AT = vca;
@@ -767,6 +768,15 @@ public class PVController implements ApplicationRunner , ErrorController {
                 FileUtil.removeEmptyFolder(new File(rootPath));
                 System.out.println("归档主目录为 : "+rootPath);
                 isReady = true;
+                if (!archiveInfo.isReadFromFile() && noVideoTime) {
+                    archiveInfo.getInfos().stream().filter(p->p.getMimeType()!=null && p.getMimeType().startsWith("video/"))
+                       .forEach(p->{
+                           p.setShootTime(null);
+                           p.setCreateTime(null);
+                       });
+                    archiveInfo.sortInfos();
+                    archiveInfo.saveInfos();
+                }
                 archiveInfo.createThumbFiles();
                 System.out.println("Photo viewer started.");
             }

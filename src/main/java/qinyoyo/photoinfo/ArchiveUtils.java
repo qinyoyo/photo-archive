@@ -281,7 +281,7 @@ public class ArchiveUtils {
             for (int i=index;i<list2.size();i++) {
                 PhotoInfo p = list2.get(i);
                 index = i;
-                int pc = p.getSubFolder().compareTo(pi.getSubFolder());
+                int pc = Util.chineseCompare(p.getSubFolder(),pi.getSubFolder());
                 if ( pc < 0) continue;
                 else if (pc > 0) {
                     if (rootPath!=null) deleteFile(pi,rootPath);
@@ -290,7 +290,7 @@ public class ArchiveUtils {
                     break;
                 }
                 else {
-                    int nc = p.getFileName().compareTo(pi.getFileName());
+                    int nc = Util.chineseCompare(p.getFileName(),pi.getFileName());
                     if (nc < 0) continue;
                     else if (nc==0) {
                         index++;
@@ -362,7 +362,7 @@ public class ArchiveUtils {
     }
     public static void nameSort(List<PhotoInfo> infos) {
         if (infos!=null && infos.size()>1)
-            infos.sort((a,b)->(a.getSubFolder()+File.separator+a.getFileName()).compareTo(b.getSubFolder()+File.separator+b.getFileName()));
+            infos.sort((a,b)->(Util.chineseCompare(a.getSubFolder()+File.separator+a.getFileName(),b.getSubFolder()+File.separator+b.getFileName())));
     }
 
     public static void setOutput(Class clazz,String stdoutFilePath) {
@@ -632,7 +632,7 @@ public class ArchiveUtils {
             if (subDirs != null && subDirs.length > 0) {
                 List<File> dirs = Arrays.asList(subDirs);
                 dirs.sort((a, b) -> {
-                    return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
+                    return Util.chineseCompare(a.getName().toLowerCase(),b.getName().toLowerCase());
                 });
                 for (File d : dirs) {
                     if (d.isDirectory()) {
