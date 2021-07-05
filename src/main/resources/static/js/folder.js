@@ -45,7 +45,9 @@ function videoOverlay(v) {
             else video.pause()
         }
     }
-
+    video.onmouseenter = function() {
+        this.controls = true
+    }
     const dblclick=function() {
         if (window.fullScreenElement()) window.handleFullScreen(document.body)
         document.getElementById('app').style.display = display
@@ -287,9 +289,6 @@ window.onload=function(){
     }
     document.querySelectorAll('video').forEach(function(v) {
         const w=window.innerWidth, h=window.innerHeight
-        v.onclick = function() {
-            this.controls = !this.controls
-        }
         const dblclick = function (event){
             event.preventDefault()
             v.pause()
