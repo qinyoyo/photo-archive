@@ -29,6 +29,10 @@
           }
       })
     }
+    function videoClick(event,video) {
+        event.preventDefault()
+        video.controls = !video.controls
+    }
     function radioClick() {
         let o = document.getElementById('loginOptions')
         if (o) {
@@ -273,7 +277,7 @@
         <div class="collapse-content video-list grid-box">
         <#list videos as v>
             <div class="video-item grid-cell">
-                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}"<#if v.width?? && v.height??> data-width="${v.width?c}" data-height="${v.height?c}"</#if> onclick="this.controls = !this.controls" onplay="onavplay(this)"></video>
+                <video src = "${fileUrl(v)}"<#if noVideoThumb?? && noVideoThumb> controls<#else> poster="/.thumb${fileUrl(v)}.jpg"</#if> class="video-index-${v?index?c}"<#if v.width?? && v.height??> data-width="${v.width?c}" data-height="${v.height?c}"</#if> onclick="videoClick(event,this)" onplay="onavplay(this)"></video>
                 <#if sessionOptions.unlocked><i class="fa fa-trash-o video-remove"></i></#if>
                 <div>${v.fileName}</div>
             </div>

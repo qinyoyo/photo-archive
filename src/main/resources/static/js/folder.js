@@ -321,11 +321,20 @@ window.onload=function(){
     document.querySelectorAll('.collapse .collapse-item, .collapse .collapse-item-expanded').forEach(function(v) {
         v.onclick = function() {
             let cls = v.className
+            const videoNonExpand = function(e) {
+                if (e.nextElementSibling.className.indexOf('video-list')>=0) {
+                    e.nextElementSibling.querySelectorAll('video').forEach(function(video){
+                        video.controls = false
+                    })
+                }
+            }
             if (cls.indexOf('collapse-item-expanded') >=0) {
                 v.className = cls.replace('collapse-item-expanded','collapse-item')
+                videoNonExpand(v)
             } else {
                 v.parentElement.querySelectorAll('.collapse-item-expanded').forEach(function(v1){
                     v1.className = v1.className.replace('collapse-item-expanded','collapse-item')
+                    videoNonExpand(v1)
                 })
                 v.className = cls.replace('collapse-item','collapse-item-expanded')
             }
