@@ -21,14 +21,6 @@
     <title>Photo Viewer</title>
 </head>
 <script>
-    function onavplay(e) {
-      document.querySelectorAll('audio,video').forEach(function(r){
-          if (r!==e) {
-              r.pause()
-              r.controls = false
-          }
-      })
-    }
     function videoClick(event,video) {
         event.preventDefault()
         video.controls = !video.controls
