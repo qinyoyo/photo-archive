@@ -14,6 +14,7 @@ const stepIcon0 = makeIcon({
     pointX: 9,
     pointY: 26
 })
+
 const stepIcon1 = makeIcon({
     url: "/static/image/step1.png",
     width: 18,

@@ -1500,11 +1500,3 @@
         window.ImageCornerClick = ImageCornerClick
     }
 })();
-function onavplay(e) {
-    document.querySelectorAll('audio,video').forEach(function(r){
-        if (r!==e) {
-            r.pause()
-            r.controls = false
-        }
-    })
-}
